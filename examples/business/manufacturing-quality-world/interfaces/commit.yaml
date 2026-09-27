@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: CommitContract
+metadata:
+  name: quality-commit
+spec:
+  approvalRequired: true
+  commitExamples:
+    - qms_capa_approval
+    - lot_hold_status_change
+  rule: Tool or API success is not equivalent to a business commit.

@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ActionBindingProfile
+metadata:
+  name: quality-actions
+spec:
+  actions:
+    - propose_capa
+    - request_quality_hold
+    - request_reinspection
+  execution: governed_external_system_or_human_workflow

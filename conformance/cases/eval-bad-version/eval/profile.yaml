@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata:
+  name: fixture-eval
+  version: v1
+spec:
+  metrics: [task_success]

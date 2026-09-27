@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: EffectVerificationProfile
+metadata:
+  name: quality-effect-verification
+spec:
+  verifies:
+    - committed_qms_status
+    - follow_up_inspection_result
+    - realized_capa_outcome
+  rule: A committed action and a realized World change are tracked separately.

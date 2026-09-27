@@ -1,0 +1,49 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: mes-lot-2401
+    type: MES.production_lot
+    subject: LOT-2401
+    observedAt: "2026-09-01T06:00:00Z"
+    values: {genealogy: [RM-778, RM-779]}
+  - id: mes-eq-fill02-a
+    type: MES.equipment
+    subject: FILL-02
+    observedAt: "2026-09-01T07:10:00Z"
+    values: {condition_event: vibration_warning}
+  - id: mes-eq-fill02-b
+    type: MES.equipment
+    subject: FILL-02
+    observedAt: "2026-09-01T07:40:00Z"
+    values: {condition_event: vibration_cleared}
+  - id: qms-claim-001
+    type: QMS.claim
+    subject: CLM-001
+    observedAt: "2026-09-03T09:00:00Z"
+    values: {status: open}
+  - id: qms-nc-17
+    type: QMS.nonconformance
+    subject: NC-17
+    observedAt: "2026-09-03T10:00:00Z"
+    values: {status: under_investigation}
+  - id: qms-insp-1
+    type: QMS.inspection
+    subject: LOT-2401
+    observedAt: "2026-09-03T11:00:00Z"
+    values: {result: seal_leak_detected}
+  - id: qms-capa-9-draft
+    type: QMS.capa
+    subject: CAPA-9
+    observedAt: "2026-09-04T08:00:00Z"
+    values: {status: proposed}
+  - id: qms-capa-9-sync
+    type: QMS.capa
+    subject: CAPA-9
+    observedAt: "2026-09-04T08:00:00Z"
+    values: {status: approved}
+  - id: qms-claim-001-late
+    type: QMS.claim
+    subject: CLM-001
+    observedAt: "2026-09-10T09:00:00Z"
+    values: {status: closed}

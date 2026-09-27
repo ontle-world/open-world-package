@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: model-artifact
+spec:
+  implementationStatus: unbound
+  bundled: false
+  artifactRef: null
+  supportedProviders: [huggingface, oci, s3, local_content_addressed_store]

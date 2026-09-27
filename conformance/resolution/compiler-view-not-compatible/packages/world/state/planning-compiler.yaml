@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: planning-compiler
+spec:
+  worldViewRef: views/planning.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [entity.state]

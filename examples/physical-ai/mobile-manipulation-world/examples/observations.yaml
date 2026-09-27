@@ -1,0 +1,36 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: lang-1
+    type: language_task
+    observedAt: "2026-09-01T12:00:00Z"
+    values: {text: put the red block in bin A}
+  - id: task-1
+    type: task.target
+    observedAt: "2026-09-01T12:00:00Z"
+    values: {region: bin-a}
+  - id: prop-1
+    type: proprioception
+    observedAt: "2026-09-01T12:00:01Z"
+    values: {joint_state: [0.0, -0.5, 1.2, 0.0, 0.8, 0.0], gripper: open}
+  - id: prop-2
+    type: proprioception
+    observedAt: "2026-09-01T12:00:02Z"
+    values: {joint_state: [0.1, -0.4, 1.1, 0.0, 0.8, 0.0], gripper: open}
+  - id: pose-front-2
+    type: perception.object_pose
+    observedAt: "2026-09-01T12:00:02Z"
+    values: {pose: [0.42, 0.10, 0.02]}
+  - id: pose-wrist-2
+    type: perception.object_pose
+    observedAt: "2026-09-01T12:00:02Z"
+    values: {pose: [0.43, 0.10, 0.02]}
+  - id: safety-1
+    type: safety.monitor
+    observedAt: "2026-09-01T12:00:00Z"
+    values: {constraint: human_in_zone_b}
+  - id: safety-2
+    type: safety.monitor
+    observedAt: "2026-09-01T12:00:02Z"
+    values: {constraint: speed_limit_0_25}

@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: VerifierPackage
+metadata:
+  name: effect-verifier
+  version: 1.4.0
+spec:
+  verifies: [outcome]

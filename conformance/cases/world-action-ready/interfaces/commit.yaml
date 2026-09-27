@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: CommitContract
+metadata:
+  name: commit
+spec:
+  approvalRequired: true

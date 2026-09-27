@@ -1,0 +1,3970 @@
+{
+  "manifest": "ontle-public-release-manifest/v1",
+  "release": "public-alpha-world-view-aligned",
+  "version": "0.2.0a2",
+  "cli": "ontle",
+  "distribution": "ontle-open-world",
+  "file_count_excluding_manifest": 792,
+  "files": [
+    {
+      "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
+      "sha256": "1a6ec2d8c16bb58261ed1b30ced1138f38ba6890e6bd26257317441fb62ce9d0",
+      "size": 518
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "sha256": "f286411900070a5be497fbb58b459baf2c127deaa28b0069d4fe27a3f018cb5c",
+      "size": 282
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "sha256": "efe35b04741cc513b7fecc935d603508aff876b23c82979b0a3300f299c3ea37",
+      "size": 193
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "ac5486e8f0ba49b3380ebbf3631d477b99d223cb522615e3b036b45b31d04782",
+      "size": 864
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "f4fc52b812fdbaccbc072c334674ed950abe23afcf0a9a432a0d0c5887f15f3b",
+      "size": 695
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "aab44b8d3e629e2a8dc2c34c3bbd2a06b69e023970010b5d33438b67d2d37963",
+      "size": 182
+    },
+    {
+      "path": "00_INDEX.md",
+      "sha256": "c6bd628175e672b92e405fde72b167c047d1c46f0d75e1d4f8d9af6d3ba53403",
+      "size": 783
+    },
+    {
+      "path": "BRANDING.md",
+      "sha256": "bf7c0673523b53e1c7841415d715912efc807845963403c51d333ce1a3508d8a",
+      "size": 418
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "ea79475fe1f893fb7c68d09a1ccbb59f751cc7fa1de69b06f6068a8c29788089",
+      "size": 4987
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "sha256": "70897326275efb93929a0cc75a774aed73e3e24118fb08658c971a93f73dc299",
+      "size": 608
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "8bd949aa18a95c29d3f7514d747a9b1d05c34c8045284c63d29fcaec17f8a68a",
+      "size": 1140
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+      "size": 10850
+    },
+    {
+      "path": "LICENSES/CC-BY-4.0.txt",
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+      "size": 18657
+    },
+    {
+      "path": "Makefile",
+      "sha256": "ed3f6facb6b50635ece6cf53b4ac4a50a490005ca61c760831c56378eeb058de",
+      "size": 503
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "8bd368690d44c28a40b82bb6234705db915423a67810dfe2da76c40403067fdb",
+      "size": 483
+    },
+    {
+      "path": "README.md",
+      "sha256": "abf422cbabfdcebc8f0660a0e66510c9d0fbfde301008db6dc5afe00e123fc67",
+      "size": 6200
+    },
+    {
+      "path": "RELEASE_NOTES.md",
+      "sha256": "b5a494d24b20a60054d865de1b29d58e59efdc421952541646335a49aa55c798",
+      "size": 2528
+    },
+    {
+      "path": "ROADMAP.md",
+      "sha256": "200af203519789e9f555dc91f8b2ae76738bcf831dafda61f55a2b5498d6fe82",
+      "size": 5318
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "eceaddbaf6e73738133153dd2396c62a828784e57837c34c35004e6ce024c1ff",
+      "size": 454
+    },
+    {
+      "path": "conformance/README.md",
+      "sha256": "9e199af25851c006300b30a0697de3039292b0ff0fdb608a7bdf4e414f69bd4d",
+      "size": 1968
+    },
+    {
+      "path": "conformance/cases/asset-dotslash-path/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-dotslash-path/owp.yaml",
+      "sha256": "ad0549d723ab3819934bf507f5487f9ebf44ef9aa539597f6b9d6fbdba375b55",
+      "size": 265
+    },
+    {
+      "path": "conformance/cases/asset-dotslash-path/scenarios/s.yaml",
+      "sha256": "ead2a83868bba213aefba2ff9c72774bae6ec6ec432852606e8bbf3966eec1a0",
+      "size": 82
+    },
+    {
+      "path": "conformance/cases/asset-duplicate-path/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-duplicate-path/owp.yaml",
+      "sha256": "b2bc831d660b991f38c97751b012a4742c28c595ad3e76ff845b7e317d4ff5c5",
+      "size": 316
+    },
+    {
+      "path": "conformance/cases/asset-duplicate-path/scenarios/s.yaml",
+      "sha256": "ead2a83868bba213aefba2ff9c72774bae6ec6ec432852606e8bbf3966eec1a0",
+      "size": 82
+    },
+    {
+      "path": "conformance/cases/asset-kind-mismatch/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-kind-mismatch/owp.yaml",
+      "sha256": "d2e972d08d63c1dde4783e4c11ef22d7644deff441b03ae9d59254a1b43e0156",
+      "size": 263
+    },
+    {
+      "path": "conformance/cases/asset-kind-mismatch/scenarios/s.yaml",
+      "sha256": "c2f5772149e53b9fc290635730c4883f100a81018ba68a803b4b9595178268cc",
+      "size": 87
+    },
+    {
+      "path": "conformance/cases/asset-missing-file/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-missing-file/owp.yaml",
+      "sha256": "04bc2b00cfd784e26ff077b405d62599b6961ae4cb00810e0c49d4c54a426ef5",
+      "size": 269
+    },
+    {
+      "path": "conformance/cases/asset-namespaced-kind/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-namespaced-kind/assets/safety.yaml",
+      "sha256": "c68c7e3281ae27cb94b35880dede15330ae8b65f42d2980b6e291e2f23a6c3af",
+      "size": 87
+    },
+    {
+      "path": "conformance/cases/asset-namespaced-kind/owp.yaml",
+      "sha256": "122dfa31c7589a77f203c251a4e2473fd373cf5cbc66e2d52b778220d8f5c567",
+      "size": 265
+    },
+    {
+      "path": "conformance/cases/asset-path-and-ref/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-path-and-ref/owp.yaml",
+      "sha256": "10925aefde4a35a1090d64f5c36aee4b95ab39a0cb9a2be5386bf3d4eb2884ef",
+      "size": 292
+    },
+    {
+      "path": "conformance/cases/asset-path-and-ref/scenarios/s.yaml",
+      "sha256": "ead2a83868bba213aefba2ff9c72774bae6ec6ec432852606e8bbf3966eec1a0",
+      "size": 82
+    },
+    {
+      "path": "conformance/cases/asset-path-escapes-package/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-path-escapes-package/owp.yaml",
+      "sha256": "8bcf0353f28e0bdcded6884df8219d8829a0555e3c7ef15ea44c984f7fe43ef9",
+      "size": 262
+    },
+    {
+      "path": "conformance/cases/asset-unparseable-yaml/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/asset-unparseable-yaml/owp.yaml",
+      "sha256": "d2e972d08d63c1dde4783e4c11ef22d7644deff441b03ae9d59254a1b43e0156",
+      "size": 263
+    },
+    {
+      "path": "conformance/cases/asset-unparseable-yaml/scenarios/s.yaml",
+      "sha256": "8e499a68abb011548479427a801c1e21ebd57b9e405cc08ad2546785f3335899",
+      "size": 15
+    },
+    {
+      "path": "conformance/cases/dependency-range/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/dependency-range/owp.yaml",
+      "sha256": "cc2df04b4f4dc0f52ea36ab72b6c63517800686dcfd3ae98ae9271a87fcb6467",
+      "size": 261
+    },
+    {
+      "path": "conformance/cases/eval-bad-version/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/eval-bad-version/eval/profile.yaml",
+      "sha256": "99eee674860612ec8e3824264454ec5db5e27e662323a95b0d2db6b135dae7fe",
+      "size": 132
+    },
+    {
+      "path": "conformance/cases/eval-bad-version/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/eval-bad-version/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/eval-bad-version/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/eval/profile-copy.yaml",
+      "sha256": "49416816810120ba0c990c93064e1f301d74e441adbd1dd5f3ef6ce772353ae4",
+      "size": 128
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/eval-duplicate-name/owp.yaml",
+      "sha256": "41812db5371bea70daa2cc16e6b1624c7898606c4eaa900744707cf3e98c60be",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/eval-supersedes-range/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/eval-supersedes-range/eval/profile.yaml",
+      "sha256": "7f480ec847fbc8631569d87c7a666fb5e3ff207996a564f71cdbd8935629f36b",
+      "size": 169
+    },
+    {
+      "path": "conformance/cases/eval-supersedes-range/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/eval-supersedes-range/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/eval-supersedes-range/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/eval/evidence.yaml",
+      "sha256": "679caa06093c6b12e24ca6cb2586e81fb0e7bce74916b79cac01b50108a8ab1b",
+      "size": 364
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-compiler-out-of-scope/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/eval/evidence.yaml",
+      "sha256": "d76d0b7987b69f8c42641ea71fc149dadf368ab5afeeb30c593e3c60836e0f88",
+      "size": 303
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-external-profile/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/eval/evidence.yaml",
+      "sha256": "a2bfe89b2c8b62c0e06ff1ffc3ee6bd6a26f0678ff8304dd1eff8113c980744a",
+      "size": 304
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/eval/profile.yaml",
+      "sha256": "63eb42a6babee9a053f077c9d0a6744c93eff308868859910d26d5489c8a55c6",
+      "size": 118
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-local-profile-unversioned/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/eval/evidence.yaml",
+      "sha256": "4148daebf27b7d1de61e53274f33d75233b17ee52007ceabd9588022dd31ef38",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-missing-result/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/eval/evidence.yaml",
+      "sha256": "134802e9c0601c89a1a39d0e99f2aa6b8f89ec4692b0fc952f67f2c430f3de65",
+      "size": 372
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-pinned/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/eval/evidence.yaml",
+      "sha256": "d8140a7f5d0acd0a848f91158078b9194b908a2ac7e561710ebce185f794546e",
+      "size": 304
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-scope-worldref-mismatch/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/eval/evidence.yaml",
+      "sha256": "87f9e6c91c36a24b6903d51eb444047fcd3c757dc0921ce83f9303f82f576797",
+      "size": 310
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-subject-mismatch/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/eval/evidence.yaml",
+      "sha256": "f24b41e7b097cf29e775905f4af0785e8ec302c826ff2fd7fbc708cf19f44756",
+      "size": 305
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-profile/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/eval/evidence.yaml",
+      "sha256": "09cfa94f39c463f39cde36ec3c4e752c7fea849f472f1923bbcb0c0b6be1115a",
+      "size": 332
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-unpinned-verifier/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/eval/evidence.yaml",
+      "sha256": "308b84651bc8c642b02a099ad9e163a635387ed4e24094fd60ccbb85a43d8e59",
+      "size": 338
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/eval/verifier.yaml",
+      "sha256": "a338858fc54b152746563cdaa98d2419ab4bd0c7993d4a72d3824686a8d99ae9",
+      "size": 132
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-verifier-version-mismatch/owp.yaml",
+      "sha256": "24324d902f0b48e128475c0b9809a7d9cccfa8ddf44cb4a6640d52412fab89b1",
+      "size": 895
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/eval/evidence.yaml",
+      "sha256": "bcc6980815695179f098cbf24a5cfe048d26845fd8778889034d750b173edd75",
+      "size": 304
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-version-mismatch/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/eval/evidence.yaml",
+      "sha256": "26627fef2d53b8a4f4dba266786fa8e4031f4828e08bfd42944dd782f93da60d",
+      "size": 305
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/evidence-view-out-of-scope/owp.yaml",
+      "sha256": "9f495a48e30a1932ff55f73de9b567b667f2fbf179003f954b521fa4a955d30d",
+      "size": 840
+    },
+    {
+      "path": "conformance/cases/identity-with-slash/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/identity-with-slash/owp.yaml",
+      "sha256": "6200bf38b4a51a95b5d1e657aafed0acc5cc201903e11bafeeeef7740b504718",
+      "size": 218
+    },
+    {
+      "path": "conformance/cases/manifest-bad-api-version/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/manifest-bad-api-version/owp.yaml",
+      "sha256": "10b8496620ee725892194a5ce81e42f323ea1f5b2bb2f672692d01b2220111e5",
+      "size": 207
+    },
+    {
+      "path": "conformance/cases/manifest-unknown-kind/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/manifest-unknown-kind/owp.yaml",
+      "sha256": "60dbce08d29dc25dbf0c971518cdac993f7b410b2a5ad72f91ab2dc2ce3a635d",
+      "size": 217
+    },
+    {
+      "path": "conformance/cases/model-adapter-wrong-source/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-adapter-wrong-source/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-adapter-wrong-source/models/adapter.yaml",
+      "sha256": "4012a9cc96bf52bc83c9c33c42261e5c039c96096e9f0e44eccc264dd8361ffa",
+      "size": 145
+    },
+    {
+      "path": "conformance/cases/model-adapter-wrong-source/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-adapter-wrong-source/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/cases/model-grounded/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-grounded/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-grounded/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-grounded/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-grounded/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/cases/model-missing-adapter/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-missing-adapter/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-missing-adapter/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-missing-adapter/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-missing-adapter/owp.yaml",
+      "sha256": "44c0219585d92756681e8aec31a392c919853151131198d2ec6fd982195a8950",
+      "size": 710
+    },
+    {
+      "path": "conformance/cases/model-missing-compilers/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-missing-compilers/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-missing-compilers/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-missing-compilers/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-missing-compilers/owp.yaml",
+      "sha256": "94089a4c40676112a645dc363f35b5ab6207c00f2502dd18d21f30752caf5228",
+      "size": 690
+    },
+    {
+      "path": "conformance/cases/model-missing-views/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-missing-views/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-missing-views/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-missing-views/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-missing-views/owp.yaml",
+      "sha256": "d27ef3dc6879c5d08d69b1edfc6ace2cdcf77e448471c8b5f25b1b54df1f25ee",
+      "size": 703
+    },
+    {
+      "path": "conformance/cases/model-no-roles/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-no-roles/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-no-roles/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-no-roles/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-no-roles/owp.yaml",
+      "sha256": "9b9515248d3f34b061ffd6e1b2ef2cf9fef6cc6a48d9b8ddb73e150dbe3288a7",
+      "size": 760
+    },
+    {
+      "path": "conformance/cases/model-view-other-world/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-view-other-world/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-view-other-world/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-view-other-world/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-view-other-world/owp.yaml",
+      "sha256": "8fc0abdddf824c44448c50a9f1f17088219540a561b1b95e28ed19c7bb31559f",
+      "size": 779
+    },
+    {
+      "path": "conformance/cases/model-world-ref-not-package-reference/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-world-ref-not-package-reference/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-world-ref-not-package-reference/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-world-ref-not-package-reference/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-world-ref-not-package-reference/owp.yaml",
+      "sha256": "875312281ec84217b37bdbf31b289e79c55aa7f8bd4e9bb17cb62a546ab3f621",
+      "size": 731
+    },
+    {
+      "path": "conformance/cases/model-wrong-input-contract/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/cases/model-wrong-input-contract/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/cases/model-wrong-input-contract/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/cases/model-wrong-input-contract/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/cases/model-wrong-input-contract/owp.yaml",
+      "sha256": "85fbde5d27fa0b37197b9205d6aebd10f86acfa2f24c0cc5f99827864cd9e8fb",
+      "size": 770
+    },
+    {
+      "path": "conformance/cases/ontology-missing-spec/ONTOLOGY.md",
+      "sha256": "a43f348aef2e47cbef850c597f25871bb9f19ee4064a541b6f560f836df99f38",
+      "size": 4
+    },
+    {
+      "path": "conformance/cases/ontology-missing-spec/owp.yaml",
+      "sha256": "526b354288a7fde987d8dbb952c458c0a307c23ce5322590ba1ecab2f2366a8f",
+      "size": 137
+    },
+    {
+      "path": "conformance/cases/package-example-kind-not-checked/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/package-example-kind-not-checked/examples/observations.yaml",
+      "sha256": "9bd1f08f2db7098757cf3094dd80727809894f836efdcf3bd57930e8db0dfd3f",
+      "size": 77
+    },
+    {
+      "path": "conformance/cases/package-example-kind-not-checked/owp.yaml",
+      "sha256": "7a3ba3ca00bf83bde49f524d0d09b098b96431dba8e12e9abc6f2a34e0c872c7",
+      "size": 272
+    },
+    {
+      "path": "conformance/cases/package-example-unparseable/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/package-example-unparseable/examples/raw.yaml",
+      "sha256": "8e499a68abb011548479427a801c1e21ebd57b9e405cc08ad2546785f3335899",
+      "size": 15
+    },
+    {
+      "path": "conformance/cases/package-example-unparseable/owp.yaml",
+      "sha256": "08ccbab7d8db85eeb5e3ce5c1530ba3aa3fc72a0b4ea145df502738be33cf363",
+      "size": 263
+    },
+    {
+      "path": "conformance/cases/package-legacy-manifest/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/package-legacy-manifest/owp.yaml",
+      "sha256": "4667a99a6ddf8cd1f921fadf6d65ea07e162551ce8a11eac4858c88e829cc78b",
+      "size": 213
+    },
+    {
+      "path": "conformance/cases/package-legacy-manifest/package.yaml",
+      "sha256": "70d0445ab03612f8fa0a2e652993eba6e459ed1b5de87dca9a54b7d8a78d0fac",
+      "size": 13
+    },
+    {
+      "path": "conformance/cases/package-legacy-world-yaml/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/package-legacy-world-yaml/owp.yaml",
+      "sha256": "4667a99a6ddf8cd1f921fadf6d65ea07e162551ce8a11eac4858c88e829cc78b",
+      "size": 213
+    },
+    {
+      "path": "conformance/cases/package-legacy-world-yaml/world.yaml",
+      "sha256": "70d0445ab03612f8fa0a2e652993eba6e459ed1b5de87dca9a54b7d8a78d0fac",
+      "size": 13
+    },
+    {
+      "path": "conformance/cases/package-missing-card/owp.yaml",
+      "sha256": "4667a99a6ddf8cd1f921fadf6d65ea07e162551ce8a11eac4858c88e829cc78b",
+      "size": 213
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/interfaces/actions.yaml",
+      "sha256": "9f4d99668823c1f7627e829de89dae72acfdd2be046c569023fab0fa185aa3ed",
+      "size": 107
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/interfaces/effect.yaml",
+      "sha256": "435a3f680f6e20c154e51be3e146be868761690fa6b885f69bbdc03e2a382aa1",
+      "size": 116
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/owp.yaml",
+      "sha256": "6412a534e65858f0c3468678c5c9d69b2e762036713a2418ad1a6fcdb2ecdc9f",
+      "size": 588
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/cases/world-action-ready-missing-commit/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-action-ready/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-action-ready/interfaces/actions.yaml",
+      "sha256": "9f4d99668823c1f7627e829de89dae72acfdd2be046c569023fab0fa185aa3ed",
+      "size": 107
+    },
+    {
+      "path": "conformance/cases/world-action-ready/interfaces/commit.yaml",
+      "sha256": "d5a9ea70a77ecbe5e8fbe43d85d747dd2020ba4d05c08f2a6096fcfb7e87af39",
+      "size": 108
+    },
+    {
+      "path": "conformance/cases/world-action-ready/interfaces/effect.yaml",
+      "sha256": "435a3f680f6e20c154e51be3e146be868761690fa6b885f69bbdc03e2a382aa1",
+      "size": 116
+    },
+    {
+      "path": "conformance/cases/world-action-ready/owp.yaml",
+      "sha256": "00230645931a96c12367bb6062253dc25b76e8222e49dbc06ec77f68d0c4e580",
+      "size": 646
+    },
+    {
+      "path": "conformance/cases/world-action-ready/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/cases/world-action-ready/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-field/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-field/owp.yaml",
+      "sha256": "6cd1a71afdd5a242c483f4ddd0a6daa29195f64cea09087fe9301b40ee82e638",
+      "size": 450
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-field/state/task-compiler.yaml",
+      "sha256": "fbc2a3055d86ccd622c3bb2f8eda100ba928db81ba42bc57973e9189655445e9",
+      "size": 258
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-field/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-select/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-select/owp.yaml",
+      "sha256": "6cd1a71afdd5a242c483f4ddd0a6daa29195f64cea09087fe9301b40ee82e638",
+      "size": 450
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-select/state/task-compiler.yaml",
+      "sha256": "b607cb57a2ea2603b605fa2108a273154f37be1e71bb8591c5c464de406618d0",
+      "size": 274
+    },
+    {
+      "path": "conformance/cases/world-bad-binding-select/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-compiler-unknown-view/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-compiler-unknown-view/owp.yaml",
+      "sha256": "7cf4d93aa7969c4864affda232f26776b4e7b22ea61ff969446768118ab5a7db",
+      "size": 517
+    },
+    {
+      "path": "conformance/cases/world-compiler-unknown-view/state/extra-compiler.yaml",
+      "sha256": "ff67534d5f242f78e58639830b6f2d2280d886fb704b2b262201ccee998bb4d4",
+      "size": 212
+    },
+    {
+      "path": "conformance/cases/world-compiler-unknown-view/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/cases/world-compiler-unknown-view/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-compiler-wrong-output-contract/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-compiler-wrong-output-contract/owp.yaml",
+      "sha256": "6cd1a71afdd5a242c483f4ddd0a6daa29195f64cea09087fe9301b40ee82e638",
+      "size": 450
+    },
+    {
+      "path": "conformance/cases/world-compiler-wrong-output-contract/state/task-compiler.yaml",
+      "sha256": "3e525d5e5c4962110e2f6e08b549c5815e1f827943200d5f83cd0add4697a7f0",
+      "size": 200
+    },
+    {
+      "path": "conformance/cases/world-compiler-wrong-output-contract/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-default-compiler-other-view/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-default-compiler-other-view/owp.yaml",
+      "sha256": "72e8dcfe71a823419422145df868c52008cae4cf0ed22af99b3c872a275c8fad",
+      "size": 504
+    },
+    {
+      "path": "conformance/cases/world-default-compiler-other-view/state/task-compiler.yaml",
+      "sha256": "e01e7776b029e32009bed74f3ca0fc3f37ccce06cc48327e83311590a2f51781",
+      "size": 210
+    },
+    {
+      "path": "conformance/cases/world-default-compiler-other-view/views/other.yaml",
+      "sha256": "10177bb5201e87afd7afe5781f5847753b642b21e8f597a59bd9cd1f6149b237",
+      "size": 159
+    },
+    {
+      "path": "conformance/cases/world-default-compiler-other-view/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-descriptive-default/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-descriptive-default/owp.yaml",
+      "sha256": "4667a99a6ddf8cd1f921fadf6d65ea07e162551ce8a11eac4858c88e829cc78b",
+      "size": 213
+    },
+    {
+      "path": "conformance/cases/world-descriptive-missing-definition/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-descriptive-missing-definition/owp.yaml",
+      "sha256": "d91d79d6e91eab33e9d46e4dbca65554a9605f40de36dece5d6a1877ef9c5511",
+      "size": 170
+    },
+    {
+      "path": "conformance/cases/world-descriptive-via-world-definition/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-descriptive-via-world-definition/owp.yaml",
+      "sha256": "06758bc2d66eeb36011d6454614bd00d735cec9cb0ea4769d7bb0e7aa4ced70d",
+      "size": 229
+    },
+    {
+      "path": "conformance/cases/world-descriptive-via-world-definition/semantics/definition.yaml",
+      "sha256": "cab67501615f4e053561dc78c45d5aad99d528bfb7c2f1ed4ed5ee1d78684b16",
+      "size": 126
+    },
+    {
+      "path": "conformance/cases/world-model-ready-missing-schema/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-model-ready-missing-schema/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/cases/world-model-ready-missing-schema/state/task-compiler.yaml",
+      "sha256": "5b1f0fb8dabe0305c54ea10a50b737f20b279fe4d90cab33a3791c759851ca77",
+      "size": 166
+    },
+    {
+      "path": "conformance/cases/world-model-ready-missing-schema/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-model-ready-via-schema-ref/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-model-ready-via-schema-ref/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/cases/world-model-ready-via-schema-ref/schemas/ews.json",
+      "sha256": "b35b6c3e47475f3bd171a145b2b94b687e461572683daa1f394815d4bce091a2",
+      "size": 55
+    },
+    {
+      "path": "conformance/cases/world-model-ready-via-schema-ref/state/task-compiler.yaml",
+      "sha256": "2ff0e13e7b142a2187404e09182a7d17efe70ddd1ba1dbaa263d66e24e091137",
+      "size": 202
+    },
+    {
+      "path": "conformance/cases/world-model-ready-via-schema-ref/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-stateful-missing-compiler/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-stateful-missing-compiler/owp.yaml",
+      "sha256": "9368fbde83a9c7a5930b57a7c42ae358c198abb91c952660fca177ea5389737f",
+      "size": 333
+    },
+    {
+      "path": "conformance/cases/world-stateful-missing-compiler/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-stateful-satisfies-higher/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-stateful-satisfies-higher/owp.yaml",
+      "sha256": "6cd1a71afdd5a242c483f4ddd0a6daa29195f64cea09087fe9301b40ee82e638",
+      "size": 450
+    },
+    {
+      "path": "conformance/cases/world-stateful-satisfies-higher/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/cases/world-stateful-satisfies-higher/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-unknown-profile/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-unknown-profile/owp.yaml",
+      "sha256": "135a38a9f99d1e0eb17dd008337975a2c7b5c4d6c323fec8ef69c66a488d0293",
+      "size": 258
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-foreign/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-foreign/owp.yaml",
+      "sha256": "744380d22c809e7dba4ef0ff6fc6717ec9b1dee85c29be17f9e49ffc9acbb653",
+      "size": 333
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-foreign/views/task.yaml",
+      "sha256": "63489c0921c863f01e7e7ec0e32b20a64c40bda90b86da841595fdc1de4e39c1",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-self/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-self/owp.yaml",
+      "sha256": "744380d22c809e7dba4ef0ff6fc6717ec9b1dee85c29be17f9e49ffc9acbb653",
+      "size": 333
+    },
+    {
+      "path": "conformance/cases/world-view-worldref-self/views/task.yaml",
+      "sha256": "1d5c4c6e0abb02350a69175645292529fdb18a691fc012759ee7eba587813c59",
+      "size": 139
+    },
+    {
+      "path": "conformance/cases/world-viewable-missing-default-view/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-viewable-missing-default-view/owp.yaml",
+      "sha256": "4aab2dc657172cab4a46414fb5c6861dcb92a3527513bad7725de5d1143654ef",
+      "size": 300
+    },
+    {
+      "path": "conformance/cases/world-viewable-missing-default-view/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/cases/world-viewable-view-without-worldref/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-viewable-view-without-worldref/owp.yaml",
+      "sha256": "744380d22c809e7dba4ef0ff6fc6717ec9b1dee85c29be17f9e49ffc9acbb653",
+      "size": 333
+    },
+    {
+      "path": "conformance/cases/world-viewable-view-without-worldref/views/task.yaml",
+      "sha256": "dcc4353114c54eb20cac9d57d7cf7599aa3339df04efe0addcc1034683725faa",
+      "size": 122
+    },
+    {
+      "path": "conformance/cases/world-viewable/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/world-viewable/owp.yaml",
+      "sha256": "744380d22c809e7dba4ef0ff6fc6717ec9b1dee85c29be17f9e49ffc9acbb653",
+      "size": 333
+    },
+    {
+      "path": "conformance/cases/world-viewable/views/task.yaml",
+      "sha256": "dcd3d87035084f70381da68baf0c422812fe01ec3e20596edb503983d8a61bbf",
+      "size": 158
+    },
+    {
+      "path": "conformance/ews-check/bad-as-of/ews.yaml",
+      "sha256": "dfefd485e1721511f5a33020a3627145a12db571ad7d3a74939358843b8f70a8",
+      "size": 416
+    },
+    {
+      "path": "conformance/ews-check/bad-as-of/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/bad-as-of/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/bad-as-of/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/bad-as-of/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/duplicate-alternatives/ews.yaml",
+      "sha256": "2b3ad8ef5da4d35b828fa42dd9fd610b44e1a7e2c0991ba6dbc37b366a35ddab",
+      "size": 430
+    },
+    {
+      "path": "conformance/ews-check/duplicate-alternatives/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/duplicate-alternatives/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/duplicate-alternatives/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/duplicate-alternatives/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/field-absent/ews.yaml",
+      "sha256": "bd78a950b2e054a38d4fdbe3374b95dd5ef9f1267d1de8195db0143417611dfb",
+      "size": 406
+    },
+    {
+      "path": "conformance/ews-check/field-absent/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/field-absent/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/field-absent/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/field-absent/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/field-in-two-places/ews.yaml",
+      "sha256": "dd460088fbb40083e53edf8082451fc65185791667116d70f76ed4eaed41f26b",
+      "size": 430
+    },
+    {
+      "path": "conformance/ews-check/field-in-two-places/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/field-in-two-places/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/field-in-two-places/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/field-in-two-places/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/field-not-in-schema/ews.yaml",
+      "sha256": "344091684aecda6fa7b38d2fd3ee9cb900f54c26c5781775571d0dd23a9fc189",
+      "size": 432
+    },
+    {
+      "path": "conformance/ews-check/field-not-in-schema/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/field-not-in-schema/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/field-not-in-schema/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/field-not-in-schema/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/missing-provenance/ews.yaml",
+      "sha256": "229410fd32f2485f5ff7de7ac9aaf866af253d6123f93078a9edece8dccaf565",
+      "size": 394
+    },
+    {
+      "path": "conformance/ews-check/missing-provenance/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/missing-provenance/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/missing-provenance/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/missing-provenance/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/provenance-orphan/ews.yaml",
+      "sha256": "f9a88a8129e9cfd50fd1c1c174326530a257378c9141a25d5bf194f4c687c2fc",
+      "size": 441
+    },
+    {
+      "path": "conformance/ews-check/provenance-orphan/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/provenance-orphan/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/provenance-orphan/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/provenance-orphan/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/ews.yaml",
+      "sha256": "665091b7119a0da648256e15e79b06cc6587f491ad6ea282154172468a4eccae",
+      "size": 458
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/world/schemas/ews.json",
+      "sha256": "eb217225d785a7a56210d52aec0c958b124561339aca20fd2f20b4a67267d671",
+      "size": 19
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/world/state/task-compiler.yaml",
+      "sha256": "2ff0e13e7b142a2187404e09182a7d17efe70ddd1ba1dbaa263d66e24e091137",
+      "size": 202
+    },
+    {
+      "path": "conformance/ews-check/schema-ref-only-compiler/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/single-alternative/ews.yaml",
+      "sha256": "155b01f540c1147f43c6b413dec4de1c311afe6378a36d20d75aea2b8eee5cdd",
+      "size": 420
+    },
+    {
+      "path": "conformance/ews-check/single-alternative/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/single-alternative/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/single-alternative/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/single-alternative/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/trace-not-required/ews.yaml",
+      "sha256": "7058782035ec506f7f84425ca4f5b526c62ef6e4346b468067c80c13ff4daffa",
+      "size": 377
+    },
+    {
+      "path": "conformance/ews-check/trace-not-required/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/trace-not-required/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/trace-not-required/world/state/task-compiler.yaml",
+      "sha256": "978afd6ab8aa03945736e3268af0108eddce10cb2a68313350cd9c0d15bc51bd",
+      "size": 366
+    },
+    {
+      "path": "conformance/ews-check/trace-not-required/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/valid/ews.yaml",
+      "sha256": "ffe7e22f9c8ec84cf3f966361d320dfea0e2e7021da89384f1770005835b1d2a",
+      "size": 417
+    },
+    {
+      "path": "conformance/ews-check/valid/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/valid/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/valid/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/valid/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/view-mismatch/ews.yaml",
+      "sha256": "204ef7fad55e2924caa9560379d27e5e34eedf17eb5ce807e2e48eec637c6400",
+      "size": 418
+    },
+    {
+      "path": "conformance/ews-check/view-mismatch/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/view-mismatch/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/view-mismatch/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/view-mismatch/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/world-ref-mismatch/ews.yaml",
+      "sha256": "0f75c133849b7dd5643bfd689715376eaf43cc1df838a8a4ea646a25efb9709b",
+      "size": 413
+    },
+    {
+      "path": "conformance/ews-check/world-ref-mismatch/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/world-ref-mismatch/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/world-ref-mismatch/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/world-ref-mismatch/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews-check/wrong-kind/ews.yaml",
+      "sha256": "ee645b2034237e5e04dfcaca2dc9107c205bdc44f2d409a7b3ff9560e794278e",
+      "size": 401
+    },
+    {
+      "path": "conformance/ews-check/wrong-kind/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews-check/wrong-kind/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews-check/wrong-kind/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews-check/wrong-kind/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/all-ordered/expected-ews.yaml",
+      "sha256": "f43b13b7607edf19d3e5e2d46093182cd61fe10ffe6c7c3e26c84dcfb4bc55ab",
+      "size": 425
+    },
+    {
+      "path": "conformance/ews/all-ordered/observations.yaml",
+      "sha256": "d32d8a91348f46a267171d34c0a4f664820b522bcb0d78d208096ed0ec7385d3",
+      "size": 350
+    },
+    {
+      "path": "conformance/ews/all-ordered/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/all-ordered/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/all-ordered/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/all-ordered/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/expected-ews.yaml",
+      "sha256": "05006b2a3e54ca4e88c859e264a311043dba35ae097f301185a115f1eccb0234",
+      "size": 388
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/observations.yaml",
+      "sha256": "54d6e9c496336306b6361e293a0eaae137fd99c5bfa4f09700d3f492fe4977e4",
+      "size": 254
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/as-of-excludes-future/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-duplicate-id/observations.yaml",
+      "sha256": "f42aeb35d008c3e004fce24144b0aee64a899ae191aa6f85ec7d09e4b2d155cf",
+      "size": 254
+    },
+    {
+      "path": "conformance/ews/error-duplicate-id/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-duplicate-id/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-duplicate-id/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/error-duplicate-id/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-invalid-calendar-as-of/observations.yaml",
+      "sha256": "7099d1d4c7f21c161348e844c7b65f8c20153f436f81aafd60581a3a6b07ff4c",
+      "size": 164
+    },
+    {
+      "path": "conformance/ews/error-invalid-calendar-as-of/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-invalid-calendar-as-of/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-invalid-calendar-as-of/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/error-invalid-calendar-as-of/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-missing-values/observations.yaml",
+      "sha256": "95edb022c4f8aabb4fd56e17fe9ff62f933cf37e000803a5cc1f6d6b04553700",
+      "size": 143
+    },
+    {
+      "path": "conformance/ews/error-missing-values/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-missing-values/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-missing-values/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/error-missing-values/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-non-utc-timestamp/observations.yaml",
+      "sha256": "b744bc9db47f27a0ef0c42c8defa5047c5bb3ad1fdb09a453640889e63def637",
+      "size": 169
+    },
+    {
+      "path": "conformance/ews/error-non-utc-timestamp/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-non-utc-timestamp/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-non-utc-timestamp/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/error-non-utc-timestamp/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-opaque-compiler/observations.yaml",
+      "sha256": "7099d1d4c7f21c161348e844c7b65f8c20153f436f81aafd60581a3a6b07ff4c",
+      "size": 164
+    },
+    {
+      "path": "conformance/ews/error-opaque-compiler/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-opaque-compiler/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-opaque-compiler/world/state/task-compiler.yaml",
+      "sha256": "5f6217a47431f8ecb873afd2a01a9aa69d63de465172905fb01cdeede581ab4b",
+      "size": 205
+    },
+    {
+      "path": "conformance/ews/error-opaque-compiler/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/error-unquoted-non-utc-timestamp/observations.yaml",
+      "sha256": "a2d1e0c867a0c94c5e9c55fa4b27eee8710f09f46ff4bc1618277bafe4dd816b",
+      "size": 167
+    },
+    {
+      "path": "conformance/ews/error-unquoted-non-utc-timestamp/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/error-unquoted-non-utc-timestamp/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/error-unquoted-non-utc-timestamp/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/error-unquoted-non-utc-timestamp/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/expected-ews.yaml",
+      "sha256": "123312eae36d9ff6e0dd13ef5d721c3af98082e667c42865fffd76d5658710c5",
+      "size": 414
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/observations.yaml",
+      "sha256": "d529afa4a66de08bc86a21fbf8a86df6507436de16252aa0b623edc9e5306834",
+      "size": 264
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/id-code-point-order/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/expected-ews.yaml",
+      "sha256": "eb0e47d43a43973471b4838c69395d9c5dd05509c92e409e3c7733ccafec0d87",
+      "size": 414
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/observations.yaml",
+      "sha256": "ac66c0bb8214b37912f4322ad702d55715ff1f2eb3785e52133277dc9427d839",
+      "size": 257
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/json-bool-vs-number/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/expected-ews.yaml",
+      "sha256": "8724c4538959d98b787bb72cc99106ae15868474a64166ec14092e3aefd5a0b9",
+      "size": 397
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/observations.yaml",
+      "sha256": "f4f5bfb0966545dc4d152f86dcb2ce222ff61a7ad2fdb15c160281fdb854db8f",
+      "size": 256
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/json-int-vs-float/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/json-structured-values/expected-ews.yaml",
+      "sha256": "ae820f887754104ae60f93424b8a1e0dd207d11462adb9ebecdc3af0c87b80bf",
+      "size": 435
+    },
+    {
+      "path": "conformance/ews/json-structured-values/observations.yaml",
+      "sha256": "3419f73a2e073259455cc18a855921f99ccc677b1e6e640cbc86a1c129116dec",
+      "size": 294
+    },
+    {
+      "path": "conformance/ews/json-structured-values/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/json-structured-values/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/json-structured-values/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/json-structured-values/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/expected-ews.yaml",
+      "sha256": "98f5652a17f8b64fa4b6d7828e493955ba082b41dc71d727970e53f837874c26",
+      "size": 388
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/observations.yaml",
+      "sha256": "4d227616f85de1bdcabd7c930135a120bdd6444ce397d3ad6a47a7043dbf210a",
+      "size": 254
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/latest-picks-newest/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/expected-ews.yaml",
+      "sha256": "9f5b6776c7bf75ec27d5945828dd47d4157b6894ba7c1e1cc2fa82383b2e4577",
+      "size": 411
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/observations.yaml",
+      "sha256": "b249f2de2bcf6fa57eb4e043eb4eb449227db209c1d03e03fcaaadb6564b0ee9",
+      "size": 258
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/latest-tie-conflict/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/expected-ews.yaml",
+      "sha256": "255e6150b7709339b07e4c7bd8482a954e7c0545d89030d8666dd26b4c1489c8",
+      "size": 397
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/observations.yaml",
+      "sha256": "81ddb46b070e66cb2beb54fc445ec23945834d891e5c3e1a052159c1452b2a2c",
+      "size": 254
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/latest-tie-same-value/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/expected-ews.yaml",
+      "sha256": "badab42c1ebf6b4b5606a78b0e3ce817ff3cab3cd6a351fb97ea2ce655596120",
+      "size": 368
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/observations.yaml",
+      "sha256": "b7fc35231b8fb078ced63b87b929543c2c02717470e2a2f648f979ffd3bb0f1d",
+      "size": 258
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/no-candidates-missing/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/null-value/expected-ews.yaml",
+      "sha256": "3dbace70ac8125cb3d40a21a98468851c1ebadaa30bcbf1df16d450cc1889e80",
+      "size": 391
+    },
+    {
+      "path": "conformance/ews/null-value/observations.yaml",
+      "sha256": "a5dd440a7b57c4cdb6974013caeac227021fa94d3f40a60695e13ebea7e736f4",
+      "size": 257
+    },
+    {
+      "path": "conformance/ews/null-value/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/null-value/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/null-value/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/null-value/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/expected-ews.yaml",
+      "sha256": "a8d552067570e1dba5602219453db640f19a9e21c6c8a0fee25c90463a33ac68",
+      "size": 388
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/observations.yaml",
+      "sha256": "b1a2a056aedabfa350e9358872091f7f0518763e247bdafbde6239ee0de4ba8c",
+      "size": 162
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/world/WORLD.md",
+      "sha256": "7e0405d5e5fd02d92c5fd707c869a47f3530d4011ab1d2c1c8b945e1fccf9c22",
+      "size": 12
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/world/owp.yaml",
+      "sha256": "441bf9b6cc402e5cec18f538a64e46788c7f1c84fa3c0f6d30158957bbff4529",
+      "size": 457
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/world/state/task-compiler.yaml",
+      "sha256": "872d061db2a6127a0329e3a4cc58545f782846801b226188f7a2bb7c87fea927",
+      "size": 365
+    },
+    {
+      "path": "conformance/ews/unquoted-utc-timestamp/world/views/task.yaml",
+      "sha256": "0924509a0f0493800932c0ca7c9e73f3ce9f16b8c74de336dcfa73061553852a",
+      "size": 157
+    },
+    {
+      "path": "conformance/expected.yaml",
+      "sha256": "f6c3b1dd5a19f9ab838503dc5e1e58db9544f9e3432c8926f8e55e8cb0c9e325",
+      "size": 19867
+    },
+    {
+      "path": "conformance/resolution/archive-source/packages/world-0.1.0.owp.zip",
+      "sha256": "06ae98148d31fe325c70c015621cc46ca5de6f6b0176f6b71b32d008a18ab7e5",
+      "size": 1393
+    },
+    {
+      "path": "conformance/resolution/archive-source/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/archive-source/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/archive-source/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/archive-source/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/archive-source/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/packages/world-0.1.0.owp.zip",
+      "sha256": "4d23996c2659740ad320141ccdbce85e47c968deeeeed89670addd48f8515af5",
+      "size": 1404
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/archive-tampered/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/packages/world-0.1.0.owp.zip",
+      "sha256": "71e08bc56753f1065755c0969b465da363aa7a1b2fa4b112630cab45037c3ce8",
+      "size": 1503
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/archive-unlocked-file/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/compiler-missing-in-world/root/owp.yaml",
+      "sha256": "beaa5b441f57a5f9842e73ce2de389f2ebb442ed759a9ff8d5408773c732d410",
+      "size": 771
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/owp.yaml",
+      "sha256": "78c097441870aa2e1da261cdca5278082c27f6dd3cc4488a79c09d73819967e3",
+      "size": 580
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/state/planning-compiler.yaml",
+      "sha256": "99ef79af729c4b0750ce0d66d10622b602ee13021d879b6b582e628d9a9f9116",
+      "size": 217
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/views/planning.yaml",
+      "sha256": "7ad8777d1e3f559adef5cafe3f95a8b3115a19dd46323be81797fdd23a5f626a",
+      "size": 157
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/compiler-view-not-compatible/root/owp.yaml",
+      "sha256": "879d38040cd41b4909eef2a9d40eb1ac21378684ec0473c0cc3d203e2390f236",
+      "size": 783
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/base/WORLD.md",
+      "sha256": "a6a016f1cdc6fa0d715c261ed3147f4e0ad7f59a534130685f49f8f48686176f",
+      "size": 7
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/base/owp.yaml",
+      "sha256": "e3a409766389da531399a2c4cc19db1adaae6b74d54d18cd849d8cf51fc3904b",
+      "size": 296
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/world/owp.yaml",
+      "sha256": "8842eb5e671c6a40f7b80be5ddc8fe683cc2141db8948f73f8d1d9ccde3df798",
+      "size": 496
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/dependency-cycle/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/root/owp.yaml",
+      "sha256": "f9f6211564a6061993daee6ebea8922ddd002e551cabed0591d894c66d138da5",
+      "size": 806
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/vendor/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/vendor/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/vendor/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/dependency-mapping-source/vendor/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/taxonomy/WORLD.md",
+      "sha256": "4968f6426401a77f5f4d4d9a16e5b5634539045009fa05920b0b712c79b22045",
+      "size": 11
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/taxonomy/owp.yaml",
+      "sha256": "e2e534fd540b8e84a9fa73f703ad2baf11bb7eb7a1e9460f93c31d8e0783bdba",
+      "size": 256
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/descriptive-dependency/root/owp.yaml",
+      "sha256": "0160b482a050ec5c5fe529b15f5e1c094c39af06d4ff52ac6c5b2a8cddeca4f0",
+      "size": 810
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/taxonomy/WORLD.md",
+      "sha256": "4968f6426401a77f5f4d4d9a16e5b5634539045009fa05920b0b712c79b22045",
+      "size": 11
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/taxonomy/owp.yaml",
+      "sha256": "e2e534fd540b8e84a9fa73f703ad2baf11bb7eb7a1e9460f93c31d8e0783bdba",
+      "size": 256
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/world/owp.yaml",
+      "sha256": "94ea7e07fbc7a1633cd7ab034201a86e6963011e4554fb23dc95e756dce04b81",
+      "size": 500
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/diamond/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/diamond/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/diamond/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/diamond/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/diamond/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/diamond/root/owp.yaml",
+      "sha256": "0160b482a050ec5c5fe529b15f5e1c094c39af06d4ff52ac6c5b2a8cddeca4f0",
+      "size": 810
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/root/owp.yaml",
+      "sha256": "0338933c50deb235e02363c0cf39cda7e87845e1be511f65cf15d4ec336a164c",
+      "size": 836
+    },
+    {
+      "path": "conformance/resolution/git-bundle-source/world.bundle",
+      "sha256": "30f583f6442c22699875f9bca160377d77088147c7efedfbeb811800b9d8908c",
+      "size": 1055
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/root/owp.yaml",
+      "sha256": "55960cedabdb79d51f37b5c1610728e02186e84a3e720f4251bebb885703067f",
+      "size": 836
+    },
+    {
+      "path": "conformance/resolution/git-missing-rev/world.bundle",
+      "sha256": "30f583f6442c22699875f9bca160377d77088147c7efedfbeb811800b9d8908c",
+      "size": 1055
+    },
+    {
+      "path": "conformance/resolution/grounded/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/grounded/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/grounded/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/grounded/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/grounded/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/grounded/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/grounded/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/grounded/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/grounded/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/packages/.hidden/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/packages/.hidden/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/packages/.hidden/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/packages/.hidden/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/hidden-directory-skipped/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/packages/world/state/task-compiler.yaml",
+      "sha256": "ff67534d5f242f78e58639830b6f2d2280d886fb704b2b262201ccee998bb4d4",
+      "size": 212
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/invalid-dependency/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/model/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/model/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/model/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/model/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/model/owp.yaml",
+      "sha256": "a395da5522cdbbbe3c5d4f1a796cbbf40c90d3b1f1dbe17187b9524c7ddb0834",
+      "size": 780
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/non-root-model-grounding/root/owp.yaml",
+      "sha256": "3512a45d508c678425a24d07e767fe23d089051ad3b9fbf4e48caf1e3215e7bc",
+      "size": 809
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/unresolvable-world/root/owp.yaml",
+      "sha256": "6f9fa06fc8111c86f4183f253445df37255eddbdb5c84e0e241f183184b2bccc",
+      "size": 779
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/taxonomy1/WORLD.md",
+      "sha256": "4968f6426401a77f5f4d4d9a16e5b5634539045009fa05920b0b712c79b22045",
+      "size": 11
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/taxonomy1/owp.yaml",
+      "sha256": "e2e534fd540b8e84a9fa73f703ad2baf11bb7eb7a1e9460f93c31d8e0783bdba",
+      "size": 256
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/taxonomy2/WORLD.md",
+      "sha256": "4968f6426401a77f5f4d4d9a16e5b5634539045009fa05920b0b712c79b22045",
+      "size": 11
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/taxonomy2/owp.yaml",
+      "sha256": "fd7b7405f70fad086b033c2917f49328c4157c1438aeb6fd2661cf0dd1503708",
+      "size": 256
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/world/owp.yaml",
+      "sha256": "94ea7e07fbc7a1633cd7ab034201a86e6963011e4554fb23dc95e756dce04b81",
+      "size": 500
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/version-conflict/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/version-conflict/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/version-conflict/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/version-conflict/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/version-conflict/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/version-conflict/root/owp.yaml",
+      "sha256": "dc566ce1749a01505912a25c65923a1833b4d4cba67e7bc6990338cb17dbc451",
+      "size": 810
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/view-missing-in-world/root/owp.yaml",
+      "sha256": "4ffc648bf4030fb6f6ff3497f663c126090b60699bcf0a1ebdc9d0ace4a8bcb7",
+      "size": 828
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/view-path-wrong-kind/root/owp.yaml",
+      "sha256": "9460b21eb02c52d49f34f20d959d31a92e045b439247d4d5e7c5e7fcbcabc575",
+      "size": 788
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/packages/world/WORLD.md",
+      "sha256": "42e512b2f39bcc621e01fc5b725a273fe015f14b650b1d7fa74c4c4092085729",
+      "size": 8
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/packages/world/owp.yaml",
+      "sha256": "0dd39530d95280fae9305ea9ed69b451e99ad1a1e512a7983737d1945b51c239",
+      "size": 453
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/packages/world/state/task-compiler.yaml",
+      "sha256": "6583dd3d536f0147d5afacc092839c058f843ac16eb040240fd0ea861fa48d0d",
+      "size": 209
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/packages/world/views/task.yaml",
+      "sha256": "a1de16dd27d62beb5898102bfcc511cfcc1c61fa52f5a849f95b24c6829085ac",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-a-dependency/root/owp.yaml",
+      "sha256": "174e57fc307d44327fb3aa1ee9c07c898697e0adf1756ed9ece855326cb2f21e",
+      "size": 735
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/packages/world/ONTOLOGY.md",
+      "sha256": "a43f348aef2e47cbef850c597f25871bb9f19ee4064a541b6f560f836df99f38",
+      "size": 4
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/packages/world/owp.yaml",
+      "sha256": "975d7e7c1e68eb32c7ea41c73ab2242e57d59b24b12398bd68d3f3d9cf6db2e4",
+      "size": 168
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/root/WORLDMODEL.md",
+      "sha256": "e27a92df6922d3ab3644504db5f003c73fe25bfdcf128ac363b875bfcd682176",
+      "size": 34
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/root/eval/profile.yaml",
+      "sha256": "6dca5007611ff21175d03934a26ad3af20208daa38329511794d787048ff1c86",
+      "size": 135
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/root/models/adapter.yaml",
+      "sha256": "8d70467b8d8e8b7a692eba46b6c51071c0108fbb3d66a4cbcd3c92f342905aeb",
+      "size": 147
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/root/models/model-artifact.yaml",
+      "sha256": "96015bfe766eb30f62f17997c3e53c51dddefb66ad85a0cae44e2a57f07d8e86",
+      "size": 153
+    },
+    {
+      "path": "conformance/resolution/world-ref-not-world/root/owp.yaml",
+      "sha256": "5edb1f4e2ad167cadbdf7fdd36c9f16fbc600abaa73518cb4cca293ea3c06177",
+      "size": 779
+    },
+    {
+      "path": "docs/ASSET_GRAPH.md",
+      "sha256": "20dc4519517fbb4dbfb275a970c16c91298c8ae9a94a7951339e17342109bee0",
+      "size": 1226
+    },
+    {
+      "path": "docs/BUSINESS_AI.md",
+      "sha256": "008e5ee518b047086b74976cbf2e48db879af9dbafef783424a997befbc85f2b",
+      "size": 1218
+    },
+    {
+      "path": "docs/CONCEPTS.md",
+      "sha256": "bdf93dbdad8d1e454662fdce294165c2923646c4c1653d2722540e945f39af8a",
+      "size": 2288
+    },
+    {
+      "path": "docs/EXAMPLE_CONVENTIONS.md",
+      "sha256": "18e84b39bdef1564baec22cc94669a3c620f8d58bc41abeea0b55164ecce48ca",
+      "size": 2408
+    },
+    {
+      "path": "docs/GITHUB_PUBLISHING.md",
+      "sha256": "3a5a10e74d1a0969a0725178a56f8417b2f6e809185ac1a8f21fb2ea3c7ad3a6",
+      "size": 681
+    },
+    {
+      "path": "docs/HUGGINGFACE_INTEROP.md",
+      "sha256": "b2a24d7a7f1c0894691d57d29aa1ffae1da3a2a8feda20bb7db1a3c70f963091",
+      "size": 869
+    },
+    {
+      "path": "docs/MULTIMODAL_WORLD_MODELS.md",
+      "sha256": "6c6dea81c6e7d30e53619e2ac57603ce3b345b7468d08a8a994bd5ad8955e74d",
+      "size": 1026
+    },
+    {
+      "path": "docs/PHYSICAL_AI.md",
+      "sha256": "edd3902203b00e657e523098e3af533cebc7dbe4f7468612823386f9599922b3",
+      "size": 1453
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "5ea469a5ca04a66573a7bbafea249cc40b3fe676f6635611b3f8f31fe537a7e1",
+      "size": 1869
+    },
+    {
+      "path": "docs/RELEASE_CHECKLIST.md",
+      "sha256": "18161bc815d576fbf76cd4d14a4bb2d63a4fee138cbdd11b71c8347a46598567",
+      "size": 1351
+    },
+    {
+      "path": "docs/RUNTIME_INTEGRATION.md",
+      "sha256": "2f4f8d1ad160338abf513da5a7e3bdf91eaecbf295a4e8980e764cc42a356a54",
+      "size": 2082
+    },
+    {
+      "path": "docs/STANDARDS_INTEROP.md",
+      "sha256": "16f26a8c43c8ed55a1cf66679ee0eaf7ff68ac076e926e010498e1b24aba18a7",
+      "size": 2535
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/WORLD.md",
+      "sha256": "73406b5f54ebfb16a503c22142656491f5632e775b8cf6c67f1d31e064926067",
+      "size": 692
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/examples/basic.yaml",
+      "sha256": "516ec23af023d20cc5b09699cbdb36bc8338d8770a0d62bf84d3ec34066d1578",
+      "size": 101
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/examples/expected-ews.yaml",
+      "sha256": "020c02c8e61ea6b846199f101c51b62b26fa85b20b417763c29608be0b0bb7ce",
+      "size": 1048
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/examples/observations.yaml",
+      "sha256": "754ea06de3be1ad4b04bb1bb96f60664499ceca5f9be15d1e315514e5434bfba",
+      "size": 1366
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/interfaces/actions.yaml",
+      "sha256": "659534f83d72d6eb11f81c190c59bdaa08eefa0bf0442912706eada92889ddc8",
+      "size": 238
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/interfaces/commit.yaml",
+      "sha256": "d6b0b16fc452c04a2bf97d0fe32b0f68ff774fe6c5f7d597c06adafc56837dcf",
+      "size": 255
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/interfaces/effect-verification.yaml",
+      "sha256": "4675f0e03f318c6abbf0690848bf808b73e67ee5fe796e8f34d2c07f00d2bb99",
+      "size": 295
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/interfaces/observations.yaml",
+      "sha256": "5a2b0d4432734a18454788ae6182d9064a4a446853aebe840881ec20f2ed1edc",
+      "size": 411
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/interfaces/sources.yaml",
+      "sha256": "f55a0bf4f366ec1506dab217f0d8c5dd12ea7550fabd064abed0028eca28cfeb",
+      "size": 476
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/owp.yaml",
+      "sha256": "2326f98b186b63b826b6d0d49465bb872bbe19ff67cd45a68665ed3dece13e3a",
+      "size": 1737
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/scenarios/claim-rca.yaml",
+      "sha256": "091144ba9c86b9fc89d38f6f3901493d9917cbc64cb18837503b519f5df82bea",
+      "size": 187
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/state/quality-incident-compiler.yaml",
+      "sha256": "ab10c94a986c4ccd678e14890145b80c2af718c21ff95bd96077e01009999052",
+      "size": 1150
+    },
+    {
+      "path": "examples/business/manufacturing-quality-world/views/quality-incident-task.yaml",
+      "sha256": "6452fc15f853d01d82534041af55c0dda2a37e9b99e44cfb71fd5bfddd28a3fd",
+      "size": 695
+    },
+    {
+      "path": "examples/business/quality-transition-world-model/WORLDMODEL.md",
+      "sha256": "57ffeb5a579701b30f0cfb2367bf5078955945a669d8aec45a17d6709367996d",
+      "size": 371
+    },
+    {
+      "path": "examples/business/quality-transition-world-model/eval/basic.yaml",
+      "sha256": "26035665a14345f73ab2cf76dd5ea7d3e2e621bc765496795676f574fbf502d4",
+      "size": 173
+    },
+    {
+      "path": "examples/business/quality-transition-world-model/models/adapter.yaml",
+      "sha256": "c5eb052df288aa08550bc6b30108fe2f8b0d23544ed4048f43630496d86c86bb",
+      "size": 254
+    },
+    {
+      "path": "examples/business/quality-transition-world-model/models/model-artifact.yaml",
+      "sha256": "9445b6d1b76de0e797bcb47170626470f40ac53b8131addd3618cb3bca4c24ae",
+      "size": 279
+    },
+    {
+      "path": "examples/business/quality-transition-world-model/owp.yaml",
+      "sha256": "902501bbb21e6139c4d6ba9b303b6fe0caad658b26403e1f4e19d37fcf0abf45",
+      "size": 1319
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/WORLD.md",
+      "sha256": "5fa9f38f263c361d18ca0bea9b0cb1a04bb7aeafb77f5131b400e72dc369996a",
+      "size": 933
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/datasets/manipulation-episodes.yaml",
+      "sha256": "5d05724c581846d4581908b1ae3cae000ab1a16b7262abd3bfe4a406dbf9dae2",
+      "size": 337
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/environment/reference-environment.yaml",
+      "sha256": "94a63bce1952f1747c0fa1f86f8cf2c5b9cf7e05e750ed6ff080c3fdc639480b",
+      "size": 434
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/examples/basic.yaml",
+      "sha256": "2e3e1ea3c32041fb84a1ffc477e7abbb99a4cfd841c707d926b80e2b303428cd",
+      "size": 72
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/examples/expected-ews.yaml",
+      "sha256": "97aa86dda74458b00bcba076830ddfa926b24ae29a64a0d1c0f6eddcc385f0c8",
+      "size": 1049
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/examples/observations.yaml",
+      "sha256": "54e20cedab5dcf523ad669f00a7fe19485c513633a092e0cfe1e8b495dc04eb7",
+      "size": 1120
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/interfaces/actions.yaml",
+      "sha256": "6ebd08580195ce2ae0b82a226390399471300062f40e56aeab221019620bdd94",
+      "size": 407
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/interfaces/commit.yaml",
+      "sha256": "1c9d581ec861d72cfdb61c185768b58be06e69b1c6eee8afc07890965f09f973",
+      "size": 315
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/interfaces/effect-verification.yaml",
+      "sha256": "01c91db924c1266ce54e822bf15a03d7616aaf517063c9a4a6a01180da8c4284",
+      "size": 264
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/interfaces/observations.yaml",
+      "sha256": "4bd6e4d920f1b03431223e78ac17532a78e93e10de7c9ac960a6828a2b7321a8",
+      "size": 348
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/owp.yaml",
+      "sha256": "8e10b66a0f659cac77aaabf972208e6ea72ba52e42cc880971f9b42f285e7090",
+      "size": 1746
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/scenarios/pick-place.yaml",
+      "sha256": "2f8800933001feec76abbb51be46a73f714f68783d040ce7d25dbe2122f4b68b",
+      "size": 192
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/state/pick-place-compiler.yaml",
+      "sha256": "594875357372009d24e71b7b70eae19a1be9a8539616fe10ea3e9c4ca6b75c6a",
+      "size": 1154
+    },
+    {
+      "path": "examples/physical-ai/mobile-manipulation-world/views/pick-place-task.yaml",
+      "sha256": "ab8daecc320c28939332d0678d872cfe4abae206152866b7ab7ca1b0c82f2156",
+      "size": 774
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/WORLDMODEL.md",
+      "sha256": "d8dc11a7b97c41a8847ca748e1a5a963dd751e3123384a95aca4eecb0e2b12ac",
+      "size": 870
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/eval/evidence-reference-sim.yaml",
+      "sha256": "99bc93d4c24f22340f20ac9478cad88928249dd5c557a53aedfb304f5a91ef07",
+      "size": 895
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/eval/manipulation.yaml",
+      "sha256": "f83695de27d1d545bedbf4710ee69e97f5fcaa85e43fe0ffb7394b7080c6cead",
+      "size": 466
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/eval/verifier.yaml",
+      "sha256": "35fd51e9644098b16f64541dcfab404e1feac5395de7644377e6713a50cfc719",
+      "size": 273
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/models/adapter.yaml",
+      "sha256": "90359393f753beaba471b43af282053a950614ea628b70f68c8b531d2194dd4c",
+      "size": 239
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/models/model-artifact.yaml",
+      "sha256": "b54d1b8a17d8842de2f995efa0b003b605f5fd5ce68069e5ea0a9f2c2387ee9f",
+      "size": 354
+    },
+    {
+      "path": "examples/physical-ai/multimodal-action-world-model/owp.yaml",
+      "sha256": "d5e0688046bf8169d3eab3f2f46fa7067bc030441c9c8ebc2f66810c78c5ae9d",
+      "size": 1832
+    },
+    {
+      "path": "implementations/typescript/.gitignore",
+      "sha256": "555604bc0f3bfb94337f04887461f28c6d5dfd20a3b05572f72ec5f205a33e87",
+      "size": 45
+    },
+    {
+      "path": "implementations/typescript/README.md",
+      "sha256": "116ed95bf9e99de5fd8cfd39207fd9a5e4a2b8f4820400907b1af9f260214990",
+      "size": 2683
+    },
+    {
+      "path": "implementations/typescript/package-lock.json",
+      "sha256": "7a8b984c31e39f4d29853e1206ffb1eb767c7704b7022299d0cf9bbc3531fbe2",
+      "size": 2047
+    },
+    {
+      "path": "implementations/typescript/package.json",
+      "sha256": "96e48858f8cdf80503292d3cdf5b5c7e2241c59f1f56c919d7ebed61a69a011f",
+      "size": 1129
+    },
+    {
+      "path": "implementations/typescript/scripts/check-examples-ews.mjs",
+      "sha256": "463786259d389ce95d69b61b044071a450ecdc718bf999ca29860365950b0d3f",
+      "size": 1432
+    },
+    {
+      "path": "implementations/typescript/scripts/make-probes.mjs",
+      "sha256": "60b0969c6bf99814592d130d2ce904e71d293d8d117c8b62d3b94c911b9295e6",
+      "size": 32751
+    },
+    {
+      "path": "implementations/typescript/src/cli.ts",
+      "sha256": "948323ac26b07a33dccc349dac3c88e3db5e515cac710cc5624bb33b95aa0adc",
+      "size": 4260
+    },
+    {
+      "path": "implementations/typescript/src/conformance.ts",
+      "sha256": "beb879095f2db19ad52a0924d7e5ea10838a727f73323ec96b8f7218058333d7",
+      "size": 8130
+    },
+    {
+      "path": "implementations/typescript/src/context.ts",
+      "sha256": "7a7dcd2f0c805621e7d315fb376d249d39b48707dea2dd8e9abb8d45e0e90df3",
+      "size": 2184
+    },
+    {
+      "path": "implementations/typescript/src/ews.ts",
+      "sha256": "922e39652af089ba996937be29c25a324f0aa7bacfed0749287d452718cb0409",
+      "size": 13893
+    },
+    {
+      "path": "implementations/typescript/src/resolve.ts",
+      "sha256": "05feb80ec25da2a609ae2e324dd11772da495e890b9a52a2cd7f2a883d1d23dc",
+      "size": 17071
+    },
+    {
+      "path": "implementations/typescript/src/rules/assets.ts",
+      "sha256": "0502467cf6b31ab0597c5217b4de53a6a020a09e586cf087300181949098ebbe",
+      "size": 5084
+    },
+    {
+      "path": "implementations/typescript/src/rules/dependencies.ts",
+      "sha256": "e590c0d8f0a639b5b694b74a56c2fcd2a950cfad5c2a55aa32da02a0f935caab",
+      "size": 2207
+    },
+    {
+      "path": "implementations/typescript/src/rules/evaluation.ts",
+      "sha256": "62a2af1f8109967392e9f6fd6b737812cc18fa10f26c240936af16fcd4bba4ce",
+      "size": 8144
+    },
+    {
+      "path": "implementations/typescript/src/rules/manifest.ts",
+      "sha256": "0451ad81a44934f46b69bcfaa738c14491c5672263475075259da10e97660f7c",
+      "size": 2426
+    },
+    {
+      "path": "implementations/typescript/src/rules/world.ts",
+      "sha256": "7453c3b65eb73bd5e4aa2732dcf2557543273813eef7b9522533af5801ab78a0",
+      "size": 8532
+    },
+    {
+      "path": "implementations/typescript/src/rules/worldmodel.ts",
+      "sha256": "1ec19a6f66ab88d0d6c0286db07dda6c1ed2c4993eeabb4f5520aa0db9297bd7",
+      "size": 5261
+    },
+    {
+      "path": "implementations/typescript/src/util.ts",
+      "sha256": "414adc9872ea0f1c4c4d0dfb537dc13898f36bcbf45f30e6bd69c74bc6c53114",
+      "size": 3123
+    },
+    {
+      "path": "implementations/typescript/src/validate.ts",
+      "sha256": "fa874959bf0e95eeebe2b813831bd3c1662469944ba9501f05789a8415aa7ba5",
+      "size": 4170
+    },
+    {
+      "path": "implementations/typescript/src/vocab.ts",
+      "sha256": "b24039c2e993aa04f5bf95df9cc7bb4f9bcc5f33e9c35e634a2602959dc79e97",
+      "size": 1902
+    },
+    {
+      "path": "implementations/typescript/src/zip.ts",
+      "sha256": "ed25768529838a7a408bc70f35df8cdb56bab0461954a0db775fdf22cf01aa3e",
+      "size": 1917
+    },
+    {
+      "path": "implementations/typescript/tsconfig.json",
+      "sha256": "7b9be21763895316707f8580bce1a621e80d4bf3928d8c557995e82d00579670",
+      "size": 253
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "2c0be01d3917d3a3834ac8ad70e489e16a07221713e786cb8ad93f925341cbda",
+      "size": 925
+    },
+    {
+      "path": "schemas/compatibility-evidence.schema.json",
+      "sha256": "e4f27fb8f0305fe6b6b4502d1f07d53306295f59a814c42d4d539945c16b0aa2",
+      "size": 2496
+    },
+    {
+      "path": "schemas/effective-world-state.schema.json",
+      "sha256": "a1bf6782eb450c9e9f9ff61c12d6d1d2922dc2cc3b485d8c7bdd99d809038fe1",
+      "size": 1963
+    },
+    {
+      "path": "schemas/observation-set.schema.json",
+      "sha256": "cb626da92ce5d5e34cb9745865ed2d64fb40832dbd86b1355ab0fe5c553a2dc8",
+      "size": 1499
+    },
+    {
+      "path": "schemas/owp-manifest.schema.json",
+      "sha256": "984ba926b582c21d22e4270abd4f33521a365263a59dfa6e6a1fce2480f5c406",
+      "size": 12427
+    },
+    {
+      "path": "scripts/golden_smoke.sh",
+      "sha256": "d45ea26b1882341c2885a4de860664df158bde9265c51df90cdae77919968ff9",
+      "size": 2065
+    },
+    {
+      "path": "spec/OWP_SPEC.md",
+      "sha256": "9f601c5d32c2e02982b737108547a127e1a8c9644d03cf1144edd33c58f14d5c",
+      "size": 28694
+    },
+    {
+      "path": "src/ontle/__init__.py",
+      "sha256": "4600133fba9b8fc6974891edf42d2c16750cd7dae7a0d5bce8253a016392a81e",
+      "size": 24
+    },
+    {
+      "path": "src/ontle/cli.py",
+      "sha256": "90c6ebf8d2b3c37e614d3f8e3351a7241063900e24ef1541dcaf0fd0443cc93e",
+      "size": 5784
+    },
+    {
+      "path": "src/ontle/core.py",
+      "sha256": "e69f5fe20ae008b9041345823d2890388c48e89d9cb7fecf07628df9a0ac85e6",
+      "size": 29577
+    },
+    {
+      "path": "src/ontle/ews.py",
+      "sha256": "f487ba167ab2802d831d55f1c07f7eb73d6d8ea6ee0128dc5b60a0e254d24137",
+      "size": 12715
+    },
+    {
+      "path": "src/ontle/resolve.py",
+      "sha256": "ab0f486cede5f3d183092646522bcf6cdd7c81942a13de4f3606337433fd5896",
+      "size": 14586
+    },
+    {
+      "path": "src/ontle/scaffold.py",
+      "sha256": "75f7521067c2706d71637d941b11f096fa56a4efa24a81a6e94c5ab5f18599c1",
+      "size": 4490
+    },
+    {
+      "path": "src/ontle/templates/enterprise/WORLD.md",
+      "sha256": "09fcec61fcd13cf7e9dcf248b0a53ea9095ad3b0d4f84b188dbf7da571d78b6c",
+      "size": 850
+    },
+    {
+      "path": "src/ontle/templates/enterprise/examples/basic.yaml",
+      "sha256": "060a8afa15c105bc141bf6b5af58480d344eb15279d812134ed5734b8ff0ca83",
+      "size": 83
+    },
+    {
+      "path": "src/ontle/templates/enterprise/interfaces/actions.yaml",
+      "sha256": "87e3a6f5e7e062f2eb45e7bb5fbc2a74f8386240d904e0b3d51dfe3aea4cb0a1",
+      "size": 115
+    },
+    {
+      "path": "src/ontle/templates/enterprise/interfaces/commit.yaml",
+      "sha256": "a1499da59b3f2bc57c429ed4228740d54bf86829e22df719bc3899533a22bc9b",
+      "size": 188
+    },
+    {
+      "path": "src/ontle/templates/enterprise/interfaces/effect-verification.yaml",
+      "sha256": "03093d6d828dead290394998e3e26d59c088990bc6785cd02b25e9454d6900a3",
+      "size": 133
+    },
+    {
+      "path": "src/ontle/templates/enterprise/interfaces/observations.yaml",
+      "sha256": "65d98d4ac2d75eeeae4f2d3a0a10507036faa6ac968640f62995fcd5bce1b51b",
+      "size": 128
+    },
+    {
+      "path": "src/ontle/templates/enterprise/interfaces/sources.yaml",
+      "sha256": "15c06e838a22cc268d896067e3a7eb34c9efd56fb2a2685ea9006a8bb9e29d13",
+      "size": 120
+    },
+    {
+      "path": "src/ontle/templates/enterprise/owp.yaml",
+      "sha256": "0c2a27e3065d16c12a7a5df807dcf816a25ea8c5e5af0a411e5d4e96435ffbc7",
+      "size": 1283
+    },
+    {
+      "path": "src/ontle/templates/enterprise/state/default-compiler.yaml",
+      "sha256": "0a3a1d932e5f3435b28d95a8114698a3263ce10018c9fdf55bc147292a8e2313",
+      "size": 446
+    },
+    {
+      "path": "src/ontle/templates/enterprise/views/default.yaml",
+      "sha256": "b02b8f864d5e72327aaef7aca02509f0a960b98e99c274173b334f1aa896121f",
+      "size": 526
+    },
+    {
+      "path": "src/ontle/templates/minimal/WORLD.md",
+      "sha256": "98383557affdb208e0d3ce71f92ddb0c8c872529072b3532efd625fab833a192",
+      "size": 620
+    },
+    {
+      "path": "src/ontle/templates/minimal/examples/basic.yaml",
+      "sha256": "060a8afa15c105bc141bf6b5af58480d344eb15279d812134ed5734b8ff0ca83",
+      "size": 83
+    },
+    {
+      "path": "src/ontle/templates/minimal/owp.yaml",
+      "sha256": "287f55c75339ed6588e94fea09dd0cac9bc37caa1228e4bd08f82c54f710ae75",
+      "size": 709
+    },
+    {
+      "path": "src/ontle/templates/minimal/state/default-compiler.yaml",
+      "sha256": "0a3a1d932e5f3435b28d95a8114698a3263ce10018c9fdf55bc147292a8e2313",
+      "size": 446
+    },
+    {
+      "path": "src/ontle/templates/minimal/views/default.yaml",
+      "sha256": "aa12e6bc135693b4c35367b544db9690780d327b7a3b3c93a346ca793b3faa83",
+      "size": 518
+    },
+    {
+      "path": "src/ontle/templates/ontology/ONTOLOGY.md",
+      "sha256": "a2c1bcda9ee4bb339f8f5f082b751819651d31207c62e02849301962567dd098",
+      "size": 363
+    },
+    {
+      "path": "src/ontle/templates/ontology/owp.yaml",
+      "sha256": "79049f526f72dc935689a745e42352371af18f3fdb21f27bb31abd1ea049479b",
+      "size": 289
+    },
+    {
+      "path": "src/ontle/templates/ontology/semantics/core.yaml",
+      "sha256": "d459da743b48ecaafe47d1a6e12b88b0c89d8e5c78a68d95a23c5f4b315ed99e",
+      "size": 110
+    },
+    {
+      "path": "src/ontle/templates/worldmodel-multimodal/WORLDMODEL.md",
+      "sha256": "75abff813174df75b24f46677b3e430b477e28355ed82ddcb5a95cdc92c9a313",
+      "size": 567
+    },
+    {
+      "path": "src/ontle/templates/worldmodel-multimodal/eval/basic.yaml",
+      "sha256": "607046e0e66329f5985da4f4ee5d1c5257ea033ec0b77bf5cc3d8b645f1267b0",
+      "size": 128
+    },
+    {
+      "path": "src/ontle/templates/worldmodel-multimodal/models/adapter.yaml",
+      "sha256": "e8e6ae8ea74f6cbf635937b0bfe805b9537e68cd95db53861a96627c5221909d",
+      "size": 252
+    },
+    {
+      "path": "src/ontle/templates/worldmodel-multimodal/models/model-artifact.yaml",
+      "sha256": "535bd2eb0214ea78af34b078bce5dce1904c8a70bdee6421c5bb0a031151c475",
+      "size": 235
+    },
+    {
+      "path": "src/ontle/templates/worldmodel-multimodal/owp.yaml",
+      "sha256": "493fa1fb443a91295e11483b955f26fa6c85a938b6399d01a1f6e26297175509",
+      "size": 1421
+    },
+    {
+      "path": "src/ontle/templates/worldmodel/WORLDMODEL.md",
+      "sha256": "4e219d7940e90ce970bd460597c388f192b33c6fa7df1f0dee6ceab2d596280b",
+      "size": 705
+    },
+    {
+      "path": "src/ontle/templates/worldmodel/eval/basic.yaml",
+      "sha256": "607046e0e66329f5985da4f4ee5d1c5257ea033ec0b77bf5cc3d8b645f1267b0",
+      "size": 128
+    },
+    {
+      "path": "src/ontle/templates/worldmodel/models/adapter.yaml",
+      "sha256": "4dbf846de4357679370bd69e30282d7b6495b3a36cedc181228daf903e327c62",
+      "size": 243
+    },
+    {
+      "path": "src/ontle/templates/worldmodel/models/model-artifact.yaml",
+      "sha256": "9c679a4d7ebe3a393cc6f434b0bdeee634996433e91efff11a47d16079243311",
+      "size": 159
+    },
+    {
+      "path": "src/ontle/templates/worldmodel/owp.yaml",
+      "sha256": "a1d8ac0fb68cafaeb4de4afb3b8e386ac8708856c115086c46f89f3e76492b42",
+      "size": 1064
+    },
+    {
+      "path": "starters/github-world-repo/.github/workflows/owp-ci.yml",
+      "sha256": "029f6804a0ceae44447e4b7ae68eb635a777bcb2d74df50826d1d98dcdfb0661",
+      "size": 510
+    },
+    {
+      "path": "starters/github-world-repo/.gitignore",
+      "sha256": "fb2c1bad8f0423ae41d5ffb0e95247e5ed84962df067ef7c72980757e3d28a05",
+      "size": 44
+    },
+    {
+      "path": "starters/github-world-repo/README.md",
+      "sha256": "6fb9c314a9f963856da593a3c9f0a30ed3488a304cba91c9285a042ec69c995a",
+      "size": 669
+    },
+    {
+      "path": "starters/github-world-repo/WORLD.md",
+      "sha256": "e47d0e0ec73d52cf0eaf83f6e09ddf26dfd8e066337b0c811735f6016450ad4a",
+      "size": 394
+    },
+    {
+      "path": "starters/github-world-repo/examples/basic.yaml",
+      "sha256": "060a8afa15c105bc141bf6b5af58480d344eb15279d812134ed5734b8ff0ca83",
+      "size": 83
+    },
+    {
+      "path": "starters/github-world-repo/owp.yaml",
+      "sha256": "287f55c75339ed6588e94fea09dd0cac9bc37caa1228e4bd08f82c54f710ae75",
+      "size": 709
+    },
+    {
+      "path": "starters/github-world-repo/state/default-compiler.yaml",
+      "sha256": "0a3a1d932e5f3435b28d95a8114698a3263ce10018c9fdf55bc147292a8e2313",
+      "size": 446
+    },
+    {
+      "path": "starters/github-world-repo/views/default.yaml",
+      "sha256": "aa12e6bc135693b4c35367b544db9690780d327b7a3b3c93a346ca793b3faa83",
+      "size": 518
+    },
+    {
+      "path": "templates/enterprise/WORLD.md",
+      "sha256": "09fcec61fcd13cf7e9dcf248b0a53ea9095ad3b0d4f84b188dbf7da571d78b6c",
+      "size": 850
+    },
+    {
+      "path": "templates/enterprise/examples/basic.yaml",
+      "sha256": "060a8afa15c105bc141bf6b5af58480d344eb15279d812134ed5734b8ff0ca83",
+      "size": 83
+    },
+    {
+      "path": "templates/enterprise/interfaces/actions.yaml",
+      "sha256": "87e3a6f5e7e062f2eb45e7bb5fbc2a74f8386240d904e0b3d51dfe3aea4cb0a1",
+      "size": 115
+    },
+    {
+      "path": "templates/enterprise/interfaces/commit.yaml",
+      "sha256": "a1499da59b3f2bc57c429ed4228740d54bf86829e22df719bc3899533a22bc9b",
+      "size": 188
+    },
+    {
+      "path": "templates/enterprise/interfaces/effect-verification.yaml",
+      "sha256": "03093d6d828dead290394998e3e26d59c088990bc6785cd02b25e9454d6900a3",
+      "size": 133
+    },
+    {
+      "path": "templates/enterprise/interfaces/observations.yaml",
+      "sha256": "65d98d4ac2d75eeeae4f2d3a0a10507036faa6ac968640f62995fcd5bce1b51b",
+      "size": 128
+    },
+    {
+      "path": "templates/enterprise/interfaces/sources.yaml",
+      "sha256": "15c06e838a22cc268d896067e3a7eb34c9efd56fb2a2685ea9006a8bb9e29d13",
+      "size": 120
+    },
+    {
+      "path": "templates/enterprise/owp.yaml",
+      "sha256": "0c2a27e3065d16c12a7a5df807dcf816a25ea8c5e5af0a411e5d4e96435ffbc7",
+      "size": 1283
+    },
+    {
+      "path": "templates/enterprise/state/default-compiler.yaml",
+      "sha256": "0a3a1d932e5f3435b28d95a8114698a3263ce10018c9fdf55bc147292a8e2313",
+      "size": 446
+    },
+    {
+      "path": "templates/enterprise/views/default.yaml",
+      "sha256": "b02b8f864d5e72327aaef7aca02509f0a960b98e99c274173b334f1aa896121f",
+      "size": 526
+    },
+    {
+      "path": "templates/minimal/WORLD.md",
+      "sha256": "98383557affdb208e0d3ce71f92ddb0c8c872529072b3532efd625fab833a192",
+      "size": 620
+    },
+    {
+      "path": "templates/minimal/examples/basic.yaml",
+      "sha256": "060a8afa15c105bc141bf6b5af58480d344eb15279d812134ed5734b8ff0ca83",
+      "size": 83
+    },
+    {
+      "path": "templates/minimal/owp.yaml",
+      "sha256": "287f55c75339ed6588e94fea09dd0cac9bc37caa1228e4bd08f82c54f710ae75",
+      "size": 709
+    },
+    {
+      "path": "templates/minimal/state/default-compiler.yaml",
+      "sha256": "0a3a1d932e5f3435b28d95a8114698a3263ce10018c9fdf55bc147292a8e2313",
+      "size": 446
+    },
+    {
+      "path": "templates/minimal/views/default.yaml",
+      "sha256": "aa12e6bc135693b4c35367b544db9690780d327b7a3b3c93a346ca793b3faa83",
+      "size": 518
+    },
+    {
+      "path": "templates/ontology/ONTOLOGY.md",
+      "sha256": "a2c1bcda9ee4bb339f8f5f082b751819651d31207c62e02849301962567dd098",
+      "size": 363
+    },
+    {
+      "path": "templates/ontology/owp.yaml",
+      "sha256": "79049f526f72dc935689a745e42352371af18f3fdb21f27bb31abd1ea049479b",
+      "size": 289
+    },
+    {
+      "path": "templates/ontology/semantics/core.yaml",
+      "sha256": "d459da743b48ecaafe47d1a6e12b88b0c89d8e5c78a68d95a23c5f4b315ed99e",
+      "size": 110
+    },
+    {
+      "path": "templates/worldmodel-multimodal/WORLDMODEL.md",
+      "sha256": "75abff813174df75b24f46677b3e430b477e28355ed82ddcb5a95cdc92c9a313",
+      "size": 567
+    },
+    {
+      "path": "templates/worldmodel-multimodal/eval/basic.yaml",
+      "sha256": "607046e0e66329f5985da4f4ee5d1c5257ea033ec0b77bf5cc3d8b645f1267b0",
+      "size": 128
+    },
+    {
+      "path": "templates/worldmodel-multimodal/models/adapter.yaml",
+      "sha256": "e8e6ae8ea74f6cbf635937b0bfe805b9537e68cd95db53861a96627c5221909d",
+      "size": 252
+    },
+    {
+      "path": "templates/worldmodel-multimodal/models/model-artifact.yaml",
+      "sha256": "535bd2eb0214ea78af34b078bce5dce1904c8a70bdee6421c5bb0a031151c475",
+      "size": 235
+    },
+    {
+      "path": "templates/worldmodel-multimodal/owp.yaml",
+      "sha256": "493fa1fb443a91295e11483b955f26fa6c85a938b6399d01a1f6e26297175509",
+      "size": 1421
+    },
+    {
+      "path": "templates/worldmodel/WORLDMODEL.md",
+      "sha256": "4e219d7940e90ce970bd460597c388f192b33c6fa7df1f0dee6ceab2d596280b",
+      "size": 705
+    },
+    {
+      "path": "templates/worldmodel/eval/basic.yaml",
+      "sha256": "607046e0e66329f5985da4f4ee5d1c5257ea033ec0b77bf5cc3d8b645f1267b0",
+      "size": 128
+    },
+    {
+      "path": "templates/worldmodel/models/adapter.yaml",
+      "sha256": "4dbf846de4357679370bd69e30282d7b6495b3a36cedc181228daf903e327c62",
+      "size": 243
+    },
+    {
+      "path": "templates/worldmodel/models/model-artifact.yaml",
+      "sha256": "9c679a4d7ebe3a393cc6f434b0bdeee634996433e91efff11a47d16079243311",
+      "size": 159
+    },
+    {
+      "path": "templates/worldmodel/owp.yaml",
+      "sha256": "a1d8ac0fb68cafaeb4de4afb3b8e386ac8708856c115086c46f89f3e76492b42",
+      "size": 1064
+    },
+    {
+      "path": "tests/test_conformance.py",
+      "sha256": "5997d6789368480cae6b86c9e57af59b5b67da45190b9758bb760f13b0c8987e",
+      "size": 1166
+    },
+    {
+      "path": "tests/test_core.py",
+      "sha256": "d1c08aa7e991d7f39aeaa9f083d5593fa762b7b48a8f80fdd3c477b3c4731206",
+      "size": 13410
+    },
+    {
+      "path": "tests/test_ews.py",
+      "sha256": "5d6de239822f1a3e02c892e06db32a3798df084d690131639ddb254591904b0c",
+      "size": 4580
+    },
+    {
+      "path": "tests/test_resolve.py",
+      "sha256": "1300b5eb0c21eedc0b0f1a8cd70043b1d173e90bb304529be41ec3d83fb97ecf",
+      "size": 4725
+    },
+    {
+      "path": "vocab/asset-kinds.yaml",
+      "sha256": "8089dbe8080e85565b97c9960911cd022c5ed6d0f7d9ba83d05508822211cef4",
+      "size": 1036
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+apiVersion: openworld/v1alpha1
+kind: WorldModelPackage
+metadata:
+  namespace: conformance
+  name: model
+  version: 0.1.0
+spec:
+  dependencies:
+  - conformance/world@0.1.0
+  worldModel:
+    description: WORLDMODEL.md
+    roles: []
+    semanticGrounding:
+      worldRef: conformance/world@0.1.0
+      compatibleWorldViews:
+      - conformance/world@0.1.0#views/task.yaml
+      compatibleStateCompilers:
+      - conformance/world@0.1.0#state/task-compiler.yaml
+    inputs:
+      contract: EffectiveWorldState
+    representation:
+      adapterRef: models/adapter.yaml
+  assets:
+  - kind: ModelArtifact
+    path: models/model-artifact.yaml
+  - kind: RepresentationAdapterProfile
+    path: models/adapter.yaml
+  - kind: EvaluationProfile
+    path: eval/profile.yaml

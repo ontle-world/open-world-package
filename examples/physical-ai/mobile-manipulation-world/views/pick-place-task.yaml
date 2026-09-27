@@ -1,0 +1,29 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: pick-place-task-view
+spec:
+  worldRef: openworld-examples/mobile-manipulation-world@0.1.0
+  purpose:
+    task: pick_place
+    actorScope: robot_or_authorized_controller
+    objective: place_target_object_safely
+  projection:
+    include:
+    - robot
+    - target_object
+    - target_zone
+    - workspace
+    - observations
+    - safety_constraints
+    - action_space
+    - task_outcome
+    principle: minimal_sufficient_representation
+  conditioning:
+    authorityScope: task_declared
+    timeScope: task_declared
+    scale: task_declared
+    resolution: task_declared
+  notes:
+  - Raw image/video frames remain observation artifacts; the view selects task-relevant
+    semantic and observation state.

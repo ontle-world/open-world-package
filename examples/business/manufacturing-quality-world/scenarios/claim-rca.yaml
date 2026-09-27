@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: claim-rca
+spec:
+  objective: Trace a customer claim to production/equipment evidence and propose reviewed RCA/CAPA.

@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: s
+spec: {}

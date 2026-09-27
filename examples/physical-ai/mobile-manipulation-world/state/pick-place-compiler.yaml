@@ -1,0 +1,30 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: pick-place-state-compiler
+spec:
+  worldViewRef: views/pick-place-task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields:
+    - robot.joint_state
+    - robot.gripper_state
+    - target_object.pose
+    - target_zone.region
+    - task.instruction
+    - safety_constraints.active
+  bindings:
+    robot.joint_state: {from: proprioception, value: joint_state, select: latest}
+    robot.gripper_state: {from: proprioception, value: gripper, select: latest}
+    target_object.pose: {from: perception.object_pose, value: pose, select: latest}
+    target_zone.region: {from: task.target, value: region, select: latest}
+    task.instruction: {from: language_task, value: text, select: latest}
+    safety_constraints.active: {from: safety.monitor, value: constraint, select: all}
+  compilation:
+    reconciliation: retain_alternatives_when_unresolved
+    authority: preserve_declared_authority
+    freshness: sensor_and_source_declared
+    scale: view_declared
+    resolution: task_and_sensor_declared
+    sufficiency: task_relevant_state_required
+  traceRequired: true

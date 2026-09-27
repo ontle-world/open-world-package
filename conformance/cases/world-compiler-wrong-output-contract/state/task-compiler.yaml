@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: ModelInput
+  outputSchema:
+    fields: [entity.state]

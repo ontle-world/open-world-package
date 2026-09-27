@@ -1,0 +1,21 @@
+apiVersion: openworld/v1alpha1
+kind: CompatibilityEvidence
+metadata:
+  name: reference-sim-pick-place
+spec:
+  subject: openworld-examples/multimodal-action-world-model@0.1.0
+  evaluationProfile: manipulation-basic@0.2.0
+  verifier: pick-place-effect-verifier@0.1.0
+  scope:
+    worldRef: openworld-examples/mobile-manipulation-world@0.1.0
+    worldView: openworld-examples/mobile-manipulation-world@0.1.0#views/pick-place-task.yaml
+    stateCompiler: openworld-examples/mobile-manipulation-world@0.1.0#state/pick-place-compiler.yaml
+    environment: openworld-examples/mobile-manipulation-world@0.1.0#environment/reference-environment.yaml
+    task: pick_place
+  result:
+    status: illustrative
+    metrics:
+      task_success: 0.92
+      constraint_violation_rate: 0.01
+      effect_verified_rate: 0.9
+  note: Illustrative values only; this example bundles no model and no evaluation was run.

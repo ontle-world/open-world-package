@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: RepresentationAdapterProfile
+metadata:
+  name: adapter
+spec:
+  source: raw_sensor_stream
+  target: identity

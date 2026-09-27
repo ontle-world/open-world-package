@@ -1,0 +1,21 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+    defaultView: views/task.yaml
+    defaultStateCompiler: state/task-compiler.yaml
+  conformance:
+    profile: stateful
+  assets:
+  - kind: WorldViewProfile
+    path: views/task.yaml
+  - kind: StateCompilerProfile
+    path: state/task-compiler.yaml
+  - kind: WorldViewProfile
+    path: views/other.yaml

@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: quality-transition-model-artifact
+spec:
+  implementationStatus: reference_contract
+  bundled: false
+  artifactRef: null
+  note: Bind a rule, statistical, learned, solver, or external model implementation here.

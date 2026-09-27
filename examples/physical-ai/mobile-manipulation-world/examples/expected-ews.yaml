@@ -1,0 +1,46 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: openworld-examples/mobile-manipulation-world@0.1.0
+  worldView: openworld-examples/mobile-manipulation-world@0.1.0#views/pick-place-task.yaml
+  stateCompiler: openworld-examples/mobile-manipulation-world@0.1.0#state/pick-place-compiler.yaml
+  context:
+    asOf: '2026-09-01T12:00:03Z'
+  state:
+    robot.joint_state:
+    - 0.1
+    - -0.4
+    - 1.1
+    - 0.0
+    - 0.8
+    - 0.0
+    robot.gripper_state: open
+    target_zone.region: bin-a
+    task.instruction: put the red block in bin A
+    safety_constraints.active:
+    - human_in_zone_b
+    - speed_limit_0_25
+  unresolved:
+    target_object.pose:
+    - - 0.42
+      - 0.1
+      - 0.02
+    - - 0.43
+      - 0.1
+      - 0.02
+  missing: []
+  provenance:
+    robot.joint_state:
+    - prop-2
+    robot.gripper_state:
+    - prop-2
+    target_object.pose:
+    - pose-front-2
+    - pose-wrist-2
+    target_zone.region:
+    - task-1
+    task.instruction:
+    - lang-1
+    safety_constraints.active:
+    - safety-1
+    - safety-2

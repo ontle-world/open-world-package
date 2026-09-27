@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:manifest:v1alpha1",
+  "title": "Open World Package Manifest",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "enum": [
+        "WorldPackage",
+        "WorldModelPackage",
+        "OntologyPackage"
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "namespace",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ref": {
+                "type": "object"
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "path"
+                ]
+              },
+              {
+                "required": [
+                  "ref"
+                ]
+              }
+            ],
+            "additionalProperties": true
+          }
+        },
+        "world": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "definition": {
+              "type": "string"
+            },
+            "defaultView": {
+              "type": "string",
+              "minLength": 1
+            },
+            "defaultStateCompiler": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": true
+        },
+        "worldModel": {
+          "type": "object",
+          "properties": {
+            "roles": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "semanticGrounding": {
+              "type": "object",
+              "required": [
+                "worldRef",
+                "compatibleWorldViews",
+                "compatibleStateCompilers"
+              ],
+              "properties": {
+                "worldRef": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "compatibleWorldViews": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "compatibleStateCompilers": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              "additionalProperties": true
+            },
+            "inputs": {
+              "type": "object",
+              "required": [
+                "contract"
+              ],
+              "properties": {
+                "contract": {
+                  "const": "EffectiveWorldState"
+                }
+              },
+              "additionalProperties": true
+            },
+            "representation": {
+              "type": "object",
+              "required": [
+                "adapterRef"
+              ],
+              "properties": {
+                "adapterRef": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "roles",
+            "semanticGrounding",
+            "inputs",
+            "representation"
+          ]
+        },
+        "conformance": {
+          "type": "object",
+          "description": "WorldPackage only. Profiles are cumulative; absent means descriptive.",
+          "properties": {
+            "profile": {
+              "enum": [
+                "descriptive",
+                "viewable",
+                "stateful",
+                "model-ready",
+                "action-ready"
+              ]
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "WorldPackage"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "required": [
+              "world"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "conformance": {
+                      "properties": {
+                        "profile": {
+                          "enum": [
+                            "viewable",
+                            "stateful",
+                            "model-ready",
+                            "action-ready"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "conformance"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "required": [
+                    "assets"
+                  ],
+                  "properties": {
+                    "world": {
+                      "required": [
+                        "defaultView"
+                      ]
+                    },
+                    "assets": {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "const": "WorldViewProfile"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      },
+                      "minContains": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "conformance": {
+                      "properties": {
+                        "profile": {
+                          "enum": [
+                            "stateful",
+                            "model-ready",
+                            "action-ready"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "conformance"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "world": {
+                      "required": [
+                        "defaultStateCompiler"
+                      ]
+                    },
+                    "assets": {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "const": "StateCompilerProfile"
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      },
+                      "minContains": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "conformance": {
+                      "properties": {
+                        "profile": {
+                          "enum": [
+                            "action-ready"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "conformance"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "spec": {
+                  "properties": {
+                    "assets": {
+                      "allOf": [
+                        {
+                          "contains": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "const": "ActionBindingProfile"
+                              }
+                            },
+                            "required": [
+                              "kind"
+                            ]
+                          },
+                          "minContains": 1
+                        },
+                        {
+                          "contains": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "const": "CommitContract"
+                              }
+                            },
+                            "required": [
+                              "kind"
+                            ]
+                          },
+                          "minContains": 1
+                        },
+                        {
+                          "contains": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "const": "EffectVerificationProfile"
+                              }
+                            },
+                            "required": [
+                              "kind"
+                            ]
+                          },
+                          "minContains": 1
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "WorldModelPackage"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "required": [
+              "worldModel",
+              "assets"
+            ],
+            "properties": {
+              "worldModel": {
+                "required": [
+                  "roles",
+                  "semanticGrounding"
+                ]
+              },
+              "assets": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "const": "RepresentationAdapterProfile"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "minContains": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

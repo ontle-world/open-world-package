@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: Dataset
+metadata:
+  name: manipulation-episodes
+spec:
+  worldViewRef: views/pick-place-task.yaml
+  structure: episodic
+  standardBindings:
+    format: lerobot
+    artifactRef: null
+    status: unbound
+  note: Bind an immutable LeRobot/Hugging Face dataset revision when publishing concrete episodes.

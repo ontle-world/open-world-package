@@ -1,0 +1,4 @@
+robot: robot-01
+object: object-red-block
+target: bin-a
+task: pick_place

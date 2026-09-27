@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+build/
+dist/
+*.owp.zip
+!conformance/**/*.owp.zip
+node_modules/
+.ontle/cache/
+.ontle/build/

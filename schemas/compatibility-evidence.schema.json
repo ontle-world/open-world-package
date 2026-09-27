@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:compatibility-evidence:v1alpha1",
+  "title": "OWP CompatibilityEvidence asset",
+  "description": "Binds a result to the exact evaluation, verifier, World, View, and State Compiler that produced it.",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "CompatibilityEvidence"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "spec": {
+      "type": "object",
+      "required": [
+        "subject",
+        "evaluationProfile",
+        "scope",
+        "result"
+      ],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evaluationProfile": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "verifier": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "goldenSet": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "dataset": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+        },
+        "scope": {
+          "type": "object",
+          "required": [
+            "worldRef",
+            "worldView"
+          ],
+          "properties": {
+            "worldRef": {
+              "type": "string",
+              "minLength": 1
+            },
+            "worldView": {
+              "type": "string",
+              "minLength": 1
+            },
+            "stateCompiler": {
+              "type": "string",
+              "minLength": 1
+            },
+            "environment": {
+              "type": "string",
+              "minLength": 1
+            },
+            "task": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": true
+        },
+        "result": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

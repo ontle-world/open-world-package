@@ -1,0 +1,50 @@
+# Core Concepts
+
+## Target reality and explicit representation
+
+`World (in real)` is the actual or conceptual target. It is not a database or registry object.
+
+`World (in data schema)` is an intentionally incomplete, explicit representation used for identity, semantics, relations, state meaning, provenance, validity, source references, and reusable projections.
+
+## Interface boundary
+
+Inbound examples: database rows, APIs, sensors, images, video, documents, human observations.
+
+Outbound examples: API calls, workflow commits, approvals, robot actions, equipment controls.
+
+Keep these distinctions:
+
+```text
+Source Record != Observation != State
+API/Tool Success != Business Commit != Realized World Change
+```
+
+## World View
+
+A task-, actor-, objective-, authority-, scale-, resolution-, and time-conditioned projection of a World representation. OWP packages this as a reusable `WorldViewProfile`. A WorldPackage at the `viewable` profile or above carries at least one.
+
+## State Compiler
+
+A packaged `StateCompilerProfile` defines how a compatible World View is reconciled, authority/freshness checked, and materialized into runtime state. A WorldPackage at the `stateful` profile or above carries at least one; at `model-ready` each compiler also declares a concrete EWS schema (`outputSchema`).
+
+## Effective World State (EWS)
+
+A runtime-ready materialization of a World View for one execution/evaluation context. EWS is not a new World and is not automatically a registry asset.
+
+## World Model
+
+A World Model is semantically grounded in a World, MUST name one or more compatible World View contracts and State Compiler contracts, and consumes the resulting EWS through a declared Representation Adapter at runtime.
+
+## Conformance profiles
+
+A World does not need a World Model to be useful. A WorldPackage declares how far along the chain it goes:
+
+```text
+descriptive -> viewable -> stateful -> model-ready -> action-ready
+```
+
+See `spec/OWP_SPEC.md` section 6.1.
+
+## Evaluation lineage
+
+A score only means something together with the exact EvaluationProfile, Verifier, View, State Compiler, and environment that produced it. OWP records that binding (`CompatibilityEvidence`); running and evolving evaluations is a runtime/registry concern. See `spec/OWP_SPEC.md` section 9.

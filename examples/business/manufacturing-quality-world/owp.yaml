@@ -1,0 +1,64 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: openworld-examples
+  name: manufacturing-quality-world
+  version: 0.1.0
+  title: Manufacturing Quality World
+  license: Apache-2.0
+spec:
+  domains:
+  - manufacturing
+  - quality
+  world:
+    description: WORLD.md
+    definition: Quality incidents, lots, equipment, evidence, constraints, decisions,
+      CAPA actions, and outcomes.
+    boundary:
+      included:
+      - quality_incident
+      - lot
+      - equipment
+      - inspection
+      - claim
+      - decision
+      - capa
+      - outcome
+      excluded:
+      - complete_mes_implementation
+      - complete_qms_implementation
+    defaultView: views/quality-incident-task.yaml
+    defaultStateCompiler: state/quality-incident-compiler.yaml
+  conformance:
+    profile: action-ready
+  capabilities:
+  - explore
+  - state_tracking
+  - audit
+  - decision_support
+  validity:
+    limitations:
+    - Reference semantic package; source systems remain external.
+  assets:
+  - kind: WorldViewProfile
+    path: views/quality-incident-task.yaml
+  - kind: StateCompilerProfile
+    path: state/quality-incident-compiler.yaml
+  - kind: SourceSystemSchemaProfile
+    path: interfaces/sources.yaml
+  - kind: ObservationAcquisitionProfile
+    path: interfaces/observations.yaml
+  - kind: ActionBindingProfile
+    path: interfaces/actions.yaml
+  - kind: CommitContract
+    path: interfaces/commit.yaml
+  - kind: EffectVerificationProfile
+    path: interfaces/effect-verification.yaml
+  - kind: ScenarioProfile
+    path: scenarios/claim-rca.yaml
+  - kind: PackageExample
+    path: examples/basic.yaml
+  - kind: PackageExample
+    path: examples/observations.yaml
+  - kind: PackageExample
+    path: examples/expected-ews.yaml

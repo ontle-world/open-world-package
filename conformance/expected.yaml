@@ -1,0 +1,504 @@
+# Expected outcomes for the OWP conformance suite.
+# valid: whether a conforming validator accepts the package.
+# satisfiedProfile: highest WorldPackage conformance profile satisfied (WorldPackage cases only; null if none).
+# rule: informative; error message wording is implementation-defined.
+suite: owp-conformance/v1alpha1
+cases:
+  world-descriptive-default:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Absent spec.conformance means descriptive; no View or State Compiler is required."
+  world-descriptive-missing-definition:
+    valid: false
+    errors: [profile.descriptive]
+    satisfiedProfile: null
+    rule: "descriptive requires spec.world.definition or a WorldDefinition asset."
+  world-viewable:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "viewable requires a WorldViewProfile named by spec.world.defaultView."
+  world-viewable-missing-default-view:
+    valid: false
+    errors: [profile.viewable]
+    satisfiedProfile: descriptive
+    rule: "viewable requires spec.world.defaultView."
+  world-viewable-view-without-worldref:
+    valid: false
+    errors: [profile.viewable.world-ref]
+    satisfiedProfile: descriptive
+    rule: "The default WorldViewProfile must declare spec.worldRef."
+  world-stateful-satisfies-higher:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "The satisfied profile is computed independently of the declared profile."
+  world-stateful-missing-compiler:
+    valid: false
+    errors: [profile.stateful]
+    satisfiedProfile: viewable
+    rule: "stateful requires a StateCompilerProfile named by spec.world.defaultStateCompiler."
+  world-compiler-unknown-view:
+    valid: false
+    errors: [profile.stateful.compiler-view]
+    satisfiedProfile: viewable
+    rule: "A StateCompilerProfile spec.worldViewRef must point to a local WorldViewProfile asset."
+  world-compiler-wrong-output-contract:
+    valid: false
+    errors: [profile.stateful.output-contract]
+    satisfiedProfile: viewable
+    rule: "A StateCompilerProfile must declare outputContract = EffectiveWorldState."
+  world-model-ready-missing-schema:
+    valid: false
+    errors: [profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "model-ready requires a concrete EWS schema: outputSchema.fields or outputSchemaRef."
+  world-action-ready:
+    valid: true
+    satisfiedProfile: action-ready
+    rule: "action-ready = model-ready + ActionBinding + Commit + EffectVerification."
+  world-action-ready-missing-commit:
+    valid: false
+    errors: [profile.action-ready]
+    satisfiedProfile: model-ready
+    rule: "action-ready requires a CommitContract."
+  world-unknown-profile:
+    valid: false
+    errors: [profile.unknown]
+    satisfiedProfile: descriptive
+    rule: "spec.conformance.profile must be a defined profile."
+  world-view-worldref-self:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A View's worldRef may be 'self'."
+  world-view-worldref-foreign:
+    valid: false
+    errors: [profile.viewable.world-ref]
+    satisfiedProfile: descriptive
+    rule: "The default View's worldRef must be 'self' or this package's identity."
+  world-descriptive-via-world-definition:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "descriptive may be satisfied by a WorldDefinition asset instead of spec.world.definition."
+  world-model-ready-via-schema-ref:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "model-ready may be satisfied by outputSchemaRef."
+  package-legacy-manifest:
+    valid: false
+    errors: [package.legacy-manifest]
+    satisfiedProfile: descriptive
+    rule: "package.yaml or world.yaml at the package root is rejected."
+  asset-kind-mismatch:
+    valid: false
+    errors: [asset.kind-mismatch]
+    satisfiedProfile: descriptive
+    rule: "A local YAML asset that declares kind must match the manifest kind."
+  asset-missing-file:
+    valid: false
+    errors: [asset.missing-file]
+    satisfiedProfile: descriptive
+    rule: "Local asset paths must exist."
+  asset-path-escapes-package:
+    valid: false
+    errors: [asset.path-escape]
+    satisfiedProfile: descriptive
+    rule: "Local asset paths must stay inside the package root."
+  world-bad-binding-field:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: "A binding key must be a field of outputSchema.fields; malformed bindings fail stateful (declared and satisfied)."
+  world-bad-binding-select:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: "Binding select must be latest or all."
+  dependency-range:
+    valid: false
+    errors: [manifest.dependency]
+    satisfiedProfile: descriptive
+    rule: "Dependencies are exact references; ranges are invalid even without resolution."
+  identity-with-slash:
+    valid: false
+    errors: [manifest.identity]
+    satisfiedProfile: descriptive
+    rule: "namespace and name must not contain '/', '@', '#', or whitespace."
+  package-legacy-world-yaml:
+    valid: false
+    errors: [package.legacy-manifest]
+    satisfiedProfile: descriptive
+    rule: "world.yaml at the package root is rejected."
+  asset-duplicate-path:
+    valid: false
+    errors: [asset.duplicate-path]
+    satisfiedProfile: descriptive
+    rule: "The same local path may be listed once."
+  asset-dotslash-path:
+    valid: false
+    errors: [asset.path-form]
+    satisfiedProfile: descriptive
+    rule: "Local paths must not start with './'."
+  asset-namespaced-kind:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Namespaced asset kinds (containing ':') are accepted."
+  package-example-kind-not-checked:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "A PackageExample may hold any document, such as an ObservationSet; its kind is not compared with the manifest kind."
+  package-example-unparseable:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "A PackageExample YAML file must still parse."
+  manifest-bad-api-version:
+    valid: false
+    errors: [manifest.api-version]
+    satisfiedProfile: descriptive
+    rule: "apiVersion must be openworld/v1alpha1."
+  manifest-unknown-kind:
+    valid: false
+    errors: [manifest.kind]
+    rule: "kind must be a defined package kind."
+  package-missing-card:
+    valid: false
+    errors: [package.card]
+    satisfiedProfile: descriptive
+    rule: "A WorldPackage requires WORLD.md."
+  asset-path-and-ref:
+    valid: false
+    errors: [asset.path-or-ref]
+    satisfiedProfile: descriptive
+    rule: "An asset entry declares exactly one of path or ref."
+  asset-unparseable-yaml:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "Local YAML assets other than PackageExample must parse."
+  world-default-compiler-other-view:
+    valid: false
+    errors: [profile.stateful.default-compiler-view]
+    satisfiedProfile: viewable
+    rule: "The default State Compiler must compile spec.world.defaultView."
+  ontology-missing-spec:
+    valid: false
+    errors: [ontology.spec]
+    rule: "An OntologyPackage declares spec.ontology as a mapping."
+  model-grounded:
+    valid: true
+    rule: "A World Model names compatible World Views and State Compilers as <worldRef>#<asset path>."
+  model-missing-views:
+    valid: false
+    errors: [worldmodel.compatible-views]
+    rule: "compatibleWorldViews is required."
+  model-missing-compilers:
+    valid: false
+    errors: [worldmodel.compatible-compilers]
+    rule: "compatibleStateCompilers is required."
+  model-view-other-world:
+    valid: false
+    errors: [worldmodel.grounding-ref]
+    rule: "Grounding references must belong to semanticGrounding.worldRef."
+  evidence-pinned:
+    valid: true
+    rule: "Evidence binds an exact EvaluationProfile version and a scope inside the declared applicability."
+  evidence-unpinned-profile:
+    valid: false
+    errors: [evidence.unpinned]
+    rule: "Evidence must reference <name>@<exact-semver>; ranges are not allowed."
+  evidence-version-mismatch:
+    valid: false
+    errors: [evidence.version-mismatch]
+    rule: "Evidence cannot claim a version other than the packaged EvaluationProfile version."
+  evidence-view-out-of-scope:
+    valid: false
+    errors: [evidence.scope.world-view]
+    rule: "Evidence scope.worldView must be one of compatibleWorldViews."
+  evidence-compiler-out-of-scope:
+    valid: false
+    errors: [evidence.scope.state-compiler]
+    rule: "Evidence scope.stateCompiler, when present, must be one of compatibleStateCompilers."
+  evidence-subject-mismatch:
+    valid: false
+    errors: [evidence.subject]
+    rule: "Inside a WorldModelPackage, evidence subject is the package identity."
+  evidence-scope-worldref-mismatch:
+    valid: false
+    errors: [evidence.scope.world-ref]
+    rule: "Evidence scope.worldRef equals semanticGrounding.worldRef."
+  evidence-external-profile:
+    valid: true
+    rule: "Evidence may bind an EvaluationProfile that is not packaged locally."
+  evidence-local-profile-unversioned:
+    valid: false
+    errors: [evidence.version-mismatch]
+    rule: "Binding to a locally packaged EvaluationProfile requires that profile to declare the same metadata.version."
+  evidence-verifier-version-mismatch:
+    valid: false
+    errors: [evidence.version-mismatch]
+    rule: "A pinned verifier that is packaged locally must match its version."
+  model-wrong-input-contract:
+    valid: false
+    errors: [worldmodel.input-contract]
+    rule: "inputs.contract must be EffectiveWorldState."
+  model-missing-adapter:
+    valid: false
+    errors: [worldmodel.adapter, worldmodel.adapter-ref]
+    rule: "A WorldModelPackage requires a local RepresentationAdapterProfile named by representation.adapterRef."
+  model-world-ref-not-package-reference:
+    valid: false
+    errors: [worldmodel.world-ref]
+    rule: "semanticGrounding.worldRef must be <namespace>/<name>@<semver>."
+  eval-duplicate-name:
+    valid: false
+    errors: [eval.duplicate-name]
+    rule: "Two local EvaluationProfiles must not share metadata.name."
+  model-adapter-wrong-source:
+    valid: false
+    errors: [worldmodel.adapter-source]
+    rule: "The adapter named by adapterRef must declare spec.source = EffectiveWorldState."
+  model-no-roles:
+    valid: false
+    errors: [worldmodel.roles]
+    rule: "A World Model declares at least one role."
+  eval-bad-version:
+    valid: false
+    errors: [eval.version]
+    rule: "EvaluationProfile metadata.version, when present, is SemVer."
+  eval-supersedes-range:
+    valid: false
+    errors: [eval.supersedes]
+    rule: "supersedes is a pinned <name>@<version> reference."
+  evidence-missing-result:
+    valid: false
+    errors: [evidence.result]
+    rule: "CompatibilityEvidence declares spec.result."
+  evidence-unpinned-verifier:
+    valid: false
+    errors: [evidence.unpinned]
+    rule: "A verifier reference, when present, must be pinned."
+
+# Resolution cases: validate <case>/root with dependency resolution, using <case>/packages as the only package source.
+resolutionCases:
+  grounded:
+    valid: true
+    rule: "Grounding paths exist in the referenced World with the right kinds, and the compiler compiles a compatible View."
+  unresolvable-world:
+    valid: false
+    errors: [resolve.unresolved]
+    rule: "Resolution is by exact version; 0.1.0 does not satisfy 0.2.0."
+  world-ref-not-a-dependency:
+    valid: false
+    errors: [grounding.world-not-dependency]
+    rule: "semanticGrounding.worldRef must be listed in spec.dependencies."
+  view-missing-in-world:
+    valid: false
+    errors: [grounding.world-view]
+    rule: "Every compatibleWorldViews path must be a WorldViewProfile asset of the referenced World."
+  view-path-wrong-kind:
+    valid: false
+    errors: [grounding.world-view]
+    rule: "A compatibleWorldViews path that names a StateCompilerProfile is rejected."
+  compiler-missing-in-world:
+    valid: false
+    errors: [grounding.state-compiler]
+    rule: "Every compatibleStateCompilers path must be a StateCompilerProfile asset of the referenced World."
+  compiler-view-not-compatible:
+    valid: false
+    errors: [grounding.compiler-view]
+    rule: "Each compatible State Compiler must compile one of the model's compatibleWorldViews."
+  version-conflict:
+    valid: false
+    errors: [resolve.version-conflict]
+    rule: "One package name may resolve to only one version in a dependency closure."
+  dependency-cycle:
+    valid: false
+    errors: [resolve.cycle]
+    rule: "Dependency cycles are rejected."
+  invalid-dependency:
+    valid: false
+    errors: [resolve.dependency-invalid]
+    rule: "A resolved dependency must itself be valid."
+  descriptive-dependency:
+    valid: true
+    rule: "A descriptive World (no View/State Compiler) is a valid dependency."
+  archive-source:
+    valid: true
+    rule: "A .owp.zip in a directory source is resolved after its lock verifies."
+  archive-tampered:
+    valid: false
+    errors: [resolve.source]
+    rule: "An archive whose file hash differs from owp.lock.json is rejected."
+  archive-unlocked-file:
+    valid: false
+    errors: [resolve.source]
+    rule: "An archive containing a file not listed in owp.lock.json is rejected."
+  dependency-mapping-source:
+    valid: true
+    rule: "A {ref, source} dependency uses its source, resolved against the declaring package directory."
+  diamond:
+    valid: true
+    rule: "The same exact version reached twice is not a conflict."
+  world-ref-not-world:
+    valid: false
+    errors: [grounding.world-kind]
+    rule: "semanticGrounding.worldRef must resolve to a WorldPackage."
+  non-root-model-grounding:
+    valid: false
+    errors: [grounding.world-view]
+    rule: "Cross-package grounding rules apply to every WorldModelPackage in the closure, not only the root."
+  git-bundle-source:
+    valid: true
+    rule: "A git source (here a git bundle, resolved relative to the declaring package) is fetched at the tag; the package is found under #subdir."
+  git-missing-rev:
+    valid: false
+    errors: [resolve.source]
+    rule: "A git source whose rev does not exist is a source error."
+  hidden-directory-skipped:
+    valid: false
+    errors: [resolve.unresolved]
+    rule: "Directories whose name starts with '.' are not scanned."
+
+# EWS compile cases: run <case>/world's compiler over <case>/observations.yaml at asOf.
+# Compare with <case>/expected-ews.yaml on worldRef, worldView, stateCompiler, asOf, state, unresolved, missing (as a set), provenance (as sets).
+# error: true means a conforming compiler must refuse the input.
+ewsCases:
+  latest-picks-newest:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "select latest takes the value with the greatest observedAt."
+  latest-tie-same-value:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Equal values at the newest time resolve to that value; provenance lists every tied observation."
+  latest-tie-conflict:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Different values at the newest time are unresolved; alternatives are kept in (observedAt, id) order, first occurrence wins."
+  all-ordered:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "select all returns values ordered by (observedAt, id)."
+  as-of-excludes-future:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:03Z"
+    rule: "Observations after asOf are ignored; observedAt equal to asOf is included."
+  no-candidates-missing:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "A bound field with no matching observation (type and value key) is missing; unbound fields are always missing."
+  json-bool-vs-number:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Values compare in the JSON data model: true and 1 differ, so the field is unresolved."
+  json-int-vs-float:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Numbers compare numerically: 1 and 1.0 are equal, so the field resolves."
+  json-structured-values:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Mappings compare by key set and values, independent of key order."
+  null-value:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "A null value is a value: the newest observation sets the field to null."
+  id-code-point-order:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "Ties on observedAt order by id in Unicode code point order ('o10' < 'o9')."
+  unquoted-utc-timestamp:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "An unquoted timestamp is read as its source text, not converted."
+  error-unquoted-non-utc-timestamp:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.input]
+    rule: "An unquoted non-UTC timestamp is read as text and rejected, never converted to UTC."
+  error-missing-values:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.input]
+    rule: "Each observation needs a values mapping."
+  error-invalid-calendar-as-of:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-02-30T00:00:00Z"
+    error: true
+    errors: [ews.input]
+    rule: "asOf must be a valid calendar instant."
+  error-opaque-compiler:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.opaque-compiler]
+    rule: "A compiler without bindings is opaque; compiling it is refused."
+  error-duplicate-id:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.input]
+    rule: "Duplicate observation ids are rejected."
+  error-non-utc-timestamp:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.input]
+    rule: "observedAt must be UTC YYYY-MM-DDTHH:MM:SSZ."
+
+# EWS check cases: check <case>/ews.yaml against <case>/world's State Compiler output contract.
+ewsCheckCases:
+  valid:
+    valid: true
+    rule: "A complete EWS document satisfying the compiler's output contract."
+  field-in-two-places:
+    valid: false
+    errors: [ews.field-placement]
+    rule: "Each schema field appears in exactly one of state, unresolved, missing."
+  field-absent:
+    valid: false
+    errors: [ews.field-placement]
+    rule: "A schema field that appears nowhere is rejected."
+  field-not-in-schema:
+    valid: false
+    errors: [ews.field-unknown]
+    rule: "Fields outside outputSchema are rejected."
+  missing-provenance:
+    valid: false
+    errors: [ews.provenance-required]
+    rule: "With traceRequired, every valued field needs provenance."
+  view-mismatch:
+    valid: false
+    errors: [ews.world-view]
+    rule: "worldView must be the View compiled by stateCompiler."
+  world-ref-mismatch:
+    valid: false
+    errors: [ews.world-ref]
+    rule: "worldRef must be the World's identity."
+  bad-as-of:
+    valid: false
+    errors: [ews.as-of]
+    rule: "context.asOf must be a UTC timestamp."
+  provenance-orphan:
+    valid: false
+    errors: [ews.provenance-orphan]
+    rule: "Provenance only for fields with a value."
+  duplicate-alternatives:
+    valid: false
+    errors: [ews.unresolved-alternatives]
+    rule: "Unresolved alternatives must be at least two distinct values."
+  trace-not-required:
+    valid: true
+    rule: "Without traceRequired, provenance may be omitted."
+  schema-ref-only-compiler:
+    valid: true
+    rule: "Alpha limitation: a compiler with only outputSchemaRef skips the field rules until outputSchemaRef resolution is specified (see ROADMAP)."
+  wrong-kind:
+    valid: false
+    errors: [ews.kind]
+    rule: "The document kind must be EffectiveWorldState."
+  single-alternative:
+    valid: false
+    errors: [ews.unresolved-alternatives]
+    rule: "An unresolved field retains at least two alternatives."

@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  ontology: {formats: [yaml]}
+  assets: []

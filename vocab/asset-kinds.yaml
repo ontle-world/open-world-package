@@ -1,0 +1,49 @@
+apiVersion: openworld/v1alpha1
+kind: AssetKindVocabulary
+assetKinds:
+  semantic:
+  - SemanticProfile
+  - WorldDefinition
+  - WorldViewProfile
+  - StateCompilerProfile
+  interface:
+  - SourceSystemSchemaProfile
+  - SourceAdapterProfile
+  - MappingSpec
+  - IdentityResolutionProfile
+  - ObservationAcquisitionProfile
+  - ActionBindingProfile
+  - CommitContract
+  - EffectVerificationProfile
+  reference:
+  - ReferenceEnterpriseProfile
+  - ReferenceIndustryProfile
+  - ScenarioProfile
+  - EnvironmentProfile
+  model:
+  - WorldModelContract
+  - ModelArtifact
+  - RepresentationAdapterProfile
+  - ResolutionProfile
+  - AggregationCoarseGrainingProfile
+  operational:
+  - CapabilityContract
+  - SkillProfile
+  - ToolProfile
+  - AgentProfile
+  - WorkflowProfile
+  - OperationalAsset
+  - SemanticBinding
+  evaluation:
+  - Dataset
+  - ReferenceFixture
+  - NegativeFixture
+  - BenchmarkCase
+  - AcceptanceCase
+  - Validator
+  - EvaluationProfile
+  - VerifierPackage
+  - CompatibilityEvidence
+  - Attestation
+  package_support:
+  - PackageExample

@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: CompatibilityEvidence
+metadata:
+  name: evidence
+spec:
+  subject: conformance/model@0.1.0
+  evaluationProfile: fixture-eval@1.1.0
+  scope:
+    worldRef: conformance/other@0.1.0
+    worldView: conformance/world@0.1.0#views/task.yaml
+  result:
+    status: illustrative

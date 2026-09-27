@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: EnvironmentProfile
+metadata:
+  name: reference-manipulation-environment
+spec:
+  exposes:
+    observations: [rgb_front, rgb_wrist, proprioception]
+    actions: [navigate, reach, grasp, release]
+  runtimeBinding: unspecified
+  standardBindings:
+    scene:
+      standard: openusd
+      ref: null
+      status: unbound
+  note: Environment is an interaction surface for a World, not the World itself.

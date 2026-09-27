@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationAcquisitionProfile
+metadata:
+  name: quality-observations
+spec:
+  inputs:
+    - source: MES.defect_event
+      semanticRole: observation
+    - source: QMS.inspection
+      semanticRole: evidence
+    - source: QMS.claim
+      semanticRole: observation
+  rule: Source records are mapped into observations/evidence; they are not automatically committed World state.

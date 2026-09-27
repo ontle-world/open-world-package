@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: o1
+    type: sensor.a
+    observedAt: "2026-01-01T00:00:01Z"
+    values: {"other": 1}
+  - id: o2
+    type: sensor.c
+    observedAt: "2026-01-01T00:00:01Z"
+    values: {"v": 1}

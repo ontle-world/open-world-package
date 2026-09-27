@@ -1,0 +1,10 @@
+ONTLE Open World tooling and the Open World Package (OWP) public-alpha materials.
+
+Code, CLI, schemas, templates, and examples are licensed under Apache License 2.0
+unless a file says otherwise.
+
+Specification and documentation under spec/ and docs/ are licensed under
+Creative Commons Attribution 4.0 International (CC BY 4.0).
+
+ONTLE and FutureWorkLab names and logos are not licensed under the Apache or
+Creative Commons licenses. This repository does not grant trademark rights.

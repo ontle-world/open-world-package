@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: SourceSystemSchemaProfile
+metadata:
+  name: manufacturing-sources
+spec:
+  systems:
+    MES: [production_order, operation_execution, production_lot, equipment, defect_event]
+    QMS: [inspection, nonconformance, claim, capa, verification]
+  standardBindings:
+    isa95:
+      production_lot: MaterialLot
+      equipment: Equipment
+      operation_execution: OperationsPerformance
+    opcua:
+      equipment: companion_specification_unbound

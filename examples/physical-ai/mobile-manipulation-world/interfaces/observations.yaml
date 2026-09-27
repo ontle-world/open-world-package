@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationAcquisitionProfile
+metadata:
+  name: observations
+spec:
+  modalities:
+    - rgb_front
+    - rgb_wrist
+    - proprioception
+    - language_task
+  standardBindings:
+    ros2:
+      rgb_front: sensor_msgs/msg/Image
+      rgb_wrist: sensor_msgs/msg/Image
+      proprioception: sensor_msgs/msg/JointState

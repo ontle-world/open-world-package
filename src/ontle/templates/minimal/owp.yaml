@@ -1,0 +1,31 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: example
+  name: my-world
+  version: 0.1.0
+  title: My World
+  license: Apache-2.0
+spec:
+  domains: []
+  world:
+    description: WORLD.md
+    definition: A minimal explicit representation for a target world.
+    boundary:
+      included: []
+      excluded: []
+    defaultView: views/default.yaml
+    defaultStateCompiler: state/default-compiler.yaml
+  conformance:
+    profile: stateful
+  capabilities:
+  - explore
+  validity:
+    limitations: []
+  assets:
+  - kind: WorldViewProfile
+    path: views/default.yaml
+  - kind: StateCompilerProfile
+    path: state/default-compiler.yaml
+  - kind: PackageExample
+    path: examples/basic.yaml

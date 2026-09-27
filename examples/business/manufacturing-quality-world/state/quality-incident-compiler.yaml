@@ -1,0 +1,31 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: quality-incident-state-compiler
+spec:
+  worldViewRef: views/quality-incident-task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields:
+    - quality_incident.status
+    - claim.status
+    - lot.genealogy
+    - equipment.condition_events
+    - inspection.results
+    - evidence.open_hypotheses
+    - capa.status
+  bindings:
+    quality_incident.status: {from: QMS.nonconformance, value: status, select: latest}
+    claim.status: {from: QMS.claim, value: status, select: latest}
+    lot.genealogy: {from: MES.production_lot, value: genealogy, select: latest}
+    equipment.condition_events: {from: MES.equipment, value: condition_event, select: all}
+    inspection.results: {from: QMS.inspection, value: result, select: all}
+    capa.status: {from: QMS.capa, value: status, select: latest}
+  compilation:
+    reconciliation: retain_alternatives_when_unresolved
+    authority: preserve_declared_authority
+    freshness: source_declared
+    scale: view_declared
+    resolution: view_declared
+    sufficiency: task_relevant_state_required
+  traceRequired: true

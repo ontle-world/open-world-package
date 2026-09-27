@@ -1,0 +1,27 @@
+{
+  "name": "owp-validator-ts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Independent TypeScript implementation of the Open World Package (OWP) validator, resolver, and EWS compiler, written from the spec",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "owp-validate": "dist/cli.js"
+  },
+  "main": "dist/validate.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "validate": "node dist/cli.js",
+    "conformance": "node dist/conformance.js",
+    "examples": "node dist/cli.js ../../examples/business/manufacturing-quality-world ../../examples/physical-ai/mobile-manipulation-world && node dist/cli.js --resolve --source ../../examples ../../examples/business/quality-transition-world-model ../../examples/physical-ai/multimodal-action-world-model && node scripts/check-examples-ews.mjs",
+    "probes": "node scripts/make-probes.mjs && node dist/conformance.js --suite probes",
+    "test": "npm run build && npm run conformance && npm run examples"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.0"
+  }
+}

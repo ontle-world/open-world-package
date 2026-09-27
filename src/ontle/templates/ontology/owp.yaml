@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: example
+  name: my-ontology
+  version: 0.1.0
+  title: My Ontology
+  license: Apache-2.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    formats: [yaml]
+    entrypoints:
+      - semantics/core.yaml
+  assets: []

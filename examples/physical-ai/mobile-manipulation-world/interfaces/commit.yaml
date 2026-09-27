@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: CommitContract
+metadata:
+  name: robot-command-commit
+spec:
+  commitSemantics:
+    commandAccepted: controller acknowledgement
+    actionCommitted: controller accepted the command for execution
+  rule: Controller acceptance does not prove the intended physical effect occurred.

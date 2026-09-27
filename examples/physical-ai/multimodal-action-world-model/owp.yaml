@@ -1,0 +1,67 @@
+apiVersion: openworld/v1alpha1
+kind: WorldModelPackage
+metadata:
+  namespace: openworld-examples
+  name: multimodal-action-world-model
+  version: 0.1.0
+  title: Multimodal Action World Model
+  license: Apache-2.0
+spec:
+  domains:
+  - physical-ai
+  - robotics
+  dependencies:
+  - openworld-examples/mobile-manipulation-world@0.1.0
+  worldModel:
+    description: WORLDMODEL.md
+    roles:
+    - semantic_grounding
+    - state_estimation
+    - dynamics_prediction
+    - observation_prediction
+    - action_policy
+    semanticGrounding:
+      worldRef: openworld-examples/mobile-manipulation-world@0.1.0
+      compatibleWorldViews:
+      - openworld-examples/mobile-manipulation-world@0.1.0#views/pick-place-task.yaml
+      compatibleStateCompilers:
+      - openworld-examples/mobile-manipulation-world@0.1.0#state/pick-place-compiler.yaml
+    modalities:
+      inputs:
+      - rgb_front
+      - rgb_wrist
+      - language
+      - proprioception
+      - action_history
+      outputs:
+      - latent_state
+      - predicted_observation
+      - action
+      - trajectory
+    representation:
+      input: hybrid_multimodal
+      internal: implementation_defined
+      adapterRef: models/adapter.yaml
+    temporal:
+      contextWindow: 8_steps
+      predictionWindow: 4_steps
+      actionHorizon: 4_steps
+    validity:
+      requiredObservationModalities:
+      - rgb_front
+      - proprioception
+      limitations:
+      - Example contract; no weights bundled.
+    inputs:
+      contract: EffectiveWorldState
+  assets:
+  - kind: ModelArtifact
+    path: models/model-artifact.yaml
+  - kind: RepresentationAdapterProfile
+    path: models/adapter.yaml
+  - kind: EvaluationProfile
+    path: eval/manipulation.yaml
+  - kind: VerifierPackage
+    path: eval/verifier.yaml
+  - kind: CompatibilityEvidence
+    path: eval/evidence-reference-sim.yaml

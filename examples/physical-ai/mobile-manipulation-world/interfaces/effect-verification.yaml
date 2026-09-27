@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: EffectVerificationProfile
+metadata:
+  name: physical-effect-verification
+spec:
+  verifies:
+    - gripper_contact
+    - object_pose_change
+    - target_zone_occupancy
+  observationSources: [rgb_front, rgb_wrist, proprioception]

@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: ActionBindingProfile
+metadata:
+  name: robot-actions
+spec:
+  actionSpace:
+    type: hybrid
+    commands: [navigate, reach, grasp, release]
+  standardBindings:
+    ros2:
+      navigate: nav2_msgs/action/NavigateToPose
+      reach: control_msgs/action/FollowJointTrajectory
+      grasp: control_msgs/action/GripperCommand
+      release: control_msgs/action/GripperCommand

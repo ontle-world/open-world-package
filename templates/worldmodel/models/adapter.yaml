@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: RepresentationAdapterProfile
+metadata:
+  name: representation-adapter
+spec:
+  source: EffectiveWorldState
+  target: model_native_input
+  preserves: [semantic_identity, units, temporal_meaning, uncertainty]

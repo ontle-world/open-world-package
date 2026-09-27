@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/missing.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [entity.state]

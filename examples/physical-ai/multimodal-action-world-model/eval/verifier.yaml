@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: VerifierPackage
+metadata:
+  name: pick-place-effect-verifier
+  version: 0.1.0
+spec:
+  verifies: [object_pose_change, target_zone_occupancy]
+  basis: openworld-examples/mobile-manipulation-world@0.1.0#interfaces/effect-verification.yaml

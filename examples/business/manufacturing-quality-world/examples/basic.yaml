@@ -1,0 +1,7 @@
+claim:
+  id: CLM-001
+  lot: LOT-2401
+equipment:
+  id: FILL-02
+observation:
+  type: vibration_warning

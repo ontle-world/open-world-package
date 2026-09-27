@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [a.latest, b.all, c.unbound]
+  bindings:
+    a.latest: {from: sensor.a, value: v, select: latest}
+    b.all: {from: sensor.b, value: v, select: all}
+  traceRequired: false

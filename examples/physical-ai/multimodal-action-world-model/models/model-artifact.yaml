@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: multimodal-action-model-artifact
+spec:
+  implementationStatus: unbound_example
+  bundled: false
+  artifactRef: null
+  supportedProviders: [huggingface, oci, s3, local_content_addressed_store]
+  note: Bind an immutable external model revision when publishing a concrete implementation.

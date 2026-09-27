@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: WorldDefinition
+metadata:
+  name: definition
+spec:
+  summary: Conformance fixture World.

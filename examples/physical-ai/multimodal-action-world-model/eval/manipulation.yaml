@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata:
+  name: manipulation-basic
+  version: 0.2.0
+spec:
+  tasks: [pick_place]
+  metrics: [task_success, constraint_violation_rate, effect_verified_rate]
+  supersedes: manipulation-basic@0.1.0
+  changedBecause:
+  - Controller-accepted grasps were counted as task success without a verified object pose change.
+  note: Results produced under 0.1.0 are not comparable with results produced under this version.

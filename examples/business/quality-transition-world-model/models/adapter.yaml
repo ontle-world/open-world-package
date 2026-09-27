@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: RepresentationAdapterProfile
+metadata:
+  name: quality-state-adapter
+spec:
+  source: EffectiveWorldState
+  target: structured_quality_model_input
+  preserves: [semantic_identity, units, temporal_meaning, uncertainty]

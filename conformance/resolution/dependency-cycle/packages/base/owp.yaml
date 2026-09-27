@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: base
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+  conformance:
+    profile: descriptive
+  dependencies:
+  - conformance/world@0.1.0
+  assets: []

@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: pick-place
+spec:
+  objective: Pick a target object and place it in the target zone without violating safety constraints.

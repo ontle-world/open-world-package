@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: EffectVerificationProfile
+metadata:
+  name: enterprise-effect-verification
+spec:
+  verifies: []

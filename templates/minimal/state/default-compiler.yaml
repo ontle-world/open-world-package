@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: default-state-compiler
+spec:
+  worldViewRef: views/default.yaml
+  outputContract: EffectiveWorldState
+  compilation:
+    reconciliation: retain_alternatives_when_unresolved
+    authority: preserve_declared_authority
+    freshness: source_declared
+    scale: view_declared
+    resolution: view_declared
+    sufficiency: task_relevant_state_required
+  traceRequired: true

@@ -82,8 +82,11 @@ export function checkWorldModelPackage(ctx: Context): Grounding {
   }
 
   // Spec 8 severity: missing ModelArtifact / EvaluationProfile are warnings.
-  for (const k of ["ModelArtifact", "EvaluationProfile"]) {
-    if (!hasAssetOfKind(ctx, k)) warn(ctx, `worldmodel.${k}-missing`, `WorldModelPackage has no ${k} asset`, "owp.yaml");
+  for (const [k, rule] of [
+    ["ModelArtifact", "worldmodel.model-artifact-missing"],
+    ["EvaluationProfile", "worldmodel.evaluation-profile-missing"],
+  ] as const) {
+    if (!hasAssetOfKind(ctx, k)) warn(ctx, rule, `WorldModelPackage has no ${k} asset`, "owp.yaml");
   }
 
   // Representation adapter

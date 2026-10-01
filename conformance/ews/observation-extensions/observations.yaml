@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  extensions:
+    acme: {batch: B-17}
+  observations:
+  - id: o1
+    type: sensor.a
+    observedAt: "2026-01-01T00:00:03Z"
+    values: {"v": 1}
+    extensions:
+      acme: {gateway: gw-2}
+  - id: o2
+    type: sensor.a
+    observedAt: "2026-01-01T00:01:00Z"
+    values: {"v": 2}

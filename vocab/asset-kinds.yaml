@@ -1,49 +1,59 @@
 apiVersion: openworld/v1alpha1
 kind: AssetKindVocabulary
-assetKinds:
-  semantic:
-  - SemanticProfile
-  - WorldDefinition
-  - WorldViewProfile
-  - StateCompilerProfile
-  interface:
-  - SourceSystemSchemaProfile
-  - SourceAdapterProfile
-  - MappingSpec
-  - IdentityResolutionProfile
-  - ObservationAcquisitionProfile
-  - ActionBindingProfile
-  - CommitContract
-  - EffectVerificationProfile
-  reference:
-  - ReferenceEnterpriseProfile
-  - ReferenceIndustryProfile
-  - ScenarioProfile
-  - EnvironmentProfile
-  model:
-  - WorldModelContract
-  - ModelArtifact
-  - RepresentationAdapterProfile
-  - ResolutionProfile
-  - AggregationCoarseGrainingProfile
-  operational:
-  - CapabilityContract
-  - SkillProfile
-  - ToolProfile
-  - AgentProfile
-  - WorkflowProfile
-  - OperationalAsset
-  - SemanticBinding
-  evaluation:
-  - Dataset
-  - ReferenceFixture
-  - NegativeFixture
-  - BenchmarkCase
-  - AcceptanceCase
-  - Validator
-  - EvaluationProfile
-  - VerifierPackage
-  - CompatibilityEvidence
-  - Attestation
-  package_support:
-  - PackageExample
+# Public asset-kind vocabulary (spec section 8). The vocabulary is open: an
+# unqualified kind outside it is a warning; an extension kind <name>:<Kind> is
+# governed by spec section 13.
+#
+# stability:
+#   standard      part of this specification's vocabulary
+#   experimental  may change or be removed; using it is a warning (asset.kind-experimental)
+#
+# Group names are informative and do not affect validation.
+groups:
+  semanticWorld:
+    SemanticProfile: {stability: standard}
+    WorldDefinition: {stability: standard}
+    WorldViewProfile: {stability: standard}
+    StateCompilerProfile: {stability: standard}
+  interfaceIntegration:
+    SourceSystemSchemaProfile: {stability: standard}
+    SourceAdapterProfile: {stability: standard}
+    MappingSpec: {stability: standard}
+    IdentityResolutionProfile: {stability: standard}
+    ObservationAcquisitionProfile: {stability: standard}
+    ActionBindingProfile: {stability: standard}
+    CommitContract: {stability: standard}
+    EffectVerificationProfile: {stability: standard}
+  referenceProfiles:
+    ReferenceEnterpriseProfile: {stability: standard}
+    ReferenceIndustryProfile: {stability: standard}
+    ScenarioProfile: {stability: standard}
+    EnvironmentProfile: {stability: standard}
+  modelRepresentation:
+    WorldModelContract: {stability: standard}
+    ModelArtifact: {stability: standard}
+    RepresentationAdapterProfile: {stability: standard}
+    ResolutionProfile: {stability: standard}
+    AggregationCoarseGrainingProfile: {stability: standard}
+  capabilityOperational:
+    CapabilityContract: {stability: standard}
+    SkillProfile: {stability: standard}
+    ToolProfile: {stability: standard}
+    AgentProfile: {stability: standard}
+    WorkflowProfile: {stability: standard}
+    OperationalAsset: {stability: standard}
+    SemanticBinding: {stability: standard}
+  evaluationTestEvidence:
+    Dataset: {stability: standard}
+    ReferenceFixture: {stability: standard}
+    NegativeFixture: {stability: standard}
+    BenchmarkCase: {stability: standard}
+    AcceptanceCase: {stability: standard}
+    Validator: {stability: standard}
+    EvaluationProfile: {stability: standard}
+    VerifierPackage: {stability: standard}
+    CompatibilityEvidence: {stability: standard}
+  governancePublication:
+    Attestation: {stability: standard}
+  packageSupport:
+    PackageExample: {stability: standard}

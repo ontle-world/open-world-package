@@ -82,7 +82,7 @@ const runEws: Runner = (dir, id, exp) => {
 const runEwsCheck: Runner = (dir, id, exp) => {
   const base = path.join(dir, "ews-check", id);
   const doc = loadYamlFile(path.join(base, "ews.yaml"));
-  const r = doc.ok ? checkEws(doc.value, path.join(base, "world")) : { valid: false, errors: [{ code: "ews.parse", message: doc.error }] };
+  const r = doc.ok ? checkEws(doc.value, path.join(base, "world")) : { valid: false, errors: [{ code: "ews.kind", message: `not parseable YAML: ${doc.error}` }] };
   return {
     expected: `valid=${fmt(exp.valid)}`,
     got: `valid=${fmt(r.valid)}`,

@@ -11,7 +11,7 @@ from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .resolve import resolve_package, validate_resolved
-from .scaffold import add_asset, init_project
+from .scaffold import add_asset, add_extension, init_project
 
 
 def cmd_init(args):
@@ -80,6 +80,10 @@ def cmd_verify(args):
 
 
 def cmd_add(args):
+    if args.asset_kind == "extension":
+        name = add_extension(args.path, args.name, args.as_name, args.must_understand)
+        print(f"declared extension {name} -> {args.name}")
+        return 0
     target = add_asset(args.path, args.asset_kind, args.name)
     print(target)
     return 0
@@ -135,9 +139,11 @@ def build_parser():
     x.set_defaults(func=cmd_verify)
 
     x = sp.add_parser("add", help="add optional scaffolding to an existing package")
-    x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset"])
-    x.add_argument("name")
+    x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension"])
+    x.add_argument("name", help="asset name, or for 'extension' the defining package <namespace>/<name>@<version>")
     x.add_argument("--path", default=".")
+    x.add_argument("--as", dest="as_name", help="extension: local name (default: package name without a trailing -extension)")
+    x.add_argument("--must-understand", action="store_true", help="extension: runtimes that do not implement it must not run the package")
     x.set_defaults(func=cmd_add)
     return p
 

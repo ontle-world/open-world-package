@@ -4,11 +4,33 @@ from pathlib import Path
 
 import yaml
 
-from ontle.core import deterministic_pack, validate_package, verify_archive
-from ontle.scaffold import init_project, add_asset
+from ontle.core import deterministic_pack, inspect_package, validate_package, verify_archive
+from ontle.scaffold import add_extension, init_project, add_asset
 
 
 class OntleTests(unittest.TestCase):
+    def test_add_extension_declares_dependency(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("demo", "test", "minimal", Path(td) / "demo")
+            name = add_extension(p, "acme/quality-extension@1.2.0", must_understand=True)
+            self.assertEqual(name, "quality")
+            manifest = yaml.safe_load((p / "owp.yaml").read_text(encoding="utf-8"))
+            manifest["spec"]["extensions"] = {"quality": {"plantCode": "P-07"}}
+            (p / "owp.yaml").write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+            result = validate_package(p)
+            self.assertTrue(result.valid, result.errors)
+            self.assertEqual(inspect_package(p)["extensions"],
+                             [{"name": "quality", "ref": "acme/quality-extension@1.2.0", "mustUnderstand": True}])
+            with self.assertRaises(Exception):
+                add_extension(p, "acme/other-extension@1.0.0", "quality")
+
+    def test_templates_single_source(self):
+        from ontle.scaffold import TEMPLATES, _template_dir
+        for name in TEMPLATES:
+            self.assertTrue(_template_dir(name).joinpath("owp.yaml").is_file(), name)
+        self.assertFalse((Path(__file__).resolve().parents[1] / "templates").exists(),
+                         "starter templates belong in src/ontle/templates/ only")
+
     def test_init_minimal_validates(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")

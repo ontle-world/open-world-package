@@ -45,6 +45,10 @@ descriptive -> viewable -> stateful -> model-ready -> action-ready
 
 See `spec/OWP_SPEC.md` section 6.1.
 
+## Extensions
+
+Publishers add their own asset kinds and fields without changing the standard. A package declares each extension it uses as a dependency with a local name, then uses that name for kinds (`acme-quality:LineBalancingProfile`) and for data in `extensions` blocks. Any other unknown key is an error, so typos are caught. See `spec/OWP_SPEC.md` section 13.
+
 ## Evaluation lineage
 
 A score only means something together with the exact EvaluationProfile, Verifier, View, State Compiler, and environment that produced it. OWP records that binding (`CompatibilityEvidence`); running and evolving evaluations is a runtime/registry concern. See `spec/OWP_SPEC.md` section 9.

@@ -18,7 +18,9 @@ Start here:
 Implementation:
 
 - `src/ontle/`
+- `src/ontle/templates/` — `ontle init` starter templates (single source; shipped as package data)
 - `schemas/`
+- `spec/rule-ids.yaml` — registry of every rule id
 - `vocab/`
 - `tests/`
 - `conformance/` — language-neutral suite for independent implementations

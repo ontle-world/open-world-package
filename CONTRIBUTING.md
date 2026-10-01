@@ -7,10 +7,12 @@ Thank you for contributing to ONTLE / OWP public-alpha tooling.
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e .   # installs the runtime dependency PyYAML
 python -m unittest discover -s tests -v
 ./scripts/golden_smoke.sh
 ```
+
+Starter templates live only in `src/ontle/templates/` and ship as package data; edit them there.
 
 ## Design rules
 

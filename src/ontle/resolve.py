@@ -282,9 +282,16 @@ def _load_asset(pkg: ResolvedPackage, rel: str) -> dict[str, Any]:
 
 
 def cross_package_errors(resolution: Resolution) -> list[str]:
-    """Rules that need more than one package: World Model grounding against the referenced World."""
+    """Rules that need more than one package: extension definitions and World Model grounding against the referenced World."""
     errors: list[str] = []
     for pkg in resolution.packages.values():
+        deps = (pkg.manifest.get("spec") or {}).get("dependencies") or []
+        for dep in deps if isinstance(deps, list) else []:
+            if not (isinstance(dep, dict) and isinstance(dep.get("as"), str) and isinstance(dep.get("ref"), str)):
+                continue
+            target = resolution.packages.get(dep["ref"])
+            if target is not None and not isinstance((target.manifest.get("spec") or {}).get("extensionDefinition"), dict):
+                errors.append(f"extension.definition: {pkg.identity}: extension {dep['as']!r} resolves to {dep['ref']}, which declares no spec.extensionDefinition")
         if pkg.kind != "WorldModelPackage":
             continue
         grounding = ((pkg.manifest.get("spec") or {}).get("worldModel") or {}).get("semanticGrounding") or {}

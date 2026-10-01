@@ -1,8 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: EvaluationProfile
-metadata:
-  name: basic
-  version: 0.1.0
-spec:
-  tasks: []
-  metrics: []

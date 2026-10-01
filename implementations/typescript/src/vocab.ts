@@ -1,53 +1,61 @@
+export type Stability = "standard" | "experimental";
+
 /**
- * Asset kind vocabulary, copied from vocab/asset-kinds.yaml (public alpha).
- * The spec does not say whether this vocabulary is closed; this implementation
- * warns (does not error) on kinds outside it.
+ * Asset kind vocabulary, copied from vocab/asset-kinds.yaml (public alpha): group -> kind -> stability.
+ * scripts/check-vocab.mjs (run by `npm test`) checks that this table equals the YAML file.
+ * Spec 8: the vocabulary is open. An unqualified kind outside it is a warning, a kind marked
+ * experimental is a warning, and a kind containing ':' is an extension kind (spec 13).
+ * Group names are informative.
  */
-export const ASSET_KINDS: Record<string, string[]> = {
-  semantic: ["SemanticProfile", "WorldDefinition", "WorldViewProfile", "StateCompilerProfile"],
-  interface: [
-    "SourceSystemSchemaProfile",
-    "SourceAdapterProfile",
-    "MappingSpec",
-    "IdentityResolutionProfile",
-    "ObservationAcquisitionProfile",
-    "ActionBindingProfile",
-    "CommitContract",
-    "EffectVerificationProfile",
-  ],
-  reference: ["ReferenceEnterpriseProfile", "ReferenceIndustryProfile", "ScenarioProfile", "EnvironmentProfile"],
-  model: [
-    "WorldModelContract",
-    "ModelArtifact",
-    "RepresentationAdapterProfile",
-    "ResolutionProfile",
-    "AggregationCoarseGrainingProfile",
-  ],
-  operational: [
-    "CapabilityContract",
-    "SkillProfile",
-    "ToolProfile",
-    "AgentProfile",
-    "WorkflowProfile",
-    "OperationalAsset",
-    "SemanticBinding",
-  ],
-  evaluation: [
-    "Dataset",
-    "ReferenceFixture",
-    "NegativeFixture",
-    "BenchmarkCase",
-    "AcceptanceCase",
-    "Validator",
-    "EvaluationProfile",
-    "VerifierPackage",
-    "CompatibilityEvidence",
-    "Attestation",
-  ],
-  package_support: ["PackageExample"],
+const S: Stability = "standard";
+export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
+  semanticWorld: { SemanticProfile: S, WorldDefinition: S, WorldViewProfile: S, StateCompilerProfile: S },
+  interfaceIntegration: {
+    SourceSystemSchemaProfile: S,
+    SourceAdapterProfile: S,
+    MappingSpec: S,
+    IdentityResolutionProfile: S,
+    ObservationAcquisitionProfile: S,
+    ActionBindingProfile: S,
+    CommitContract: S,
+    EffectVerificationProfile: S,
+  },
+  referenceProfiles: { ReferenceEnterpriseProfile: S, ReferenceIndustryProfile: S, ScenarioProfile: S, EnvironmentProfile: S },
+  modelRepresentation: {
+    WorldModelContract: S,
+    ModelArtifact: S,
+    RepresentationAdapterProfile: S,
+    ResolutionProfile: S,
+    AggregationCoarseGrainingProfile: S,
+  },
+  capabilityOperational: {
+    CapabilityContract: S,
+    SkillProfile: S,
+    ToolProfile: S,
+    AgentProfile: S,
+    WorkflowProfile: S,
+    OperationalAsset: S,
+    SemanticBinding: S,
+  },
+  evaluationTestEvidence: {
+    Dataset: S,
+    ReferenceFixture: S,
+    NegativeFixture: S,
+    BenchmarkCase: S,
+    AcceptanceCase: S,
+    Validator: S,
+    EvaluationProfile: S,
+    VerifierPackage: S,
+    CompatibilityEvidence: S,
+  },
+  governancePublication: { Attestation: S },
+  packageSupport: { PackageExample: S },
 };
 
-export const KNOWN_ASSET_KINDS = new Set(Object.values(ASSET_KINDS).flat());
+/** Kind -> stability across all groups. */
+export const ASSET_KIND_STABILITY: Map<string, Stability> = new Map(
+  Object.values(ASSET_KINDS).flatMap((g) => Object.entries(g)),
+);
 
 export const PACKAGE_KINDS = ["WorldPackage", "WorldModelPackage", "OntologyPackage"] as const;
 

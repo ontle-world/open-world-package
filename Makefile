@@ -4,6 +4,7 @@ install:
 	python -m pip install -e .
 
 test:
+	@python -c "import yaml" 2>/dev/null || { echo "PyYAML is not installed; run 'make install' (python -m pip install -e .)"; exit 1; }
 	python -m unittest discover -s tests -v
 
 smoke:

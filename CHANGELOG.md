@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add publisher extensions (spec section 13): an extension is a `spec.dependencies` entry with `as` (and optional `mustUnderstand`); extension kinds are `<extension>:<Kind>`; extension data goes in `extensions` blocks; a package that defines an extension declares `spec.extensionDefinition`. Undeclared extension names are errors.
+- Defined fields are enforced: the manifest, CompatibilityEvidence, ObservationSet, and EWS documents reject keys that are neither defined fields nor `extensions` blocks (`schema.unknown-field`). The manifest JSON Schema now lists every field already in use (`dependencies`, `worldModel.description`, `world.boundary`, `domains`, and others); all four JSON Schemas are closed.
+- Breaking for packages that used a namespaced kind such as `acme:SafetyCase` without declaring it: add a dependency with `as: acme`. The conformance case `asset-namespaced-kind` is replaced by `extension-kind-declared` and `extension-kind-undeclared`.
+- Restructure `vocab/asset-kinds.yaml`: camelCase groups aligned with the asset-graph families (Attestation moves to `governancePublication`) and a `stability` per kind; experimental kinds produce the warning `asset.kind-experimental`. The reference implementation reads this file instead of a copied list.
+- Add `spec/rule-ids.yaml`, a machine-readable registry of every error and warning id; warnings now have ids (spec Appendix A). Tests check that the spec, the conformance suite, and both implementations use exactly the registered ids.
+- Add `ontle add extension <ref> [--as <name>] [--must-understand]`; `ontle inspect` lists declared extensions.
+- Add spec Appendix B (notation).
+- Define ExternalRef (spec section 5.1): `provider`, `uri`, `revision`, `digest`, `mediaType`, `size`, `status` (`bound`/`unbound`); provider-specific pinning with the warning `ref.unpinned`; several files pinned through a file list in the `owp.lock.json` `files` format; `repository` is accepted as the deprecated name of `uri` (warning `ref.legacy-shape`). The manifest's `spec.assets[].ref` is validated; examples and templates use `ref: {status: unbound}` instead of `ref: null`.
+- Example: the multimodal World Model's evidence note moves from `spec.note` to `metadata.description`.
 - Replace the unconditional WorldPackage View/State Compiler requirement with cumulative conformance profiles (`descriptive`, `viewable`, `stateful`, `model-ready`, `action-ready`); absent means `descriptive`. Starter templates declare `stateful`.
 - `model-ready` requires a concrete EWS schema (`outputSchema.fields` or `outputSchemaRef`) on every State Compiler.
 - WorldModel grounding references must have the form `<worldRef>#<asset path>`.
@@ -16,7 +25,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 62 validation, 21 resolution (including packed `.owp.zip` and `git bundle` fixtures), 18 EWS compile, 14 EWS check cases; every invalid case lists its expected rule ids.
+- Conformance suite: 97 validation, 23 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

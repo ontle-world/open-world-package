@@ -50,7 +50,7 @@ function ewsMain(args: string[], json: boolean): number {
     const file = args[0];
     if (!world || !file) return usage();
     const doc = loadYamlFile(file);
-    const r = doc.ok ? checkEws(doc.value, world) : { valid: false, errors: [{ code: "ews.parse", message: doc.error }] };
+    const r = doc.ok ? checkEws(doc.value, world) : { valid: false, errors: [{ code: "ews.kind", message: `not parseable YAML: ${doc.error}` }] };
     if (json) process.stdout.write(JSON.stringify(r, null, 2) + "\n");
     else {
       process.stdout.write(`${r.valid ? "VALID" : "INVALID"} ${file}\n`);
@@ -65,7 +65,7 @@ function ewsMain(args: string[], json: boolean): number {
     const world = args[0];
     if (!compiler || !obs || !asOf || !world) return usage();
     const doc = loadYamlFile(obs);
-    const r = doc.ok ? compileEws(world, compiler, doc.value, asOf) : { ok: false as const, errors: [doc.error] };
+    const r = doc.ok ? compileEws(world, compiler, doc.value, asOf) : { ok: false as const, errors: [`ews.input: ${doc.error}`] };
     if (!r.ok) {
       process.stderr.write(`refused: ${r.errors.join("; ")}\n`);
       return 1;

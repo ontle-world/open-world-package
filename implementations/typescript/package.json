@@ -15,7 +15,8 @@
     "conformance": "node dist/conformance.js",
     "examples": "node dist/cli.js ../../examples/business/manufacturing-quality-world ../../examples/physical-ai/mobile-manipulation-world && node dist/cli.js --resolve --source ../../examples ../../examples/business/quality-transition-world-model ../../examples/physical-ai/multimodal-action-world-model && node scripts/check-examples-ews.mjs",
     "probes": "node scripts/make-probes.mjs && node dist/conformance.js --suite probes",
-    "test": "npm run build && npm run conformance && npm run examples"
+    "test": "npm run build && npm run vocab && npm run conformance && npm run examples",
+    "vocab": "node scripts/check-vocab.mjs"
   },
   "dependencies": {
     "yaml": "^2.9.1"

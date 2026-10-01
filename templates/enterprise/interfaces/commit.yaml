@@ -1,7 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: CommitContract
-metadata:
-  name: enterprise-commit
-spec:
-  approvalRequired: false
-  rule: Tool or API success is not automatically a business commit.

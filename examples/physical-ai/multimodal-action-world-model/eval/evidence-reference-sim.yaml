@@ -2,6 +2,7 @@ apiVersion: openworld/v1alpha1
 kind: CompatibilityEvidence
 metadata:
   name: reference-sim-pick-place
+  description: Illustrative values only; this example bundles no model and no evaluation was run.
 spec:
   subject: openworld-examples/multimodal-action-world-model@0.1.0
   evaluationProfile: manipulation-basic@0.2.0
@@ -18,4 +19,3 @@ spec:
       task_success: 0.92
       constraint_violation_rate: 0.01
       effect_verified_rate: 0.9
-  note: Illustrative values only; this example bundles no model and no evaluation was run.

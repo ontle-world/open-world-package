@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  extensions:
+    acme: {batch: B-17}
+  observations: []

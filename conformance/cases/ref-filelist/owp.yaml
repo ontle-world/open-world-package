@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+  assets:
+  - kind: Dataset
+    ref:
+      provider: s3
+      uri: s3://bucket/dataset/files.json
+      mediaType: application/vnd.openworld.filelist+json
+      digest: "sha256:abababababababababababababababababababababababababababababababab"
+      size: 2048

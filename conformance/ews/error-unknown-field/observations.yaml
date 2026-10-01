@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: o1
+    type: sensor.a
+    observedAt: "2026-01-01T00:00:03Z"
+    values: {"v": 1}
+    note: not a defined field
+  - id: o2
+    type: sensor.a
+    observedAt: "2026-01-01T00:01:00Z"
+    values: {"v": 2}

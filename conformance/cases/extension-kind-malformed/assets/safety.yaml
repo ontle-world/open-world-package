@@ -1,0 +1,4 @@
+apiVersion: openworld/v1alpha1
+kind: acme:safety:Case
+metadata: {name: safety}
+spec: {}

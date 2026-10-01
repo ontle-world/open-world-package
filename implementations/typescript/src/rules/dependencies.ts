@@ -8,6 +8,8 @@ export interface Dependency {
   version: string;
   /** Per-dependency package source, tried before the global sources (spec 11). */
   source?: string;
+  /** Extension name declared with `as` (spec 13.1), when it is a string. */
+  as?: string;
 }
 
 export function parsePackageRef(ref: string): { namespace: string; name: string; version: string } | null {
@@ -17,7 +19,7 @@ export function parsePackageRef(ref: string): { namespace: string; name: string;
 
 /**
  * Spec 11: `spec.dependencies` is a list of exact `<ns>/<name>@<version>` strings or
- * `{ref, source}` mappings. Ranges are not allowed.
+ * `{ref, source, as, mustUnderstand}` mappings. Ranges are not allowed.
  */
 export function parseDependencies(manifest: Obj): { deps: Dependency[]; problems: string[] } {
   const deps: Dependency[] = [];
@@ -50,7 +52,8 @@ export function parseDependencies(manifest: Obj): { deps: Dependency[]; problems
       problems.push(`spec.dependencies[${i}] "${ref}" must be an exact <namespace>/<name>@<version>; ranges are not allowed`);
       return;
     }
-    deps.push({ ref, ...p, ...(typeof source === "string" ? { source } : {}) });
+    const as = isObj(d) && typeof d.as === "string" ? d.as : undefined;
+    deps.push({ ref, ...p, ...(typeof source === "string" ? { source } : {}), ...(as !== undefined ? { as } : {}) });
   });
   return { deps, problems };
 }

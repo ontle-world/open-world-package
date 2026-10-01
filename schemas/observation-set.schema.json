@@ -50,13 +50,32 @@
               },
               "subject": {
                 "type": "string"
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
               }
             },
-            "additionalProperties": true
+            "additionalProperties": false
           }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false,
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
 }

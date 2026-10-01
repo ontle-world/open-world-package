@@ -11,7 +11,8 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Registry-free dependency resolution (directory, `.owp.zip`, git).
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
-- Conformance suite: 62 validation, 21 resolution, 18 EWS compile, 14 EWS check cases.
+- Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
+- Conformance suite: 97 validation, 23 resolution, 20 EWS compile, 16 EWS check cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3
@@ -25,9 +26,9 @@ Order matters: each item can change verdicts, so both implementations and the su
 
 1. **YAML profile for all OWP documents.** Specify the YAML 1.2 core schema for `owp.yaml` and assets, not only for ObservationSet and EWS documents. Today the Python reference reads manifests as YAML 1.1 (`yes` → true, `0755` → 493, `1:20` → 80), while YAML 1.2 loaders do not. Switch the reference loader and add cases.
 2. **`outputSchemaRef` resolution.** Define it as a package-relative JSON Schema that lists EWS fields, apply the §12.1 field rules to it, and retire the `schema-ref-only-compiler` alpha-limitation case.
-3. **Warnings in the suite.** Add `warnings: [rule-id]` expectations so severity (spec §8) is testable, and assign rule ids to warnings.
+3. **Warnings in the suite.** Add `warnings: [rule-id]` expectations so severity (spec §8) is testable. (Warning ids are assigned in spec Appendix A.)
 4. **Recorded revisions.** Add the expected `git:<commit>` / `sha256:<digest>` revisions to resolution cases so recorded revisions are compared across implementations.
-5. **Machine-readable rule ids.** Add `spec/rule-ids.yaml` and check that the spec appendix, the suite, and both implementations use exactly those ids.
+5. ~~**Machine-readable rule ids.**~~ Done: `spec/rule-ids.yaml`, checked by `tests/test_rule_ids.py`.
 
 ## 3. Bind the examples to real external artifacts
 

@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: s
+  extensions:
+    acme: {reviewed: true}
+spec:
+  description: Scenario with vendor data.
+  extensions:
+    acme: {shift: night}

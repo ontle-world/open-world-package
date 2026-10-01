@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  dependencies:
+  - ref: acme/safety-extension@1.0.0
+    as: acme
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+  extensions:
+    acme: 3
+  assets: []

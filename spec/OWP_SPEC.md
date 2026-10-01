@@ -39,7 +39,9 @@ Logical package identity:
 
 Version uses SemVer. `namespace` and `name` MUST NOT contain `/`, `@`, `#`, or whitespace.
 
-`spec.dependencies`, when present, lists exact package references (section 11); a version range makes the package invalid even without resolution.
+`spec.dependencies`, when present, lists exact package references (section 11); a version range makes the package invalid even without resolution. A dependency entry may also declare an extension (section 13).
+
+A manifest contains only the fields defined by `schemas/owp-manifest.schema.json` and `extensions` blocks (section 13); any other key is an error (section 8).
 
 ## 3. Package kinds
 
@@ -114,7 +116,7 @@ assets/           optional
 
 ## 5. Assets
 
-`spec.assets` can reference local package assets or external artifacts.
+`spec.assets` can reference local package assets or external artifacts. An entry has `kind`, exactly one of `path` and `ref`, and optionally an `extensions` block. `kind` is a vocabulary kind or an extension kind `<extension>:<Kind>` (section 13).
 
 Local example:
 
@@ -133,9 +135,40 @@ spec:
     - kind: ModelArtifact
       ref:
         provider: huggingface
-        repository: organization/model-name
-        revision: immutable-revision
+        uri: hf://organization/model-name
+        revision: 0123456789abcdef0123456789abcdef01234567
 ```
+
+### 5.1 External references
+
+An external reference (`ExternalRef`) points at an artifact outside the package. The manifest's `spec.assets[].ref` is an ExternalRef; asset documents SHOULD use the same shape wherever they point outside the package (for example `ModelArtifact.spec.artifactRef` or a `standardBindings` entry's `ref`). An asset has at most one ExternalRef for its content: an asset with a local description file puts it in that file, not also in the manifest entry.
+
+```yaml
+ref:
+  provider: huggingface                   # huggingface | oci | git | https | s3 | gcs | doi | <extension>:<provider>
+  uri: hf://datasets/organization/name
+  revision: <commit hash>
+  digest: "sha256:<64 lowercase hex>"
+  mediaType: application/vnd.openworld.filelist+json
+  size: 1234567890                        # informative
+  status: bound                           # bound (default) | unbound
+```
+
+- A bound reference declares `provider` and `uri`. An `unbound` reference records that no artifact has been chosen yet; its other fields are optional. Examples MUST NOT invent artifacts; they use `status: unbound` instead.
+- `provider` is one of the listed values or an extension provider `<extension>:<provider>` (section 13).
+- `digest` is `sha256:` followed by 64 lowercase hex digits. `size` is a non-negative integer.
+- `repository` is the deprecated name of `uri`; it is accepted with the warning `ref.legacy-shape` and MUST NOT appear together with `uri`.
+- A bound reference SHOULD be pinned; otherwise the warning `ref.unpinned` applies. Pinning depends on the provider:
+
+| Provider | Pinned by |
+|---|---|
+| `git`, `huggingface` | `revision` is a commit hash (40 or 64 lowercase hex digits), or `digest` |
+| `oci` | `digest` of the OCI manifest |
+| `https`, `s3`, `gcs`, `doi` | `digest` of the file bytes |
+| extension providers | defined by the extension |
+
+- Several files are pinned together through a file list: an artifact with `mediaType: application/vnd.openworld.filelist+json` whose content uses the `files` format of `owp.lock.json` (section 7), with `digest` taken over the list. A consumer verifies the list's digest and then each listed file.
+- This alpha validates ExternalRefs in the manifest. ExternalRefs inside asset documents are validated once their asset kind has a JSON Schema.
 
 ## 6. World/View/EWS/Model rule
 
@@ -222,8 +255,9 @@ Precise meaning of the checks above:
 - **Dependencies:** every `spec.dependencies` entry is `<namespace>/<name>@<semver>` or a mapping whose `ref` is; otherwise the package is invalid.
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **Typed local YAML assets:** every local `.yaml`/`.yml` asset MUST parse. If an asset other than `PackageExample` declares a top-level `kind`, that kind MUST equal the manifest entry's `kind`. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not compared.
-- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: an unrecognized unqualified kind is a warning; a namespaced kind containing `:` is accepted.
-- **Severity:** MUST/required rules are errors and make the package invalid. These are warnings and never invalidate: `spec.world` without definition or description; a WorldModelPackage without `ModelArtifact` or `EvaluationProfile`; an EvaluationProfile or VerifierPackage without `metadata.version`; an unrecognized unqualified asset kind; `spec.conformance` on a non-World package.
+- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: a kind without `:` that is not in the vocabulary is a warning; a vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
+- **Defined fields:** the manifest, CompatibilityEvidence assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 
 The reference validator also rejects legacy manifest names, validates typed local YAML asset references, detects duplicate paths, and requires a Representation Adapter for every WorldModelPackage (an identity adapter is valid when no transform is needed). Additional domain-specific validators may be layered on top.
@@ -309,6 +343,8 @@ Resolution rules:
 
 Directory sources: candidates are `<dir>/owp.yaml`, then all `<dir>/*/owp.yaml` in sorted order, then all `<dir>/*/*/owp.yaml` in sorted order, then `<dir>/*.owp.zip` (directly in `<dir>` only) in sorted order. Directories whose name starts with `.` are skipped. When two candidates in one source share an identity, the first in this order wins. A relative `source` in a `{ref, source}` dependency is resolved against the declaring package's directory. `ONTLE_PATH` uses the platform path-list separator.
 
+Cross-package rule for extensions: a dependency declared with `as` (section 13) MUST resolve to a package that declares `spec.extensionDefinition`.
+
 Cross-package rules for a WorldModelPackage:
 
 - `semanticGrounding.worldRef` MUST be listed in `spec.dependencies` and resolve to a WorldPackage.
@@ -337,6 +373,8 @@ spec:
 ```
 
 Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents are loaded with YAML 1.2 core schema rules into the JSON data model (YAML 1.1 loaders that produce date objects must be configured not to), including values inside `values`.
+
+ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
 
 Values are compared in the JSON data model: types must match (a boolean never equals a number), numbers compare numerically (`1` equals `1.0`), arrays compare element by element in order, and mappings compare by key set and values.
 
@@ -389,11 +427,58 @@ Preconditions: the compiler is a listed local `StateCompilerProfile` asset of th
 3. `select: all`: `state[field]` is the list of candidate values in candidate order; provenance is every candidate id.
 4. `select: latest`: take the candidates with the greatest `observedAt`. If their values are all equal, `state[field]` is that value; otherwise `unresolved[field]` lists the distinct values in candidate order (first occurrence kept). Provenance is the ids of those newest candidates.
 
-Invalid input (duplicate ids, a missing `id`/`type`/`values`, a non-UTC timestamp) MUST be rejected rather than compiled.
+Invalid input (duplicate ids, a missing `id`/`type`/`values`, a non-UTC timestamp, an undefined field) MUST be rejected rather than compiled.
 
 Two EWS documents are equal when `worldRef`, `worldView`, `stateCompiler`, `asOf`, `state`, and `unresolved` are equal, `missing` is equal as a set, and each `provenance` entry is equal as a set.
 
 Reference CLI: `ontle ews compile <world> --compiler <path> --observations <file> --as-of <timestamp>`.
+
+## 13. Extensions
+
+Publishers can add their own asset kinds, fields, and vocabulary values without changing this specification. Tools that do not know an extension can ignore it safely.
+
+### 13.1 Declaring an extension
+
+An extension is declared as a dependency with a local name:
+
+```yaml
+spec:
+  dependencies:
+  - ref: acme/quality-extension@1.2.0    # package that defines the extension
+    as: acme-quality                     # name used in this package
+    mustUnderstand: true                 # optional, default false
+```
+
+- `as`, when present, MUST be a string matching `[a-z][a-z0-9-]*` (at most 63 characters); `as: null` is invalid. `owp` and `openworld` are reserved. A name is declared at most once per package.
+- `mustUnderstand: true` means a runtime that does not implement the extension MUST NOT run the package. It does not change validation. `mustUnderstand` requires `as`.
+- The name is local to the declaring package. Two packages may use the same name for different extensions; the package reference identifies the extension.
+- Under resolution (section 11), the dependency MUST resolve to a package that declares `spec.extensionDefinition`.
+
+### 13.2 Defining an extension
+
+A package that defines an extension declares:
+
+```yaml
+spec:
+  extensionDefinition:
+    description: Line balancing assets and plant metadata.
+    kinds: [LineBalancingProfile]            # kinds it defines, without a prefix
+    schemas: [schemas/line-balancing.schema.json]   # package-relative JSON Schema files
+```
+
+`kinds` entries are PascalCase names; `schemas` entries are package-relative paths that MUST exist. This alpha recommends an OntologyPackage for extension definitions; no separate package kind exists.
+
+### 13.3 Using an extension
+
+| Extension point | Form | Where |
+|---|---|---|
+| Asset kind | `<extension>:<Kind>`, for example `acme-quality:LineBalancingProfile` | `spec.assets[].kind` and the asset file's `kind`; package kinds cannot be extended |
+| Fields | `extensions: {<extension>: {...}}` | any object the manifest schema defines except the document root; the top-level `metadata` and `spec` of local asset documents other than `PackageExample`; objects defined by the CompatibilityEvidence schema; ObservationSet and EWS documents as in section 12 |
+| Rule ids | `<extension>:<rule>` | errors and warnings reported by domain validators |
+
+An `extensions` block maps extension names to mappings. In a package, every name used in an extension kind or an `extensions` block MUST be declared with `as` in the same package's `spec.dependencies`.
+
+Extensions MUST NOT change the meaning of standard fields. A tool that ignores every extension still interprets the package correctly, apart from extensions declared with `mustUnderstand: true`. `extensions` is reserved: this specification does not use the name for any other field.
 
 ## Appendix A. Rule ids
 
@@ -410,8 +495,10 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `manifest.spec` | 2 | `spec` is not a mapping |
 | `package.card` | 3 | required human card missing |
 | `package.legacy-manifest` | 8 | `package.yaml` or `world.yaml` at the root |
-| `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, or missing entry `kind` |
+| `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, missing entry `kind`, or a kind containing `:` that is not `<extension>:<Kind>` |
 | `asset.path-or-ref` | 5 | entry has both or neither of `path` and `ref` |
+| `ref.shape` | 5.1 | malformed ExternalRef: not a mapping, bad `status`, `digest`, `size`, or field type, a bound reference without `provider` or `uri`, or both `uri` and `repository` |
+| `ref.provider` | 5.1 | `provider` is neither a listed provider nor `<extension>:<provider>` |
 | `asset.path-form` | 3 | local path is not a relative POSIX path, or starts with `./` |
 | `manifest.dependency` | 2 | `spec.dependencies` entry is not an exact package reference |
 | `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierPackage assets share `metadata.name` |
@@ -446,7 +533,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `evaluationProfile`, `result`, or `scope.worldRef`/`scope.worldView` |
 | `evidence.unpinned` | 9 | reference not `<name>@<exact-semver>` |
 | `evidence.version-mismatch` | 9 | bound local asset missing that exact version |
-| `evidence.scope.world-ref`, `.world-view`, `.state-compiler` | 9 | scope outside the model's grounding |
+| `evidence.scope.world-ref`, `evidence.scope.world-view`, `evidence.scope.state-compiler` | 9 | scope outside the model's grounding |
 | `resolve.reference` | 11 | malformed dependency reference |
 | `resolve.source` | 11 | source unusable (for example an archive fails verification) |
 | `resolve.unresolved` | 11 | dependency not found in any source |
@@ -455,7 +542,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `resolve.dependency-invalid` | 11 | a resolved dependency is itself invalid |
 | `grounding.world-not-dependency` | 11 | `worldRef` not listed in `spec.dependencies` |
 | `grounding.world-kind` | 11 | `worldRef` does not resolve to a WorldPackage |
-| `grounding.world-view`, `grounding.state-compiler` | 11 | grounding path is not a View`, `State Compiler asset of the World |
+| `grounding.world-view`, `grounding.state-compiler` | 11 | grounding path is not a View or State Compiler asset of the World |
 | `grounding.compiler-view` | 11 | a compatible compiler compiles a View outside `compatibleWorldViews` |
 | `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
 | `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
@@ -467,4 +554,40 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.field-unknown` | 12.1 | field outside `outputSchema` |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
+| `schema.unknown-field` | 8, 12 | a key that is neither a defined field nor an `extensions` block |
+| `extension.name` | 13.1 | `as` malformed or reserved |
+| `extension.duplicate` | 13.1 | extension name declared twice |
+| `extension.declaration` | 13.1 | `mustUnderstand` without `as`, or not a boolean |
+| `extension.undeclared` | 13.3 | extension kind or `extensions` block uses an undeclared name |
+| `extension.block` | 13.3 | `extensions` value is not a mapping of names to mappings |
+| `extension.definition` | 13.1, 13.2 | malformed `spec.extensionDefinition`, a missing schema file, or (under resolution) an `as` dependency without one |
 
+Warnings also have ids. Implementations SHOULD prefix warning messages with them. An implementation MAY report additional warnings; their ids MUST contain `:` (for example `owp-ts:eval-order`) so they cannot collide with ids added to this table.
+
+| Warning id | Section | Condition |
+|---|---|---|
+| `world.undescribed` | 8 | `spec.world` without definition or description |
+| `worldmodel.model-artifact-missing` | 8 | WorldModelPackage without a `ModelArtifact` asset |
+| `worldmodel.evaluation-profile-missing` | 8 | WorldModelPackage without an `EvaluationProfile` asset |
+| `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
+| `asset.kind-unknown` | 8 | kind without `:` outside the vocabulary |
+| `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
+| `manifest.conformance-ignored` | 6.1 | `spec.conformance` on a package other than WorldPackage |
+| `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
+| `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
+
+The machine-readable list of every id is `spec/rule-ids.yaml`.
+
+
+## Appendix B. Notation (informative)
+
+| Item | Form | Examples |
+|---|---|---|
+| Field keys | camelCase | `worldViewRef`, `outputSchema`, `mustUnderstand` |
+| Kinds | PascalCase | `WorldViewProfile`, `EffectiveWorldState` |
+| ExternalRef `provider` values | lowercase | `huggingface`, `oci` |
+| Vocabulary values | snake_case | roles `semantic_grounding`, capabilities `state_tracking` |
+| Conformance profile names | kebab-case | `model-ready`, `action-ready` |
+| References | `…Ref` (one), `…Refs` (several) | `adapterRef` |
+| Extension names | lowercase, digits, `-` | `acme-quality` |
+| Rule ids | dotted lowercase, kebab-case parts | `profile.stateful.output-contract` |

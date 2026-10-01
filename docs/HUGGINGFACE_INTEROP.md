@@ -10,8 +10,8 @@ spec:
     - kind: ModelArtifact
       ref:
         provider: huggingface
-        repository: organization/model-name
-        revision: immutable-revision
+        uri: hf://organization/model-name
+        revision: <commit hash>      # pins the reference (spec section 5.1)
 ```
 
 OWP adds the information that a generic model artifact repository normally cannot infer safely:

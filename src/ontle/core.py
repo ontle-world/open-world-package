@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 import hashlib
 import json
@@ -10,20 +11,25 @@ from typing import Any
 
 import yaml
 
+from . import structure
+
 MANIFEST = "owp.yaml"
 KINDS = {"WorldPackage", "WorldModelPackage", "OntologyPackage"}
 LEGACY_MANIFESTS = {"package.yaml", "world.yaml"}
-KNOWN_ASSET_KINDS = {
-    "SemanticProfile", "WorldDefinition", "WorldViewProfile", "StateCompilerProfile",
-    "SourceSystemSchemaProfile", "SourceAdapterProfile", "MappingSpec", "IdentityResolutionProfile",
-    "ObservationAcquisitionProfile", "ActionBindingProfile", "CommitContract", "EffectVerificationProfile",
-    "ReferenceEnterpriseProfile", "ReferenceIndustryProfile", "ScenarioProfile", "EnvironmentProfile",
-    "WorldModelContract", "ModelArtifact", "RepresentationAdapterProfile", "ResolutionProfile",
-    "AggregationCoarseGrainingProfile", "CapabilityContract", "SkillProfile", "ToolProfile", "AgentProfile",
-    "WorkflowProfile", "OperationalAsset", "SemanticBinding", "Dataset", "ReferenceFixture",
-    "NegativeFixture", "BenchmarkCase", "AcceptanceCase", "Validator", "EvaluationProfile",
-    "VerifierPackage", "CompatibilityEvidence", "Attestation", "PackageExample",
-}
+
+
+def _load_vocabulary() -> dict[str, str]:
+    """Asset kind -> stability, from vocab/asset-kinds.yaml (packaged as ontle.vocab)."""
+    try:
+        text = resources.files("ontle.vocab").joinpath("asset-kinds.yaml").read_text(encoding="utf-8")
+    except (ModuleNotFoundError, FileNotFoundError):  # editable install: read the repository copy
+        text = (Path(__file__).resolve().parents[2] / "vocab" / "asset-kinds.yaml").read_text(encoding="utf-8")
+    groups = yaml.safe_load(text)["groups"]
+    return {kind: entry["stability"] for group in groups.values() for kind, entry in group.items()}
+
+
+ASSET_KIND_STABILITY = _load_vocabulary()
+KNOWN_ASSET_KINDS = set(ASSET_KIND_STABILITY)
 SEMVER_PATTERN = r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
 SEMVER_RE = re.compile(rf"^{SEMVER_PATTERN}$")
 # Exact reference to a versioned asset: <name>@<semver>. Ranges are not allowed.
@@ -170,7 +176,7 @@ def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str,
                 errors.append(f"eval.duplicate-name: more than one local {asset_kind} is named {md['name']!r}")
             local_versions[asset_kind].setdefault(md["name"], version if isinstance(version, str) else None)
         if version is None:
-            warnings.append(f"{asset_kind} {rel} should declare metadata.version so evidence can bind to it")
+            warnings.append(f"eval.version-missing: {asset_kind} {rel} should declare metadata.version so evidence can bind to it")
         elif not isinstance(version, str) or not SEMVER_RE.match(version):
             errors.append(f"eval.version: {asset_kind} {rel} metadata.version must use SemVer")
         supersedes = _spec_of(doc).get("supersedes")
@@ -222,6 +228,19 @@ def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str,
             errors.append(f"evidence.result: CompatibilityEvidence {rel} must declare spec.result")
 
 
+def _asset_structure_errors(doc: dict[str, Any], asset_kind: Any, rel: str, extension_names: set[str]) -> list[str]:
+    """Defined fields for kinds with a schema; top-level extension blocks for every kind."""
+    table = structure.ASSET_STRUCTURES.get(asset_kind)
+    if table is not None:
+        return structure.structure_errors(doc, table, rel, extension_names)
+    errors: list[str] = []
+    for section in ("metadata", "spec"):
+        block = doc.get(section)
+        if isinstance(block, dict) and structure.EXTENSIONS in block:
+            errors.extend(structure.extension_block_errors(block[structure.EXTENSIONS], f"{section}.{structure.EXTENSIONS}", rel, extension_names))
+    return errors
+
+
 def validate_package(path: str | Path) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
@@ -270,6 +289,15 @@ def validate_package(path: str | Path) -> ValidationResult:
         if not (isinstance(ref, str) and PACKAGE_REF_RE.match(ref)):
             errors.append(f"manifest.dependency: dependency {dep!r} must be <namespace>/<name>@<exact-semver> or a mapping with such a ref")
 
+    extension_names, extension_errors = structure.declared_extensions(spec)
+    errors.extend(extension_errors)
+    errors.extend(structure.structure_errors(data, structure.MANIFEST, MANIFEST, extension_names))
+    errors.extend(structure.extension_definition_errors(spec))
+    definition = spec.get("extensionDefinition")
+    for rel in (definition.get("schemas") or []) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
+        if isinstance(rel, str) and rel and not (root / rel).is_file():
+            errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} does not exist")
+
     card = {
         "WorldPackage": "WORLD.md",
         "WorldModelPackage": "WORLDMODEL.md",
@@ -283,7 +311,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         if not isinstance(world, dict):
             errors.append("world.spec: WorldPackage requires spec.world")
         elif not (world.get("definition") or world.get("description")):
-            warnings.append("spec.world should declare definition or description")
+            warnings.append("world.undescribed: spec.world should declare definition or description")
 
     if kind == "WorldModelPackage":
         wm = spec.get("worldModel")
@@ -332,10 +360,22 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.append(f"asset.kind: spec.assets[{idx}].kind is required")
         else:
             asset_kinds.add(asset_kind)
-            if asset_kind not in KNOWN_ASSET_KINDS and ":" not in asset_kind:
-                warnings.append(f"unrecognized unqualified asset kind: {asset_kind}")
+            if ":" in asset_kind:
+                match = structure.EXTENSION_KIND_RE.match(asset_kind)
+                if not match:
+                    errors.append(f"asset.kind: spec.assets[{idx}].kind {asset_kind!r} must be <extension>:<Kind>")
+                elif match.group(1) not in extension_names:
+                    errors.append(f"extension.undeclared: spec.assets[{idx}].kind {asset_kind!r} uses extension {match.group(1)!r}, which spec.dependencies does not declare with 'as'")
+            elif asset_kind not in KNOWN_ASSET_KINDS:
+                warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
+            elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
+                warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change")
         has_path = isinstance(item.get("path"), str) and bool(item.get("path").strip())
-        has_ref = isinstance(item.get("ref"), dict)
+        has_ref = "ref" in item
+        if has_ref:
+            ref_errors, ref_warnings = structure.external_ref_issues(item["ref"], f"spec.assets[{idx}].ref", extension_names)
+            errors.extend(ref_errors)
+            warnings.extend(ref_warnings)
         if has_path == has_ref:
             errors.append(f"asset.path-or-ref: spec.assets[{idx}] must declare exactly one of path or ref")
             continue
@@ -369,12 +409,14 @@ def validate_package(path: str | Path) -> ValidationResult:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
                 if isinstance(adata, dict):
                     local_asset_docs[rel] = adata
+                    if asset_kind != "PackageExample":
+                        errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:
-            warnings.append("WorldModelPackage should reference a ModelArtifact, even if it is contract-only/unbound")
+            warnings.append("worldmodel.model-artifact-missing: WorldModelPackage should reference a ModelArtifact, even if it is contract-only/unbound")
         if "EvaluationProfile" not in asset_kinds:
-            warnings.append("WorldModelPackage should reference an EvaluationProfile")
+            warnings.append("worldmodel.evaluation-profile-missing: WorldModelPackage should reference an EvaluationProfile")
         if "RepresentationAdapterProfile" not in asset_kinds:
             errors.append("worldmodel.adapter: WorldModelPackage requires a RepresentationAdapterProfile (an identity adapter is valid when no transform is needed)")
         wm = spec.get("worldModel") or {}
@@ -401,7 +443,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         else:
             errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, identity))
     elif spec.get("conformance") is not None:
-        warnings.append("spec.conformance applies to WorldPackage only and is ignored")
+        warnings.append("manifest.conformance-ignored: spec.conformance applies to WorldPackage only and is ignored")
 
     _validate_evaluation_lineage(spec, kind, identity, local_asset_kinds, local_asset_docs, errors, warnings)
 
@@ -431,6 +473,10 @@ def inspect_package(path: str | Path) -> dict[str, Any]:
         "warnings": result.warnings,
         "asset_count": len(spec.get("assets", []) or []),
         "domains": spec.get("domains", []),
+        "extensions": [
+            {"name": d["as"], "ref": d.get("ref"), "mustUnderstand": bool(d.get("mustUnderstand", False))}
+            for d in (spec.get("dependencies") or []) if isinstance(d, dict) and isinstance(d.get("as"), str)
+        ],
         **summary,
     }
 

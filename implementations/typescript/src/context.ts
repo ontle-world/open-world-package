@@ -51,6 +51,8 @@ export interface Context {
   rawIdentity?: string;
   localAssets: LocalAsset[];
   refAssets: RefAsset[];
+  /** Extension names declared with `as` in spec.dependencies (spec 13.1). */
+  extensionNames: Set<string>;
   errors: Issue[];
   warnings: Issue[];
   satisfiedProfile?: Profile | null;

@@ -25,11 +25,11 @@ classifiers = [
 ontle = "ontle.cli:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+# vocab/ is a specification artifact at the repository root; it ships as ontle.vocab.
+package-dir = {"" = "src", "ontle.vocab" = "vocab"}
+packages = ["ontle", "ontle.vocab"]
 include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.setuptools.package-data]
 ontle = ["templates/**/*"]
+"ontle.vocab" = ["*.yaml"]

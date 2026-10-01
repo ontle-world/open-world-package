@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: acme
+  name: safety-extension
+  version: 1.0.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+  extensionDefinition:
+    schemas: [schemas/missing.schema.json]
+  assets: []

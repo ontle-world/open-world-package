@@ -7,6 +7,7 @@ import { checkWorldPackage } from "./rules/world.js";
 import { checkWorldModelPackage, Grounding } from "./rules/worldmodel.js";
 import { checkEvaluation } from "./rules/evaluation.js";
 import { checkDependencies } from "./rules/dependencies.js";
+import { checkAssetStructure, checkExtensionDeclarations, checkExtensionDefinition, checkManifestStructure } from "./rules/extensions.js";
 import { isObj, loadYamlFile } from "./util.js";
 import { LEGACY_MANIFEST_NAMES } from "./vocab.js";
 
@@ -26,7 +27,7 @@ export interface ValidationResult {
 
 /**
  * Validate an OWP package directory against the public-alpha spec.
- * Rule order: filesystem/manifest -> identity -> assets -> kind rules -> evaluation.
+ * Rule order: filesystem/manifest -> identity -> extensions/defined fields -> assets -> kind rules -> evaluation.
  */
 export function validatePackage(dir: string): ValidationResult {
   const root = path.resolve(dir);
@@ -71,13 +72,18 @@ export function validatePackage(dir: string): ValidationResult {
     packageKind: typeof loaded.value.kind === "string" ? loaded.value.kind : "",
     localAssets: [],
     refAssets: [],
+    extensionNames: new Set(),
     errors: base.errors,
     warnings: base.warnings,
   };
 
   checkManifest(ctx);
   checkDependencies(ctx);
+  checkExtensionDeclarations(ctx);
+  checkManifestStructure(ctx);
+  checkExtensionDefinition(ctx);
   collectAssets(ctx);
+  checkAssetStructure(ctx);
   checkSemanticAssetShape(ctx);
 
   let grounding: Grounding | undefined;
@@ -96,7 +102,7 @@ export function validatePackage(dir: string): ValidationResult {
       break;
   }
   if (ctx.packageKind !== "WorldPackage" && isObj(ctx.manifest.spec) && ctx.manifest.spec.conformance !== undefined) {
-    warn(ctx, "conformance.notWorld", "spec.conformance applies to WorldPackage only and is ignored", "owp.yaml");
+    warn(ctx, "manifest.conformance-ignored", "spec.conformance applies to WorldPackage only and is ignored", "owp.yaml");
   }
   checkEvaluation(ctx, grounding);
 

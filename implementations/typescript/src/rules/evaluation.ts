@@ -47,7 +47,7 @@ function checkVersionedEvalAsset(ctx: Context, a: LocalAsset): void {
   const name = get(a.doc, "metadata", "name");
   const version = get(a.doc, "metadata", "version");
   if (!isNonEmptyString(name)) {
-    warn(ctx, "eval.name", `${a.kind} ${file} should declare metadata.name`, file);
+    warn(ctx, "owp-ts:eval-name", `${a.kind} ${file} should declare metadata.name`, file);
   }
   if (version === undefined) {
     warn(ctx, "eval.version-missing", `${a.kind} ${file} SHOULD declare metadata.version (SemVer)`, file);
@@ -63,10 +63,10 @@ function checkVersionedEvalAsset(ctx: Context, a: LocalAsset): void {
     } else {
       const s = splitPinned(supersedes);
       if (isNonEmptyString(name) && s.name !== name) {
-        warn(ctx, "eval.supersedes.name", `${a.kind} ${file} supersedes "${supersedes}" which has a different name than ${name}`, file);
+        warn(ctx, "owp-ts:eval-supersedes-name", `${a.kind} ${file} supersedes "${supersedes}" which has a different name than ${name}`, file);
       }
       if (typeof version === "string" && SEMVER_RE.test(version) && compareSemver(s.version, version) >= 0) {
-        warn(ctx, "eval.supersedes.order", `${a.kind} ${file} version ${version} is not greater than superseded version ${s.version}`, file);
+        warn(ctx, "owp-ts:eval-supersedes-order", `${a.kind} ${file} version ${version} is not greater than superseded version ${s.version}`, file);
       }
     }
     // Spec 9 (revised): changedBecause is recommended and not validated in this alpha.

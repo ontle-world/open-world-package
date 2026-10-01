@@ -10,6 +10,6 @@ spec:
   standardBindings:
     scene:
       standard: openusd
-      ref: null
-      status: unbound
+      ref:
+        status: unbound
   note: Environment is an interaction surface for a World, not the World itself.

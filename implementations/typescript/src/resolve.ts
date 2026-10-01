@@ -1,6 +1,6 @@
 /**
  * Spec section 11: dependency resolution over ordered package sources
- * (directory, .owp.zip archive, git) plus cross-package WorldModel rules.
+ * (directory, .owp.zip archive, git) plus cross-package rules (extension definitions, WorldModel grounding).
  */
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
@@ -360,6 +360,16 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
     }
   };
   visit(root, [rootId]);
+
+  // Spec 11 + 13.1: a dependency declared with `as` resolves to a package with spec.extensionDefinition.
+  for (const n of nodes.values()) {
+    for (const d of n.deps) {
+      const target = d.as !== undefined ? nodes.get(d.ref) : undefined;
+      if (target && !isObj(get(target.manifest, "spec", "extensionDefinition"))) {
+        err("extension.definition", `${n.identity}: extension "${d.as}" resolves to ${d.ref}, which declares no spec.extensionDefinition`);
+      }
+    }
+  }
 
   // Cross-package rules for every WorldModelPackage in the closure.
   for (const n of nodes.values()) {

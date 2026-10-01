@@ -76,6 +76,7 @@ ontle add eval baseline
 ontle add verifier outcome-check
 ontle add test smoke
 ontle add asset sop-template
+ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension
 ```
 
 ## Examples

@@ -1,6 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: ObservationAcquisitionProfile
-metadata:
-  name: enterprise-observations
-spec:
-  inputs: []

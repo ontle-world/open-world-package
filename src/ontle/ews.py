@@ -14,6 +14,7 @@ from typing import Any
 import yaml
 
 from .core import EWS, OWPError, load_manifest
+from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
 
 SELECTORS = {"latest", "all"}
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -124,6 +125,9 @@ def binding_errors(compiler: dict[str, Any], rel: str) -> list[str]:
 def _observations(doc: dict[str, Any]) -> list[dict[str, Any]]:
     if doc.get("kind") != "ObservationSet":
         raise OWPError("ews.input: observations document must have kind ObservationSet")
+    unknown = structure_errors(doc, OBSERVATION_SET, "ObservationSet", None)
+    if unknown:
+        raise OWPError("; ".join(unknown))
     obs = (doc.get("spec") or {}).get("observations")
     if not isinstance(obs, list):
         raise OWPError("ews.input: ObservationSet requires spec.observations list")
@@ -208,7 +212,7 @@ def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
     if ews.get("kind") != EWS:
         return [f"ews.kind: EWS document must have kind {EWS}"]
     spec = ews.get("spec") if isinstance(ews.get("spec"), dict) else {}
-    errors: list[str] = []
+    errors: list[str] = structure_errors(ews, EFFECTIVE_WORLD_STATE, "EffectiveWorldState", None)
     if spec.get("worldRef") != world_ref:
         errors.append(f"ews.world-ref: spec.worldRef must be {world_ref}")
     compiler_ref = spec.get("stateCompiler")

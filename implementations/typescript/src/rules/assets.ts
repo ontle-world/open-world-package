@@ -1,7 +1,9 @@
 import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
 import { fileExists, isNonEmptyString, isObj, isYamlPath, loadYamlFile, normalizeRelPath, staysInside } from "../util.js";
-import { API_VERSION, KNOWN_ASSET_KINDS } from "../vocab.js";
+import { EXTENSION_KIND_RE } from "../structure.js";
+import { externalRefProblems } from "./externalref.js";
+import { API_VERSION, ASSET_KIND_STABILITY } from "../vocab.js";
 
 /**
  * Spec section 5 + 8: `spec.assets` entries, local references, duplicate paths,
@@ -28,22 +30,33 @@ export function collectAssets(ctx: Context): void {
       return;
     }
     const kind = a.kind;
-    // Spec 8: vocabulary is open; unqualified unknown kinds warn, namespaced kinds (with ':') are accepted.
-    if (!KNOWN_ASSET_KINDS.has(kind) && !kind.includes(":")) {
+    // Spec 8: the vocabulary is open. A kind containing ':' is an extension kind (spec 13.3).
+    if (kind.includes(":")) {
+      const m = EXTENSION_KIND_RE.exec(kind);
+      if (!m) {
+        error(ctx, "asset.kind", `${where}.kind "${kind}" contains ':' but is not <extension>:<Kind>`, "owp.yaml");
+      } else if (!ctx.extensionNames.has(m[1])) {
+        error(ctx, "extension.undeclared", `${where}.kind "${kind}" uses extension "${m[1]}", which spec.dependencies does not declare with "as"`, "owp.yaml");
+      }
+    } else if (!ASSET_KIND_STABILITY.has(kind)) {
       warn(ctx, "asset.kind-unknown", `${where}.kind "${kind}" is not in the asset-kind vocabulary`, "owp.yaml");
+    } else if (ASSET_KIND_STABILITY.get(kind) === "experimental") {
+      warn(ctx, "asset.kind-experimental", `${where}.kind "${kind}" is experimental and may change or be removed`, "owp.yaml");
     }
     const hasPath = a.path !== undefined;
-    const hasRef = a.ref !== undefined;
+    // Spec 5.1: a present `ref` key is an ExternalRef, whatever its value.
+    const hasRef = Object.prototype.hasOwnProperty.call(a, "ref");
+    if (hasRef) {
+      const r = externalRefProblems(a.ref, `${where}.ref`, ctx.extensionNames);
+      for (const p of r.errors) error(ctx, p.rule, p.msg, "owp.yaml");
+      for (const p of r.warnings) warn(ctx, p.rule, p.msg, "owp.yaml");
+    }
     if (hasPath === hasRef) {
       error(ctx, "asset.path-or-ref", `${where} must have exactly one of "path" or "ref"`, "owp.yaml");
       return;
     }
     if (hasRef) {
-      if (!isObj(a.ref) || Object.keys(a.ref).length === 0) {
-        error(ctx, "asset.entry", `${where}.ref must be a non-empty mapping`, "owp.yaml");
-        return;
-      }
-      ctx.refAssets.push({ index: i, kind, ref: a.ref });
+      if (isObj(a.ref)) ctx.refAssets.push({ index: i, kind, ref: a.ref });
       return;
     }
 
@@ -107,7 +120,7 @@ export function collectAssets(ctx: Context): void {
         error(ctx, "asset.kind-mismatch", `asset ${raw} declares kind ${JSON.stringify(doc.kind)} but owp.yaml declares ${kind}`, raw);
       }
       if (doc.apiVersion !== undefined && doc.apiVersion !== API_VERSION) {
-        warn(ctx, "asset.api-version", `asset ${raw} declares apiVersion ${JSON.stringify(doc.apiVersion)}; expected ${API_VERSION}`, raw);
+        warn(ctx, "owp-ts:asset-api-version", `asset ${raw} declares apiVersion ${JSON.stringify(doc.apiVersion)}; expected ${API_VERSION}`, raw);
       }
     }
   });

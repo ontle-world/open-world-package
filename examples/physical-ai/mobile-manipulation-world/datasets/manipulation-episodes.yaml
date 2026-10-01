@@ -7,6 +7,6 @@ spec:
   structure: episodic
   standardBindings:
     format: lerobot
-    artifactRef: null
-    status: unbound
+    ref:
+      status: unbound
   note: Bind an immutable LeRobot/Hugging Face dataset revision when publishing concrete episodes.

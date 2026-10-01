@@ -1,6 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: ActionBindingProfile
-metadata:
-  name: enterprise-actions
-spec:
-  actions: []

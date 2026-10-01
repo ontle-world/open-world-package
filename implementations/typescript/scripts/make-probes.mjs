@@ -30,6 +30,9 @@ const worldManifest = (specExtra = {}, worldExtra = {}, assets) => ({
 });
 const worldFiles = () => ({ "WORLD.md": "# Probe\n", "views/task.yaml": view(), "state/task.yaml": compiler() });
 
+// Spec 5.1 ExternalRef, pinned by digest (was {provider: "x", repository} before ExternalRef was defined).
+const xref = (name) => ({ provider: "https", uri: `https://example.org/${name}`, digest: `sha256:${"0".repeat(64)}` });
+
 const G = "probe/world@0.1.0";
 const evalProfile = (version = "1.0.0", extra = {}) => ({ apiVersion: AV, kind: "EvaluationProfile", metadata: { name: "ev", ...(version ? { version } : {}) }, spec: { ...extra } });
 const evidence = (specOver = {}, scopeOver = {}) => ({
@@ -142,7 +145,7 @@ probe("p-model-ready-outputschemaref", { "owp.yaml": worldManifest({ conformance
   { valid: true, satisfiedProfile: "model-ready", rule: "outputSchemaRef alternative; its target is not resolved (unspecified)" });
 probe("p-action-ready-via-refs", { "owp.yaml": worldManifest({ conformance: { profile: "action-ready" } }, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" },
-  { kind: "ActionBindingProfile", ref: { provider: "x", repository: "a" } }, { kind: "CommitContract", ref: { provider: "x", repository: "c" } }, { kind: "EffectVerificationProfile", ref: { provider: "x", repository: "e" } }]), ...worldFiles() },
+  { kind: "ActionBindingProfile", ref: xref("a") }, { kind: "CommitContract", ref: xref("c") }, { kind: "EffectVerificationProfile", ref: xref("e") }]), ...worldFiles() },
   { valid: true, satisfiedProfile: "action-ready", rule: "action-ready assets may be external refs? (unspecified)" });
 probe("p-conformance-on-model-package", { "owp.yaml": { ...modelManifest(), spec: { ...modelManifest().spec, conformance: { profile: "stateful" } } }, ...modelFiles() },
   { valid: true, rule: "conformance on non-World package (schema: WorldPackage only; this impl warns)" });
@@ -218,14 +221,14 @@ probe("p2-bindings-bad-key-declared-descriptive", (() => { const f = ewsWorld({ 
   { valid: true, satisfiedProfile: "viewable", rule: "not declared stateful: valid, but satisfied profile drops (spec 6.1, round 3)" });
 probe("p2-bindings-bad-select", ewsWorld({ bindings: { "a.latest": { from: "sensor.a", value: "v", select: "first" } } }),
   { valid: false, satisfiedProfile: "viewable", rule: "select is latest|all; fails stateful (round 3)" });
-probe("p2-namespaced-asset-kind", { "owp.yaml": worldManifest({}, {}, [
+probe("p2-namespaced-asset-kind", { "owp.yaml": worldManifest({ dependencies: [{ ref: "acme/ext@1.0.0", as: "acme" }] }, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "acme:Hologram", path: "x/h.yaml" }]), ...worldFiles(),
-  "x/h.yaml": { apiVersion: AV, kind: "acme:Hologram", metadata: { name: "h" }, spec: {} } },
-  { valid: true, satisfiedProfile: "model-ready", rule: "namespaced kinds are accepted" });
+  "x/h.yaml": { apiVersion: AV, kind: "acme:Hologram", metadata: { name: "h" }, spec: { extensions: { acme: { depth: 3 } } } } },
+  { valid: true, satisfiedProfile: "model-ready", rule: "extension kinds <name>:<Kind> are accepted when <name> is declared with as (spec 13; was: any namespaced kind)" });
 probe("p2-package-example-unparseable", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "PackageExample", path: "examples/bad.yaml" }]), ...worldFiles(),
   "examples/bad.yaml": "a: [unclosed\n" },
-  { valid: true, satisfiedProfile: "model-ready", rule: "PackageExample files are not parsed" });
+  { valid: false, satisfiedProfile: "model-ready", rule: "PackageExample YAML must parse (spec 8; was: not parsed)" });
 probe("p2-dependency-range", { "owp.yaml": { ...worldManifest(), spec: { ...worldManifest().spec, dependencies: ["probe/base@^1.0.0"] } }, ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "ranges are not allowed in spec.dependencies (checked without --resolve in this impl)" });
 probe("p2-identity-invalid-but-view-matches", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "0.1" } }, ...worldFiles(), "views/task.yaml": view("probe/w@0.1") },

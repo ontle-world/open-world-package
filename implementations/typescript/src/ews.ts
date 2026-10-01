@@ -3,12 +3,15 @@
  *  - checkEws:   12.1 output contract against a World's State Compiler
  *  - compileEws: 12.2 declarative bindings over an ObservationSet at asOf
  *  - ewsEqual:   12.2 equality
+ * Both document kinds contain only their schema fields plus extensions blocks (spec 12);
+ * extension names are not checked (no manifest declares them), and compile/equality ignore them.
  */
 import * as path from "node:path";
 import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 import { bindingProblems } from "./rules/world.js";
+import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
 const UTC_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/;
 
@@ -83,6 +86,7 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   }
   if (ews.apiVersion !== API_VERSION) e("ews.kind", `apiVersion must be ${API_VERSION}`);
   if (ews.kind !== "EffectiveWorldState") e("ews.kind", "kind must be EffectiveWorldState");
+  for (const p of structureProblems(ews, EFFECTIVE_WORLD_STATE, null)) e(p.rule, `EffectiveWorldState: ${p.msg}`);
   const s = ews.spec;
   if (!isObj(s)) {
     e("ews.shape", "spec must be a mapping");
@@ -102,7 +106,8 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   else for (const [k, v] of Object.entries(provenance)) {
     if (!Array.isArray(v) || !v.every((x) => typeof x === "string")) e("ews.shape", `provenance.${k} must be a list of observation ids`);
   }
-  if (errors.some((x) => x.code !== "ews.as-of") || !isObj(state) || !isObj(unresolved) || !Array.isArray(missing) || !isObj(provenance)) {
+  const structural = new Set(["ews.as-of", "schema.unknown-field", "extension.block"]);
+  if (errors.some((x) => !structural.has(x.code)) || !isObj(state) || !isObj(unresolved) || !Array.isArray(missing) || !isObj(provenance)) {
     return { valid: false, errors };
   }
 
@@ -166,39 +171,52 @@ export interface Observation {
 
 export type CompileResult = { ok: true; ews: Obj } | { ok: false; errors: string[] };
 
+/** Errors are `<rule-id>: <message>` strings. */
 export function parseObservationSet(doc: unknown): { observations: Observation[]; errors: string[] } {
   const errors: string[] = [];
   const observations: Observation[] = [];
-  if (!isObj(doc)) return { observations, errors: ["ObservationSet must be a mapping"] };
-  if (doc.apiVersion !== undefined && doc.apiVersion !== API_VERSION) errors.push(`ObservationSet apiVersion must be ${API_VERSION}`);
-  if (doc.kind !== "ObservationSet") errors.push("kind must be ObservationSet");
+  const input = (m: string) => errors.push(refusal("ews.input", m));
+  if (!isObj(doc)) return { observations, errors: [refusal("ews.input", "ObservationSet must be a mapping")] };
+  for (const p of structureProblems(doc, OBSERVATION_SET, null)) errors.push(refusal(p.rule, `ObservationSet: ${p.msg}`));
+  if (doc.apiVersion !== undefined && doc.apiVersion !== API_VERSION) input(`ObservationSet apiVersion must be ${API_VERSION}`);
+  if (doc.kind !== "ObservationSet") input("kind must be ObservationSet");
   const list = get(doc, "spec", "observations");
-  if (!Array.isArray(list)) return { observations, errors: [...errors, "spec.observations must be a list"] };
+  if (!Array.isArray(list)) {
+    input("spec.observations must be a list");
+    return { observations, errors };
+  }
   const ids = new Set<string>();
   list.forEach((o, i) => {
-    if (!isObj(o)) return errors.push(`observations[${i}] must be a mapping`);
-    if (!isNonEmptyString(o.id)) errors.push(`observations[${i}] is missing id`);
-    else if (ids.has(o.id)) errors.push(`duplicate observation id ${o.id}`);
+    if (!isObj(o)) return void input(`observations[${i}] must be a mapping`);
+    if (!isNonEmptyString(o.id)) input(`observations[${i}] is missing id`);
+    else if (ids.has(o.id)) input(`duplicate observation id ${o.id}`);
     else ids.add(o.id);
-    if (!isNonEmptyString(o.type)) errors.push(`observations[${i}] is missing type`);
-    if (!isUtcTimestamp(o.observedAt)) errors.push(`observations[${i}].observedAt ${JSON.stringify(o.observedAt)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`);
-    if (!isObj(o.values)) errors.push(`observations[${i}] is missing a values mapping`);
+    if (!isNonEmptyString(o.type)) input(`observations[${i}] is missing type`);
+    if (!isUtcTimestamp(o.observedAt)) input(`observations[${i}].observedAt ${JSON.stringify(o.observedAt)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`);
+    if (!isObj(o.values)) input(`observations[${i}] is missing a values mapping`);
     if (errors.length === 0) observations.push(o as unknown as Observation);
   });
   return { observations, errors };
 }
 
+function refusal(rule: string, message: string): string {
+  return `${rule}: ${message}`;
+}
+
 export function compileEws(worldDir: string, compilerPath: string, observationDoc: unknown, asOf: string): CompileResult {
   const world = loadWorld(worldDir);
-  if (!world.manifest || !world.identity) return { ok: false, errors: world.problems.map((p) => `ews.state-compiler: ${p}`) };
-  if (!isUtcTimestamp(asOf)) return { ok: false, errors: [`ews.input: asOf ${JSON.stringify(asOf)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`] };
+  if (!world.manifest || !world.identity) return { ok: false, errors: world.problems.map((p) => refusal("ews.state-compiler", p)) };
+  if (!isUtcTimestamp(asOf)) return { ok: false, errors: [refusal("ews.input", `asOf ${JSON.stringify(asOf)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`)] };
   const comp = loadCompiler(worldDir, world.manifest, world.identity, compilerPath);
-  if (typeof comp === "string") return { ok: false, errors: [`ews.state-compiler: ${comp}`] };
-  if (comp.spec.bindings === undefined) return { ok: false, errors: [`ews.opaque-compiler: State Compiler ${compilerPath} declares no bindings; it is opaque and cannot be compiled declaratively`] };
+  if (typeof comp === "string") return { ok: false, errors: [refusal("ews.state-compiler", comp)] };
+  if (comp.spec.bindings === undefined) {
+    return { ok: false, errors: [refusal("ews.opaque-compiler", `State Compiler ${compilerPath} declares no bindings; it is opaque and cannot be compiled declaratively`)] };
+  }
   const bp = bindingProblems(comp.spec);
-  if (bp.length) return { ok: false, errors: bp.map((m) => `compiler.binding: ${m}`) };
+  if (bp.length) return { ok: false, errors: bp.map((m) => refusal("compiler.binding", m)) };
+  // Spec 12: an unknown field makes the ObservationSet invalid input, so compilation is refused.
   const { observations, errors } = parseObservationSet(observationDoc);
-  if (errors.length) return { ok: false, errors: errors.map((m) => `ews.input: ${m}`) };
+  if (errors.length) return { ok: false, errors };
 
   const bindings = comp.spec.bindings as Record<string, Obj>;
   const state: Obj = {};

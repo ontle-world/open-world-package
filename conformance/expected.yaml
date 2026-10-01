@@ -137,10 +137,106 @@ cases:
     errors: [asset.path-form]
     satisfiedProfile: descriptive
     rule: "Local paths must not start with './'."
-  asset-namespaced-kind:
+  extension-kind-declared:
     valid: true
     satisfiedProfile: descriptive
-    rule: "Namespaced asset kinds (containing ':') are accepted."
+    rule: "An extension asset kind <name>:<Kind> is accepted when spec.dependencies declares <name> with 'as'."
+  extension-kind-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: descriptive
+    rule: "An extension asset kind whose extension name is not declared is an error."
+  extension-kind-malformed:
+    valid: false
+    errors: [asset.kind]
+    satisfiedProfile: descriptive
+    rule: "A kind containing ':' must have the form <extension>:<Kind>."
+  extension-blocks:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "extensions blocks are allowed in manifest objects, asset entries, and asset metadata/spec; keys are declared extension names."
+  extension-block-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: descriptive
+    rule: "An extensions block key must be a declared extension name."
+  extension-block-asset-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: descriptive
+    rule: "Extension names in local asset documents are checked against the package's declarations."
+  extension-block-not-mapping:
+    valid: false
+    errors: [extension.block]
+    satisfiedProfile: descriptive
+    rule: "An extensions block maps each extension name to a mapping."
+  extension-name-reserved:
+    valid: false
+    errors: [extension.name]
+    satisfiedProfile: descriptive
+    rule: "owp and openworld are reserved extension names."
+  extension-name-form:
+    valid: false
+    errors: [extension.name]
+    satisfiedProfile: descriptive
+    rule: "Extension names match [a-z][a-z0-9-]*."
+  extension-duplicate:
+    valid: false
+    errors: [extension.duplicate]
+    satisfiedProfile: descriptive
+    rule: "An extension name is declared at most once."
+  extension-must-understand:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "mustUnderstand: true is valid on a dependency declared with 'as'."
+  extension-must-understand-without-as:
+    valid: false
+    errors: [extension.declaration]
+    satisfiedProfile: descriptive
+    rule: "mustUnderstand requires 'as'."
+  extension-name-not-string:
+    valid: false
+    errors: [extension.name]
+    satisfiedProfile: descriptive
+    rule: "When as is present it must be a valid extension name; as: null is invalid."
+  package-example-extensions:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "PackageExample files may hold any document, so their extensions blocks are not checked against declarations."
+  manifest-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "A key that is neither a defined field nor an extensions block is an error (here a misspelt defaultView)."
+  manifest-unknown-metadata-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "metadata accepts only its defined fields and an extensions block."
+  manifest-colon-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "Extension data goes in an extensions block; a field named <extension>:<field> is unknown."
+  manifest-open-containers:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Keys inside open containers such as spec.validity are not checked."
+  extension-definition:
+    valid: true
+    rule: "spec.extensionDefinition lists the kinds and schema files an extension package defines."
+  extension-definition-malformed:
+    valid: false
+    errors: [extension.definition]
+    rule: "extensionDefinition.kinds are PascalCase names without a prefix."
+  extension-definition-missing-schema:
+    valid: false
+    errors: [extension.definition]
+    rule: "extensionDefinition.schemas entries must exist in the package."
+  evidence-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    rule: "CompatibilityEvidence accepts only the fields of schemas/compatibility-evidence.schema.json and extensions blocks."
   package-example-kind-not-checked:
     valid: true
     satisfiedProfile: descriptive
@@ -278,6 +374,69 @@ cases:
     rule: "A verifier reference, when present, must be pinned."
 
 # Resolution cases: validate <case>/root with dependency resolution, using <case>/packages as the only package source.
+  ref-pinned-commit:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "A Hugging Face or git reference is pinned by a commit-hash revision."
+  ref-oci-digest:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "An OCI reference is pinned by the manifest digest."
+  ref-filelist:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Several files are pinned through a file list (application/vnd.openworld.filelist+json) and its digest."
+  ref-unbound:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "status: unbound records that no artifact is chosen yet; other fields are optional."
+  ref-unpinned:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "An unpinned bound reference is a warning (ref.unpinned), not an error."
+  ref-legacy-repository:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "repository is the deprecated name of uri (warning ref.legacy-shape)."
+  ref-repository-and-uri:
+    valid: false
+    errors: [ref.shape]
+    satisfiedProfile: descriptive
+    rule: "uri and repository must not appear together."
+  ref-missing-uri:
+    valid: false
+    errors: [ref.shape]
+    satisfiedProfile: descriptive
+    rule: "A bound reference declares provider and uri."
+  ref-bad-digest:
+    valid: false
+    errors: [ref.shape]
+    satisfiedProfile: descriptive
+    rule: "digest is sha256: followed by 64 lowercase hex digits."
+  ref-bad-status:
+    valid: false
+    errors: [ref.shape]
+    satisfiedProfile: descriptive
+    rule: "status is bound or unbound."
+  ref-unknown-provider:
+    valid: false
+    errors: [ref.provider]
+    satisfiedProfile: descriptive
+    rule: "provider is a listed provider or <extension>:<provider>."
+  ref-extension-provider:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "An extension provider is accepted when its extension is declared."
+  ref-extension-provider-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: descriptive
+    rule: "An extension provider must use a declared extension name."
+  ref-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "ExternalRef accepts only its defined fields and an extensions block."
 resolutionCases:
   grounded:
     valid: true
@@ -361,6 +520,13 @@ resolutionCases:
 # EWS compile cases: run <case>/world's compiler over <case>/observations.yaml at asOf.
 # Compare with <case>/expected-ews.yaml on worldRef, worldView, stateCompiler, asOf, state, unresolved, missing (as a set), provenance (as sets).
 # error: true means a conforming compiler must refuse the input.
+  extension-defined:
+    valid: true
+    rule: "A dependency declared with 'as' resolves to a package that declares spec.extensionDefinition."
+  extension-without-definition:
+    valid: false
+    errors: [extension.definition]
+    rule: "A dependency declared with 'as' must resolve to a package that declares spec.extensionDefinition."
 ewsCases:
   latest-picks-newest:
     compiler: state/task-compiler.yaml
@@ -448,6 +614,16 @@ ewsCases:
     rule: "observedAt must be UTC YYYY-MM-DDTHH:MM:SSZ."
 
 # EWS check cases: check <case>/ews.yaml against <case>/world's State Compiler output contract.
+  observation-extensions:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:03Z"
+    rule: "extensions blocks on the ObservationSet and on observations are allowed and do not affect compilation."
+  error-unknown-field:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:03Z"
+    error: true
+    errors: [schema.unknown-field]
+    rule: "An observation key that is neither defined nor an extensions block makes the input invalid."
 ewsCheckCases:
   valid:
     valid: true
@@ -502,3 +678,10 @@ ewsCheckCases:
     valid: false
     errors: [ews.unresolved-alternatives]
     rule: "An unresolved field retains at least two alternatives."
+  unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    rule: "An EWS key that is neither defined nor an extensions block is an error."
+  extensions:
+    valid: true
+    rule: "extensions blocks in spec and spec.context are allowed and ignored by the output contract and EWS equality."

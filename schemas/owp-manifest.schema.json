@@ -48,9 +48,12 @@
         },
         "license": {
           "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "spec": {
       "type": "object",
@@ -64,15 +67,17 @@
             ],
             "properties": {
               "kind": {
-                "type": "string",
-                "minLength": 1
+                "$ref": "#/$defs/assetKind"
               },
               "path": {
                 "type": "string",
                 "minLength": 1
               },
               "ref": {
-                "type": "object"
+                "$ref": "#/$defs/externalRef"
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
               }
             },
             "oneOf": [
@@ -87,7 +92,7 @@
                 ]
               }
             ],
-            "additionalProperties": true
+            "additionalProperties": false
           }
         },
         "world": {
@@ -106,9 +111,33 @@
             "defaultStateCompiler": {
               "type": "string",
               "minLength": 1
+            },
+            "boundary": {
+              "type": "object",
+              "properties": {
+                "included": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "excluded": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
         "worldModel": {
           "type": "object",
@@ -148,9 +177,12 @@
                     "type": "string",
                     "minLength": 1
                   }
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": false
             },
             "inputs": {
               "type": "object",
@@ -160,9 +192,12 @@
               "properties": {
                 "contract": {
                   "const": "EffectiveWorldState"
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": false
             },
             "representation": {
               "type": "object",
@@ -173,12 +208,65 @@
                 "adapterRef": {
                   "type": "string",
                   "minLength": 1
+                },
+                "input": {
+                  "type": "string"
+                },
+                "internal": {
+                  "type": "string"
+                },
+                "mode": {
+                  "type": "string"
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
                 }
               },
-              "additionalProperties": true
+              "additionalProperties": false
+            },
+            "description": {
+              "type": "string"
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "modalities": {
+              "type": "object",
+              "properties": {
+                "inputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "outputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "extensions": {
+                  "$ref": "#/$defs/extensions"
+                }
+              },
+              "additionalProperties": false
+            },
+            "temporal": {
+              "type": "object",
+              "description": "Open container: keys are not checked."
+            },
+            "validity": {
+              "type": "object",
+              "description": "Open container: keys are not checked."
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
             }
           },
-          "additionalProperties": true,
+          "additionalProperties": false,
           "required": [
             "roles",
             "semanticGrounding",
@@ -198,15 +286,74 @@
                 "model-ready",
                 "action-ready"
               ]
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
             }
           },
-          "additionalProperties": true
+          "additionalProperties": false
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "ontology": {
+          "type": "object",
+          "description": "OntologyPackage only. Open container in this alpha."
+        },
+        "extensionDefinition": {
+          "type": "object",
+          "description": "Present when this package defines an extension (spec section 13).",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "kinds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Za-z0-9]*$"
+              }
+            },
+            "schemas": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validity": {
+          "type": "object",
+          "description": "Open container: keys are not checked."
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
         }
       },
-      "additionalProperties": true
+      "additionalProperties": false
     }
   },
-  "additionalProperties": true,
+  "additionalProperties": false,
   "allOf": [
     {
       "if": {
@@ -466,5 +613,137 @@
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "assetKind": {
+      "type": "string",
+      "anyOf": [
+        {
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        {
+          "pattern": "^[a-z][a-z0-9-]{0,62}:[A-Z][A-Za-z0-9]*$"
+        }
+      ],
+      "description": "A vocabulary kind, or an extension kind <extension>:<Kind> (spec section 13)."
+    },
+    "packageRef": {
+      "type": "string",
+      "pattern": "^[^/@#\\s]+/[^/@#\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "dependency": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/packageRef"
+        },
+        {
+          "type": "object",
+          "required": [
+            "ref"
+          ],
+          "properties": {
+            "ref": {
+              "$ref": "#/$defs/packageRef"
+            },
+            "source": {
+              "type": "string"
+            },
+            "as": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,62}$",
+              "not": {
+                "enum": [
+                  "owp",
+                  "openworld"
+                ]
+              },
+              "description": "Declares this dependency as an extension and names it (spec section 13)."
+            },
+            "mustUnderstand": {
+              "type": "boolean",
+              "description": "Runtimes that do not implement the extension must not run the package."
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "dependentRequired": {
+            "mustUnderstand": [
+              "as"
+            ]
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "externalRef": {
+      "description": "Reference to an artifact outside the package (spec section 5.1).",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "anyOf": [
+            {
+              "enum": [
+                "huggingface",
+                "oci",
+                "git",
+                "https",
+                "s3",
+                "gcs",
+                "doi"
+              ]
+            },
+            {
+              "pattern": "^[a-z][a-z0-9-]{0,62}:.+$"
+            }
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "bound",
+            "unbound"
+          ],
+          "default": "bound"
+        },
+        "repository": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated name of uri."
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

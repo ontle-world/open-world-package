@@ -18,7 +18,7 @@ OWP does not replace existing standards. Each of them answers part of the questi
 
 ## Binding convention
 
-Asset YAML files carry external references under `standardBindings`. Unbound references say so explicitly instead of pointing at an invented artifact:
+Asset YAML files carry external references under `standardBindings`. Each `ref` uses the ExternalRef shape of spec section 5.1. Unbound references say so explicitly instead of pointing at an invented artifact:
 
 ```yaml
 kind: EnvironmentProfile
@@ -26,8 +26,17 @@ spec:
   standardBindings:
     scene:
       standard: openusd
-      ref: null
-      status: unbound
+      ref:
+        status: unbound
+```
+
+A bound reference names the provider, the artifact, and how it is pinned:
+
+```yaml
+      ref:
+        provider: huggingface
+        uri: hf://datasets/organization/name
+        revision: <commit hash>
 ```
 
 The examples use this convention:
@@ -35,7 +44,7 @@ The examples use this convention:
 - `examples/physical-ai/mobile-manipulation-world` — OpenUSD scene, ROS 2 message/action types, LeRobot episodes
 - `examples/business/manufacturing-quality-world` — ISA-95 object models, OPC UA information model
 
-`standardBindings` is not validated by the reference validator in this alpha; domain validators may layer checks on top.
+The reference validator checks ExternalRefs in the manifest. `standardBindings` inside asset files are checked once those asset kinds have JSON Schemas; domain validators may layer checks on top.
 
 ## What is still missing
 

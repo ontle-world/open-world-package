@@ -14,3 +14,6 @@ dist/
 node_modules/
 .ontle/cache/
 .ontle/build/
+
+# Internal design notes (not canon, not published)
+/internal/

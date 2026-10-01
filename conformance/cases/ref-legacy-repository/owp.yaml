@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+  assets:
+  - kind: Dataset
+    ref:
+      provider: huggingface
+      repository: organization/name
+      revision: 0123456789abcdef0123456789abcdef01234567

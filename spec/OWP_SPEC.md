@@ -196,7 +196,6 @@ ref:
 - A bound reference declares `provider` and `uri`. An `unbound` reference records that no artifact has been chosen yet; its other fields are optional. Examples MUST NOT invent artifacts; they use `status: unbound` instead.
 - `provider` is one of the listed values or an extension provider `<extension>:<provider>` (section 13).
 - `digest` is `sha256:` followed by 64 lowercase hex digits. `size` is a non-negative integer.
-- `repository` is the deprecated name of `uri`; it is accepted with the warning `ref.legacy-shape` and MUST NOT appear together with `uri`.
 - A bound reference SHOULD be pinned; otherwise the warning `ref.unpinned` applies. Pinning depends on the provider:
 
 | Provider | Pinned by |
@@ -263,14 +262,15 @@ Every WorldModelPackage requires compatible View and State Compiler references r
 
 ```json
 {
-  "format": "owp-lock/v1alpha1",
+  "format": "owp-lock/v1alpha2",
   "manifest": "owp.yaml",
   "manifest_sha256": "<hex sha256 of owp.yaml>",
-  "files": [{"path": "<posix path>", "sha256": "<hex sha256>", "size": 123}]
+  "files": [{"path": "<posix path>", "sha256": "<hex sha256>", "size": 123}],
+  "externals": [{"pointer": "/spec/assets/0/ref", "provider": "huggingface", "uri": "hf://org/name", "revision": "<commit>"}]
 }
 ```
 
-`files` lists every archived file except `owp.lock.json` itself (including `owp.yaml`). The current format is `owp-lock/v1alpha2`, which adds `externals`: one entry per bound ExternalRef (section 5.1) in `owp.yaml`, in manifest order, with `pointer` (a JSON Pointer into `owp.yaml`), `provider`, `uri`, and the `revision`, `digest`, and `mediaType` it declares. An entry MAY add `vendoredPath`, the archive path of the referenced content included in the archive (vendoring); that file is listed in `files` and its bytes match `digest`. A verifier MUST check that `externals` equals the manifest's bound references, and MUST still accept `owp-lock/v1alpha1` archives, which have no `externals`. The schema is `schemas/owp-lock.schema.json`. `manifest_sha256` MUST match `owp.yaml`; `size` is informative. Hashes are lowercase hex without prefix. An archive is valid only when its entries other than `owp.lock.json` are exactly the locked paths and every hash matches. The digest of an archive is the SHA-256 of the archive bytes.
+`files` lists every archived file except `owp.lock.json` itself (including `owp.yaml`). `externals` has one entry per bound ExternalRef (section 5.1) in `owp.yaml`, in manifest order, with `pointer` (a JSON Pointer into `owp.yaml`), `provider`, `uri`, and the `revision`, `digest`, and `mediaType` it declares. An entry MAY add `vendoredPath`, the archive path of the referenced content included in the archive (vendoring); that file is listed in `files` and its bytes match `digest`. A verifier MUST check that `externals` equals the manifest's bound references. The schema is `schemas/owp-lock.schema.json`. `manifest_sha256` MUST match `owp.yaml`; `size` is informative. Hashes are lowercase hex without prefix. An archive is valid only when its entries other than `owp.lock.json` are exactly the locked paths and every hash matches. The digest of an archive is the SHA-256 of the archive bytes.
 
 ### 7.1 OCI artifacts
 
@@ -602,7 +602,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `package.legacy-manifest` | 8 | `package.yaml` or `world.yaml` at the root |
 | `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, missing entry `kind`, or a kind containing `:` that is not `<extension>:<Kind>` |
 | `asset.path-or-ref` | 5 | entry has both or neither of `path` and `ref` |
-| `ref.shape` | 5.1 | malformed ExternalRef: not a mapping, bad `status`, `digest`, `size`, or field type, a bound reference without `provider` or `uri`, or both `uri` and `repository` |
+| `ref.shape` | 5.1 | malformed ExternalRef: not a mapping, bad `status`, `digest`, `size`, or field type, or a bound reference without `provider` or `uri` |
 | `ref.provider` | 5.1 | `provider` is neither a listed provider nor `<extension>:<provider>` |
 | `asset.path-form` | 3 | local path is not a relative POSIX path, or starts with `./` |
 | `manifest.dependency` | 2 | `spec.dependencies` entry is not an exact package reference |
@@ -698,7 +698,6 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
 | `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
-| `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside an experimental value set |
 | `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |

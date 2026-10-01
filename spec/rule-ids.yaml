@@ -17,7 +17,7 @@ rules:
   asset.entry: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, or a kind containing : that is not <extension>:<Kind>"}
   asset.kind: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, or a kind containing : that is not <extension>:<Kind>"}
   asset.path-or-ref: {severity: error, section: "5", summary: "entry has both or neither of path and ref"}
-  ref.shape: {severity: error, section: "5.1", summary: "malformed ExternalRef: not a mapping, bad status, digest, size, or field type, a bound reference without provider or uri, or both uri and repository"}
+  ref.shape: {severity: error, section: "5.1", summary: "malformed ExternalRef: not a mapping, bad status, digest, size, or field type, or a bound reference without provider or uri"}
   ref.provider: {severity: error, section: "5.1", summary: "provider is neither a listed provider nor <extension>:<provider>"}
   asset.path-form: {severity: error, section: "3", summary: "local path is not a relative POSIX path, or starts with ./"}
   manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies entry is not an exact package reference"}
@@ -122,7 +122,6 @@ rules:
   compiler.multi-latest: {severity: warning, section: "C.1", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}
   binding.term-unscoped: {severity: warning, section: "14", summary: "binding term outside the World boundary and every View projection"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
-  ref.legacy-shape: {severity: warning, section: "5.1", summary: "ExternalRef uses repository instead of uri"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
   experimental.value: {severity: warning, section: "C", summary: "value outside an experimental value set"}
   experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes cycle"}

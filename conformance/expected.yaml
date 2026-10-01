@@ -394,15 +394,6 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "An unpinned bound reference is a warning (ref.unpinned), not an error."
-  ref-legacy-repository:
-    valid: true
-    satisfiedProfile: descriptive
-    rule: "repository is the deprecated name of uri (warning ref.legacy-shape)."
-  ref-repository-and-uri:
-    valid: false
-    errors: [ref.shape]
-    satisfiedProfile: descriptive
-    rule: "uri and repository must not appear together."
   ref-missing-uri:
     valid: false
     errors: [ref.shape]

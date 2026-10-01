@@ -8,14 +8,12 @@
     "format",
     "manifest",
     "manifest_sha256",
-    "files"
+    "files",
+    "externals"
   ],
   "properties": {
     "format": {
-      "enum": [
-        "owp-lock/v1alpha1",
-        "owp-lock/v1alpha2"
-      ]
+      "const": "owp-lock/v1alpha2"
     },
     "manifest": {
       "const": "owp.yaml"
@@ -49,7 +47,7 @@
     },
     "externals": {
       "type": "array",
-      "description": "v1alpha2: every bound ExternalRef in owp.yaml, in manifest order.",
+      "description": "Every bound ExternalRef in owp.yaml, in manifest order.",
       "items": {
         "type": "object",
         "required": [

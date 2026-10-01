@@ -25,7 +25,7 @@ export const closed = (fields: Record<string, Shape>, ext = true): Shape => ({ t
 export const leaves = (...names: string[]): Record<string, Shape> => Object.fromEntries(names.map((n) => [n, ANY]));
 
 /** schemas/owp-manifest.schema.json $defs/externalRef (spec 5.1). */
-export const EXTERNAL_REF: Shape = closed(leaves("provider", "uri", "revision", "digest", "mediaType", "size", "status", "repository"));
+export const EXTERNAL_REF: Shape = closed(leaves("provider", "uri", "revision", "digest", "mediaType", "size", "status"));
 
 /** schemas/owp-manifest.schema.json spec.ontology (spec 3.1); `prefixes` is an open map. */
 export const ONTOLOGY: Shape = closed({

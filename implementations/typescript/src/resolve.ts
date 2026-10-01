@@ -72,10 +72,10 @@ function identityOf(m: Obj | undefined): string | undefined {
 // ---------------------------------------------------------------- archives
 
 /**
- * Spec 7: {"format":"owp-lock/v1alpha1"|"owp-lock/v1alpha2","manifest":"owp.yaml","manifest_sha256":hex,
- * "files":[{"path","sha256","size"}], "externals":[...] (v1alpha2)}. Hashes are lowercase hex without prefix.
+ * Spec 7: {"format":"owp-lock/v1alpha2","manifest":"owp.yaml","manifest_sha256":hex,
+ * "files":[{"path","sha256","size"}], "externals":[...]}. Hashes are lowercase hex without prefix.
  */
-const LOCK_FORMATS = ["owp-lock/v1alpha1", "owp-lock/v1alpha2"];
+const LOCK_FORMAT = "owp-lock/v1alpha2";
 
 interface LockData {
   format: string;
@@ -86,8 +86,8 @@ interface LockData {
 
 function lockEntries(json: unknown): LockData | string {
   if (!isObj(json)) return "owp.lock.json is not a JSON object";
-  if (typeof json.format !== "string" || !LOCK_FORMATS.includes(json.format)) {
-    return `owp.lock.json format must be one of ${LOCK_FORMATS.join(", ")} (got ${JSON.stringify(json.format)})`;
+  if (json.format !== LOCK_FORMAT) {
+    return `owp.lock.json format must be ${LOCK_FORMAT} (got ${JSON.stringify(json.format)})`;
   }
   if (json.externals !== undefined && !Array.isArray(json.externals)) return "owp.lock.json externals must be a list";
   if (json.manifest !== undefined && json.manifest !== "owp.yaml") return "owp.lock.json manifest must be owp.yaml";
@@ -206,14 +206,14 @@ function externalsProblem(lock: LockData, manifest: Obj, have: Map<string, Buffe
 
 /**
  * Spec 7: the `externals` entries for a manifest — each bound ExternalRef (status absent or bound) of
- * spec.assets[].ref, then spec.ontology.externalImports[].ref, with pointer, provider, uri (uri, else the
- * deprecated repository), and revision/digest/mediaType when declared.
+ * spec.assets[].ref, then spec.ontology.externalImports[].ref, with pointer, provider, uri, and
+ * revision/digest/mediaType when declared.
  */
 export function lockExternals(manifest: Obj): Obj[] {
   const out: Obj[] = [];
   const add = (pointer: string, ref: unknown) => {
     if (!isObj(ref) || (ref.status !== undefined && ref.status !== "bound")) return;
-    const entry: Obj = { pointer, provider: ref.provider ?? null, uri: ref.uri !== undefined ? ref.uri : (ref.repository ?? null) };
+    const entry: Obj = { pointer, provider: ref.provider ?? null, uri: ref.uri ?? null };
     for (const k of ["revision", "digest", "mediaType"]) if (ref[k] !== undefined && ref[k] !== null) entry[k] = ref[k];
     out.push(entry);
   };

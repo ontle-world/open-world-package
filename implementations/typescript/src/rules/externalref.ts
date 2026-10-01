@@ -29,15 +29,7 @@ export function externalRefProblems(ref: unknown, at: string, declared: Set<stri
     return { errors, warnings };
   }
 
-  // `repository` is the deprecated name of `uri`.
-  let uri = ref.uri;
-  if (has(ref, "repository")) {
-    if (has(ref, "uri")) shape(" declares both uri and its deprecated name repository");
-    else {
-      warnings.push({ rule: "ref.legacy-shape", msg: `${at}.repository is deprecated; use uri` });
-      uri = ref.repository;
-    }
-  }
+  const uri = ref.uri;
 
   const provider = ref.provider;
   const providerError = (msg: string) => errors.push({ rule: "ref.provider", msg: `${at}.provider ${msg}` });

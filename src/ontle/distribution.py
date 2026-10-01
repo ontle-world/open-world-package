@@ -52,7 +52,7 @@ def lock_externals(manifest: dict[str, Any], vendored: dict[str, str] | None = N
     entries = []
     for item in external_refs(manifest):
         ref = item["ref"]
-        entry = {"pointer": item["pointer"], "provider": ref.get("provider"), "uri": ref.get("uri", ref.get("repository"))}
+        entry = {"pointer": item["pointer"], "provider": ref.get("provider"), "uri": ref.get("uri")}
         for key in ("revision", "digest", "mediaType"):
             if ref.get(key) is not None:
                 entry[key] = ref[key]
@@ -78,7 +78,7 @@ def _check_digest(data: bytes, digest: str | None, what: str) -> None:
 def fetch_ref(ref: dict[str, Any], target: Path) -> list[Path]:
     """Download one bound ExternalRef into target and verify it (spec section 5.1). Returns the files written."""
     provider = ref.get("provider")
-    uri = ref.get("uri", ref.get("repository"))
+    uri = ref.get("uri")
     target.mkdir(parents=True, exist_ok=True)
     if provider in {"https"} or (isinstance(uri, str) and uri.startswith(("http://", "file://"))):
         data = _download(uri)

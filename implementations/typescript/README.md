@@ -45,7 +45,7 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/world.ts` | 6.1 conformance profiles |
 | `src/rules/worldmodel.ts` | 3, 6 |
 | `src/rules/evaluation.ts` | 9 |
-| `src/resolve.ts`, `src/zip.ts` | 7 (lock formats `owp-lock/v1alpha1` and `v1alpha2` with `externals`), 11 (directory, archive, git, and local `index:` sources), 13.1, 14 |
+| `src/resolve.ts`, `src/zip.ts` | 7 (lock format `owp-lock/v1alpha2` with `externals`), 11 (directory, archive, git, and local `index:` sources), 13.1, 14 |
 | `src/evidence.ts` | 9.1 detached CompatibilityEvidence |
 | `src/ews.ts` | 12 |
 | `src/extraction.ts` | Appendix C.1 knowledge extraction transform (query results to ObservationSet) |

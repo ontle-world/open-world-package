@@ -575,7 +575,7 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-LOCK_FORMATS = {"owp-lock/v1alpha1", "owp-lock/v1alpha2"}
+LOCK_FORMAT = "owp-lock/v1alpha2"
 
 
 def build_lock(root: Path, files: list[Path], extra: dict[str, bytes] | None = None,
@@ -594,7 +594,7 @@ def build_lock(root: Path, files: list[Path], extra: dict[str, bytes] | None = N
     entries.sort(key=lambda e: e["path"])
     manifest_bytes = (root / MANIFEST).read_bytes()
     return {
-        "format": "owp-lock/v1alpha2",
+        "format": LOCK_FORMAT,
         "manifest": MANIFEST,
         "manifest_sha256": sha256_bytes(manifest_bytes),
         "files": entries,
@@ -672,7 +672,7 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
         if "owp.lock.json" not in names:
             return False, ["archive missing owp.lock.json"]
         lock = json.loads(zf.read("owp.lock.json"))
-        if lock.get("format") not in LOCK_FORMATS:
+        if lock.get("format") != LOCK_FORMAT:
             return False, [f"unsupported lock format {lock.get('format')!r}"]
         locked = {entry.get("path") for entry in lock.get("files", []) if isinstance(entry, dict)}
         for name in sorted(names - locked - {"owp.lock.json"}):
@@ -689,7 +689,7 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
             errors.append(f"archive missing {MANIFEST}")
         elif sha256_bytes(zf.read(MANIFEST)) != lock.get("manifest_sha256"):
             errors.append(f"manifest hash mismatch: {MANIFEST}")
-        elif lock.get("format") == "owp-lock/v1alpha2":
+        else:
             from .distribution import lock_externals
             recorded = [{k: v for k, v in e.items() if k != "vendoredPath"} for e in lock.get("externals") or []]
             if recorded != lock_externals(yaml.safe_load(zf.read(MANIFEST)) or {}):

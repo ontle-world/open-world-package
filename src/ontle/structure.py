@@ -26,10 +26,10 @@ def array(items: Any) -> dict[str, Any]:
 OPEN: dict[str, Any] = {"type": "object", "open": True}
 VALUE = None  # any value; not descended into
 
-# ExternalRef (spec section 5.1). `repository` is the deprecated name of `uri`.
+# ExternalRef (spec section 5.1).
 EXTERNAL_REF = closed({
     "provider": VALUE, "uri": VALUE, "revision": VALUE, "digest": VALUE,
-    "mediaType": VALUE, "size": VALUE, "status": VALUE, "repository": VALUE,
+    "mediaType": VALUE, "size": VALUE, "status": VALUE,
 })
 PROVIDERS = {"huggingface", "oci", "git", "https", "s3", "gcs", "doi"}
 COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
@@ -228,12 +228,6 @@ def external_ref_issues(ref: Any, where: str, declared: set[str]) -> tuple[list[
         errors.append(f"ref.shape: {where}.status must be bound or unbound")
         return errors, warnings
     uri = ref.get("uri")
-    if "repository" in ref:
-        if "uri" in ref:
-            errors.append(f"ref.shape: {where} declares both uri and its deprecated name repository")
-        else:
-            warnings.append(f"ref.legacy-shape: {where}.repository is deprecated; use uri")
-            uri = ref["repository"]
     provider = ref.get("provider")
     if provider is not None:
         if not isinstance(provider, str):

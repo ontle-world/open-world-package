@@ -129,11 +129,6 @@
           ],
           "default": "bound"
         },
-        "repository": {
-          "type": "string",
-          "deprecated": true,
-          "description": "Deprecated name of uri."
-        },
         "extensions": {
           "$ref": "#/$defs/extensions"
         }

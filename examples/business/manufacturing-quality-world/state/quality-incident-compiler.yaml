@@ -14,6 +14,8 @@ spec:
     - inspection.results
     - evidence.open_hypotheses
     - capa.status
+    - lot.equipment
+    - equipment.parts
   bindings:
     quality_incident.status: {from: QMS.nonconformance, value: status, select: latest}
     claim.status: {from: QMS.claim, value: status, select: latest}
@@ -21,6 +23,8 @@ spec:
     equipment.condition_events: {from: MES.equipment, value: condition_event, select: all}
     inspection.results: {from: QMS.inspection, value: result, select: all}
     capa.status: {from: QMS.capa, value: status, select: latest}
+    lot.equipment: {from: KG.lot_equipment, value: equipment, select: all}
+    equipment.parts: {from: KG.equipment_part, value: part, select: all}
   compilation:
     reconciliation: retain_alternatives_when_unresolved
     authority: preserve_declared_authority

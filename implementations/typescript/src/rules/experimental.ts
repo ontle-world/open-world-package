@@ -5,7 +5,7 @@
  */
 import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
-import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, OPEN, Shape, structureProblems } from "../structure.js";
+import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, list, OPEN, Shape, structureProblems } from "../structure.js";
 import { fileExists, isObj, normalizeRelPath, Obj, staysInside } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 import { externalRefProblems } from "./externalref.js";
@@ -46,11 +46,17 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     system: closed({ ...leaves("interfaceRefs", "deliveryMode"), serviceLevel: OPEN }),
   }),
   KnowledgeAsset: doc({
-    ...leaves("roles", "representation", "worldRef", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
+    ...leaves("roles", "representation", "format", "worldRef", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
     conformsTo: closed(leaves("ontology", "shapes")),
     snapshot: closed(leaves("asOf")),
     content: CONTENT,
     delta: closed(leaves("base", "format")),
+  }),
+  KnowledgeExtractionProfile: doc({
+    source: ANY,
+    parameters: OPEN,
+    query: closed(leaves("language", "text")),
+    observations: list(closed({ ...leaves("type", "id", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
 };
 
@@ -169,6 +175,49 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       }
       c.content(sub(s, "content"));
       break;
+    }
+    case "KnowledgeExtractionProfile": {
+      c.localRef(s.source, ["KnowledgeAsset"], "spec.source");
+      const query = sub(s, "query");
+      if (!("language" in query)) c.warn("experimental.field", "spec.query.language is required");
+      else c.value(query.language, "queryLanguages", "spec.query.language");
+      const templates = s.observations;
+      if (!Array.isArray(templates) || templates.length === 0) c.warn("experimental.field", "spec.observations must be a non-empty list");
+      (Array.isArray(templates) ? templates : []).forEach((t, i) => {
+        if (!isExtractionTemplate(t)) c.warn("experimental.field", `spec.observations[${i}] needs type, a non-empty id column list, and a values mapping`);
+      });
+      break;
+    }
+  }
+}
+
+/** Appendix C.1: an observations entry has a type, a non-empty id column list, and a non-empty values mapping. */
+export function isExtractionTemplate(t: unknown): t is { type: string; id: unknown[]; values: Obj; observedAt?: unknown; multi?: unknown } {
+  return isObj(t) && typeof t.type === "string" && Array.isArray(t.id) && t.id.length > 0 && isObj(t.values) && Object.keys(t.values).length > 0;
+}
+
+/**
+ * Appendix C.1: warning `compiler.multi-latest` when a local State Compiler binding reads, with
+ * select latest (the default), an observation type that a local extraction marks `multi: true`.
+ */
+export function checkMultiLatest(ctx: Context): void {
+  const multi = new Map<string, string>();
+  for (const a of ctx.localAssets) {
+    if (a.kind !== "KnowledgeExtractionProfile") continue;
+    const list = isObj(a.doc) && isObj(a.doc.spec) ? a.doc.spec.observations : undefined;
+    for (const t of Array.isArray(list) ? list : []) {
+      if (isObj(t) && t.multi === true && typeof t.type === "string") multi.set(t.type, a.rawPath);
+    }
+  }
+  if (multi.size === 0) return;
+  for (const a of ctx.localAssets) {
+    if (a.kind !== "StateCompilerProfile") continue;
+    const bindings = isObj(a.doc) && isObj(a.doc.spec) ? a.doc.spec.bindings : undefined;
+    for (const [field, b] of Object.entries(isObj(bindings) ? bindings : {})) {
+      if (!isObj(b) || typeof b.from !== "string" || !multi.has(b.from)) continue;
+      if ((b.select ?? "latest") === "latest") {
+        warn(ctx, "compiler.multi-latest", `${a.rawPath}: binding "${field}" reads ${b.from}, which ${multi.get(b.from)} marks multi-valued; use select: all`, a.rawPath);
+      }
     }
   }
 }

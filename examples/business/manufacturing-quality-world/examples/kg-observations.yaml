@@ -1,0 +1,29 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  provenance:
+    extraction: claim-context@0.1.0
+    parameters:
+      claimId: C-102
+    snapshot: '2026-09-01T00:00:00Z'
+  observations:
+  - id: KG.lot_equipment:https://w3id.org/openworld-examples/plant#lot-L-1|https://w3id.org/openworld-examples/plant#press-7
+    type: KG.lot_equipment
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      equipment: https://w3id.org/openworld-examples/plant#press-7
+  - id: KG.lot_equipment:https://w3id.org/openworld-examples/plant#lot-L-2|https://w3id.org/openworld-examples/plant#press-7
+    type: KG.lot_equipment
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      equipment: https://w3id.org/openworld-examples/plant#press-7
+  - id: KG.equipment_part:https://w3id.org/openworld-examples/plant#press-7|https://w3id.org/openworld-examples/plant#die-1
+    type: KG.equipment_part
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      part: https://w3id.org/openworld-examples/plant#die-1
+  - id: KG.equipment_part:https://w3id.org/openworld-examples/plant#press-7|https://w3id.org/openworld-examples/plant#die-2
+    type: KG.equipment_part
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      part: https://w3id.org/openworld-examples/plant#die-2

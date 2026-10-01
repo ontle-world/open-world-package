@@ -1,0 +1,30 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: claim-context
+  version: 0.1.0
+spec:
+  source: knowledge/kg.yaml
+  parameters:
+    claimId:
+      type: string
+  query:
+    language: sparql
+    text: SELECT ...
+  observations:
+  - type: KG.lot_equipment
+    id:
+    - lot
+    - equipment
+    values:
+      equipment: equipment
+    observedAt:
+      column: recordedAt
+      default: snapshot
+  - type: KG.equipment_part
+    id:
+    - equipment
+    - part
+    values:
+      part: part
+    multi: true

@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: claim-context
+  version: 0.1.0
+spec:
+  source: knowledge/kg.yaml
+  parameters: {}
+  query:
+    language: sparql
+    text: SELECT ...
+  observations:
+  - type: KG.measure
+    id:
+    - seq
+    values:
+      v: v

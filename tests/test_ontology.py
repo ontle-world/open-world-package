@@ -79,9 +79,22 @@ class SemanticBindingTests(unittest.TestCase):
         world = ROOT / "examples" / "business" / "manufacturing-quality-world"
         result, _ = validate_resolved(world, [str(ROOT / "examples")])
         self.assertTrue(result.valid, result.errors)
-        self.assertEqual(inspect_package(world)["semanticCoverage"], {"boundFields": 7, "fields": 7})
+        self.assertEqual(inspect_package(world)["semanticCoverage"], {"boundFields": 9, "fields": 9})
         doc = ews_jsonld(world, {"apiVersion": "openworld/v1alpha1", "kind": "EffectiveWorldState", "spec": {}}, [str(ROOT / "examples")])
         self.assertEqual(doc["@context"]["claim.status"], {"@id": "https://w3id.org/openworld-examples/quality#claimStatus"})
+
+
+class KnowledgeExtractionTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_example_extraction_runs_sparql_with_parameter(self):
+        from ontle.extraction import run_extraction
+        world = ROOT / "examples" / "business" / "manufacturing-quality-world"
+        out = run_extraction(world, "extraction/claim-context.yaml", {"claimId": "C-102"})
+        want = yaml.safe_load((world / "examples" / "kg-observations.yaml").read_text(encoding="utf-8"))
+        self.assertEqual(out, want)
+        other = run_extraction(world, "extraction/claim-context.yaml", {"claimId": "C-207"})
+        self.assertEqual([o["values"] for o in other["spec"]["observations"] if o["type"] == "KG.equipment_part"],
+                         [{"part": "https://w3id.org/openworld-examples/plant#die-8"}])
 
 
 if __name__ == "__main__":

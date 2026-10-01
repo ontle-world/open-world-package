@@ -428,6 +428,8 @@ def validate_package(path: str | Path) -> ValidationResult:
         errors.extend(exp_errors)
         warnings.extend(exp_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
+    from .extraction import multi_latest_warnings  # local import: extraction depends on core
+    warnings.extend(multi_latest_warnings(local_asset_kinds, local_asset_docs))
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
                      for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
                      if isinstance(x, str)}

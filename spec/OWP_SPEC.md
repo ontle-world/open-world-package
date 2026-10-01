@@ -414,7 +414,7 @@ spec:
 
 Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents are loaded with YAML 1.2 core schema rules into the JSON data model (YAML 1.1 loaders that produce date objects must be configured not to), including values inside `values`.
 
-ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
+ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. An ObservationSet MAY carry `spec.provenance` (`extraction`, `parameters`, `snapshot`) recording where its observations came from; compilation ignores it. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
 
 Values are compared in the JSON data model: types must match (a boolean never equals a number), numbers compare numerically (`1` equals `1.0`), arrays compare element by element in order, and mappings compare by key set and values.
 
@@ -631,6 +631,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `grounding.world-kind` | 11 | `worldRef` does not resolve to a WorldPackage |
 | `grounding.world-view`, `grounding.state-compiler` | 11 | grounding path is not a View or State Compiler asset of the World |
 | `grounding.compiler-view` | 11 | a compatible compiler compiles a View outside `compatibleWorldViews` |
+| `extraction.input` | C.1 | invalid extraction input; nothing is produced |
 | `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
 | `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
 | `ews.state-compiler` | 12 | named State Compiler is not a listed local asset, or has no `spec` |
@@ -666,6 +667,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `asset.kind-unknown` | 8 | kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
+| `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
 | `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
@@ -700,7 +702,8 @@ The kinds below are marked `stability: experimental` in `vocab/asset-kinds.yaml`
 | `ArtifactContract` | contract for an output a person or system keeps | `artifact.type`, `artifact.representation`, `structure`, `serialization.formats`, `delivery`, `governance` |
 | `ArtifactTemplate` | template for an artifact contract | `artifactContractRef`, `format`, `content` (`path` or ExternalRef) |
 | `ConsumerRepresentationProfile` | how a View is delivered to one kind of actor | `actor.kind` (value set `actorKinds`), `worldViewRef`, `representation`, and one block named after the actor kind: `human`, `agent`, `model`, or `system` |
-| `KnowledgeAsset` | reusable knowledge | `roles`, `representation`, `conformsTo`, `snapshot`, `content` (`path` or ExternalRef), `license`, `access`, `sensitivity` |
+| `KnowledgeExtractionProfile` | turns query results over a knowledge graph into observations (C.1) | `source`, `parameters`, `query.language` (value set `queryLanguages`), `query.text`, `observations` |
+| `KnowledgeAsset` | reusable knowledge | `roles`, `representation`, `format`, `conformsTo`, `snapshot`, `content` (`path` or ExternalRef), `license`, `access`, `sensitivity` |
 
 Experimental checks:
 
@@ -711,3 +714,35 @@ Experimental checks:
 **World View specialization.** A WorldViewProfile MAY declare the experimental fields `spec.specializes` (the local path of another WorldViewProfile) and `spec.projection.exclude`. The resolved View is the base View's resolved spec with: `projection.include` = base include ∪ include − exclude; `purpose` and `conditioning` overridden key by key; other fields replaced. `specializes` naming anything other than a local WorldViewProfile, or a cycle, is `experimental.reference`. State Compilers keep binding to the specialized View's own path. The reference CLI shows resolved Views with `ontle inspect --resolved-views`.
 
 **Reference graph.** `ontle inspect --graph` lists the package, its assets, and the references between them with informative relation names (`contains`, `depends_on`, `uses_extension`, `grounded_in`, `valid_for_view`, `valid_for_compiler`, `uses_adapter`, `compiles_view`, `specializes`, `uses_pattern`, `requires_view`, `requires_knowledge`, `produces_artifact`, `evaluated_by`, `template_for`, `represents_view`, `consumes_contract`, `conforms_to`, `evidences`). These names are not part of the package contract.
+
+### C.1 Knowledge extraction
+
+A KnowledgeExtractionProfile connects a knowledge graph to the World chain without changing EWS (section 12): a runtime runs its query over the source KnowledgeAsset, and the result rows become an ObservationSet that State Compilers read as usual.
+
+```yaml
+kind: KnowledgeExtractionProfile
+metadata: {name: claim-context, version: 0.1.0}
+spec:
+  source: knowledge/plant-kg.yaml            # local KnowledgeAsset
+  parameters:
+    claimId: {type: string}                  # the task's subject, supplied at run time
+  query:
+    language: sparql                         # sparql | opencypher | gql | <extension>:<language>
+    text: SELECT ?lot ?equipment WHERE { ... }
+  observations:
+  - type: KG.lot_equipment
+    id: [lot, equipment]                     # result columns that identify the observation
+    values: {equipment: equipment}          # values key -> result column
+    observedAt: {column: recordedAt, default: snapshot}
+    multi: true                              # several values per subject are expected
+```
+
+Running the query is outside this specification. Given the result rows (each a mapping from column to JSON value), the parameter values, and the source's `snapshot.asOf`, a conforming implementation builds the ObservationSet as follows:
+
+1. Every declared parameter has a value of its declared `type` (`string`, the default, `number`, or `boolean`), and no undeclared parameter is given.
+2. For each entry of `observations`, in order, and each row: if any `id` column is absent or null, the row yields nothing for that entry. `values` copies each mapped column that is present and not null; if none is, the row yields nothing. `observedAt` is the `observedAt.column` value when present and not null, otherwise `default`, where `snapshot` (the default) means the source's `snapshot.asOf`; it MUST be a valid UTC timestamp (section 12).
+3. The observation `id` is `<type>:` followed by the `id` column values joined with `|`. A string is used as is, a boolean as `true` or `false`, and a number in its shortest decimal form, without a fraction when the value is integral (`10.0` gives `10`). An array or mapping id value is invalid input.
+4. The observations of one entry are ordered by `id` (Unicode code points); entries keep their order. Rows that repeat an observation (same `id`, `values`, and `observedAt`, as joins often do) yield it once; the same `id` with different content, or from two entries, is an error.
+5. `spec.provenance` records `extraction` (`<name>@<version>`, or the name when unversioned), `parameters` when any were given, and `snapshot` when known.
+
+Invalid input is `extraction.input` and nothing is produced. A State Compiler binding with `select: latest` that reads a type an extraction marks `multi: true` is the warning `compiler.multi-latest`; such types are read with `select: all`.

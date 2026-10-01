@@ -61,6 +61,7 @@ groups:
     WorkPatternProfile: {stability: experimental}
   knowledge:
     KnowledgeAsset: {stability: experimental}
+    KnowledgeExtractionProfile: {stability: experimental}
   artifactRepresentation:
     ArtifactContract: {stability: experimental}
     ArtifactTemplate: {stability: experimental}

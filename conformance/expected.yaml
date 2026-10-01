@@ -603,6 +603,16 @@ cases:
     errors: [schema.unknown-field]
     satisfiedProfile: model-ready
     rule: "A fields entry has class and path only."
+  extraction-profile:
+    valid: true
+    satisfiedProfile: model-ready
+    warnings: [asset.kind-experimental]
+    rule: "A KnowledgeExtractionProfile over a local KnowledgeAsset is valid; multi-valued types are read with select: all."
+  extraction-multi-latest:
+    valid: true
+    satisfiedProfile: model-ready
+    warnings: [compiler.multi-latest]
+    rule: "Reading a multi-valued extracted type with select: latest is a warning."
 resolutionCases:
   grounded:
     valid: true
@@ -866,3 +876,65 @@ ewsCheckCases:
   extensions:
     valid: true
     rule: "extensions blocks in spec and spec.context are allowed and ignored by the output contract and EWS equality."
+extractionCases:
+  basic:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "Rows become observations per entry ordered by id; repeated rows from a join collapse; observedAt falls back to the snapshot; provenance records the extraction."
+  null-id-skipped:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "A row with a null or absent id column yields nothing for that entry."
+  no-values-skipped:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "A row whose mapped value columns are all null yields nothing."
+  non-string-id:
+    parameters: {}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "Non-string id values use their JSON text; ordering is by the resulting id string."
+  integral-float-id:
+    parameters: {}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "Numbers in ids use their shortest form without a fraction when integral; booleans are true or false."
+  non-scalar-id:
+    parameters: {}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "An array or mapping id value is invalid input."
+  conflicting-duplicate:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "The same id with different values is invalid input."
+  parameter-missing:
+    parameters: {}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "Every declared parameter needs a value."
+  parameter-undeclared:
+    parameters: {"claimId": "C-102", "site": "S-1"}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "An undeclared parameter is invalid input."
+  parameter-wrong-type:
+    parameters: {"limit": "10"}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "A parameter value must have its declared type."
+  bad-timestamp:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    error: true
+    errors: ["extraction.input"]
+    rule: "observedAt values must be valid UTC timestamps."
+  no-snapshot:
+    parameters: {"claimId": "C-102"}
+    error: true
+    errors: ["extraction.input"]
+    rule: "Without a snapshot, rows that need the snapshot default cannot get an observedAt."

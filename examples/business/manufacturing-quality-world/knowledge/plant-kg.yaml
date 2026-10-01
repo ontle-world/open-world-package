@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeAsset
+metadata:
+  name: plant-kg
+  version: 2026.9.1
+spec:
+  roles: [graph]
+  representation: graph
+  format: turtle
+  conformsTo:
+    ontology: openworld-examples/quality-ontology@0.1.0
+  snapshot:
+    asOf: "2026-09-01T00:00:00Z"
+  content:
+    path: kg/plant.ttl
+  license: Apache-2.0
+  access: public
+  sensitivity: none

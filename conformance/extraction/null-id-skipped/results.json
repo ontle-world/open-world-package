@@ -1,0 +1,25 @@
+[
+  {
+    "lot": "L-2",
+    "equipment": "press-7",
+    "part": "die-3",
+    "recordedAt": null
+  },
+  {
+    "lot": "L-1",
+    "equipment": "press-7",
+    "part": "die-1",
+    "recordedAt": "2026-08-30T08:00:00Z"
+  },
+  {
+    "lot": "L-1",
+    "equipment": "press-7",
+    "part": "die-2",
+    "recordedAt": "2026-08-30T08:00:00Z"
+  },
+  {
+    "lot": null,
+    "equipment": "press-9",
+    "part": null
+  }
+]

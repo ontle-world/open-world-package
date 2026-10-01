@@ -5,6 +5,7 @@
  *   resolutionCases resolution/<id>/root + /packages           spec 11
  *   ewsCases        ews/<id>/world, observations.yaml, expected-ews.yaml   spec 12.2
  *   ewsCheckCases   ews-check/<id>/world, ews.yaml              spec 12.1
+ *   extractionCases extraction/<id>/profile.yaml, results.json, expected-observations.yaml   Appendix C.1
  * usage: node dist/conformance.js [--suite <dir>] [--section <name>] [--verbose] [--json]
  */
 import * as fs from "node:fs";
@@ -13,8 +14,9 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { validatePackage } from "./validate.js";
 import { validateWithResolution } from "./resolve.js";
-import { checkEws, compileEws, ewsEqual } from "./ews.js";
-import { loadYamlFile } from "./util.js";
+import { canon, checkEws, compileEws, ewsEqual } from "./ews.js";
+import { transformExtraction } from "./extraction.js";
+import { isObj, loadYamlFile } from "./util.js";
 
 interface Row {
   section: string;
@@ -95,12 +97,44 @@ const runEwsCheck: Runner = (dir, id, exp) => {
   };
 };
 
+const runExtraction: Runner = (dir, id, exp) => {
+  const base = path.join(dir, "extraction", id);
+  const profile = loadYamlFile(path.join(base, "profile.yaml"));
+  let rows: unknown;
+  try {
+    rows = JSON.parse(fs.readFileSync(path.join(base, "results.json"), "utf8"));
+  } catch (e) {
+    return { expected: "-", got: "unreadable results.json", ok: false, details: [(e as Error).message], ids: [] };
+  }
+  if (!profile.ok) return { expected: "-", got: "unreadable profile.yaml", ok: false, details: [profile.error], ids: [] };
+  const params = isObj(exp.parameters) ? exp.parameters : {};
+  const snapshot = typeof exp.snapshot === "string" ? exp.snapshot : undefined;
+  const r = transformExtraction(profile.value, rows, params, snapshot);
+  const ids = r.ok ? [] : r.errors.map(idOf);
+  if (exp.error === true) {
+    return { expected: "refuse", got: r.ok ? "extracted" : "refused", ok: !r.ok, details: r.ok ? [] : r.errors, ids };
+  }
+  if (!r.ok) return { expected: "equal ObservationSet", got: "refused", ok: false, details: r.errors, ids };
+  const want = loadYamlFile(path.join(base, "expected-observations.yaml"));
+  if (!want.ok) return { expected: "equal ObservationSet", got: "no expected-observations.yaml", ok: false, details: [want.error], ids };
+  // Spec 12: JSON value equality (canonical JSON with sorted keys; numbers compare numerically).
+  const equal = canon(r.observations) === canon(want.value);
+  return {
+    expected: "equal ObservationSet",
+    got: equal ? "equal ObservationSet" : "different ObservationSet",
+    ok: equal,
+    details: equal ? [] : [`got:  ${canon(r.observations)}`, `want: ${canon(want.value)}`],
+    ids,
+  };
+};
+
 /** Section name -> [fixture subdirectory, runner]. Extend here for new sections. */
 const SECTIONS: Record<string, [string, Runner]> = {
   cases: ["cases", runCase],
   resolutionCases: ["resolution", runResolution],
   ewsCases: ["ews", runEws],
   ewsCheckCases: ["ews-check", runEwsCheck],
+  extractionCases: ["extraction", runExtraction],
 };
 
 function arg(name: string): string | undefined {

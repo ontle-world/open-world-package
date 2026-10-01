@@ -51,7 +51,7 @@ export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
   },
   governancePublication: { Attestation: S },
   taskWork: { TaskSetProfile: X, WorkPatternProfile: X },
-  knowledge: { KnowledgeAsset: X },
+  knowledge: { KnowledgeAsset: X, KnowledgeExtractionProfile: X },
   artifactRepresentation: { ArtifactContract: X, ArtifactTemplate: X, ConsumerRepresentationProfile: X },
   packageSupport: { PackageExample: S },
 };
@@ -79,6 +79,7 @@ export const VALUE_SETS: Record<string, string[]> = {
   actorKinds: ["human", "agent", "model", "system"],
   knowledgeRoles: ["source", "evidence", "claim", "rule", "procedure", "definition", "graph", "glossary"],
   knowledgeRepresentations: ["graph", "table", "documents", "rules", "index"],
+  queryLanguages: ["sparql", "opencypher", "gql"],
 };
 
 export const PACKAGE_KINDS = ["WorldPackage", "WorldModelPackage", "OntologyPackage"] as const;

@@ -84,6 +84,7 @@ rules:
   grounding.world-view: {severity: error, section: "11", summary: "grounding path is not a View or State Compiler asset of the World"}
   grounding.state-compiler: {severity: error, section: "11", summary: "grounding path is not a View or State Compiler asset of the World"}
   grounding.compiler-view: {severity: error, section: "11", summary: "a compatible compiler compiles a View outside compatibleWorldViews"}
+  extraction.input: {severity: error, section: "C.1", summary: "invalid extraction input; nothing is produced"}
   ews.input: {severity: error, section: "12.2", summary: "invalid ObservationSet or asOf; compilation refused"}
   ews.opaque-compiler: {severity: error, section: "12.2", summary: "compiler has no spec.bindings; compilation refused"}
   ews.state-compiler: {severity: error, section: "12", summary: "named State Compiler is not a listed local asset, or has no spec"}
@@ -117,6 +118,7 @@ rules:
   asset.kind-unknown: {severity: warning, section: "8", summary: "kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
+  compiler.multi-latest: {severity: warning, section: "C.1", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}
   binding.term-unscoped: {severity: warning, section: "14", summary: "binding term outside the World boundary and every View projection"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   ref.legacy-shape: {severity: warning, section: "5.1", summary: "ExternalRef uses repository instead of uri"}

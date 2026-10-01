@@ -1,0 +1,26 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: claim-context
+  version: 0.1.0
+spec:
+  source: knowledge/plant-kg.yaml
+  parameters:
+    claimId: {type: string}
+  query:
+    language: sparql
+    text: |
+      PREFIX q: <https://w3id.org/openworld-examples/quality#>
+      SELECT ?lot ?equipment ?part WHERE {
+        ?claim q:claimId $claimId ; q:affectsLot ?lot .
+        ?lot q:producedOn ?equipment .
+        OPTIONAL { ?equipment q:hasPart ?part }
+      }
+  observations:
+  - type: KG.lot_equipment
+    id: [lot, equipment]
+    values: {equipment: equipment}
+  - type: KG.equipment_part
+    id: [equipment, part]
+    values: {part: part}
+    multi: true

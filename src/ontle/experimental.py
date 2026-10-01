@@ -72,6 +72,7 @@ TABLES: dict[str, dict[str, Any]] = {
     "KnowledgeAsset": _document({
         "roles": VALUE,
         "representation": VALUE,
+        "format": VALUE,
         "conformsTo": closed({"ontology": VALUE, "shapes": VALUE}),
         "worldRef": VALUE,
         "snapshot": closed({"asOf": VALUE}),
@@ -82,6 +83,15 @@ TABLES: dict[str, dict[str, Any]] = {
         "access": VALUE,
         "sensitivity": VALUE,
         "evaluationRefs": VALUE,
+    }),
+    "KnowledgeExtractionProfile": _document({
+        "source": VALUE,
+        "parameters": OPEN,
+        "query": closed({"language": VALUE, "text": VALUE}),
+        "observations": array(closed({
+            "type": VALUE, "id": VALUE, "values": OPEN, "multi": VALUE,
+            "observedAt": closed({"column": VALUE, "default": VALUE}),
+        })),
     }),
 }
 
@@ -204,6 +214,19 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             if ontology not in dependency_refs:
                 warnings.append(f"experimental.reference: {rel}: spec.conformsTo.ontology {ontology!r} must also be listed in spec.dependencies")
         _check_content(sub("content"), rel, root, declared, errors, warnings)
+    elif kind == "KnowledgeExtractionProfile":
+        _check_local_ref(spec.get("source"), ("KnowledgeAsset",), "spec.source", rel, local_kinds, warnings)
+        if "language" not in sub("query"):
+            warnings.append(f"experimental.field: {rel}: spec.query.language is required")
+        else:
+            _check_value(sub("query")["language"], "queryLanguages", "spec.query.language", rel, declared, errors, warnings)
+        templates = spec.get("observations")
+        if not isinstance(templates, list) or not templates:
+            warnings.append(f"experimental.field: {rel}: spec.observations must be a non-empty list")
+        for i, template in enumerate(templates if isinstance(templates, list) else []):
+            if not (isinstance(template, dict) and isinstance(template.get("type"), str) and isinstance(template.get("id"), list)
+                    and template["id"] and isinstance(template.get("values"), dict) and template["values"]):
+                warnings.append(f"experimental.field: {rel}: spec.observations[{i}] needs type, a non-empty id column list, and a values mapping")
     return errors, warnings
 
 

@@ -23,6 +23,8 @@ spec:
     - approved
   missing:
   - evidence.open_hypotheses
+  - lot.equipment
+  - equipment.parts
   provenance:
     quality_incident.status:
     - qms-nc-17

@@ -120,7 +120,11 @@ export const COMPATIBILITY_EVIDENCE: Shape = closed(
 export const OBSERVATION_SET: Shape = closed(
   {
     ...leaves("apiVersion", "kind"),
-    spec: closed({ observations: list(closed({ ...leaves("id", "type", "observedAt", "subject"), values: OPEN })) }),
+    spec: closed({
+      observations: list(closed({ ...leaves("id", "type", "observedAt", "subject"), values: OPEN })),
+      // Spec 12 / Appendix C.1: where the observations came from; compilation ignores it.
+      provenance: closed({ ...leaves("extraction", "snapshot"), parameters: OPEN }),
+    }),
   },
   false,
 );

@@ -15,7 +15,7 @@ npm ci
 npm run build
 npm test                # build + vocab check + conformance + examples
 npm run vocab           # checks src/vocab.ts against ../../vocab/asset-kinds.yaml
-npm run conformance     # runs ../../conformance (all four sections)
+npm run conformance     # runs ../../conformance (all five sections)
 npm run examples        # validates ../../examples, resolves models, compiles example EWS
 
 node dist/cli.js [--json] [--resolve] [--source <dir|.owp.zip|git+url@rev>]... <package-dir>
@@ -46,6 +46,7 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/evaluation.ts` | 9 |
 | `src/resolve.ts`, `src/zip.ts` | 7, 11, 13.1, 14 |
 | `src/ews.ts` | 12 |
+| `src/extraction.ts` | Appendix C.1 knowledge extraction transform (query results to ObservationSet) |
 | `src/conformance.ts` | conformance runner |
 
 Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`). Rule ids are written as plain string literals so `tests/test_rule_ids.py` can check that this implementation uses exactly the registered ids. Warnings that only this implementation reports use ids containing `:`:
@@ -71,7 +72,8 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | experimental kinds | + Appendix C experimental kinds, value sets, View `specializes`; expected `warnings` checked by the runner; 10 `experimental-*`/`view-specializes*` cases | 166/166 after the update (maintainer update, not clean-room) |
 | ontology contract | + OntologyPackage contract (section 3.1): entrypoints, prefixes, SemanticProfile and OntologyTermIndex documents, external imports, ontology profiles; 20 `ontology-*` cases | 186/186 after the update (maintainer update, not clean-room) |
 | semantic binding | + SemanticBinding (section 14): single-package rules and grounding against dependency ontologies; 7 validation and 4 resolution `binding-*` cases | 198/198 after the update (maintainer update, not clean-room) |
+| knowledge extraction | + KnowledgeExtractionProfile and the extraction transform (Appendix C.1), ObservationSet `spec.provenance`, `compiler.multi-latest`; new `extractionCases` section (10) and 2 validation cases | 210/210 after the update (maintainer update, not clean-room) |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 
-After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); and semantic binding (section 14). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.
+After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); semantic binding (section 14); and knowledge extraction (Appendix C.1). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.

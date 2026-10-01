@@ -110,6 +110,7 @@ OBSERVATION_SET = closed({
     "apiVersion": VALUE,
     "kind": VALUE,
     "spec": closed({
+        "provenance": closed({"extraction": VALUE, "parameters": OPEN, "snapshot": VALUE}),
         "observations": array(closed({"id": VALUE, "type": VALUE, "observedAt": VALUE, "subject": VALUE, "values": OPEN})),
     }),
 }, extensions=False)

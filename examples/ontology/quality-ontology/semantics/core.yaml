@@ -47,4 +47,7 @@ spec:
     label: {en: Request reinspection}
   relations:
   - {id: q:affectsLot, domain: q:Claim, range: q:Lot}
+  - {id: q:producedOn, domain: q:Lot, range: q:Equipment}
+  - {id: q:hasPart, domain: q:Equipment, range: q:Equipment}
+  - {id: q:claimId, domain: q:Claim}
   - {id: q:supportedBy, domain: q:Decision, range: q:Evidence}

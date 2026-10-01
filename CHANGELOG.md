@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add knowledge extraction (spec Appendix C.1, experimental): a `KnowledgeExtractionProfile` maps query result rows over a KnowledgeAsset to an ObservationSet with a deterministic transform (ids from columns, snapshot-time default, repeated join rows collapse). EWS is unchanged. ObservationSet gains an optional `spec.provenance` (`extraction`, `parameters`, `snapshot`). Reading a `multi` type with `select: latest` is the warning `compiler.multi-latest`.
+- Add `ontle kg extract` (runs SPARQL over a local RDF KnowledgeAsset with the `rdf` extra, or transforms a `--results` file) and repeatable `--observations` for `ontle ews compile`.
+- Conformance: new `extractionCases` section (12 cases) and 2 validation cases.
+- Example: `manufacturing-quality-world` adds a small plant knowledge graph and a `claim-context` extraction; the State Compiler and binding cover 9 fields.
 - Add semantic binding (spec section 14): a `SemanticBinding` asset maps World names, EWS fields (`{class, path}`), observation types, and actions to CURIEs; a World names it with `spec.world.semanticBinding`. Prefixes come from dependency OntologyPackages; under resolution every CURIE must expand to a term they define, and conflicting prefixes are errors. Unscoped terms are a warning.
 - `ontle inspect` reports `semanticCoverage`; `ontle ews compile --jsonld` prints the EWS with a JSON-LD `@context` from the binding.
 - The `manufacturing-quality-world` example depends on `quality-ontology` and binds all seven EWS fields.
@@ -39,7 +43,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 135 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
+- Conformance suite: 137 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

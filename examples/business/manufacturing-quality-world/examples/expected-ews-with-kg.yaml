@@ -1,0 +1,52 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: openworld-examples/manufacturing-quality-world@0.1.0
+  worldView: openworld-examples/manufacturing-quality-world@0.1.0#views/quality-incident-task.yaml
+  stateCompiler: openworld-examples/manufacturing-quality-world@0.1.0#state/quality-incident-compiler.yaml
+  context:
+    asOf: '2026-09-05T00:00:00Z'
+  state:
+    quality_incident.status: under_investigation
+    claim.status: open
+    lot.genealogy:
+    - RM-778
+    - RM-779
+    equipment.condition_events:
+    - vibration_warning
+    - vibration_cleared
+    inspection.results:
+    - seal_leak_detected
+    lot.equipment:
+    - https://w3id.org/openworld-examples/plant#press-7
+    - https://w3id.org/openworld-examples/plant#press-7
+    equipment.parts:
+    - https://w3id.org/openworld-examples/plant#die-1
+    - https://w3id.org/openworld-examples/plant#die-2
+  unresolved:
+    capa.status:
+    - proposed
+    - approved
+  missing:
+  - evidence.open_hypotheses
+  provenance:
+    quality_incident.status:
+    - qms-nc-17
+    claim.status:
+    - qms-claim-001
+    lot.genealogy:
+    - mes-lot-2401
+    equipment.condition_events:
+    - mes-eq-fill02-a
+    - mes-eq-fill02-b
+    inspection.results:
+    - qms-insp-1
+    capa.status:
+    - qms-capa-9-draft
+    - qms-capa-9-sync
+    lot.equipment:
+    - KG.lot_equipment:https://w3id.org/openworld-examples/plant#lot-L-1|https://w3id.org/openworld-examples/plant#press-7
+    - KG.lot_equipment:https://w3id.org/openworld-examples/plant#lot-L-2|https://w3id.org/openworld-examples/plant#press-7
+    equipment.parts:
+    - KG.equipment_part:https://w3id.org/openworld-examples/plant#press-7|https://w3id.org/openworld-examples/plant#die-1
+    - KG.equipment_part:https://w3id.org/openworld-examples/plant#press-7|https://w3id.org/openworld-examples/plant#die-2

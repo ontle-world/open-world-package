@@ -67,6 +67,10 @@ spec:
     path: knowledge/rca-playbook.yaml
   - kind: ArtifactContract
     path: artifacts/rca-report.yaml
+  - kind: KnowledgeAsset
+    path: knowledge/plant-kg.yaml
+  - kind: KnowledgeExtractionProfile
+    path: extraction/claim-context.yaml
   - kind: TaskSetProfile
     path: tasks/claim-rca.yaml
   - kind: ConsumerRepresentationProfile
@@ -77,3 +81,7 @@ spec:
     path: examples/observations.yaml
   - kind: PackageExample
     path: examples/expected-ews.yaml
+  - kind: PackageExample
+    path: examples/kg-observations.yaml
+  - kind: PackageExample
+    path: examples/expected-ews-with-kg.yaml

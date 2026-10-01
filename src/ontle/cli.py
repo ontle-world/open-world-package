@@ -40,9 +40,17 @@ def cmd_resolve(args):
 
 
 def cmd_ews_compile(args):
-    observations = load_document(args.observations)
-    if not isinstance(observations, dict):
-        raise OWPError("observations file must contain a YAML mapping")
+    observations = None
+    for path in args.observations:
+        doc = load_document(path)
+        if not isinstance(doc, dict):
+            raise OWPError(f"observations file {path} must contain a YAML mapping")
+        if observations is None:
+            observations = doc
+        else:  # merge several ObservationSets; ids must stay unique (checked by the compiler)
+            merged = list((observations.get("spec") or {}).get("observations") or []) + list((doc.get("spec") or {}).get("observations") or [])
+            observations = {**observations, "spec": {**(observations.get("spec") or {}), "observations": merged}}
+            observations["spec"].pop("provenance", None)
     ews = compile_ews(args.world, args.compiler, observations, args.as_of)
     if args.jsonld:
         print(json.dumps(ews_jsonld(args.world, ews, args.source), indent=2, ensure_ascii=False))
@@ -73,6 +81,19 @@ def cmd_export(args):
     if manifest.get("kind") != "OntologyPackage":
         raise OWPError("ontle export reads an OntologyPackage")
     print(export_rdf(root, manifest, args.format), end="")
+    return 0
+
+
+def cmd_kg_extract(args):
+    from .extraction import run_extraction
+    parameters = {}
+    for item in args.param:
+        name, sep, value = item.partition("=")
+        if not sep:
+            raise OWPError(f"--param must be name=value: {item}")
+        parameters[name] = yaml.safe_load(value) if value[:1] in "[{" or value in {"true", "false"} or value.replace(".", "", 1).isdigit() else value
+    results = json.loads(Path(args.results).read_text(encoding="utf-8")) if args.results else None
+    print(yaml.safe_dump(run_extraction(args.package, args.profile, parameters, results), sort_keys=False, allow_unicode=True), end="")
     return 0
 
 
@@ -135,7 +156,7 @@ def build_parser():
     y = esp.add_parser("compile", help="run a declarative State Compiler over an ObservationSet")
     y.add_argument("world", help="World package directory")
     y.add_argument("--compiler", required=True, help="StateCompilerProfile asset path inside the World package")
-    y.add_argument("--observations", required=True, help="ObservationSet YAML file")
+    y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
@@ -156,6 +177,15 @@ def build_parser():
     y = osp.add_parser("index", help="write spec.ontology.termIndex from the schema entrypoints (RDF needs: pip install 'ontle-open-world[rdf]')")
     y.add_argument("path", nargs="?", default=".")
     y.set_defaults(func=cmd_ontology_index)
+
+    x = sp.add_parser("kg", help="knowledge graph tooling (experimental, spec Appendix C.1)")
+    ksp = x.add_subparsers(dest="kg_command", required=True)
+    y = ksp.add_parser("extract", help="run a KnowledgeExtractionProfile and print the ObservationSet (SPARQL needs the rdf extra)")
+    y.add_argument("package", help="package directory")
+    y.add_argument("--profile", required=True, help="KnowledgeExtractionProfile asset path")
+    y.add_argument("--param", action="append", default=[], help="parameter value name=value (repeatable)")
+    y.add_argument("--results", help="JSON file of query result rows; skips running the query")
+    y.set_defaults(func=cmd_kg_extract)
 
     x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
     x.add_argument("path", nargs="?", default=".")

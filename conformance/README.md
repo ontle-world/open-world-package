@@ -14,6 +14,7 @@ All expected outcomes are in `expected.yaml`. Rule ids are listed in `spec/rule-
 | `resolutionCases` | `resolution/<id>/root/` + `resolution/<id>/packages/` | validate `root` with `packages` as the only source and match `valid` (spec 11, 13) |
 | `ewsCases` | `ews/<id>/world/`, `observations.yaml`, `expected-ews.yaml` | compile at `asOf` with `compiler` and produce an EWS equal to `expected-ews.yaml` under spec 12.2 equality, or refuse the input when `error: true` |
 | `ewsCheckCases` | `ews-check/<id>/world/`, `ews.yaml` | check the EWS against the compiler output contract and match `valid` (spec 12.1) |
+| `extractionCases` | `extraction/<id>/profile.yaml`, `results.json`, `expected-observations.yaml` | build the ObservationSet from the result rows with the given `parameters` and `snapshot` and match it under JSON value equality, or refuse the input when `error: true` (spec Appendix C.1) |
 
 The `ewsCases` are the cross-runtime check: two runtimes that honour declarative bindings must produce the same EWS for the same World, View, State Compiler, observations, and `asOf`.
 

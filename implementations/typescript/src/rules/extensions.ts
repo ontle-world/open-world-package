@@ -2,7 +2,7 @@ import * as path from "node:path";
 import { Context, error } from "../context.js";
 import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, RESERVED_EXTENSION_NAMES, structureProblems } from "../structure.js";
 import { checkSemanticBindings } from "./binding.js";
-import { checkExperimentalAsset, checkViewSpecialization, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
+import { checkExperimentalAsset, checkMultiLatest, checkViewSpecialization, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]*$/;
@@ -89,5 +89,6 @@ export function checkAssetStructure(ctx: Context): void {
     for (const p of problems) error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
   }
   checkViewSpecialization(ctx);
+  checkMultiLatest(ctx);
   checkSemanticBindings(ctx);
 }

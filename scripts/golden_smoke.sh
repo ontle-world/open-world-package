@@ -51,6 +51,13 @@ W=examples/business/manufacturing-quality-world
 ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-05T00:00:00Z > "$TMP/quality-ews.yaml"
 ontle ews check "$TMP/quality-ews.yaml" --world "$W"
 ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-05T00:00:00Z --jsonld --source examples >/dev/null
+if python -c "import rdflib" 2>/dev/null; then
+  ontle kg extract "$W" --profile extraction/claim-context.yaml --param claimId=C-102 > "$TMP/kg-observations.yaml"
+else
+  cp "$W/examples/kg-observations.yaml" "$TMP/kg-observations.yaml"  # rdflib (rdf extra) not installed
+fi
+ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --observations "$TMP/kg-observations.yaml" --as-of 2026-09-05T00:00:00Z > "$TMP/quality-kg-ews.yaml"
+ontle ews check "$TMP/quality-kg-ews.yaml" --world "$W"
 W=examples/physical-ai/mobile-manipulation-world
 ontle ews compile "$W" --compiler state/pick-place-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-01T12:00:03Z > "$TMP/pick-place-ews.yaml"
 ontle ews check "$TMP/pick-place-ews.yaml" --world "$W"

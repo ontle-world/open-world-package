@@ -1,0 +1,19 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: claim-context
+  version: 0.1.0
+spec:
+  source: knowledge/kg.yaml
+  parameters:
+    claimId:
+      type: string
+  query:
+    language: sparql
+    text: SELECT ...
+  observations:
+  - type: KG.lot
+    id:
+    - lot
+    values:
+      grade: grade

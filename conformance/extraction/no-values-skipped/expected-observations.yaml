@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  provenance:
+    extraction: claim-context@0.1.0
+    parameters:
+      claimId: C-102
+    snapshot: '2026-09-01T00:00:00Z'
+  observations:
+  - id: KG.lot:L-2
+    type: KG.lot
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      grade: A

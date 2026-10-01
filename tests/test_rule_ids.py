@@ -52,7 +52,7 @@ class RuleIdRegistryTests(unittest.TestCase):
 
     def test_conformance_suite_uses_registered_error_ids(self):
         expected = yaml.safe_load((ROOT / "conformance" / "expected.yaml").read_text(encoding="utf-8"))
-        used = {rule for section in ("cases", "resolutionCases", "ewsCases", "ewsCheckCases")
+        used = {rule for section in ("cases", "resolutionCases", "ewsCases", "ewsCheckCases", "extractionCases")
                 for case in expected[section].values() for rule in case.get("errors", [])}
         self.assertEqual(used - {r for r, e in REGISTRY.items() if e["severity"] == "error"}, set())
 

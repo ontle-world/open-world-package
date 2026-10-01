@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  provenance:
+    extraction: claim-context@0.1.0
+    snapshot: '2026-09-01T00:00:00Z'
+  observations:
+  - id: KG.measure:10
+    type: KG.measure
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      v: 1.5
+  - id: KG.measure:2
+    type: KG.measure
+    observedAt: '2026-09-01T00:00:00Z'
+    values:
+      v: 2

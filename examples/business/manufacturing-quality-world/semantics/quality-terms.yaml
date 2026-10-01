@@ -22,6 +22,8 @@ spec:
     inspection.results: {class: q:Inspection, path: [q:inspectionResult]}
     evidence.open_hypotheses: {class: q:Evidence, path: [q:openHypothesis]}
     capa.status: {class: q:Capa, path: [q:capaStatus]}
+    lot.equipment: {class: q:Lot, path: [q:producedOn]}
+    equipment.parts: {class: q:Equipment, path: [q:hasPart]}
   observationTypes:
     QMS.nonconformance: q:QualityIncident
     QMS.claim: q:Claim
@@ -29,6 +31,8 @@ spec:
     MES.equipment: q:Equipment
     QMS.inspection: q:Inspection
     QMS.capa: q:Capa
+    KG.lot_equipment: q:Lot
+    KG.equipment_part: q:Equipment
   actions:
     propose_capa: q:ProposeCapa
     request_quality_hold: q:RequestQualityHold

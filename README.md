@@ -87,6 +87,10 @@ ontle add consumer sales-manager
 ontle add knowledge win-loss-playbook
 ontle inspect . --graph --resolved-views
 
+# knowledge extraction (experimental; SPARQL needs the rdf extra)
+ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
+ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
+
 # ontology packages
 ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle-open-world[rdf]')
 ontle export --format turtle

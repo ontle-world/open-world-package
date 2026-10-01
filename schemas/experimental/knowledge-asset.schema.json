@@ -44,6 +44,10 @@
         "representation": {
           "type": "string"
         },
+        "format": {
+          "type": "string",
+          "description": "Serialization of the content, for example turtle, nquads, jsonld, csv, parquet."
+        },
         "conformsTo": {
           "type": "object",
           "properties": {

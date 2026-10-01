@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { get, isObj, loadYamlFile, Obj } from "./util.js";
+import { canon } from "./ews.js";
 import { Issue } from "./context.js";
 import { readZip } from "./zip.js";
 import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependencies.js";
@@ -71,12 +72,24 @@ function identityOf(m: Obj | undefined): string | undefined {
 // ---------------------------------------------------------------- archives
 
 /**
- * Spec 7 (round 3): {"format":"owp-lock/v1alpha1","manifest":"owp.yaml","manifest_sha256":hex,
- * "files":[{"path","sha256","size"}]}. Hashes are lowercase hex without prefix.
+ * Spec 7: {"format":"owp-lock/v1alpha1"|"owp-lock/v1alpha2","manifest":"owp.yaml","manifest_sha256":hex,
+ * "files":[{"path","sha256","size"}], "externals":[...] (v1alpha2)}. Hashes are lowercase hex without prefix.
  */
-function lockEntries(json: unknown): { files: Map<string, { sha256: string; size?: number }>; manifestSha?: string } | string {
+const LOCK_FORMATS = ["owp-lock/v1alpha1", "owp-lock/v1alpha2"];
+
+interface LockData {
+  format: string;
+  files: Map<string, { sha256: string; size?: number }>;
+  manifestSha?: string;
+  externals: unknown[];
+}
+
+function lockEntries(json: unknown): LockData | string {
   if (!isObj(json)) return "owp.lock.json is not a JSON object";
-  if (json.format !== "owp-lock/v1alpha1") return `owp.lock.json format must be owp-lock/v1alpha1 (got ${JSON.stringify(json.format)})`;
+  if (typeof json.format !== "string" || !LOCK_FORMATS.includes(json.format)) {
+    return `owp.lock.json format must be one of ${LOCK_FORMATS.join(", ")} (got ${JSON.stringify(json.format)})`;
+  }
+  if (json.externals !== undefined && !Array.isArray(json.externals)) return "owp.lock.json externals must be a list";
   if (json.manifest !== undefined && json.manifest !== "owp.yaml") return "owp.lock.json manifest must be owp.yaml";
   if (!Array.isArray(json.files)) return "owp.lock.json files must be a list";
   const files = new Map<string, { sha256: string; size?: number }>();
@@ -87,7 +100,12 @@ function lockEntries(json: unknown): { files: Map<string, { sha256: string; size
     if (files.has(f.path)) return `owp.lock.json lists ${f.path} twice`;
     files.set(f.path, { sha256: f.sha256, ...(typeof f.size === "number" ? { size: f.size } : {}) });
   }
-  return { files, manifestSha: typeof json.manifest_sha256 === "string" ? json.manifest_sha256 : undefined };
+  return {
+    format: json.format,
+    files,
+    manifestSha: typeof json.manifest_sha256 === "string" ? json.manifest_sha256 : undefined,
+    externals: Array.isArray(json.externals) ? json.externals : [],
+  };
 }
 
 export function loadArchive(file: string, cacheDir: string, sourceLabel: string): Candidate | undefined {
@@ -162,7 +180,48 @@ export function loadArchive(file: string, cacheDir: string, sourceLabel: string)
     cand.error = `${file}: manifest_sha256 does not match owp.yaml`;
     return cand;
   }
+  if (lockData.format === "owp-lock/v1alpha2") {
+    const problem = externalsProblem(lockData, manifest, have);
+    if (problem) cand.error = `${file}: ${problem}`;
+  }
   return cand;
+}
+
+/**
+ * Spec 7, owp-lock/v1alpha2: `externals` (without vendoredPath) equals the manifest's bound ExternalRefs in
+ * manifest order; a vendoredPath is a locked file whose bytes match the entry's digest.
+ */
+function externalsProblem(lock: LockData, manifest: Obj, have: Map<string, Buffer>): string | undefined {
+  const recorded = lock.externals.map((e) => (isObj(e) ? Object.fromEntries(Object.entries(e).filter(([k]) => k !== "vendoredPath")) : e));
+  if (canon(recorded) !== canon(lockExternals(manifest))) return "owp.lock.json externals do not match the manifest's external references";
+  for (const e of lock.externals) {
+    if (!isObj(e) || e.vendoredPath === undefined) continue;
+    const vp = e.vendoredPath;
+    if (typeof vp !== "string" || !lock.files.has(vp)) return `vendored file ${JSON.stringify(vp)} is not locked`;
+    const data = have.get(vp);
+    if (typeof e.digest === "string" && (!data || `sha256:${sha256(data)}` !== e.digest)) return `vendored file ${vp} does not match its digest`;
+  }
+  return undefined;
+}
+
+/**
+ * Spec 7: the `externals` entries for a manifest — each bound ExternalRef (status absent or bound) of
+ * spec.assets[].ref, then spec.ontology.externalImports[].ref, with pointer, provider, uri (uri, else the
+ * deprecated repository), and revision/digest/mediaType when declared.
+ */
+export function lockExternals(manifest: Obj): Obj[] {
+  const out: Obj[] = [];
+  const add = (pointer: string, ref: unknown) => {
+    if (!isObj(ref) || (ref.status !== undefined && ref.status !== "bound")) return;
+    const entry: Obj = { pointer, provider: ref.provider ?? null, uri: ref.uri !== undefined ? ref.uri : (ref.repository ?? null) };
+    for (const k of ["revision", "digest", "mediaType"]) if (ref[k] !== undefined && ref[k] !== null) entry[k] = ref[k];
+    out.push(entry);
+  };
+  const assets = get(manifest, "spec", "assets");
+  (Array.isArray(assets) ? assets : []).forEach((a, i) => isObj(a) && add(`/spec/assets/${i}/ref`, a.ref));
+  const imports = get(manifest, "spec", "ontology", "externalImports");
+  (Array.isArray(imports) ? imports : []).forEach((imp, i) => isObj(imp) && add(`/spec/ontology/externalImports/${i}/ref`, imp.ref));
+  return out;
 }
 
 // ---------------------------------------------------------------- sources
@@ -258,7 +317,38 @@ class Source {
   }
 
   find(identity: string): Candidate | undefined {
+    if (this.spec.startsWith("index:")) return this.indexFind(identity);
     return this.candidates().find((c) => c.identity === identity);
+  }
+
+  /**
+   * Spec 11 "Further source types" + 11.1: `index:<path of a PackageIndex>`. The listed archive's bytes must
+   * match the entry digest before the archive is verified. This implementation reads local indexes
+   * (a path or a file: URL); http(s) indexes are reported as unusable sources.
+   */
+  private indexFind(identity: string): Candidate | undefined {
+    const location = this.spec.slice("index:".length);
+    try {
+      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(location) && !location.startsWith("file://")) {
+        throw new Error(`index ${location}: only local package indexes (a path or file: URL) are supported by this implementation`);
+      }
+      const file = location.startsWith("file://") ? fileURLToPath(location) : path.resolve(this.baseDir, location);
+      const index = JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
+      if (!isObj(index) || index.kind !== "PackageIndex" || !Array.isArray(index.packages)) throw new Error(`${location} is not a PackageIndex`);
+      const entry = index.packages.find((p) => isObj(p) && p.identity === identity);
+      if (!isObj(entry)) return undefined;
+      if (typeof entry.archive !== "string") throw new Error(`${location}: entry ${identity} has no archive`);
+      const archive = entry.archive.startsWith("file://") ? fileURLToPath(entry.archive) : path.resolve(path.dirname(file), entry.archive);
+      const digest = `sha256:${sha256(fs.readFileSync(archive))}`;
+      if (entry.digest !== digest) {
+        return { identity, dir: "", manifest: {}, source: this.spec, error: `${entry.archive} digest ${digest} does not match the index digest ${String(entry.digest)}` };
+      }
+      const cand = loadArchive(archive, this.cacheDir, this.spec);
+      return cand && (cand.identity === identity || cand.error) ? cand : { identity, dir: "", manifest: {}, source: this.spec, error: `${entry.archive} does not contain ${identity}` };
+    } catch (e) {
+      this.error = (e as Error).message;
+      return undefined;
+    }
   }
 }
 

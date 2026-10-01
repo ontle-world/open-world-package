@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:lock:v1alpha2",
+  "title": "owp.lock.json",
+  "description": "Archive lock file (spec section 7).",
+  "type": "object",
+  "required": [
+    "format",
+    "manifest",
+    "manifest_sha256",
+    "files"
+  ],
+  "properties": {
+    "format": {
+      "enum": [
+        "owp-lock/v1alpha1",
+        "owp-lock/v1alpha2"
+      ]
+    },
+    "manifest": {
+      "const": "owp.yaml"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "size": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "externals": {
+      "type": "array",
+      "description": "v1alpha2: every bound ExternalRef in owp.yaml, in manifest order.",
+      "items": {
+        "type": "object",
+        "required": [
+          "pointer",
+          "provider",
+          "uri"
+        ],
+        "properties": {
+          "pointer": {
+            "type": "string",
+            "description": "JSON Pointer into owp.yaml"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "vendoredPath": {
+            "type": "string",
+            "description": "Archive path of vendored content."
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -108,7 +108,7 @@ export const COMPATIBILITY_EVIDENCE: Shape = closed(
     ...leaves("apiVersion", "kind"),
     metadata: ASSET_METADATA,
     spec: closed({
-      ...leaves("subject", "evaluationProfile", "verifier", "goldenSet", "dataset"),
+      ...leaves("subject", "subjectDigest", "evaluationProfile", "verifier", "goldenSet", "dataset"),
       scope: closed(leaves("worldRef", "worldView", "stateCompiler", "environment", "task")),
       result: OPEN,
     }),

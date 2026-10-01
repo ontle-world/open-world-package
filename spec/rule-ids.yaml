@@ -70,6 +70,7 @@ rules:
   evidence.scope: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
   evidence.unpinned: {severity: error, section: "9", summary: "reference not <name>@<exact-semver>"}
   evidence.version-mismatch: {severity: error, section: "9", summary: "bound local asset missing that exact version"}
+  evidence.detached-subject: {severity: error, section: "9.1", summary: "detached evidence whose subject or subjectDigest does not match the archive"}
   evidence.scope.world-ref: {severity: error, section: "9", summary: "scope outside the model's grounding"}
   evidence.scope.world-view: {severity: error, section: "9", summary: "scope outside the model's grounding"}
   evidence.scope.state-compiler: {severity: error, section: "9", summary: "scope outside the model's grounding"}

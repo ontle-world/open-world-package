@@ -56,7 +56,7 @@ World -> View -> State Compiler -> EWS (from real sample data) -> Representation
 
 The Physical AI demo uses the bound LeRobot episodes and scene; the Business AI demo uses sample MES/QMS records mapped through the ISA-95 bindings.
 
-## 5. Distribution without a hosted registry
+## 5. Distribution without a hosted registry (done in the reference CLI; see spec sections 7, 7.1, 9.1, 11.1)
 
 1. OCI source type: push and pull `.owp.zip` with ORAS to existing registries (GHCR, Docker Hub); record the OCI digest as the revision.
 2. Static package index: a git repository of JSON index files served as static pages, listing identities, versions, and digests.

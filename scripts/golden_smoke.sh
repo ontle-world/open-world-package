@@ -47,6 +47,23 @@ ontle inspect "$TMP/demo-world" --graph --resolved-views >/dev/null
 ARCHIVE="$(ontle pack "$TMP/demo-world")"
 ontle verify "$ARCHIVE"
 
+# distribution: static index, resolution through it, detached evidence, catalogs
+mkdir -p "$TMP/pub"
+WORLD_ZIP="$(ontle pack examples/physical-ai/mobile-manipulation-world --output "$TMP/pub/world.owp.zip")"
+MODEL_ZIP="$(ontle pack examples/physical-ai/multimodal-action-world-model --output "$TMP/pub/model.owp.zip")"
+ontle index build "$WORLD_ZIP" "$MODEL_ZIP" --base "$TMP/pub" --output "$TMP/pub/index.json"
+ontle validate --resolve --source "index:$TMP/pub/index.json" examples/physical-ai/multimodal-action-world-model
+python - "$MODEL_ZIP" "$TMP/evidence.yaml" <<'PY'
+import hashlib, sys, yaml
+doc = yaml.safe_load(open("examples/physical-ai/multimodal-action-world-model/eval/evidence-reference-sim.yaml"))
+doc["spec"]["subjectDigest"] = "sha256:" + hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest()
+yaml.safe_dump(doc, open(sys.argv[2], "w"), sort_keys=False)
+PY
+ontle evidence check "$TMP/evidence.yaml" --package "$MODEL_ZIP"
+ontle catalog examples/business/manufacturing-quality-world --format dcat >/dev/null
+ontle catalog examples/business/manufacturing-quality-world --format croissant >/dev/null
+ontle catalog examples/physical-ai/multimodal-action-world-model --format hf-card >/dev/null
+
 W=examples/business/manufacturing-quality-world
 ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-05T00:00:00Z > "$TMP/quality-ews.yaml"
 ontle ews check "$TMP/quality-ews.yaml" --world "$W"

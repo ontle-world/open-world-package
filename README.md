@@ -91,6 +91,16 @@ ontle inspect . --graph --resolved-views
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
 ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
 
+# distribution
+ontle lock .                                   # pin https external references
+ontle fetch . --into fetched/                  # download and verify external content
+ontle pack . --vendor                          # include pinned https content in the archive
+ontle index build dist/*.owp.zip --base dist --output dist/index.json
+ontle validate --resolve --source index:dist/index.json .
+ontle push dist/acme-line-world-0.1.0.owp.zip ghcr.io/acme/line-world:0.1.0   # needs oras
+ontle sign dist/acme-line-world-0.1.0.owp.zip                                 # needs cosign
+ontle catalog . --format dcat
+
 # ontology packages
 ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle-open-world[rdf]')
 ontle export --format turtle

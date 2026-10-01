@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import { stringify } from "yaml";
 import { validatePackage, ValidationResult } from "./validate.js";
 import { validateWithResolution } from "./resolve.js";
 import { checkEws, compileEws } from "./ews.js";
+import { checkDetachedEvidence } from "./evidence.js";
 import { loadYamlFile } from "./util.js";
 
 const USAGE = `usage:
   owp-validate [--json] [--resolve] [--source <src>]... <package-dir> [...]
   owp-validate ews check <ews.yaml> --world <world-dir> [--json]
   owp-validate ews compile <world-dir> --compiler <path> --observations <file> --as-of <timestamp>
+  owp-validate evidence check <evidence.yaml> --package <archive.owp.zip> [--json]
 
-Package sources for --resolve: each --source (directory, *.owp.zip, git+<url>@<rev>[#subdir=<p>]),
+Package sources for --resolve: each --source (directory, *.owp.zip, git+<url>@<rev>[#subdir=<p>], index:<local PackageIndex>),
 then entries of $ONTLE_PATH (separated by '${path.delimiter}').
 `;
 
@@ -76,6 +79,25 @@ function ewsMain(args: string[], json: boolean): number {
   return usage();
 }
 
+/** Spec 9.1: detached CompatibilityEvidence against a package archive. */
+function evidenceMain(args: string[], json: boolean): number {
+  if (args.shift() !== "check") return usage();
+  const archive = takeOpt(args, "--package")[0];
+  const file = args[0];
+  if (!archive || !file) return usage();
+  const doc = loadYamlFile(file);
+  const cacheDir = path.resolve(process.env.OWP_CACHE_DIR ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "..", ".owp-cache"));
+  const r = doc.ok
+    ? checkDetachedEvidence(doc.value, archive, cacheDir)
+    : { valid: false, errors: [{ code: "evidence.detached-subject", message: `${file} is not parseable YAML: ${doc.error}` }] };
+  if (json) process.stdout.write(JSON.stringify(r, null, 2) + "\n");
+  else {
+    process.stdout.write(`${r.valid ? "VALID" : "INVALID"} ${file} (subject ${archive})\n`);
+    for (const e of r.errors) process.stdout.write(`  error   [${e.code}] ${e.message}\n`);
+  }
+  return r.valid ? 0 : 1;
+}
+
 function usage(): number {
   process.stderr.write(USAGE);
   return 2;
@@ -86,6 +108,7 @@ function main(argv: string[]): number {
   if (args.includes("--help") || args.includes("-h") || args.length === 0) return usage();
   const json = takeFlag(args, "--json");
   if (args[0] === "ews") return ewsMain(args.slice(1), json);
+  if (args[0] === "evidence") return evidenceMain(args.slice(1), json);
   const resolve = takeFlag(args, "--resolve");
   const sources = takeOpt(args, "--source", true);
   if (process.env.ONTLE_PATH) sources.push(...process.env.ONTLE_PATH.split(path.delimiter).filter(Boolean));

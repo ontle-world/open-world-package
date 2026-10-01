@@ -575,7 +575,12 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def build_lock(root: Path, files: list[Path]) -> dict[str, Any]:
+LOCK_FORMATS = {"owp-lock/v1alpha1", "owp-lock/v1alpha2"}
+
+
+def build_lock(root: Path, files: list[Path], extra: dict[str, bytes] | None = None,
+               vendored: dict[str, str] | None = None) -> dict[str, Any]:
+    from .distribution import lock_externals  # local import: distribution depends on core
     entries = []
     for p in files:
         data = p.read_bytes()
@@ -584,16 +589,20 @@ def build_lock(root: Path, files: list[Path]) -> dict[str, Any]:
             "sha256": sha256_bytes(data),
             "size": len(data),
         })
+    for rel, data in sorted((extra or {}).items()):
+        entries.append({"path": rel, "sha256": sha256_bytes(data), "size": len(data)})
+    entries.sort(key=lambda e: e["path"])
     manifest_bytes = (root / MANIFEST).read_bytes()
     return {
-        "format": "owp-lock/v1alpha1",
+        "format": "owp-lock/v1alpha2",
         "manifest": MANIFEST,
         "manifest_sha256": sha256_bytes(manifest_bytes),
         "files": entries,
+        "externals": lock_externals(yaml.safe_load(manifest_bytes) or {}, vendored),
     }
 
 
-def deterministic_pack(path: str | Path, output: str | Path | None = None) -> Path:
+def deterministic_pack(path: str | Path, output: str | Path | None = None, vendor: bool = False) -> Path:
     root, manifest = load_manifest(path)
     _ensure_term_index(root, manifest)
     root, manifest = load_manifest(path)
@@ -609,7 +618,14 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None) -> Pa
     output.parent.mkdir(parents=True, exist_ok=True)
 
     files = package_files(root)
-    lock = build_lock(root, files)
+    extra: dict[str, bytes] = {}
+    vendored: dict[str, str] = {}
+    if vendor:
+        from .distribution import vendor_https_refs
+        for pointer, (rel, data) in vendor_https_refs(root, manifest).items():
+            extra[rel] = data
+            vendored[pointer] = rel
+    lock = build_lock(root, files, extra, vendored)
     lock_bytes = (json.dumps(lock, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
     fixed_date = (2020, 1, 1, 0, 0, 0)
@@ -620,6 +636,11 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None) -> Pa
             zi.compress_type = zipfile.ZIP_DEFLATED
             zi.external_attr = (0o644 & 0xFFFF) << 16
             zf.writestr(zi, p.read_bytes())
+        for rel, data in sorted(extra.items()):
+            zi = zipfile.ZipInfo(rel, date_time=fixed_date)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = (0o644 & 0xFFFF) << 16
+            zf.writestr(zi, data)
         zi = zipfile.ZipInfo("owp.lock.json", date_time=fixed_date)
         zi.compress_type = zipfile.ZIP_DEFLATED
         zi.external_attr = (0o644 & 0xFFFF) << 16
@@ -651,6 +672,8 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
         if "owp.lock.json" not in names:
             return False, ["archive missing owp.lock.json"]
         lock = json.loads(zf.read("owp.lock.json"))
+        if lock.get("format") not in LOCK_FORMATS:
+            return False, [f"unsupported lock format {lock.get('format')!r}"]
         locked = {entry.get("path") for entry in lock.get("files", []) if isinstance(entry, dict)}
         for name in sorted(names - locked - {"owp.lock.json"}):
             errors.append(f"unlocked archived file: {name}")
@@ -666,4 +689,14 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
             errors.append(f"archive missing {MANIFEST}")
         elif sha256_bytes(zf.read(MANIFEST)) != lock.get("manifest_sha256"):
             errors.append(f"manifest hash mismatch: {MANIFEST}")
+        elif lock.get("format") == "owp-lock/v1alpha2":
+            from .distribution import lock_externals
+            recorded = [{k: v for k, v in e.items() if k != "vendoredPath"} for e in lock.get("externals") or []]
+            if recorded != lock_externals(yaml.safe_load(zf.read(MANIFEST)) or {}):
+                errors.append("lock externals do not match the manifest's external references")
+            for entry in lock.get("externals") or []:
+                if entry.get("vendoredPath") and entry["vendoredPath"] not in locked:
+                    errors.append(f"vendored file {entry['vendoredPath']} is not locked")
+                elif entry.get("vendoredPath") and entry.get("digest") and f"sha256:{sha256_bytes(zf.read(entry['vendoredPath']))}" != entry["digest"]:
+                    errors.append(f"vendored file {entry['vendoredPath']} does not match its digest")
     return not errors, errors

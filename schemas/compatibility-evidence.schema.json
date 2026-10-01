@@ -54,6 +54,11 @@
           "type": "string",
           "minLength": 1
         },
+        "subjectDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Digest of the subject package archive. Required for evidence published outside the package (spec section 9.1)."
+        },
         "evaluationProfile": {
           "type": "string",
           "pattern": "^[^@\\s]+@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"

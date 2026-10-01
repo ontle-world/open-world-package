@@ -97,19 +97,85 @@ def cmd_kg_extract(args):
     return 0
 
 
+def cmd_fetch(args):
+    from .distribution import fetch_package
+    for path in fetch_package(args.path, args.into):
+        print(path)
+    return 0
+
+
+def cmd_lock(args):
+    from .distribution import pin_https_refs
+    changed = pin_https_refs(args.path)
+    print("\n".join(f"pinned {p}" for p in changed) or "nothing to pin")
+    return 0
+
+
+def cmd_push(args):
+    from .distribution import oci_push
+    print(oci_push(args.archive, args.reference))
+    return 0
+
+
+def cmd_sign(args):
+    from .distribution import sign_archive
+    print(sign_archive(args.archive, args.key))
+    return 0
+
+
+def cmd_index_build(args):
+    from .distribution import build_index
+    archives = [Path(a) for a in args.archives]
+    index = build_index(archives, Path(args.base) if args.base else None, args.base_url)
+    text = json.dumps(index, indent=2, ensure_ascii=False) + "\n"
+    if args.output:
+        Path(args.output).write_text(text, encoding="utf-8")
+    else:
+        print(text, end="")
+    return 0
+
+
+def cmd_evidence_check(args):
+    from .distribution import check_detached_evidence
+    errors = check_detached_evidence(load_document(args.evidence), args.package)
+    if not errors:
+        print("VALID")
+        return 0
+    for e in errors:
+        print(f"ERROR: {e}", file=sys.stderr)
+    return 1
+
+
+def cmd_evidence_attach(args):
+    from .distribution import oci_attach_evidence
+    print(oci_attach_evidence(args.reference, args.evidence))
+    return 0
+
+
+def cmd_catalog(args):
+    from .distribution import catalog
+    print(catalog(args.path, args.format), end="")
+    return 0
+
+
 def cmd_inspect(args):
     print(json.dumps(inspect_package(args.path, graph=args.graph, resolved_views=args.resolved_views), indent=2, ensure_ascii=False))
     return 0
 
 
 def cmd_pack(args):
-    out = deterministic_pack(args.path, args.output)
+    out = deterministic_pack(args.path, args.output, vendor=args.vendor)
     print(out)
     return 0
 
 
 def cmd_verify(args):
     ok, errors = verify_archive(args.archive)
+    if ok and args.signature:
+        from .distribution import verify_signature
+        verify_signature(args.archive, args.key, args.identity, args.issuer)
+        print("VERIFIED (hashes and signature)")
+        return 0
     if ok:
         print("VERIFIED")
         return 0
@@ -195,11 +261,60 @@ def build_parser():
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")
     x.add_argument("--output")
+    x.add_argument("--vendor", action="store_true", help="include pinned https external content in the archive (spec section 7)")
     x.set_defaults(func=cmd_pack)
 
     x = sp.add_parser("verify", help="verify hashes inside an .owp.zip archive")
     x.add_argument("archive")
+    x.add_argument("--signature", action="store_true", help="also verify <archive>.sigstore.json with cosign")
+    x.add_argument("--key", help="public key for a key-based signature")
+    x.add_argument("--identity", help="certificate identity for a keyless signature")
+    x.add_argument("--issuer", help="OIDC issuer for a keyless signature")
     x.set_defaults(func=cmd_verify)
+
+    x = sp.add_parser("fetch", help="download and verify the external content a package references")
+    x.add_argument("path", nargs="?", default=".")
+    x.add_argument("--into", required=True)
+    x.set_defaults(func=cmd_fetch)
+
+    x = sp.add_parser("lock", help="pin unpinned https external references in owp.yaml by their digest")
+    x.add_argument("path", nargs="?", default=".")
+    x.set_defaults(func=cmd_lock)
+
+    x = sp.add_parser("push", help="push a verified .owp.zip as an OCI artifact (needs oras)")
+    x.add_argument("archive")
+    x.add_argument("reference", help="registry reference, or oci-layout:<dir>:<tag>")
+    x.set_defaults(func=cmd_push)
+
+    x = sp.add_parser("sign", help="sign an .owp.zip with cosign; writes <archive>.sigstore.json")
+    x.add_argument("archive")
+    x.add_argument("--key", help="private key; keyless (OIDC) when omitted")
+    x.set_defaults(func=cmd_sign)
+
+    x = sp.add_parser("index", help="static package index")
+    isp = x.add_subparsers(dest="index_command", required=True)
+    y = isp.add_parser("build", help="write a PackageIndex for .owp.zip archives")
+    y.add_argument("archives", nargs="+")
+    y.add_argument("--base", help="directory archive paths are written relative to")
+    y.add_argument("--base-url", help="URL prefix for archive locations")
+    y.add_argument("--output")
+    y.set_defaults(func=cmd_index_build)
+
+    x = sp.add_parser("evidence", help="evidence published outside a package")
+    esp2 = x.add_subparsers(dest="evidence_command", required=True)
+    y = esp2.add_parser("check", help="check detached CompatibilityEvidence against a package archive")
+    y.add_argument("evidence")
+    y.add_argument("--package", required=True, help=".owp.zip archive of the subject")
+    y.set_defaults(func=cmd_evidence_check)
+    y = esp2.add_parser("attach", help="attach detached evidence to a pushed package as an OCI referrer (needs oras)")
+    y.add_argument("evidence")
+    y.add_argument("--reference", required=True)
+    y.set_defaults(func=cmd_evidence_attach)
+
+    x = sp.add_parser("catalog", help="export catalog metadata (informative)")
+    x.add_argument("path", nargs="?", default=".")
+    x.add_argument("--format", required=True, choices=["dcat", "croissant", "hf-card"])
+    x.set_defaults(func=cmd_catalog)
 
     x = sp.add_parser("add", help="add optional scaffolding to an existing package")
     x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension",

@@ -73,7 +73,8 @@ function checkVersionedEvalAsset(ctx: Context, a: LocalAsset): void {
   }
 }
 
-function checkEvidence(ctx: Context, a: LocalAsset, g: Grounding | undefined): void {
+/** Spec 9: one CompatibilityEvidence document (also used for detached evidence, spec 9.1). */
+export function checkEvidence(ctx: Context, a: LocalAsset, g: Grounding | undefined): void {
   if (!isObj(a.doc) || a.path === null) return;
   const file = a.path;
   const doc = a.doc;

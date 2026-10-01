@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:package-index:v1alpha1",
+  "title": "PackageIndex",
+  "description": "Static package index (spec section 11.1).",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "packages"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "PackageIndex"
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "identity",
+          "archive",
+          "digest"
+        ],
+        "properties": {
+          "identity": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "archive": {
+            "type": "string",
+            "description": "Archive URL, or a path relative to the index."
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "extensions": {
+            "$ref": "#/$defs/extensions"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

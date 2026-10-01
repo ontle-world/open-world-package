@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Lock format `owp-lock/v1alpha2` (spec section 7): `externals` records every bound ExternalRef; vendored content is listed with `vendoredPath`; verifiers check `externals` against the manifest and still accept `v1alpha1`.
+- OCI artifact profile (spec section 7.1): artifact, config, layer, and evidence media types. `ontle push` (and `oci:`/`oci-layout:` resolver sources) use `oras`.
+- Static package index (spec section 11.1, `schemas/package-index.schema.json`): `ontle index build` and the `index:` resolver source, with digest checks.
+- Evidence published outside the package (spec section 9.1): `spec.subjectDigest`; `ontle evidence check` and `ontle evidence attach` (OCI referrer).
+- `ontle fetch` (download and verify external content, including file lists), `ontle lock` (pin https references), `ontle pack --vendor`, `ontle sign` and `ontle verify --signature` (cosign; keyless by default, `--key` for key pairs), and `ontle catalog --format dcat|croissant|hf-card`.
+- Add `schemas/owp-lock.schema.json`.
 - Add knowledge extraction (spec Appendix C.1, experimental): a `KnowledgeExtractionProfile` maps query result rows over a KnowledgeAsset to an ObservationSet with a deterministic transform (ids from columns, snapshot-time default, repeated join rows collapse). EWS is unchanged. ObservationSet gains an optional `spec.provenance` (`extraction`, `parameters`, `snapshot`). Reading a `multi` type with `select: latest` is the warning `compiler.multi-latest`.
 - Add `ontle kg extract` (runs SPARQL over a local RDF KnowledgeAsset with the `rdf` extra, or transforms a `--results` file) and repeatable `--observations` for `ontle ews compile`.
 - Conformance: new `extractionCases` section (12 cases) and 2 validation cases.

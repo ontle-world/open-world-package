@@ -100,7 +100,7 @@ COMPATIBILITY_EVIDENCE = closed({
     "kind": VALUE,
     "metadata": ASSET_METADATA,
     "spec": closed({
-        "subject": VALUE, "evaluationProfile": VALUE, "verifier": VALUE, "goldenSet": VALUE, "dataset": VALUE,
+        "subject": VALUE, "subjectDigest": VALUE, "evaluationProfile": VALUE, "verifier": VALUE, "goldenSet": VALUE, "dataset": VALUE,
         "scope": closed({"worldRef": VALUE, "worldView": VALUE, "stateCompiler": VALUE, "environment": VALUE, "task": VALUE}),
         "result": OPEN,
     }),

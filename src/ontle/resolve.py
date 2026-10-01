@@ -190,7 +190,35 @@ def _git(*args: str) -> str:
     return proc.stdout
 
 
+class OciSource(PackageSource):
+    """oci:<registry reference> or oci-layout:<dir>:<tag>: the package is pulled and verified like an archive."""
+
+    def _scan(self) -> list[ResolvedPackage]:
+        from .distribution import oci_pull
+        reference = self.spec.removeprefix("oci:")
+        archive, digest = oci_pull(reference, Path(tempfile.mkdtemp(prefix="ontle-oci-")))
+        found = ArchiveSource(self.spec, archive)._scan()
+        for pkg in found:
+            pkg.revision = f"oci:{digest}"
+        return found
+
+
+class IndexSource(PackageSource):
+    """index:<path or URL of a PackageIndex>: archives are downloaded on demand and their digests checked."""
+
+    def find(self, identity: str) -> ResolvedPackage | None:
+        from .distribution import index_lookup
+        hit = index_lookup(self.spec.removeprefix("index:"), identity, Path(tempfile.mkdtemp(prefix="ontle-index-")))
+        if hit is None:
+            return None
+        return ArchiveSource(self.spec, hit[0])._scan()[0]
+
+
 def make_source(spec: str, base: Path | None = None) -> PackageSource:
+    if spec.startswith(("oci:", "oci-layout:")):
+        return OciSource(spec)
+    if spec.startswith("index:"):
+        return IndexSource(spec)
     m = GIT_SOURCE_RE.match(spec)
     if m:
         url = m["url"]

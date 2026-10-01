@@ -270,7 +270,11 @@ Every WorldModelPackage requires compatible View and State Compiler references r
 }
 ```
 
-`files` lists every archived file except `owp.lock.json` itself (including `owp.yaml`). `manifest_sha256` MUST match `owp.yaml`; `size` is informative. Hashes are lowercase hex without prefix. An archive is valid only when its entries other than `owp.lock.json` are exactly the locked paths and every hash matches. The digest of an archive is the SHA-256 of the archive bytes. Registry/OCI transport can be layered on top without changing authoring semantics.
+`files` lists every archived file except `owp.lock.json` itself (including `owp.yaml`). The current format is `owp-lock/v1alpha2`, which adds `externals`: one entry per bound ExternalRef (section 5.1) in `owp.yaml`, in manifest order, with `pointer` (a JSON Pointer into `owp.yaml`), `provider`, `uri`, and the `revision`, `digest`, and `mediaType` it declares. An entry MAY add `vendoredPath`, the archive path of the referenced content included in the archive (vendoring); that file is listed in `files` and its bytes match `digest`. A verifier MUST check that `externals` equals the manifest's bound references, and MUST still accept `owp-lock/v1alpha1` archives, which have no `externals`. The schema is `schemas/owp-lock.schema.json`. `manifest_sha256` MUST match `owp.yaml`; `size` is informative. Hashes are lowercase hex without prefix. An archive is valid only when its entries other than `owp.lock.json` are exactly the locked paths and every hash matches. The digest of an archive is the SHA-256 of the archive bytes.
+
+### 7.1 OCI artifacts
+
+An archive MAY be distributed through an OCI registry. The OCI manifest has `artifactType` `application/vnd.openworld.package.v1alpha1`, a config blob of media type `application/vnd.openworld.manifest.v1alpha1+json` holding `owp.yaml` as JSON, and exactly one layer of media type `application/vnd.openworld.package.layer.v1alpha1+zip` holding the `.owp.zip`. A consumer verifies the archive (section 7) after pulling it. Evidence published outside the package (section 9.1) MAY be attached as an OCI referrer with `artifactType` `application/vnd.openworld.evidence.v1alpha1` and a layer of media type `application/vnd.openworld.evidence.v1alpha1+yaml`. Signatures (for example Sigstore bundles) MAY be attached the same way or stored next to the archive as `<archive>.sigstore.json`.
 
 ## 8. Validation
 
@@ -355,6 +359,10 @@ Rules:
 
 JSON Schema: `schemas/compatibility-evidence.schema.json`.
 
+### 9.1 Evidence published outside the package
+
+Evaluations often finish after a package is released. Such evidence MAY be published as a standalone CompatibilityEvidence document (for example as an OCI referrer, section 7.1). It then MUST declare `spec.subjectDigest`, the SHA-256 digest of the subject archive (`sha256:<hex>`), and `spec.subject` MUST be that archive's identity. The scope rules of section 9 apply against the subject's grounding. The reference CLI checks this with `ontle evidence check <evidence.yaml> --package <archive>`.
+
 ## 10. Relationship to adjacent standards (informative)
 
 OWP is a glue contract, not a replacement for existing standards. Scene description (OpenUSD), scenarios (ASAM OpenSCENARIO), robot interfaces (ROS 2), episodic datasets (LeRobot), enterprise-control models (ISA-95), industrial information models (OPC UA), model/dataset cards (Hugging Face), model signatures (MLflow), and content-addressed distribution (OCI) stay authoritative in their domains. OWP records how their artifacts relate inside one World, View, and model applicability scope. See `docs/STANDARDS_INTEROP.md`.
@@ -391,7 +399,26 @@ Cross-package rules for a WorldModelPackage:
 - Each `compatibleWorldViews` path names a `WorldViewProfile` asset of that World; each `compatibleStateCompilers` path names a `StateCompilerProfile` asset of that World.
 - Each compatible State Compiler's `spec.worldViewRef` is one of the model's compatible View paths.
 
+Further source types. An implementation MAY support them; when it does, it follows these rules:
+
+| Source | Form | Revision recorded |
+|---|---|---|
+| OCI | `oci:<registry reference>` (or `oci-layout:<dir>:<tag>` for a local OCI layout); the pulled archive is verified like an archive source | `oci:<manifest digest>` |
+| index | `index:<path or URL of a PackageIndex>` (section 11.1); the listed archive is downloaded and its digest checked before it is verified | `sha256:<archive digest>` |
+
 The reference CLI: `ontle resolve`, `ontle validate --resolve`, with `--source` (repeatable) and the `ONTLE_PATH` environment variable.
+
+### 11.1 Package index
+
+A package index is a static JSON document (`schemas/package-index.schema.json`) that can be served from any web server or repository:
+
+```json
+{"apiVersion": "openworld/v1alpha1", "kind": "PackageIndex",
+ "packages": [{"identity": "acme/line-world@0.1.0", "kind": "WorldPackage",
+               "archive": "acme-line-world-0.1.0.owp.zip", "digest": "sha256:<hex>"}]}
+```
+
+Each identity appears once. `archive` is a URL or a path relative to the index. A resolver MUST reject an archive whose bytes do not match `digest`. The reference CLI writes indexes with `ontle index build`.
 
 ## 12. Effective World State documents
 
@@ -620,6 +647,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `evaluationProfile`, `result`, or `scope.worldRef`/`scope.worldView` |
 | `evidence.unpinned` | 9 | reference not `<name>@<exact-semver>` |
 | `evidence.version-mismatch` | 9 | bound local asset missing that exact version |
+| `evidence.detached-subject` | 9.1 | detached evidence whose `subject` or `subjectDigest` does not match the archive |
 | `evidence.scope.world-ref`, `evidence.scope.world-view`, `evidence.scope.state-compiler` | 9 | scope outside the model's grounding |
 | `resolve.reference` | 11 | malformed dependency reference |
 | `resolve.source` | 11 | source unusable (for example an archive fails verification) |

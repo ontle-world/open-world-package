@@ -21,6 +21,7 @@ npm run examples        # validates ../../examples, resolves models, compiles ex
 node dist/cli.js [--json] [--resolve] [--source <dir|.owp.zip|git+url@rev>]... <package-dir>
 node dist/cli.js ews compile <world> --compiler <path> --observations <file> --as-of <timestamp>
 node dist/cli.js ews check <ews.yaml> --world <world>
+node dist/cli.js evidence check <evidence.yaml> --package <archive.owp.zip>   # detached evidence, spec 9.1
 ```
 
 The conformance runner checks that the reported ids include every id a case lists under `errors` and, for validation and resolution cases, under `warnings`.
@@ -44,7 +45,8 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/world.ts` | 6.1 conformance profiles |
 | `src/rules/worldmodel.ts` | 3, 6 |
 | `src/rules/evaluation.ts` | 9 |
-| `src/resolve.ts`, `src/zip.ts` | 7, 11, 13.1, 14 |
+| `src/resolve.ts`, `src/zip.ts` | 7 (lock formats `owp-lock/v1alpha1` and `v1alpha2` with `externals`), 11 (directory, archive, git, and local `index:` sources), 13.1, 14 |
+| `src/evidence.ts` | 9.1 detached CompatibilityEvidence |
 | `src/ews.ts` | 12 |
 | `src/extraction.ts` | Appendix C.1 knowledge extraction transform (query results to ObservationSet) |
 | `src/conformance.ts` | conformance runner |
@@ -73,7 +75,8 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | ontology contract | + OntologyPackage contract (section 3.1): entrypoints, prefixes, SemanticProfile and OntologyTermIndex documents, external imports, ontology profiles; 20 `ontology-*` cases | 186/186 after the update (maintainer update, not clean-room) |
 | semantic binding | + SemanticBinding (section 14): single-package rules and grounding against dependency ontologies; 7 validation and 4 resolution `binding-*` cases | 198/198 after the update (maintainer update, not clean-room) |
 | knowledge extraction | + KnowledgeExtractionProfile and the extraction transform (Appendix C.1), ObservationSet `spec.provenance`, `compiler.multi-latest`; new `extractionCases` section (10) and 2 validation cases | 210/210 after the update (maintainer update, not clean-room) |
+| distribution | + lock `owp-lock/v1alpha2` externals and vendoring checks, detached evidence (9.1), local `index:` sources (11.1); no new conformance cases (checked against reference-built archives and indexes) | 212/212 (includes two later extraction cases) (maintainer update, not clean-room) |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 
-After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); semantic binding (section 14); and knowledge extraction (Appendix C.1). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.
+After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); semantic binding (section 14); knowledge extraction (Appendix C.1); and distribution (sections 7, 9.1, 11.1). OCI sources and http(s) package indexes are not implemented. The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.

@@ -1,0 +1,26 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: openworld-examples/sales-prioritization-world@0.1.0
+  worldView: openworld-examples/sales-prioritization-world@0.1.0#views/account-manager.yaml
+  stateCompiler: openworld-examples/sales-prioritization-world@0.1.0#state/account-priority-compiler.yaml
+  context:
+    asOf: '2026-09-15T00:00:00Z'
+  state:
+    account.stage: negotiation
+    account.open_pipeline:
+    - 120000
+    - 45000
+    activity.recent:
+    - demo
+  unresolved: {}
+  missing:
+  - territory.owner
+  provenance:
+    account.stage:
+    - crm-account-002
+    account.open_pipeline:
+    - crm-opp-001
+    - crm-opp-002
+    activity.recent:
+    - crm-act-001

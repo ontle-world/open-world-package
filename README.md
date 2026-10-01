@@ -77,12 +77,22 @@ ontle add verifier outcome-check
 ontle add test smoke
 ontle add asset sop-template
 ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension
+
+# experimental (spec Appendix C)
+ontle add view regional-view --specializes views/default.yaml
+ontle add task account-priority
+ontle add pattern prioritize
+ontle add artifact priority-board
+ontle add consumer sales-manager
+ontle add knowledge win-loss-playbook
+ontle inspect . --graph --resolved-views
 ```
 
 ## Examples
 
 - `examples/business/manufacturing-quality-world` — business/manufacturing World package
 - `examples/business/quality-transition-world-model` — World Model bound to a business World
+- `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers (experimental kinds)
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package
 

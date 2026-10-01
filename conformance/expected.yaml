@@ -437,6 +437,54 @@ cases:
     errors: [schema.unknown-field]
     satisfiedProfile: descriptive
     rule: "ExternalRef accepts only its defined fields and an extensions block."
+  experimental-kinds:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental]
+    rule: "Experimental kinds (spec Appendix C) are valid and reported with asset.kind-experimental."
+  experimental-unknown-field:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "An undefined field in an experimental kind is a warning, not an error."
+  experimental-value-unknown:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.value]
+    rule: "A value outside an experimental value set is a warning."
+  experimental-reference-wrong-kind:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "An experimental reference must name a local asset of the expected kind; otherwise a warning."
+  experimental-actor-block-mismatch:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "A ConsumerRepresentationProfile carries only the block named by actor.kind."
+  experimental-extension-value:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "An extension value <extension>:<value> is accepted in an experimental value set when the extension is declared."
+  experimental-extension-value-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: viewable
+    rule: "Extension rules stay errors inside experimental kinds."
+  view-specializes:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A World View may specialize another local World View (experimental fields)."
+  view-specializes-cycle:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "A specializes cycle is a warning."
+  view-specializes-missing:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "specializes must name a local WorldViewProfile; otherwise a warning."
 resolutionCases:
   grounded:
     valid: true

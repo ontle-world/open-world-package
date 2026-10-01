@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: task}
+spec:
+  worldRef: self
+  specializes: views/base.yaml
+  projection: {include: [territory_assignment], exclude: [global_pipeline]}
+  conditioning: {authorityScope: assign_within_region}

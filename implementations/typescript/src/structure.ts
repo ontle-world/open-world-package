@@ -11,18 +11,18 @@ export const EXTENSION_NAME_RE = /^[a-z][a-z0-9-]{0,62}$/;
 export const EXTENSION_KIND_RE = /^([a-z][a-z0-9-]{0,62}):([A-Z][A-Za-z0-9]*)$/;
 export const RESERVED_EXTENSION_NAMES = new Set(["owp", "openworld"]);
 
-type Shape =
+export type Shape =
   | { t: "any" }
   | { t: "open" }
   | { t: "list"; items: Shape }
   | { t: "closed"; fields: Record<string, Shape>; extensions: boolean };
 
-const ANY: Shape = { t: "any" };
-const OPEN: Shape = { t: "open" };
-const list = (items: Shape): Shape => ({ t: "list", items });
+export const ANY: Shape = { t: "any" };
+export const OPEN: Shape = { t: "open" };
+export const list = (items: Shape): Shape => ({ t: "list", items });
 /** Closed object; `extensions` is allowed unless `ext` is false (document roots). */
-const closed = (fields: Record<string, Shape>, ext = true): Shape => ({ t: "closed", fields, extensions: ext });
-const leaves = (...names: string[]): Record<string, Shape> => Object.fromEntries(names.map((n) => [n, ANY]));
+export const closed = (fields: Record<string, Shape>, ext = true): Shape => ({ t: "closed", fields, extensions: ext });
+export const leaves = (...names: string[]): Record<string, Shape> => Object.fromEntries(names.map((n) => [n, ANY]));
 
 /** schemas/owp-manifest.schema.json $defs/externalRef (spec 5.1). */
 export const EXTERNAL_REF: Shape = closed(leaves("provider", "uri", "revision", "digest", "mediaType", "size", "status", "repository"));
@@ -59,11 +59,14 @@ export const MANIFEST: Shape = closed(
   false,
 );
 
+/** `metadata` of a local asset document (schemas/compatibility-evidence.schema.json, schemas/experimental/). */
+export const ASSET_METADATA: Shape = closed(leaves("name", "version", "title", "description"));
+
 /** schemas/compatibility-evidence.schema.json */
 export const COMPATIBILITY_EVIDENCE: Shape = closed(
   {
     ...leaves("apiVersion", "kind"),
-    metadata: closed(leaves("name", "version", "title", "description")),
+    metadata: ASSET_METADATA,
     spec: closed({
       ...leaves("subject", "evaluationProfile", "verifier", "goldenSet", "dataset"),
       scope: closed(leaves("worldRef", "worldView", "stateCompiler", "environment", "task")),

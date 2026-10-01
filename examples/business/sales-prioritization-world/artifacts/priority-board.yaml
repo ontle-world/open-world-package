@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata:
+  name: priority-board
+spec:
+  artifact: {type: dashboard, representation: board}
+  structure:
+    required: [account, priority, reason, next_action, owner]
+    optional: [confidence]
+  serialization: {formats: [json, csv]}
+  governance: {approvalRequired: false}

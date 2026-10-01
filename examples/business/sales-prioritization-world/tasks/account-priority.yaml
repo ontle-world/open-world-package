@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata:
+  name: account-priority
+spec:
+  task:
+    workPatterns: [prioritize, allocate]
+  requires:
+    worldViews: [views/account-manager.yaml]
+    knowledge: [knowledge/win-loss-playbook.yaml]
+  produces:
+    artifacts: [artifacts/priority-board.yaml]

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add experimental asset kinds (spec Appendix C): `TaskSetProfile`, `WorkPatternProfile`, `ArtifactContract`, `ArtifactTemplate`, `ConsumerRepresentationProfile` (one block per actor kind: `human`, `agent`, `model`, `system`), and `KnowledgeAsset`. They are checked against `schemas/experimental/` with warnings only (`experimental.field`, `experimental.value`, `experimental.reference`); extension rules stay errors.
+- Add experimental value sets in `vocab/value-sets.yaml`, including 22 work patterns.
+- Add experimental World View specialization: `spec.specializes` and `spec.projection.exclude`; `ontle inspect --resolved-views` shows resolved Views.
+- Add `ontle inspect --graph` (reference graph with informative relation names) and `ontle add task|pattern|artifact|template|consumer|knowledge` and `ontle add view --specializes`.
+- Conformance cases may list `warnings` that an implementation must report.
+- Add the `sales-prioritization-world` example (actor-specialized Views, tasks, artifacts, consumers, sample observations and EWS); extend `manufacturing-quality-world` with an RCA task, knowledge, report contract, and consumer.
 - Add publisher extensions (spec section 13): an extension is a `spec.dependencies` entry with `as` (and optional `mustUnderstand`); extension kinds are `<extension>:<Kind>`; extension data goes in `extensions` blocks; a package that defines an extension declares `spec.extensionDefinition`. Undeclared extension names are errors.
 - Defined fields are enforced: the manifest, CompatibilityEvidence, ObservationSet, and EWS documents reject keys that are neither defined fields nor `extensions` blocks (`schema.unknown-field`). The manifest JSON Schema now lists every field already in use (`dependencies`, `worldModel.description`, `world.boundary`, `domains`, and others); all four JSON Schemas are closed.
 - Breaking for packages that used a namespaced kind such as `acme:SafetyCase` without declaring it: add a dependency with `as: acme`. The conformance case `asset-namespaced-kind` is replaced by `extension-kind-declared` and `extension-kind-undeclared`.
@@ -25,7 +31,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 97 validation, 23 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
+- Conformance suite: 107 validation, 23 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

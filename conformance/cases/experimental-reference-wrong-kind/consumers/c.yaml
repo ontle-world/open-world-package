@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: x
+spec:
+  actor: {kind: human}
+  worldViewRef: consumers/c.yaml
+  human: {presentation: board}

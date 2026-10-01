@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata:
+  name: claim-rca
+spec:
+  task:
+    workPatterns: [diagnose, recommend]
+  requires:
+    worldViews: [views/quality-incident-task.yaml]
+    knowledge: [knowledge/rca-playbook.yaml]
+  produces:
+    artifacts: [artifacts/rca-report.yaml]

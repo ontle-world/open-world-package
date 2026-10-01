@@ -55,5 +55,14 @@ groups:
     CompatibilityEvidence: {stability: standard}
   governancePublication:
     Attestation: {stability: standard}
+  taskWork:
+    TaskSetProfile: {stability: experimental}
+    WorkPatternProfile: {stability: experimental}
+  knowledge:
+    KnowledgeAsset: {stability: experimental}
+  artifactRepresentation:
+    ArtifactContract: {stability: experimental}
+    ArtifactTemplate: {stability: experimental}
+    ConsumerRepresentationProfile: {stability: experimental}
   packageSupport:
     PackageExample: {stability: standard}

@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeAsset
+metadata:
+  name: win-loss-playbook
+  version: 0.1.0
+spec:
+  roles: [procedure, evidence]
+  representation: documents
+  content:
+    ref: {status: unbound}
+  access: private
+  sensitivity: confidential

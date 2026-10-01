@@ -59,7 +59,7 @@ def cmd_ews_check(args):
 
 
 def cmd_inspect(args):
-    print(json.dumps(inspect_package(args.path), indent=2, ensure_ascii=False))
+    print(json.dumps(inspect_package(args.path, graph=args.graph, resolved_views=args.resolved_views), indent=2, ensure_ascii=False))
     return 0
 
 
@@ -84,7 +84,7 @@ def cmd_add(args):
         name = add_extension(args.path, args.name, args.as_name, args.must_understand)
         print(f"declared extension {name} -> {args.name}")
         return 0
-    target = add_asset(args.path, args.asset_kind, args.name)
+    target = add_asset(args.path, args.asset_kind, args.name, args.specializes)
     print(target)
     return 0
 
@@ -127,6 +127,8 @@ def build_parser():
 
     x = sp.add_parser("inspect", help="inspect package identity and summary")
     x.add_argument("path", nargs="?", default=".")
+    x.add_argument("--graph", action="store_true", help="include the reference graph between the package, its dependencies, and its assets")
+    x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes applied")
     x.set_defaults(func=cmd_inspect)
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
@@ -139,11 +141,13 @@ def build_parser():
     x.set_defaults(func=cmd_verify)
 
     x = sp.add_parser("add", help="add optional scaffolding to an existing package")
-    x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension"])
+    x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension",
+                                         "task", "pattern", "artifact", "template", "consumer", "knowledge"])
     x.add_argument("name", help="asset name, or for 'extension' the defining package <namespace>/<name>@<version>")
     x.add_argument("--path", default=".")
     x.add_argument("--as", dest="as_name", help="extension: local name (default: package name without a trailing -extension)")
     x.add_argument("--must-understand", action="store_true", help="extension: runtimes that do not implement it must not run the package")
+    x.add_argument("--specializes", help="view: path of the local World View this View specializes (experimental)")
     x.set_defaults(func=cmd_add)
     return p
 

@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: account-base-view
+spec:
+  worldRef: self
+  purpose:
+    task: account_prioritization
+    objective: focus_effort_on_accounts_most_likely_to_close
+  projection:
+    include: [account, opportunity, activity, quota, priority, global_pipeline]
+    principle: minimal_sufficient_representation
+  conditioning:
+    authorityScope: read_only
+    timeScope: current_quarter
+    resolution: account

@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: sales-manager
+spec:
+  actor: {kind: human}
+  worldViewRef: views/account-manager.yaml
+  representation: {mode: board, provenance: required}
+  human:
+    artifactContractRefs: [artifacts/priority-board.yaml]
+    presentation: board
+    decisionRights: [assign_account_owner]

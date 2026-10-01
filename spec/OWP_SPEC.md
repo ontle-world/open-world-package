@@ -259,6 +259,7 @@ Precise meaning of the checks above:
 - **Defined fields:** the manifest, CompatibilityEvidence assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
+- **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
 
 The reference validator also rejects legacy manifest names, validates typed local YAML asset references, detects duplicate paths, and requires a Representation Adapter for every WorldModelPackage (an identity adapter is valid when no transform is needed). Additional domain-specific validators may be layered on top.
 
@@ -575,6 +576,9 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `manifest.conformance-ignored` | 6.1 | `spec.conformance` on a package other than WorldPackage |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
+| `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
+| `experimental.value` | C | value outside an experimental value set |
+| `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 
@@ -591,3 +595,26 @@ The machine-readable list of every id is `spec/rule-ids.yaml`.
 | References | `…Ref` (one), `…Refs` (several) | `adapterRef` |
 | Extension names | lowercase, digits, `-` | `acme-quality` |
 | Rule ids | dotted lowercase, kebab-case parts | `profile.stateful.output-contract` |
+
+## Appendix C. Experimental asset kinds (informative)
+
+The kinds below are marked `stability: experimental` in `vocab/asset-kinds.yaml`. They may change or be removed. A validator reports `asset.kind-experimental` for each use and checks them against `schemas/experimental/` with warnings only (`experimental.field`, `experimental.value`, `experimental.reference`). Extension rules (section 13) still apply and remain errors. Value sets are in `vocab/value-sets.yaml`; a value outside its set is a warning, and an extension value `<extension>:<value>` is accepted when the extension is declared.
+
+| Kind | Purpose | Main fields |
+|---|---|---|
+| `TaskSetProfile` | domain-specific bundle of work | `task.workPatterns`, `requires.worldViews`, `requires.knowledge`, `mayUse`, `produces.artifacts`, `evaluationRefs` |
+| `WorkPatternProfile` | domain-independent shape of work | `pattern.kind` (value set `workPatterns`), `inputs.semanticRoles`, `outputs.semanticRoles`, `optionalCapabilities` |
+| `ArtifactContract` | contract for an output a person or system keeps | `artifact.type`, `artifact.representation`, `structure`, `serialization.formats`, `delivery`, `governance` |
+| `ArtifactTemplate` | template for an artifact contract | `artifactContractRef`, `format`, `content` (`path` or ExternalRef) |
+| `ConsumerRepresentationProfile` | how a View is delivered to one kind of actor | `actor.kind` (value set `actorKinds`), `worldViewRef`, `representation`, and one block named after the actor kind: `human`, `agent`, `model`, or `system` |
+| `KnowledgeAsset` | reusable knowledge | `roles`, `representation`, `conformsTo`, `snapshot`, `content` (`path` or ExternalRef), `license`, `access`, `sensitivity` |
+
+Experimental checks:
+
+- References written as package-relative paths (for example `TaskSetProfile.spec.requires.worldViews`, `ConsumerRepresentationProfile.spec.worldViewRef`) name a listed local asset of the expected kind. References containing `#` point into another package and are not checked.
+- A ConsumerRepresentationProfile carries at most the actor block that matches `actor.kind`. The `model` block's `adapterRef` names a local RepresentationAdapterProfile; the model input path remains the one in section 6.
+- `KnowledgeAsset.spec.conformsTo.ontology` is a package reference that is also listed in `spec.dependencies`.
+
+**World View specialization.** A WorldViewProfile MAY declare the experimental fields `spec.specializes` (the local path of another WorldViewProfile) and `spec.projection.exclude`. The resolved View is the base View's resolved spec with: `projection.include` = base include ∪ include − exclude; `purpose` and `conditioning` overridden key by key; other fields replaced. `specializes` naming anything other than a local WorldViewProfile, or a cycle, is `experimental.reference`. State Compilers keep binding to the specialized View's own path. The reference CLI shows resolved Views with `ontle inspect --resolved-views`.
+
+**Reference graph.** `ontle inspect --graph` lists the package, its assets, and the references between them with informative relation names (`contains`, `depends_on`, `uses_extension`, `grounded_in`, `valid_for_view`, `valid_for_compiler`, `uses_adapter`, `compiles_view`, `specializes`, `uses_pattern`, `requires_view`, `requires_knowledge`, `produces_artifact`, `evaluated_by`, `template_for`, `represents_view`, `consumes_contract`, `conforms_to`, `evidences`). These names are not part of the package contract.

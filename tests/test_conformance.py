@@ -23,6 +23,7 @@ class ConformanceSuiteTests(unittest.TestCase):
                 result = validate_package(root)
                 self.assertEqual(result.valid, exp["valid"], result.errors)
                 self.assertLessEqual(set(exp.get("errors", [])), rule_ids(result.errors), result.errors)
+                self.assertLessEqual(set(exp.get("warnings", [])), rule_ids(result.warnings), result.warnings)
                 if "satisfiedProfile" in exp:
                     self.assertEqual(inspect_package(root)["conformance"]["satisfied"], exp["satisfiedProfile"])
 

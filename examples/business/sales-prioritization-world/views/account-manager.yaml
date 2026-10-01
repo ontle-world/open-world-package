@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: account-manager-view
+spec:
+  worldRef: self
+  specializes: views/account-base.yaml
+  purpose:
+    actorScope: regional_sales_manager
+  projection:
+    include: [territory_assignment]
+    exclude: [global_pipeline]
+  conditioning:
+    authorityScope: assign_within_region

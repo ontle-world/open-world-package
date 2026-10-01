@@ -1,0 +1,21 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  dependencies:
+  - ref: acme/work-extension@1.0.0
+    as: acme
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+    defaultView: views/task.yaml
+  conformance:
+    profile: viewable
+  assets:
+  - kind: WorldViewProfile
+    path: views/task.yaml
+  - kind: WorkPatternProfile
+    path: patterns/p.yaml

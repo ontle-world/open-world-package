@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactTemplate
+metadata:
+  name: x
+spec:
+  artifactContractRef: artifacts/report.yaml
+  format: markdown
+  content: {path: artifacts/report-template.md}

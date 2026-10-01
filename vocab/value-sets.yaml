@@ -1,0 +1,98 @@
+apiVersion: openworld/v1alpha1
+kind: ValueSetVocabulary
+# Experimental value sets used by experimental asset kinds (spec Appendix C).
+# A value outside its set is a warning (experimental.value); an extension value
+# <extension>:<value> is accepted when the extension is declared (section 13).
+# Labels are informative.
+valueSets:
+  workPatterns:
+    stability: experimental
+    usedBy: WorkPatternProfile.spec.pattern.kind, TaskSetProfile.spec.task.workPatterns
+    values:
+      observe: {label: Observe / Monitor}
+      detect: {label: Detect / Triage}
+      retrieve: {label: Retrieve / Research}
+      summarize: {label: Summarize / Synthesize}
+      analyze: {label: Analyze / Classify}
+      compare: {label: Compare}
+      diagnose: {label: Diagnose / RCA}
+      forecast: {label: Forecast / Predict}
+      prioritize: {label: Prioritize / Rank}
+      recommend: {label: Recommend / Decide}
+      allocate: {label: Allocate / Assign}
+      schedule: {label: Schedule / Plan}
+      optimize: {label: Optimize}
+      simulate: {label: Simulate / What-if}
+      create: {label: Create / Generate}
+      transform: {label: Transform / Adapt}
+      review: {label: Review / Verify}
+      approve: {label: Approve / Govern}
+      execute: {label: Execute / Coordinate}
+      publish: {label: Publish / Deliver}
+      evaluate: {label: Evaluate}
+      learn: {label: Learn / Update}
+  artifactTypes:
+    stability: experimental
+    usedBy: ArtifactContract.spec.artifact.type
+    values:
+      document: {label: Document}
+      report: {label: Report}
+      proposal: {label: Proposal}
+      presentation: {label: Presentation}
+      spreadsheet: {label: Spreadsheet / Table}
+      dataset: {label: Dataset}
+      database_object: {label: Database object}
+      knowledge_graph: {label: Knowledge graph}
+      form: {label: Form}
+      dashboard: {label: Dashboard / Board}
+      image: {label: Image}
+      audio: {label: Audio}
+      video: {label: Video}
+      code: {label: Code}
+      app: {label: App / Mini SaaS}
+      workflow: {label: Workflow}
+      agent_configuration: {label: Agent / prompt configuration}
+      model_configuration: {label: Model / model configuration}
+      evaluation_asset: {label: Evaluation asset}
+      template: {label: Template}
+  artifactRepresentations:
+    stability: experimental
+    usedBy: ArtifactContract.spec.artifact.representation
+    values:
+      document: {label: Document}
+      table: {label: Relational table}
+      graph: {label: Graph}
+      board: {label: Board}
+      form: {label: Form}
+      media: {label: Image, audio, or video}
+      code: {label: Source code}
+      configuration: {label: Configuration}
+  actorKinds:
+    stability: experimental
+    usedBy: ConsumerRepresentationProfile.spec.actor.kind
+    values:
+      human: {label: Human}
+      agent: {label: AI agent}
+      model: {label: Model}
+      system: {label: System}
+  knowledgeRoles:
+    stability: experimental
+    usedBy: KnowledgeAsset.spec.roles
+    values:
+      source: {label: Source}
+      evidence: {label: Evidence}
+      claim: {label: Claim}
+      rule: {label: Rule}
+      procedure: {label: Procedure}
+      definition: {label: Definition}
+      graph: {label: Graph}
+      glossary: {label: Glossary}
+  knowledgeRepresentations:
+    stability: experimental
+    usedBy: KnowledgeAsset.spec.representation
+    values:
+      graph: {label: Graph}
+      table: {label: Table}
+      documents: {label: Documents}
+      rules: {label: Rules}
+      index: {label: Retrieval index}

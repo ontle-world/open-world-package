@@ -56,6 +56,16 @@ spec:
     path: interfaces/effect-verification.yaml
   - kind: ScenarioProfile
     path: scenarios/claim-rca.yaml
+  - kind: WorkPatternProfile
+    path: patterns/diagnose.yaml
+  - kind: KnowledgeAsset
+    path: knowledge/rca-playbook.yaml
+  - kind: ArtifactContract
+    path: artifacts/rca-report.yaml
+  - kind: TaskSetProfile
+    path: tasks/claim-rca.yaml
+  - kind: ConsumerRepresentationProfile
+    path: consumers/quality-manager.yaml
   - kind: PackageExample
     path: examples/basic.yaml
   - kind: PackageExample

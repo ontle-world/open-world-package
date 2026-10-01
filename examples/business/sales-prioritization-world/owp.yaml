@@ -1,0 +1,53 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: openworld-examples
+  name: sales-prioritization-world
+  version: 0.1.0
+  title: Sales Prioritization World
+  license: Apache-2.0
+spec:
+  domains:
+  - sales
+  world:
+    description: WORLD.md
+    definition: Accounts, opportunities, sales activity, territories, quotas, and the priorities assigned to accounts.
+    boundary:
+      included: [account, opportunity, activity, territory, quota, priority]
+      excluded: [complete_crm_implementation, pricing_engine]
+    defaultView: views/account-manager.yaml
+    defaultStateCompiler: state/account-priority-compiler.yaml
+  conformance:
+    profile: model-ready
+  validity:
+    limitations:
+    - Illustrative example; no real CRM data. Uses experimental asset kinds (spec Appendix C).
+  assets:
+  - kind: WorldViewProfile
+    path: views/account-base.yaml
+  - kind: WorldViewProfile
+    path: views/account-manager.yaml
+  - kind: WorldViewProfile
+    path: views/account-agent.yaml
+  - kind: StateCompilerProfile
+    path: state/account-priority-compiler.yaml
+  - kind: WorkPatternProfile
+    path: patterns/prioritize.yaml
+  - kind: WorkPatternProfile
+    path: patterns/allocate.yaml
+  - kind: TaskSetProfile
+    path: tasks/account-priority.yaml
+  - kind: ArtifactContract
+    path: artifacts/priority-board.yaml
+  - kind: KnowledgeAsset
+    path: knowledge/win-loss-playbook.yaml
+  - kind: CapabilityContract
+    path: capabilities/crm-read.yaml
+  - kind: ConsumerRepresentationProfile
+    path: consumers/sales-manager.yaml
+  - kind: ConsumerRepresentationProfile
+    path: consumers/sales-agent.yaml
+  - kind: PackageExample
+    path: examples/observations.yaml
+  - kind: PackageExample
+    path: examples/expected-ews.yaml

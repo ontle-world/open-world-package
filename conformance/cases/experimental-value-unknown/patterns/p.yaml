@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: x
+spec:
+  pattern: {kind: brainstorm}

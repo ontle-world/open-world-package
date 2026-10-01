@@ -101,3 +101,6 @@ rules:
   manifest.conformance-ignored: {severity: warning, section: "6.1", summary: "spec.conformance on a package other than WorldPackage"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   ref.legacy-shape: {severity: warning, section: "5.1", summary: "ExternalRef uses repository instead of uri"}
+  experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
+  experimental.value: {severity: warning, section: "C", summary: "value outside an experimental value set"}
+  experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes cycle"}

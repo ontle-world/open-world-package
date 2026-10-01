@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import { Context, error } from "../context.js";
 import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, RESERVED_EXTENSION_NAMES, structureProblems } from "../structure.js";
+import { checkExperimentalAsset, checkViewSpecialization, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]*$/;
@@ -61,13 +62,19 @@ export function checkExtensionDefinition(ctx: Context): void {
 /**
  * Spec 8 + 13.3 for local asset documents other than PackageExample: kinds with a JSON Schema (CompatibilityEvidence)
  * are checked field by field; every other kind only for extensions blocks in its top-level
- * metadata and spec. Extension names are checked against the package's declarations.
+ * metadata and spec; experimental kinds follow Appendix C (src/rules/experimental.ts).
+ * Extension names are checked against the package's declarations.
  */
 export function checkAssetStructure(ctx: Context): void {
   for (const a of ctx.localAssets) {
     const doc = a.doc;
     // Spec 8 / 13.3: PackageExample files may hold any document, so they are not checked.
     if (!isObj(doc) || a.kind === "PackageExample") continue;
+    // Appendix C: experimental kinds are checked with warnings (extension rules stay errors).
+    if (a.kind in EXPERIMENTAL_STRUCTURES) {
+      checkExperimentalAsset(ctx, a);
+      continue;
+    }
     const shape = ASSET_STRUCTURES[a.kind];
     const problems = shape
       ? structureProblems(doc, shape, ctx.extensionNames)
@@ -79,4 +86,5 @@ export function checkAssetStructure(ctx: Context): void {
         });
     for (const p of problems) error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
   }
+  checkViewSpecialization(ctx);
 }

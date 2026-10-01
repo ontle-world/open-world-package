@@ -45,6 +45,10 @@ descriptive -> viewable -> stateful -> model-ready -> action-ready
 
 See `spec/OWP_SPEC.md` section 6.1.
 
+## Work, artifacts, and consumers (experimental)
+
+A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. Each actor has its own World View, often specializing a shared base View. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_SPEC.md` Appendix C.
+
 ## Extensions
 
 Publishers add their own asset kinds and fields without changing the standard. A package declares each extension it uses as a dependency with a local name, then uses that name for kinds (`acme-quality:LineBalancingProfile`) and for data in `extensions` blocks. Any other unknown key is an error, so typos are caught. See `spec/OWP_SPEC.md` section 13.

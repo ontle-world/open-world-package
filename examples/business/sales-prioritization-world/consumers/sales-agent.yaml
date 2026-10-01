@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: sales-agent
+spec:
+  actor: {kind: agent}
+  worldViewRef: views/account-agent.yaml
+  representation:
+    mode: structured_context
+    freshness: {maxAge: PT1H}
+    provenance: required
+  agent:
+    toolScope: {capabilityRefs: [capabilities/crm-read.yaml]}
+    memoryScope: {retention: task}
+    feasibleActions: [propose_meeting, draft_follow_up]
+    contextBudget: {maxItems: 50}

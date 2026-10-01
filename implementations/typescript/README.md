@@ -23,6 +23,8 @@ node dist/cli.js ews compile <world> --compiler <path> --observations <file> --a
 node dist/cli.js ews check <ews.yaml> --world <world>
 ```
 
+The conformance runner checks that the reported ids include every id a case lists under `errors` and, for validation and resolution cases, under `warnings`.
+
 `npm run conformance -- --suite <dir>` (or `OWP_CONFORMANCE_DIR`) runs another copy of the suite.
 
 `npm run probes` generates extra probe packages under `probes/` (not committed). Their expected verdicts are this implementation's reading of the spec, not reference results; they are useful for finding disagreements with other implementations.
@@ -33,9 +35,10 @@ node dist/cli.js ews check <ews.yaml> --world <world>
 |---|---|
 | `src/rules/manifest.ts`, `src/rules/assets.ts`, `src/rules/dependencies.ts` | 2, 3, 5, 8 |
 | `src/rules/externalref.ts` | 5.1 ExternalRef (`spec.assets[].ref`) |
+| `src/rules/experimental.ts` | Appendix C experimental kinds (warnings) and World View `specializes` |
 | `src/structure.ts` | 8 defined fields: field tables mirroring `schemas/*.schema.json` |
 | `src/rules/extensions.ts` | 13 extension declarations, definitions, `extensions` blocks |
-| `src/vocab.ts` | 8 asset-kind vocabulary (copy of `vocab/asset-kinds.yaml`, checked by `scripts/check-vocab.mjs`) |
+| `src/vocab.ts` | 8 asset-kind vocabulary and Appendix C value sets (copies of `vocab/asset-kinds.yaml` and `vocab/value-sets.yaml`, checked by `scripts/check-vocab.mjs`) |
 | `src/rules/world.ts` | 6.1 conformance profiles |
 | `src/rules/worldmodel.ts` | 3, 6 |
 | `src/rules/evaluation.ts` | 9 |
@@ -63,7 +66,8 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | test audit | + git bundle source fixtures, PackageExample parse rule | 113/115 before the two spec decisions below, 115/115 after |
 | extensions | + defined fields, extensions (section 13), vocabulary stability, warning ids | 122/140 before the update, 142/142 after (two cases added during the update) (maintainer update, not clean-room) |
 | external refs | + ExternalRef (section 5.1), 14 `ref-*` cases | 156/156 after the update (maintainer update, not clean-room) |
+| experimental kinds | + Appendix C experimental kinds, value sets, View `specializes`; expected `warnings` checked by the runner; 10 `experimental-*`/`view-specializes*` cases | 166/166 after the update (maintainer update, not clean-room) |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 
-After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); and ExternalRef validation of `spec.assets[].ref` (section 5.1). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.
+After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); and experimental kinds (Appendix C). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.

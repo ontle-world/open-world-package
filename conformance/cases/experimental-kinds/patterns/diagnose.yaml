@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: x
+spec:
+  pattern: {kind: diagnose, family: analyze_explain}
+  inputs: {semanticRoles: [symptom, evidence]}
+  outputs: {semanticRoles: [cause, confidence]}
+  optionalCapabilities: [rule, llm]

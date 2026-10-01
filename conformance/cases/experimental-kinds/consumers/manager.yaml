@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: x
+spec:
+  actor: {kind: human}
+  worldViewRef: views/task.yaml
+  representation: {mode: report}
+  human: {artifactContractRefs: [artifacts/report.yaml], presentation: report}

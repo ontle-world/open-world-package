@@ -8,6 +8,7 @@ export type Stability = "standard" | "experimental";
  * Group names are informative.
  */
 const S: Stability = "standard";
+const X: Stability = "experimental";
 export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
   semanticWorld: { SemanticProfile: S, WorldDefinition: S, WorldViewProfile: S, StateCompilerProfile: S },
   interfaceIntegration: {
@@ -49,6 +50,9 @@ export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
     CompatibilityEvidence: S,
   },
   governancePublication: { Attestation: S },
+  taskWork: { TaskSetProfile: X, WorkPatternProfile: X },
+  knowledge: { KnowledgeAsset: X },
+  artifactRepresentation: { ArtifactContract: X, ArtifactTemplate: X, ConsumerRepresentationProfile: X },
   packageSupport: { PackageExample: S },
 };
 
@@ -56,6 +60,26 @@ export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
 export const ASSET_KIND_STABILITY: Map<string, Stability> = new Map(
   Object.values(ASSET_KINDS).flatMap((g) => Object.entries(g)),
 );
+
+/**
+ * Experimental value sets, copied from vocab/value-sets.yaml (spec Appendix C; checked by
+ * scripts/check-vocab.mjs). A value outside its set is a warning; `<extension>:<value>` is
+ * accepted when the extension is declared.
+ */
+export const VALUE_SETS: Record<string, string[]> = {
+  workPatterns: [
+    "observe", "detect", "retrieve", "summarize", "analyze", "compare", "diagnose", "forecast", "prioritize", "recommend", "allocate",
+    "schedule", "optimize", "simulate", "create", "transform", "review", "approve", "execute", "publish", "evaluate", "learn",
+  ],
+  artifactTypes: [
+    "document", "report", "proposal", "presentation", "spreadsheet", "dataset", "database_object", "knowledge_graph", "form", "dashboard",
+    "image", "audio", "video", "code", "app", "workflow", "agent_configuration", "model_configuration", "evaluation_asset", "template",
+  ],
+  artifactRepresentations: ["document", "table", "graph", "board", "form", "media", "code", "configuration"],
+  actorKinds: ["human", "agent", "model", "system"],
+  knowledgeRoles: ["source", "evidence", "claim", "rule", "procedure", "definition", "graph", "glossary"],
+  knowledgeRepresentations: ["graph", "table", "documents", "rules", "index"],
+};
 
 export const PACKAGE_KINDS = ["WorldPackage", "WorldModelPackage", "OntologyPackage"] as const;
 

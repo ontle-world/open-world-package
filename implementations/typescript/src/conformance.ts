@@ -25,7 +25,8 @@ interface Row {
   details: string[];
 }
 
-type RunOut = Omit<Row, "section" | "id"> & { ids: string[] };
+/** ids: reported error rule ids; warnIds: reported warning ids (when the section reports warnings). */
+type RunOut = Omit<Row, "section" | "id"> & { ids: string[]; warnIds?: string[] };
 type Runner = (dir: string, id: string, exp: Record<string, unknown>) => RunOut;
 
 const idOf = (m: string) => m.split(": ")[0];
@@ -41,8 +42,9 @@ const runCase: Runner = (dir, id, exp) => {
     expected: `valid=${fmt(exp.valid)}` + (checkProfile ? ` profile=${fmt(exp.satisfiedProfile)}` : ""),
     got: `valid=${fmt(r.valid)}` + (checkProfile ? ` profile=${fmt(r.satisfiedProfile ?? null)}` : ""),
     ok,
-    details: r.errors.map((e) => `[${e.code}] ${e.message}`),
+    details: [...r.errors.map((e) => `[${e.code}] ${e.message}`), ...r.warnings.map((w) => `warning [${w.code}] ${w.message}`)],
     ids: r.errors.map((e) => e.code),
+    warnIds: r.warnings.map((w) => w.code),
   };
 };
 
@@ -59,6 +61,7 @@ const runResolution: Runner = (dir, id, exp) => {
       ...r.resolved.map((p) => `resolved ${p.identity}${p.revision ? ` ${p.revision}` : ""}`),
     ],
     ids: r.errors.map((e) => e.code),
+    warnIds: r.warnings.map((w) => w.code),
   };
 };
 
@@ -129,17 +132,21 @@ function main(): number {
       } catch (e) {
         row = { expected: "-", got: "exception", ok: false, details: [(e as Error).stack ?? String(e)], ids: [] };
       }
-      // Appendix A: expected rule ids must be a subset of the reported ids.
-      const want = Array.isArray(exp.errors) ? (exp.errors as string[]) : [];
-      const missingIds = want.filter((x) => !row.ids.includes(x));
-      if (want.length) {
-        row.expected += ` ids⊇[${want.join(",")}]`;
-        if (missingIds.length) {
+      // Appendix A: expected error and warning ids must be subsets of the reported ids.
+      for (const [key, label, have] of [
+        ["errors", "ids", row.ids],
+        ["warnings", "warnings", row.warnIds ?? []],
+      ] as const) {
+        const want = Array.isArray(exp[key]) ? (exp[key] as string[]) : [];
+        if (!want.length) continue;
+        const missing = want.filter((x) => !have.includes(x));
+        row.expected += ` ${label}⊇[${want.join(",")}]`;
+        if (missing.length) {
           row.ok = false;
-          row.got += ` missing ids [${missingIds.join(",")}]`;
+          row.got += ` missing ${label} [${missing.join(",")}]`;
         }
       }
-      const { ids: _ids, ...rest } = row;
+      const { ids: _ids, warnIds: _warnIds, ...rest } = row;
       rows.push({ section, id, ...rest });
     }
     const fixtures = path.join(suite, subdir);

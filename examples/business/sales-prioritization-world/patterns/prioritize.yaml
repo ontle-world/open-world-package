@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: prioritize
+spec:
+  pattern: {kind: prioritize, family: decide_optimize}
+  inputs: {semanticRoles: [candidate, objective, evidence, constraint]}
+  outputs: {semanticRoles: [priority, recommendation]}
+  optionalCapabilities: [rule, llm, ml_ranking, solver]

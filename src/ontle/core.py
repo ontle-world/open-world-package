@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from . import structure
+from . import experimental, structure
 
 MANIFEST = "owp.yaml"
 KINDS = {"WorldPackage", "WorldModelPackage", "OntologyPackage"}
@@ -348,6 +348,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         errors.append("asset.list: spec.assets must be a list when present")
         assets = []
     seen_paths: set[str] = set()
+    experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
     asset_kinds: set[str] = set()
@@ -409,8 +410,16 @@ def validate_package(path: str | Path) -> ValidationResult:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
                 if isinstance(adata, dict):
                     local_asset_docs[rel] = adata
-                    if asset_kind != "PackageExample":
+                    if asset_kind in experimental.TABLES:
+                        experimental_docs.append((rel, asset_kind, adata))
+                    elif asset_kind != "PackageExample":
                         errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
+
+    for rel, asset_kind, adata in experimental_docs:
+        exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names)
+        errors.extend(exp_errors)
+        warnings.extend(exp_warnings)
+    warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:
@@ -450,7 +459,7 @@ def validate_package(path: str | Path) -> ValidationResult:
     return ValidationResult(not errors, errors, warnings, data)
 
 
-def inspect_package(path: str | Path) -> dict[str, Any]:
+def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool = False) -> dict[str, Any]:
     root, data = load_manifest(path)
     result = validate_package(root)
     md = data.get("metadata") or {}
@@ -464,6 +473,13 @@ def inspect_package(path: str | Path) -> dict[str, Any]:
             "satisfied": satisfied_world_profile(spec, {k for k in kinds.values()} | _ref_asset_kinds(spec), kinds, docs,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
+    if graph or resolved_views:
+        kinds, docs = _local_assets(root, spec if isinstance(spec, dict) else {})
+        if graph:
+            summary["graph"] = experimental.reference_graph(data, docs, kinds)
+        if resolved_views:
+            summary["resolvedViews"] = {rel: experimental.resolve_view(rel, docs, kinds)
+                                        for rel, k in sorted(kinds.items()) if k == "WorldViewProfile"}
     return {
         "root": str(root),
         "identity": f"{md.get('namespace','?')}/{md.get('name','?')}@{md.get('version','?')}",

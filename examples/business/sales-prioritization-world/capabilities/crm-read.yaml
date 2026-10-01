@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: CapabilityContract
+metadata:
+  name: crm-read
+spec:
+  description: Read accounts, opportunities, and activities in the agent's region.
+  effect: none

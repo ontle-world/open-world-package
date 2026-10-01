@@ -1,8 +1,9 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
-from ontle import structure
+from ontle import experimental, structure
 
 SCHEMAS = Path(__file__).resolve().parent.parent / "schemas"
 
@@ -52,6 +53,13 @@ class StructureMatchesJsonSchema(unittest.TestCase):
         ):
             with self.subTest(schema=name):
                 schema = json.loads((SCHEMAS / f"{name}.schema.json").read_text(encoding="utf-8"))
+                self.compare(table, schema, schema, "")
+
+    def test_experimental_tables(self):
+        for kind, table in experimental.TABLES.items():
+            name = re.sub(r"(?<!^)(?=[A-Z])", "-", kind).lower()
+            with self.subTest(kind=kind):
+                schema = json.loads((SCHEMAS / "experimental" / f"{name}.schema.json").read_text(encoding="utf-8"))
                 self.compare(table, schema, schema, "")
 
 

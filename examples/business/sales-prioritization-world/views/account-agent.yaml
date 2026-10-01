@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: account-agent-view
+spec:
+  worldRef: self
+  specializes: views/account-base.yaml
+  purpose:
+    actorScope: sales_agent
+  projection:
+    exclude: [global_pipeline, quota]
+  conditioning:
+    authorityScope: propose_only

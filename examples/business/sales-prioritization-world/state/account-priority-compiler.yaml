@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: account-priority-state-compiler
+spec:
+  worldViewRef: views/account-manager.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields:
+    - account.stage
+    - account.open_pipeline
+    - activity.recent
+    - territory.owner
+  bindings:
+    account.stage: {from: CRM.account, value: stage, select: latest}
+    account.open_pipeline: {from: CRM.opportunity, value: amount, select: all}
+    activity.recent: {from: CRM.activity, value: type, select: all}
+    territory.owner: {from: CRM.territory, value: owner, select: latest}

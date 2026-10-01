@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata:
+  name: x
+spec:
+  artifact: {type: report, representation: document}
+  structure: {required: [summary, causes, actions]}
+  serialization: {formats: [markdown, pdf]}
+  governance: {approvalRequired: true}

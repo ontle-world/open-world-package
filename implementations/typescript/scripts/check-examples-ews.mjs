@@ -8,7 +8,7 @@ import { compileEws, ewsEqual, checkEws } from "../dist/ews.js";
 
 const ex = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "examples");
 let bad = 0;
-for (const w of ["business/manufacturing-quality-world", "physical-ai/mobile-manipulation-world"]) {
+for (const w of ["business/manufacturing-quality-world", "business/sales-prioritization-world", "physical-ai/mobile-manipulation-world"]) {
   const dir = path.join(ex, w);
   const expected = parse(fs.readFileSync(path.join(dir, "examples/expected-ews.yaml"), "utf8"));
   const obs = parse(fs.readFileSync(path.join(dir, "examples/observations.yaml"), "utf8"));

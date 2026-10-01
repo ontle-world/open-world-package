@@ -1,0 +1,28 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+    defaultView: views/task.yaml
+  conformance:
+    profile: viewable
+  assets:
+  - kind: WorldViewProfile
+    path: views/task.yaml
+  - kind: WorkPatternProfile
+    path: patterns/diagnose.yaml
+  - kind: KnowledgeAsset
+    path: knowledge/playbook.yaml
+  - kind: ArtifactContract
+    path: artifacts/report.yaml
+  - kind: ArtifactTemplate
+    path: artifacts/report-template.yaml
+  - kind: TaskSetProfile
+    path: tasks/rca.yaml
+  - kind: ConsumerRepresentationProfile
+    path: consumers/manager.yaml

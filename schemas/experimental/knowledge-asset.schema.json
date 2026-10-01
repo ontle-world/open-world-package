@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:experimental:KnowledgeAsset:v1alpha1",
+  "title": "KnowledgeAsset (experimental)",
+  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "KnowledgeAsset"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "representation": {
+          "type": "string"
+        },
+        "conformsTo": {
+          "type": "object",
+          "properties": {
+            "ontology": {
+              "type": "string"
+            },
+            "shapes": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "worldRef": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "object",
+          "properties": {
+            "asOf": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "ref": {
+              "$ref": "#/$defs/externalRef"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "delta": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "access": {
+          "type": "string"
+        },
+        "sensitivity": {
+          "type": "string"
+        },
+        "evaluationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "externalRef": {
+      "description": "Reference to an artifact outside the package (spec section 5.1).",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "anyOf": [
+            {
+              "enum": [
+                "huggingface",
+                "oci",
+                "git",
+                "https",
+                "s3",
+                "gcs",
+                "doi"
+              ]
+            },
+            {
+              "pattern": "^[a-z][a-z0-9-]{0,62}:.+$"
+            }
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "bound",
+            "unbound"
+          ],
+          "default": "bound"
+        },
+        "repository": {
+          "type": "string",
+          "deprecated": true,
+          "description": "Deprecated name of uri."
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

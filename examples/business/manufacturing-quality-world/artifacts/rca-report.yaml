@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata:
+  name: rca-report
+spec:
+  artifact: {type: report, representation: document}
+  structure:
+    required: [incident_summary, evidence, root_cause_hypotheses, capa_proposal]
+    optional: [open_questions]
+  serialization: {formats: [markdown, docx, pdf]}
+  governance: {approvalRequired: true}

@@ -4,7 +4,7 @@ Language-neutral fixtures for checking that an OWP implementation interprets pac
 
 A single implementation reading its own packages does not demonstrate interoperability. An independent parser, validator, resolver, or runtime should run this suite and report its results.
 
-All expected outcomes are in `expected.yaml`. Rule ids are listed in `spec/rule-ids.yaml`. For an invalid case, `errors` lists the rule ids (spec Appendix A) a conforming implementation MUST report; it MAY report more. `rule` is informative; error wording and ordering are implementation-defined.
+All expected outcomes are in `expected.yaml`. Rule ids are listed in `spec/rule-ids.yaml`. For an invalid case, `errors` lists the rule ids (spec Appendix A) a conforming implementation MUST report; it MAY report more. `warnings`, when present, lists warning ids it MUST report; it MAY report more. `rule` is informative; error wording and ordering are implementation-defined.
 
 ## Sections
 

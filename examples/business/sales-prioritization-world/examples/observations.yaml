@@ -1,0 +1,24 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: crm-account-001
+    type: CRM.account
+    observedAt: "2026-09-01T09:00:00Z"
+    values: {stage: evaluation}
+  - id: crm-account-002
+    type: CRM.account
+    observedAt: "2026-09-10T09:00:00Z"
+    values: {stage: negotiation}
+  - id: crm-opp-001
+    type: CRM.opportunity
+    observedAt: "2026-09-02T10:00:00Z"
+    values: {amount: 120000}
+  - id: crm-opp-002
+    type: CRM.opportunity
+    observedAt: "2026-09-08T10:00:00Z"
+    values: {amount: 45000}
+  - id: crm-act-001
+    type: CRM.activity
+    observedAt: "2026-09-09T15:00:00Z"
+    values: {type: demo}

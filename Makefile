@@ -15,6 +15,7 @@ validate-examples:
 	ontle validate examples/business/quality-transition-world-model
 	ontle validate examples/physical-ai/mobile-manipulation-world
 	ontle validate examples/physical-ai/multimodal-action-world-model
+	ontle validate examples/business/sales-prioritization-world
 
 build:
 	python -m pip install build

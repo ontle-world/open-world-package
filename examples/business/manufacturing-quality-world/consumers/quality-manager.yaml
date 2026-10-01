@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: quality-manager
+spec:
+  actor: {kind: human}
+  worldViewRef: views/quality-incident-task.yaml
+  representation: {mode: report, provenance: required}
+  human:
+    artifactContractRefs: [artifacts/rca-report.yaml]
+    presentation: report
+    decisionRights: [approve_capa]

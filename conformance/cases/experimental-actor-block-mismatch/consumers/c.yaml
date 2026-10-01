@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: x
+spec:
+  actor: {kind: agent}
+  worldViewRef: views/task.yaml
+  human: {presentation: board}

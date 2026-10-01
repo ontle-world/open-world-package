@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata:
+  name: x
+spec:
+  task: {workPatterns: [diagnose]}
+  requires: {worldViews: [views/task.yaml], knowledge: [knowledge/playbook.yaml]}
+  produces: {artifacts: [artifacts/report.yaml]}

@@ -56,10 +56,32 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
     if kind == "StateCompilerProfile":
         return {"worldViewRef": world.get("defaultView"), "outputContract": "EffectiveWorldState",
                 "outputSchema": {"fields": []}}
+    # Experimental kinds (spec Appendix C)
+    if kind == "TaskSetProfile":
+        views = [world["defaultView"]] if world.get("defaultView") else []
+        return {"task": {"objectiveRefs": [], "workPatterns": []},
+                "requires": {"worldViews": views, "knowledge": []},
+                "mayUse": {"worldModels": [], "capabilities": [], "workflows": []},
+                "produces": {"artifacts": []}, "evaluationRefs": []}
+    if kind == "WorkPatternProfile":
+        return {"pattern": {"kind": "analyze"}, "inputs": {"semanticRoles": []}, "outputs": {"semanticRoles": []},
+                "optionalCapabilities": [], "evaluationRefs": []}
+    if kind == "ArtifactContract":
+        return {"artifact": {"type": "report", "representation": "document"},
+                "structure": {"required": [], "optional": []}, "serialization": {"formats": ["markdown"]},
+                "delivery": {"destinations": []}, "governance": {"approvalRequired": False, "policyRefs": []},
+                "evaluationRefs": []}
+    if kind == "ArtifactTemplate":
+        return {"artifactContractRef": None, "format": "markdown", "content": {"ref": {"status": "unbound"}}}
+    if kind == "ConsumerRepresentationProfile":
+        return {"actor": {"kind": "human"}, "worldViewRef": world.get("defaultView"),
+                "representation": {"mode": "board"}, "human": {"artifactContractRefs": [], "presentation": "board"}}
+    if kind == "KnowledgeAsset":
+        return {"roles": ["definition"], "representation": "documents", "content": {"ref": {"status": "unbound"}}}
     return {}
 
 
-def add_asset(project: str | Path, asset_kind: str, name: str) -> Path:
+def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str | None = None) -> Path:
     root = Path(project).expanduser().resolve()
     manifest_path = root / "owp.yaml"
     if not manifest_path.exists():
@@ -81,6 +103,13 @@ def add_asset(project: str | Path, asset_kind: str, name: str) -> Path:
         "verifier": ("eval", "VerifierPackage"),
         "test": ("tests", "AcceptanceCase"),
         "asset": ("assets", "OperationalAsset"),
+        # experimental kinds (spec Appendix C)
+        "task": ("tasks", "TaskSetProfile"),
+        "pattern": ("patterns", "WorkPatternProfile"),
+        "artifact": ("artifacts", "ArtifactContract"),
+        "template": ("artifacts/templates", "ArtifactTemplate"),
+        "consumer": ("consumers", "ConsumerRepresentationProfile"),
+        "knowledge": ("knowledge", "KnowledgeAsset"),
     }
     if asset_kind not in mapping:
         raise OWPError(f"asset kind must be one of {sorted(mapping)}")
@@ -93,11 +122,20 @@ def add_asset(project: str | Path, asset_kind: str, name: str) -> Path:
     metadata = {"name": name}
     if kind in {"EvaluationProfile", "VerifierPackage"}:
         metadata["version"] = "0.1.0"
+    skeleton = _skeleton_spec(kind, manifest)
+    if specializes is not None:
+        if kind != "WorldViewProfile":
+            raise OWPError("--specializes applies to 'view' only")
+        listed = {a.get("path"): a.get("kind") for a in (manifest.get("spec") or {}).get("assets", []) or [] if isinstance(a, dict)}
+        if listed.get(specializes) != "WorldViewProfile":
+            raise OWPError(f"--specializes must name a local WorldViewProfile asset: {specializes}")
+        skeleton = {"worldRef": "self", "specializes": specializes, "purpose": {"actorScope": None},
+                    "projection": {"include": [], "exclude": []}, "conditioning": {}}
     target.write_text(yaml.safe_dump({
         "apiVersion": "openworld/v1alpha1",
         "kind": kind,
         "metadata": metadata,
-        "spec": _skeleton_spec(kind, manifest),
+        "spec": skeleton,
     }, sort_keys=False), encoding="utf-8")
 
     spec = manifest.setdefault("spec", {})

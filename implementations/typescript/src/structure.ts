@@ -144,11 +144,61 @@ export const EFFECTIVE_WORLD_STATE: Shape = closed(
   false,
 );
 
+/** A standard asset document: apiVersion, kind, metadata, and a closed spec (schemas/<kind>.schema.json). */
+const standard = (spec: Record<string, Shape>): Shape => closed({ ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed(spec) }, false);
+
+// Standard kinds with defined fields. Fields marked experimental are Appendix C.4 additions; their
+// own checks are warnings (src/rules/experimental.ts), but undefined keys are schema.unknown-field.
+
+/** schemas/world-view-profile.schema.json */
+export const WORLD_VIEW_PROFILE: Shape = standard({
+  ...leaves("worldRef", "specializes", "constraints", "evidenceRefs"), // specializes, constraints, evidenceRefs: experimental
+  purpose: closed(leaves("task", "actorScope", "objective", "actorRef", "roleRef", "taskRef")), // *Ref: experimental
+  projection: closed(leaves("include", "exclude", "principle")),
+  conditioning: closed(leaves("authorityScope", "timeScope", "scale", "resolution")),
+});
+
+/** schemas/evaluation-profile.schema.json */
+export const EVALUATION_PROFILE: Shape = standard({
+  ...leaves("supersedes", "changedBecause", "metrics", "tasks", "checks"),
+  // experimental
+  ...leaves("assessmentKind", "objective", "verifierRef", "evaluatorRef", "evidenceRefs", "resultSchemaRef"),
+  subject: closed(leaves("kind", "ref")),
+  criteria: list(closed(leaves("metric", "rubric", "threshold"))),
+  validityScope: OPEN,
+});
+
+/** schemas/scenario-profile.schema.json */
+export const SCENARIO_PROFILE: Shape = standard({
+  ...leaves("description", "objective"),
+  standardBindings: OPEN,
+  // experimental
+  ...leaves("baselineStateRef", "assumptions", "timeHorizon", "constraints", "confidence", "evidenceRefs"),
+  intervention: OPEN,
+  engine: closed(leaves("kind", "ref")),
+  uncertainty: OPEN,
+  expectedOutcome: OPEN,
+});
+
+/** schemas/capability-contract.schema.json */
+export const CAPABILITY_CONTRACT: Shape = standard({
+  ...leaves("description", "effect"),
+  // experimental
+  ...leaves("outcomeRefs", "requiredInputs", "evidenceRefs", "maturity"),
+  context: OPEN,
+  capacity: OPEN,
+  validityScope: OPEN,
+});
+
 /** Asset kinds whose documents have a JSON Schema; other kinds are checked only for top-level extension blocks. */
 export const ASSET_STRUCTURES: Record<string, Shape> = {
   CompatibilityEvidence: COMPATIBILITY_EVIDENCE,
   SemanticProfile: SEMANTIC_PROFILE,
   OntologyTermIndex: TERM_INDEX,
+  WorldViewProfile: WORLD_VIEW_PROFILE,
+  EvaluationProfile: EVALUATION_PROFILE,
+  ScenarioProfile: SCENARIO_PROFILE,
+  CapabilityContract: CAPABILITY_CONTRACT,
 };
 
 export interface Problem {

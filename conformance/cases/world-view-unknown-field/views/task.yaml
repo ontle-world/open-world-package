@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: task
+spec:
+  worldRef: self
+  purpose: {task: claim_rca, objective: resolve_claim}
+  projection: {include: [claim, lot], principle: minimal_sufficient_representation}
+  conditioning: {authorityScope: plant, timeScope: last_quarter, resolution: lot}
+  notes: free text
+  constraints: [no_customer_personal_data]
+  evidenceRefs: []

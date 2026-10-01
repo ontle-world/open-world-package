@@ -299,7 +299,7 @@ Precise meaning of the checks above:
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **Typed local YAML assets:** every local `.yaml`/`.yml` asset MUST parse. If an asset other than `PackageExample` declares a top-level `kind`, that kind MUST equal the manifest entry's `kind`. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not compared.
 - **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: a kind without `:` that is not in the vocabulary is a warning; a vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
-- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, and SemanticBinding assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
@@ -733,6 +733,7 @@ The kinds below are marked `stability: experimental` in `vocab/asset-kinds.yaml`
 | `ActorProfile` | someone or something that acts in a World (C.3) | `actorType` (value set `actorTypes`), `roleRefs`, `capabilityRefs`, `agentRef`, `memberOf` |
 | `RoleProfile` | what a role may do, decide, and answer for (C.3) | `permissions`, `authorities`, `responsibilities`, `accountabilities` |
 | `DelegationProfile` | a bounded, time-limited transfer of permission or authority (C.3) | `delegator`, `delegatee`, `scope`, `permittedActions`, `authorityCeiling`, `validFrom`, `expiresAt`, `revocation`, `escalation`, `evidenceRefs` |
+| `TaskSetProfile` (additions, C.4) | composition | `requires.actors`, `workPatternRefs`, `mayUse.scenarios`, `mayUse.skills`, `mayUse.tools` |
 | `KnowledgeExtractionProfile` | turns query results over a knowledge graph into observations (C.1) | `source`, `parameters`, `query.language` (value set `queryLanguages`), `query.text`, `observations` |
 | `KnowledgeAsset` | reusable knowledge | `roles`, `representation`, `format`, `conformsTo`, `snapshot`, `content` (`path` or ExternalRef), `license`, `access`, `sensitivity` |
 
@@ -811,3 +812,18 @@ These kinds keep apart concepts that are often conflated:
 - An ActorProfile with `actorType: ai_agent` MAY point at an `AgentProfile` (`agentRef`) that describes how the agent is implemented; the ActorProfile describes its place in the World.
 
 A DelegationProfile transfers part of a delegator's permissions or authority to a delegatee for a `scope` and a period (`validFrom` before `expiresAt`, UTC timestamps). Its `permittedActions` and `authorityCeiling.decisions` stay within what the delegator's roles grant; otherwise the warning `experimental.delegation-exceeds-authority` applies. `revocation.by` and `escalation.to` name ActorProfiles. Organization-specific approval chains, HR evaluations, and legal liability are policy bindings outside this profile.
+
+### C.4 Experimental fields of standard kinds
+
+Some standard kinds accept experimental fields. Their checks produce warnings only; the kinds' standard fields are checked as usual (section 8, schemas under `schemas/`).
+
+| Kind | Experimental fields | Checks (warnings) |
+|---|---|---|
+| `WorldViewProfile` | `specializes`, `projection.exclude` (C, View specialization); `purpose.actorRef`, `purpose.roleRef`, `purpose.taskRef`; `constraints`; `evidenceRefs` | the refs name a local ActorProfile, RoleProfile, TaskSetProfile |
+| `EvaluationProfile` | `assessmentKind` (value set `assessmentKinds`: verification, validation, evaluation, review, approval); `subject.kind` (value set `evaluationSubjects`) and `subject.ref`; `objective`; `criteria` (`metric`, `rubric`, `threshold`); `verifierRef`; `evaluatorRef`; `evidenceRefs`; `validityScope`; `resultSchemaRef` | value sets; `verifierRef` is a local VerifierPackage or a pinned `<name>@<version>`; `evaluatorRef` is a local ActorProfile; `resultSchemaRef` is a file in the package |
+| `ScenarioProfile` | `baselineStateRef`; `assumptions`; `intervention`; `engine.kind` (value set `scenarioEngines`: rule, score_ranking, optimization, simulation, ml_prediction, world_model, llm_reasoning) and `engine.ref`; `timeHorizon`; `constraints`; `uncertainty`; `confidence` (0 to 1); `expectedOutcome`; `evidenceRefs` | value set; `baselineStateRef` is a file in the package or a URI; `confidence` range |
+| `CapabilityContract` | `outcomeRefs`; `context`; `requiredInputs`; `evidenceRefs`; `capacity`; `maturity`; `validityScope` | none beyond the defined fields |
+
+A TaskSetProfile composes these profiles: `requires.actors` (ActorProfile or RoleProfile), `workPatternRefs` (WorkPatternProfile), and `mayUse.scenarios`, `mayUse.skills`, `mayUse.tools` (ScenarioProfile, SkillProfile, ToolProfile), next to its Views, knowledge, models, capabilities, workflows, artifacts, and evaluations.
+
+The kinds distinguish assessment activities: **verification** checks that conditions, facts, or specifications are met; **validation** checks fitness for purpose; **evaluation** judges quality or performance against criteria; **review** is an examination activity; **approval** is an authorized decision to use or execute. A scenario is not a prediction: it is a baseline, assumptions, an intervention, and an engine that yields an expected transition or outcome.

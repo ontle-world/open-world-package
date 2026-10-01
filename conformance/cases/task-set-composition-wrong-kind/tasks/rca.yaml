@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  task: {workPatterns: [diagnose]}
+  requires: {worldViews: [views/task.yaml], actors: [actors/manager.yaml]}
+  workPatternRefs: [scenarios/hold.yaml]
+  mayUse: {scenarios: [scenarios/hold.yaml], skills: [], tools: []}

@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  actorType: human
+  roleRefs: [roles/manager.yaml]

@@ -27,8 +27,10 @@ CONTENT = closed({"path": VALUE, "ref": EXTERNAL_REF})
 TABLES: dict[str, dict[str, Any]] = {
     "TaskSetProfile": _document({
         "task": closed({"objectiveRefs": VALUE, "workPatterns": VALUE}),
-        "requires": closed({"worldRefs": VALUE, "worldViews": VALUE, "knowledge": VALUE}),
-        "mayUse": closed({"worldModels": VALUE, "capabilities": VALUE, "workflows": VALUE}),
+        "requires": closed({"worldRefs": VALUE, "worldViews": VALUE, "knowledge": VALUE, "actors": VALUE}),
+        "workPatternRefs": VALUE,
+        "mayUse": closed({"worldModels": VALUE, "capabilities": VALUE, "workflows": VALUE,
+                          "scenarios": VALUE, "skills": VALUE, "tools": VALUE}),
         "produces": closed({"artifacts": VALUE}),
         "evaluationRefs": VALUE,
     }),
@@ -284,6 +286,13 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             _check_local_ref(ref, ("KnowledgeAsset",), "spec.requires.knowledge", rel, local_kinds, warnings)
         for ref in _values(sub("produces").get("artifacts")):
             _check_local_ref(ref, ("ArtifactContract",), "spec.produces.artifacts", rel, local_kinds, warnings)
+        for ref in _values(sub("requires").get("actors")):
+            _check_local_ref(ref, ("ActorProfile", "RoleProfile"), "spec.requires.actors", rel, local_kinds, warnings)
+        for ref in _values(spec.get("workPatternRefs")):
+            _check_local_ref(ref, ("WorkPatternProfile",), "spec.workPatternRefs", rel, local_kinds, warnings)
+        for field, kinds in (("scenarios", ("ScenarioProfile",)), ("skills", ("SkillProfile",)), ("tools", ("ToolProfile",))):
+            for ref in _values(sub("mayUse").get(field)):
+                _check_local_ref(ref, kinds, f"spec.mayUse.{field}", rel, local_kinds, warnings)
     elif kind == "WorkPatternProfile":
         if "kind" not in sub("pattern"):
             warnings.append(f"experimental.field: {rel}: spec.pattern.kind is required")
@@ -418,6 +427,50 @@ def _check_content(content: dict[str, Any], rel: str, root: Path, declared: set[
         else:
             warnings.append("experimental.field: " + issue.split(": ", 1)[1])
     warnings.extend(ref_warnings)
+
+
+# --- experimental fields of standard kinds (spec Appendix C.4) ------------------
+
+def standard_kind_warnings(doc: dict[str, Any], kind: str, rel: str, root: Path, local_kinds: dict[str, str],
+                           declared: set[str]) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    spec = doc.get("spec") if isinstance(doc.get("spec"), dict) else {}
+
+    def sub(name: str) -> dict[str, Any]:
+        value = spec.get(name)
+        return value if isinstance(value, dict) else {}
+
+    if kind == "WorldViewProfile":
+        for field, kinds in (("actorRef", ("ActorProfile",)), ("roleRef", ("RoleProfile",)), ("taskRef", ("TaskSetProfile",))):
+            if sub("purpose").get(field) is not None:
+                _check_local_ref(sub("purpose")[field], kinds, f"spec.purpose.{field}", rel, local_kinds, warnings)
+    elif kind == "EvaluationProfile":
+        if "assessmentKind" in spec:
+            _check_value(spec["assessmentKind"], "assessmentKinds", "spec.assessmentKind", rel, declared, errors, warnings)
+        if "kind" in sub("subject"):
+            _check_value(sub("subject")["kind"], "evaluationSubjects", "spec.subject.kind", rel, declared, errors, warnings)
+        if sub("subject").get("ref") is not None and "#" not in str(sub("subject")["ref"]) and "@" not in str(sub("subject")["ref"]):
+            _check_local_ref(sub("subject")["ref"], None, "spec.subject.ref", rel, local_kinds, warnings)
+        verifier = spec.get("verifierRef")
+        if verifier is not None:
+            from .core import PINNED_REF_RE  # local import: core imports this module
+            if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierPackage")):
+                warnings.append(f"experimental.reference: {rel}: spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>")
+        if spec.get("evaluatorRef") is not None:
+            _check_local_ref(spec["evaluatorRef"], ("ActorProfile",), "spec.evaluatorRef", rel, local_kinds, warnings)
+        if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
+            warnings.append(f"experimental.reference: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
+    elif kind == "ScenarioProfile":
+        if "kind" in sub("engine"):
+            _check_value(sub("engine")["kind"], "scenarioEngines", "spec.engine.kind", rel, declared, errors, warnings)
+        baseline = spec.get("baselineStateRef")
+        if baseline is not None and "://" not in str(baseline) and "#" not in str(baseline) and not _file_in_package(root, baseline):
+            warnings.append(f"experimental.reference: {rel}: spec.baselineStateRef {baseline!r} must be a file in the package or a URI")
+        confidence = spec.get("confidence")
+        if confidence is not None and (isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1):
+            warnings.append(f"experimental.field: {rel}: spec.confidence must be a number from 0 to 1")
+    return errors, warnings
 
 
 # --- World View specialization (experimental fields of WorldViewProfile) -----

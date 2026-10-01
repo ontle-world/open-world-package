@@ -52,6 +52,10 @@ class StructureMatchesJsonSchema(unittest.TestCase):
             ("effective-world-state", structure.EFFECTIVE_WORLD_STATE),
             ("semantic-profile", structure.SEMANTIC_PROFILE),
             ("ontology-term-index", structure.TERM_INDEX),
+            ("world-view-profile", structure.WORLD_VIEW_PROFILE),
+            ("evaluation-profile", structure.EVALUATION_PROFILE),
+            ("scenario-profile", structure.SCENARIO_PROFILE),
+            ("capability-contract", structure.CAPABILITY_CONTRACT),
             ("semantic-binding", binding.SEMANTIC_BINDING),
         ):
             with self.subTest(schema=name):

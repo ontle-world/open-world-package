@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  objective: decide_quality_hold
+  baselineStateRef: examples/baseline-ews.yaml
+  assumptions: [supplier_lot_defect_rate_constant]
+  intervention: {action: quality_hold, lots: [L-1, L-2]}
+  engine: {kind: simulation, ref: models/line-sim.yaml}
+  timeHorizon: P14D
+  constraints: [delivery_commitments]
+  uncertainty: {defectRate: {low: 0.01, high: 0.04}}
+  confidence: 0.7
+  expectedOutcome: {escapedDefects: reduced}

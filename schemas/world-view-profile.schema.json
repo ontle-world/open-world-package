@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:world-view-profile:v1alpha1",
+  "title": "WorldViewProfile",
+  "description": "WorldViewProfile (spec section 8). Fields listed in spec Appendix C.4 are experimental: accepted, with warnings only from their checks.",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "WorldViewProfile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "worldRef": {
+          "type": "string"
+        },
+        "specializes": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string"
+            },
+            "actorScope": {
+              "type": "string"
+            },
+            "objective": {
+              "type": "string"
+            },
+            "actorRef": {
+              "type": "string"
+            },
+            "roleRef": {
+              "type": "string"
+            },
+            "taskRef": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "projection": {
+          "type": "object",
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "principle": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "conditioning": {
+          "type": "object",
+          "properties": {
+            "authorityScope": {
+              "type": "string"
+            },
+            "timeScope": {
+              "type": "string"
+            },
+            "scale": {
+              "type": "string"
+            },
+            "resolution": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "worldRef"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "spec"
+  ],
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

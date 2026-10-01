@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  authorities:
+  - {decisions: [approve_capa], scope: plant}

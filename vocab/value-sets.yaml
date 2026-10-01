@@ -145,3 +145,35 @@ valueSets:
       organization: {label: Organization}
       external_institution: {label: External institution}
       automated_system: {label: Automated system}
+  assessmentKinds:
+    stability: experimental
+    usedBy: EvaluationProfile.spec.assessmentKind
+    values:
+      verification: {label: Verification, description: whether conditions, facts, or specifications are met}
+      validation: {label: Validation, description: whether the subject fits its purpose}
+      evaluation: {label: Evaluation, description: quality or performance judged against criteria}
+      review: {label: Review, description: an examination activity}
+      approval: {label: Approval, description: an authorized decision to use or execute}
+  evaluationSubjects:
+    stability: experimental
+    usedBy: EvaluationProfile.spec.subject.kind
+    values:
+      model: {label: Model}
+      agent: {label: Agent}
+      workflow: {label: Workflow}
+      artifact: {label: Artifact}
+      decision: {label: Decision}
+      process: {label: Process}
+      capability: {label: Capability}
+      environment: {label: Environment}
+  scenarioEngines:
+    stability: experimental
+    usedBy: ScenarioProfile.spec.engine.kind
+    values:
+      rule: {label: Rule}
+      score_ranking: {label: Score / ranking}
+      optimization: {label: Optimization}
+      simulation: {label: Simulation}
+      ml_prediction: {label: ML prediction}
+      world_model: {label: World model}
+      llm_reasoning: {label: LLM or agent reasoning}

@@ -1,6 +1,7 @@
 apiVersion: openworld/v1alpha1
 kind: WorldViewProfile
 metadata:
+  description: "Raw image/video frames remain observation artifacts; the view selects task-relevant semantic and observation state."
   name: pick-place-task-view
 spec:
   worldRef: openworld-examples/mobile-manipulation-world@0.1.0
@@ -24,6 +25,3 @@ spec:
     timeScope: task_declared
     scale: task_declared
     resolution: task_declared
-  notes:
-  - Raw image/video frames remain observation artifacts; the view selects task-relevant
-    semantic and observation state.

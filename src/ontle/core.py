@@ -355,6 +355,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         assets = []
     seen_paths: set[str] = set()
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
+    standard_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
     asset_kinds: set[str] = set()
@@ -422,11 +423,17 @@ def validate_package(path: str | Path) -> ValidationResult:
                         experimental_docs.append((rel, asset_kind, adata))
                     elif asset_kind != "PackageExample":
                         errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
+                        if asset_kind in {"WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"}:
+                            standard_docs.append((rel, asset_kind, adata))
 
     for rel, asset_kind, adata in experimental_docs:
         exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names, local_asset_docs)
         errors.extend(exp_errors)
         warnings.extend(exp_warnings)
+    for rel, asset_kind, adata in standard_docs:
+        std_errors, std_warnings = experimental.standard_kind_warnings(adata, asset_kind, rel, root, local_asset_kinds, extension_names)
+        errors.extend(std_errors)
+        warnings.extend(std_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
     from .extraction import multi_latest_warnings  # local import: extraction depends on core
     warnings.extend(multi_latest_warnings(local_asset_kinds, local_asset_docs))

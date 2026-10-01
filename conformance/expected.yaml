@@ -669,6 +669,66 @@ cases:
     satisfiedProfile: viewable
     warnings: [experimental.reference]
     rule: "ConsumerRepresentationProfile actor.ref names an ActorProfile."
+  world-view-portable:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A World View may name the actor, role, and task it serves, its constraints, and evidence (C.4)."
+  world-view-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    rule: "WorldViewProfile accepts only its defined fields."
+  world-view-actor-ref-wrong-kind:
+    valid: true
+    warnings: [experimental.reference]
+    satisfiedProfile: viewable
+    rule: "purpose.actorRef names a local ActorProfile."
+  evaluation-profile-portable:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "An EvaluationProfile may state its assessment kind, subject, criteria, verifier, and evaluator (C.4)."
+  evaluation-assessment-kind-unknown:
+    valid: true
+    warnings: [experimental.value]
+    satisfiedProfile: viewable
+    rule: "assessmentKind comes from the value set assessmentKinds."
+  evaluation-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: viewable
+    rule: "EvaluationProfile accepts only its defined fields."
+  scenario-portable:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A ScenarioProfile is a baseline, assumptions, an intervention, and an engine (C.4)."
+  scenario-engine-unknown:
+    valid: true
+    warnings: [experimental.value]
+    satisfiedProfile: viewable
+    rule: "engine.kind comes from the value set scenarioEngines."
+  scenario-confidence-range:
+    valid: true
+    warnings: [experimental.field]
+    satisfiedProfile: viewable
+    rule: "confidence is a number from 0 to 1."
+  capability-minimal:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A CapabilityContract may state outcomes, context, inputs, capacity, and maturity (C.4)."
+  capability-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: viewable
+    rule: "CapabilityContract accepts only its defined fields; scoring models are not part of it."
+  task-set-composition:
+    valid: true
+    warnings: [asset.kind-experimental]
+    satisfiedProfile: viewable
+    rule: "A TaskSet composes actors, work patterns, and scenarios with its Views (C.4)."
+  task-set-composition-wrong-kind:
+    valid: true
+    warnings: [experimental.reference]
+    satisfiedProfile: viewable
+    rule: "workPatternRefs name local WorkPatternProfiles."
 resolutionCases:
   grounded:
     valid: true

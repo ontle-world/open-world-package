@@ -1,4 +1,5 @@
-"""Regenerate schemas/experimental/*.schema.json from the field tables in src/ontle/experimental.py.
+"""Regenerate schemas/experimental/*.schema.json from the field tables in src/ontle/experimental.py,
+and the schemas of standard kinds whose tables live in src/ontle/structure.py.
 
 Run from the repository root after changing an experimental kind:
 
@@ -24,7 +25,15 @@ STRING_LISTS = {
     "triggers", "nodes", "roleRefs", "memberOf", "actions", "decisions", "responsibilities", "accountabilities",
     "permittedActions", "by", "to", "when", "actors", "workPatternRefs", "scenarios", "skills", "tools",
 }
+STRING_LISTS |= {"assumptions", "constraints", "outcomeRefs", "requiredInputs", "changedBecause", "include", "exclude"}
 BOOLEANS = {"approvalRequired", "multi"}
+ANY = {"metrics", "tasks", "checks", "threshold", "confidence", "rubric", "effect"}
+STANDARD = {
+    "WorldViewProfile": ("WORLD_VIEW_PROFILE", ["worldRef"]),
+    "EvaluationProfile": ("EVALUATION_PROFILE", []),
+    "ScenarioProfile": ("SCENARIO_PROFILE", []),
+    "CapabilityContract": ("CAPABILITY_CONTRACT", []),
+}
 INTEGERS = {"maxIterations"}
 DESCRIPTIONS = {
     "parameters": "Parameter name -> {type: string|number|boolean}.",
@@ -34,6 +43,8 @@ DESCRIPTIONS = {
 
 def convert(node, key=None):
     if node is None:
+        if key in ANY:
+            return {}
         if key in STRING_LISTS:
             return {"type": "array", "items": {"type": "string"}}
         if key in BOOLEANS:
@@ -73,6 +84,23 @@ def main() -> None:
             "$defs": {"extensions": MANIFEST["$defs"]["extensions"], "externalRef": MANIFEST["$defs"]["externalRef"]},
         }
         (out_dir / file_name(kind)).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(file_name(kind))
+    for kind, (table_name, spec_required) in STANDARD.items():
+        schema = convert(getattr(structure, table_name))
+        schema["properties"]["apiVersion"] = {"const": "openworld/v1alpha1"}
+        schema["properties"]["kind"] = {"const": kind}
+        schema["required"] = ["apiVersion", "kind", "spec"]
+        if spec_required:
+            schema["properties"]["spec"]["required"] = spec_required
+        doc = {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": f"urn:owp:schema:{file_name(kind).removesuffix('.schema.json')}:v1alpha1",
+            "title": kind,
+            "description": f"{kind} (spec section 8). Fields listed in spec Appendix C.4 are experimental: accepted, with warnings only from their checks.",
+            **schema,
+            "$defs": {"extensions": MANIFEST["$defs"]["extensions"]},
+        }
+        (ROOT / "schemas" / file_name(kind)).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(file_name(kind))
 
 

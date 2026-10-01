@@ -17,8 +17,9 @@ const CONTENT = closed({ path: ANY, ref: EXTERNAL_REF });
 export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
   TaskSetProfile: doc({
     task: closed(leaves("objectiveRefs", "workPatterns")),
-    requires: closed(leaves("worldRefs", "worldViews", "knowledge")),
-    mayUse: closed(leaves("worldModels", "capabilities", "workflows")),
+    requires: closed(leaves("worldRefs", "worldViews", "knowledge", "actors")),
+    workPatternRefs: ANY,
+    mayUse: closed(leaves("worldModels", "capabilities", "workflows", "scenarios", "skills", "tools")),
     produces: closed(leaves("artifacts")),
     evaluationRefs: ANY,
   }),
@@ -150,6 +151,10 @@ class Checker {
     }
   }
 
+  kindOf(p: string): string | undefined {
+    return this.localKinds.get(p);
+  }
+
   /** A package-relative path names a listed local asset (of one of `kinds`, when given); `#` refs point into other packages. */
   localRef(ref: unknown, kinds: string[] | null, at: string): void {
     if (typeof ref !== "string" || ref.length === 0) return this.warn("experimental.reference", `${at} must be a package-relative asset path`);
@@ -189,6 +194,12 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       for (const r of values(sub(s, "requires").worldViews)) c.localRef(r, ["WorldViewProfile"], "spec.requires.worldViews");
       for (const r of values(sub(s, "requires").knowledge)) c.localRef(r, ["KnowledgeAsset"], "spec.requires.knowledge");
       for (const r of values(sub(s, "produces").artifacts)) c.localRef(r, ["ArtifactContract"], "spec.produces.artifacts");
+      // Appendix C.4: composition.
+      for (const r of values(sub(s, "requires").actors)) c.localRef(r, ["ActorProfile", "RoleProfile"], "spec.requires.actors");
+      for (const r of values(s.workPatternRefs)) c.localRef(r, ["WorkPatternProfile"], "spec.workPatternRefs");
+      for (const [f, kind] of [["scenarios", "ScenarioProfile"], ["skills", "SkillProfile"], ["tools", "ToolProfile"]]) {
+        for (const r of values(sub(s, "mayUse")[f])) c.localRef(r, [kind], `spec.mayUse.${f}`);
+      }
       break;
     case "WorkPatternProfile": {
       const pattern = sub(s, "pattern");
@@ -388,6 +399,54 @@ export function checkExperimentalAsset(ctx: Context, a: LocalAsset, kinds = loca
   }
   const manifestSpec = isObj(ctx.manifest.spec) ? ctx.manifest.spec : {};
   checkDocument(c, a.kind, isObj(a.doc.spec) ? a.doc.spec : {}, manifestSpec);
+}
+
+/** Standard kinds with Appendix C.4 experimental fields; their checks are warnings only. */
+export const STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS = ["WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"];
+
+/** Appendix C.4: warnings for the experimental fields of a standard-kind asset document. */
+export function checkStandardKindFields(ctx: Context, a: LocalAsset): void {
+  if (!isObj(a.doc)) return;
+  const c = new Checker(ctx, a.rawPath, localKinds(ctx), localDocs(ctx));
+  const s = isObj(a.doc.spec) ? a.doc.spec : {};
+  switch (a.kind) {
+    case "WorldViewProfile":
+      for (const [f, kind] of [["actorRef", "ActorProfile"], ["roleRef", "RoleProfile"], ["taskRef", "TaskSetProfile"]]) {
+        const v = sub(s, "purpose")[f];
+        if (present(v)) c.localRef(v, [kind], `spec.purpose.${f}`);
+      }
+      break;
+    case "EvaluationProfile": {
+      if ("assessmentKind" in s) c.value(s.assessmentKind, "assessmentKinds", "spec.assessmentKind");
+      const subject = sub(s, "subject");
+      if ("kind" in subject) c.value(subject.kind, "evaluationSubjects", "spec.subject.kind");
+      // A subject ref with '#' or '@' points outside the package.
+      if (present(subject.ref) && !String(subject.ref).includes("#") && !String(subject.ref).includes("@")) c.localRef(subject.ref, null, "spec.subject.ref");
+      const v = s.verifierRef;
+      if (present(v)) {
+        const pinned = typeof v === "string" && v.includes("@") && PINNED_RE.test(v);
+        if (!pinned && !(typeof v === "string" && c.kindOf(v) === "VerifierPackage")) {
+          c.warn("experimental.reference", "spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>");
+        }
+      }
+      if (present(s.evaluatorRef)) c.localRef(s.evaluatorRef, ["ActorProfile"], "spec.evaluatorRef");
+      if (present(s.resultSchemaRef) && !c.packageFile(s.resultSchemaRef)) {
+        c.warn("experimental.reference", `spec.resultSchemaRef ${JSON.stringify(s.resultSchemaRef)} must be a file in the package`);
+      }
+      break;
+    }
+    case "ScenarioProfile": {
+      const engine = sub(s, "engine");
+      if ("kind" in engine) c.value(engine.kind, "scenarioEngines", "spec.engine.kind");
+      const baseline = s.baselineStateRef;
+      if (present(baseline) && !String(baseline).includes("://") && !String(baseline).includes("#") && !c.packageFile(baseline)) {
+        c.warn("experimental.reference", `spec.baselineStateRef ${JSON.stringify(baseline)} must be a file in the package or a URI`);
+      }
+      const conf = s.confidence;
+      if (present(conf) && !(typeof conf === "number" && conf >= 0 && conf <= 1)) c.warn("experimental.field", "spec.confidence must be a number from 0 to 1");
+      break;
+    }
+  }
 }
 
 /** Appendix C: WorldViewProfile `spec.specializes` names a local WorldViewProfile, without cycles. */

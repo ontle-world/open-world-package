@@ -86,6 +86,9 @@ export const VALUE_SETS: Record<string, string[]> = {
     "create", "inspect", "edit", "transform", "branch", "merge", "compare", "validate", "version",
     "restore", "supersede", "share", "handoff", "publish", "deliver", "commit", "deploy", "activate",
   ],
+  assessmentKinds: ["verification", "validation", "evaluation", "review", "approval"],
+  evaluationSubjects: ["model", "agent", "workflow", "artifact", "decision", "process", "capability", "environment"],
+  scenarioEngines: ["rule", "score_ranking", "optimization", "simulation", "ml_prediction", "world_model", "llm_reasoning"],
   actorTypes: ["human", "ai_agent", "team", "organization", "external_institution", "automated_system"],
 };
 

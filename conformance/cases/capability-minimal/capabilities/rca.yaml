@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: CapabilityContract
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  description: Root cause analysis of quality claims.
+  outcomeRefs: [artifacts/report.yaml]
+  context: {domain: manufacturing_quality}
+  requiredInputs: [claim, lot_genealogy]
+  capacity: {claimsPerWeek: 20}
+  maturity: piloted

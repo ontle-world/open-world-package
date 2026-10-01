@@ -77,11 +77,23 @@
                 "type": "string"
               }
             },
+            "actors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
           },
           "additionalProperties": false
+        },
+        "workPatternRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "mayUse": {
           "type": "object",
@@ -99,6 +111,24 @@
               }
             },
             "workflows": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scenarios": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tools": {
               "type": "array",
               "items": {
                 "type": "string"

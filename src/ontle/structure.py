@@ -125,12 +125,74 @@ EFFECTIVE_WORLD_STATE = closed({
     }),
 }, extensions=False)
 
+def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
+    return closed({"apiVersion": VALUE, "kind": VALUE, "metadata": ASSET_METADATA, "spec": closed(spec_fields)}, extensions=False)
+
+
+# Standard kinds with defined fields. Fields marked "experimental" are spec Appendix C additions:
+# they are accepted, and the checks on them produce warnings only.
+WORLD_VIEW_PROFILE = _standard({
+    "worldRef": VALUE,
+    "specializes": VALUE,                                  # experimental
+    "purpose": closed({"task": VALUE, "actorScope": VALUE, "objective": VALUE,
+                       "actorRef": VALUE, "roleRef": VALUE, "taskRef": VALUE}),   # *Ref: experimental
+    "projection": closed({"include": VALUE, "exclude": VALUE, "principle": VALUE}),
+    "conditioning": closed({"authorityScope": VALUE, "timeScope": VALUE, "scale": VALUE, "resolution": VALUE}),
+    "constraints": VALUE,                                  # experimental
+    "evidenceRefs": VALUE,                                 # experimental
+})
+
+EVALUATION_PROFILE = _standard({
+    "supersedes": VALUE, "changedBecause": VALUE, "metrics": VALUE, "tasks": VALUE, "checks": VALUE,
+    # experimental
+    "assessmentKind": VALUE,
+    "subject": closed({"kind": VALUE, "ref": VALUE}),
+    "objective": VALUE,
+    "criteria": array(closed({"metric": VALUE, "rubric": VALUE, "threshold": VALUE})),
+    "verifierRef": VALUE,
+    "evaluatorRef": VALUE,
+    "evidenceRefs": VALUE,
+    "validityScope": OPEN,
+    "resultSchemaRef": VALUE,
+})
+
+SCENARIO_PROFILE = _standard({
+    "description": VALUE, "objective": VALUE, "standardBindings": OPEN,
+    # experimental
+    "baselineStateRef": VALUE,
+    "assumptions": VALUE,
+    "intervention": OPEN,
+    "engine": closed({"kind": VALUE, "ref": VALUE}),
+    "timeHorizon": VALUE,
+    "constraints": VALUE,
+    "uncertainty": OPEN,
+    "confidence": VALUE,
+    "expectedOutcome": OPEN,
+    "evidenceRefs": VALUE,
+})
+
+CAPABILITY_CONTRACT = _standard({
+    "description": VALUE, "effect": VALUE,
+    # experimental
+    "outcomeRefs": VALUE,
+    "context": OPEN,
+    "requiredInputs": VALUE,
+    "evidenceRefs": VALUE,
+    "capacity": OPEN,
+    "maturity": VALUE,
+    "validityScope": OPEN,
+})
+
 # Asset kinds whose document fields are defined; other kinds are checked only for
 # top-level metadata/spec extension blocks.
 ASSET_STRUCTURES = {
     "CompatibilityEvidence": COMPATIBILITY_EVIDENCE,
     "SemanticProfile": SEMANTIC_PROFILE,
     "OntologyTermIndex": TERM_INDEX,
+    "WorldViewProfile": WORLD_VIEW_PROFILE,
+    "EvaluationProfile": EVALUATION_PROFILE,
+    "ScenarioProfile": SCENARIO_PROFILE,
+    "CapabilityContract": CAPABILITY_CONTRACT,
 }
 
 

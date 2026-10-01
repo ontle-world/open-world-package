@@ -137,6 +137,45 @@
           },
           "additionalProperties": false
         },
+        "schemaRef": {
+          "type": "string"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedOperations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "supersedes": {
+          "type": "string"
+        },
         "validationRefs": {
           "type": "array",
           "items": {

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Experimental actors, roles, and delegation (spec Appendix C.3): `ActorProfile` (`actorType` from the value set `actorTypes`), `RoleProfile` (permissions, authorities with ceilings, responsibilities, accountabilities), and `DelegationProfile` (scope, period, revocation, escalation; the warning `experimental.delegation-exceeds-authority`). ConsumerRepresentationProfile gains `actor.ref`.
+- Experimental work pattern graphs (spec Appendix C.2): nodes, transitions, guards, events, and loops; node families in the value set `workNodeFamilies`; each of the 22 work patterns names its family. WorkPatternProfile gains `objective`, `inputContracts`, `outputContracts`, `worldViewRef`, `governanceRefs`.
+- ArtifactContract gains `schemaRef`, `storage`, `allowedOperations` (value set `artifactOperations`), `sourceRefs`, `evidenceRefs`, and `supersedes`.
+- `scripts/generate_experimental_schemas.py` regenerates `schemas/experimental/`; `scripts/sync_rule_ids.py` regenerates `spec/rule-ids.yaml`.
 - Lock format `owp-lock/v1alpha2` (spec section 7): `externals` records every bound ExternalRef; vendored content is listed with `vendoredPath`; verifiers check `externals` against the manifest.
 - OCI artifact profile (spec section 7.1): artifact, config, layer, and evidence media types. `ontle push` (and `oci:`/`oci-layout:` resolver sources) use `oras`.
 - Static package index (spec section 11.1, `schemas/package-index.schema.json`): `ontle index build` and the `index:` resolver source, with digest checks.
@@ -49,7 +53,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 135 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
+- Conformance suite: 148 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

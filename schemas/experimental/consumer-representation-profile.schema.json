@@ -41,6 +41,9 @@
             "kind": {
               "type": "string"
             },
+            "ref": {
+              "type": "string"
+            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }

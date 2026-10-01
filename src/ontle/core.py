@@ -424,7 +424,7 @@ def validate_package(path: str | Path) -> ValidationResult:
                         errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
 
     for rel, asset_kind, adata in experimental_docs:
-        exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names)
+        exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names, local_asset_docs)
         errors.extend(exp_errors)
         warnings.extend(exp_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))

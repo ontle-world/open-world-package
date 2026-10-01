@@ -12,7 +12,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 135 validation, 27 resolution, 20 EWS compile, 16 EWS check, 12 extraction cases.
+- Conformance suite: 148 validation, 27 resolution, 20 EWS compile, 16 EWS check, 12 extraction cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3

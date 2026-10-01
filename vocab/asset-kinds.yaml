@@ -66,5 +66,9 @@ groups:
     ArtifactContract: {stability: experimental}
     ArtifactTemplate: {stability: experimental}
     ConsumerRepresentationProfile: {stability: experimental}
+  actorAuthority:
+    ActorProfile: {stability: experimental}
+    RoleProfile: {stability: experimental}
+    DelegationProfile: {stability: experimental}
   packageSupport:
     PackageExample: {stability: standard}

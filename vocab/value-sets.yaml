@@ -3,34 +3,34 @@ kind: ValueSetVocabulary
 # Experimental value sets used by experimental asset kinds (spec Appendix C).
 # A value outside its set is a warning (experimental.value); an extension value
 # <extension>:<value> is accepted when the extension is declared (section 13).
-# Labels are informative.
+# Labels are informative. A work pattern's family is its workNodeFamilies value.
 valueSets:
   workPatterns:
     stability: experimental
     usedBy: WorkPatternProfile.spec.pattern.kind, TaskSetProfile.spec.task.workPatterns
     values:
-      observe: {label: Observe / Monitor}
-      detect: {label: Detect / Triage}
-      retrieve: {label: Retrieve / Research}
-      summarize: {label: Summarize / Synthesize}
-      analyze: {label: Analyze / Classify}
-      compare: {label: Compare}
-      diagnose: {label: Diagnose / RCA}
-      forecast: {label: Forecast / Predict}
-      prioritize: {label: Prioritize / Rank}
-      recommend: {label: Recommend / Decide}
-      allocate: {label: Allocate / Assign}
-      schedule: {label: Schedule / Plan}
-      optimize: {label: Optimize}
-      simulate: {label: Simulate / What-if}
-      create: {label: Create / Generate}
-      transform: {label: Transform / Adapt}
-      review: {label: Review / Verify}
-      approve: {label: Approve / Govern}
-      execute: {label: Execute / Coordinate}
-      publish: {label: Publish / Deliver}
-      evaluate: {label: Evaluate}
-      learn: {label: Learn / Update}
+      observe: {label: Observe / Monitor, family: observe_knowledge}
+      detect: {label: Detect / Triage, family: observe_knowledge}
+      retrieve: {label: Retrieve / Research, family: observe_knowledge}
+      summarize: {label: Summarize / Synthesize, family: analyze_reason}
+      analyze: {label: Analyze / Classify, family: analyze_reason}
+      compare: {label: Compare, family: analyze_reason}
+      diagnose: {label: Diagnose / RCA, family: analyze_reason}
+      forecast: {label: Forecast / Predict, family: analyze_reason}
+      prioritize: {label: Prioritize / Rank, family: decide_plan}
+      recommend: {label: Recommend / Decide, family: decide_plan}
+      allocate: {label: Allocate / Assign, family: decide_plan}
+      schedule: {label: Schedule / Plan, family: decide_plan}
+      optimize: {label: Optimize, family: decide_plan}
+      simulate: {label: Simulate / What-if, family: analyze_reason}
+      create: {label: Create / Generate, family: create_modify}
+      transform: {label: Transform / Adapt, family: create_modify}
+      review: {label: Review / Verify, family: evaluate_recover}
+      approve: {label: Approve / Govern, family: decide_plan}
+      execute: {label: Execute / Coordinate, family: execute_operate}
+      publish: {label: Publish / Deliver, family: execute_operate}
+      evaluate: {label: Evaluate, family: evaluate_recover}
+      learn: {label: Learn / Update, family: evaluate_recover}
   artifactTypes:
     stability: experimental
     usedBy: ArtifactContract.spec.artifact.type
@@ -103,3 +103,45 @@ valueSets:
       sparql: {label: SPARQL 1.1}
       opencypher: {label: openCypher}
       gql: {label: ISO GQL}
+  workNodeFamilies:
+    stability: experimental
+    usedBy: WorkPatternProfile.spec.graph.nodes[].family, WorkPatternProfile.spec.pattern.family
+    values:
+      observe_knowledge: {label: Observe / Knowledge}
+      analyze_reason: {label: Analyze / Reason}
+      create_modify: {label: Create / Modify}
+      decide_plan: {label: Decide / Plan}
+      execute_operate: {label: Execute / Operate}
+      evaluate_recover: {label: Evaluate / Recover}
+  artifactOperations:
+    stability: experimental
+    usedBy: ArtifactContract.spec.allowedOperations
+    values:
+      create: {label: Create}
+      inspect: {label: Inspect}
+      edit: {label: Edit}
+      transform: {label: Transform}
+      branch: {label: Branch}
+      merge: {label: Merge}
+      compare: {label: Compare}
+      validate: {label: Validate}
+      version: {label: Version}
+      restore: {label: Restore}
+      supersede: {label: Supersede}
+      share: {label: Share}
+      handoff: {label: Hand off}
+      publish: {label: Publish}
+      deliver: {label: Deliver}
+      commit: {label: Commit}
+      deploy: {label: Deploy}
+      activate: {label: Activate}
+  actorTypes:
+    stability: experimental
+    usedBy: ActorProfile.spec.actorType
+    values:
+      human: {label: Human}
+      ai_agent: {label: AI agent}
+      team: {label: Team}
+      organization: {label: Organization}
+      external_institution: {label: External institution}
+      automated_system: {label: Automated system}

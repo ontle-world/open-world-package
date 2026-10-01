@@ -6,7 +6,8 @@
 import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
 import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, list, OPEN, Shape, structureProblems } from "../structure.js";
-import { fileExists, isObj, normalizeRelPath, Obj, staysInside } from "../util.js";
+import { isUtcTimestamp } from "../ews.js";
+import { fileExists, isObj, normalizeRelPath, Obj, PINNED_RE, staysInside } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 import { externalRefProblems } from "./externalref.js";
 
@@ -25,11 +26,21 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     pattern: closed(leaves("kind", "family")),
     inputs: closed(leaves("semanticRoles")),
     outputs: closed(leaves("semanticRoles")),
-    ...leaves("requiredContracts", "optionalCapabilities", "evaluationRefs"),
+    ...leaves("objective", "inputContracts", "outputContracts", "requiredContracts", "optionalCapabilities"),
+    graph: closed({
+      nodes: list(closed(leaves("id", "family", "patternKind", "description"))),
+      transitions: list(closed(leaves("from", "to", "guard", "event"))),
+      guards: list(closed(leaves("id", "description"))),
+      events: list(closed(leaves("id", "triggers", "description"))),
+      loops: list(closed(leaves("nodes", "maxIterations", "until"))),
+    }),
+    ...leaves("worldRef", "worldViewRef", "governanceRefs", "evaluationRefs"),
   }),
   ArtifactContract: doc({
     artifact: closed(leaves("type", "representation")),
     ...leaves("purposeRef", "audienceRef", "inputs", "sourceBindings", "validationRefs", "evaluationRefs"),
+    ...leaves("schemaRef", "sourceRefs", "evidenceRefs", "allowedOperations", "supersedes"),
+    storage: closed(leaves("kind", "uri")),
     structure: closed(leaves("required", "optional")),
     serialization: closed(leaves("formats")),
     delivery: closed(leaves("destinations")),
@@ -37,7 +48,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
   }),
   ArtifactTemplate: doc({ ...leaves("artifactContractRef", "format"), content: CONTENT }),
   ConsumerRepresentationProfile: doc({
-    actor: closed(leaves("kind")),
+    actor: closed(leaves("kind", "ref")),
     worldViewRef: ANY,
     representation: closed({ ...leaves("mode", "provenance"), freshness: OPEN }),
     human: closed({ ...leaves("artifactContractRefs", "presentation", "locale", "decisionRights"), notification: OPEN }),
@@ -58,6 +69,18 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     query: closed(leaves("language", "text")),
     observations: list(closed({ ...leaves("type", "id", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
+  ActorProfile: doc(leaves("actorType", "roleRefs", "capabilityRefs", "agentRef", "memberOf")),
+  RoleProfile: doc({
+    permissions: list(closed(leaves("actions", "scope"))),
+    authorities: list(closed({ ...leaves("decisions", "scope"), ceiling: OPEN })),
+    ...leaves("responsibilities", "accountabilities"),
+  }),
+  DelegationProfile: doc({
+    ...leaves("delegator", "delegatee", "scope", "permittedActions", "validFrom", "expiresAt", "evidenceRefs"),
+    authorityCeiling: closed({ decisions: ANY, limits: OPEN }),
+    revocation: closed(leaves("by")),
+    escalation: closed(leaves("to", "when")),
+  }),
 };
 
 const ACTOR_BLOCKS = ["human", "agent", "model", "system"];
@@ -65,6 +88,7 @@ const ACTOR_BLOCKS = ["human", "agent", "model", "system"];
 /** A single value or a list of values; null/absent is no values. */
 const values = (v: unknown): unknown[] => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
 const sub = (o: Obj, k: string): Obj => (isObj(o[k]) ? (o[k] as Obj) : {});
+const present = (v: unknown): boolean => v !== undefined && v !== null;
 
 class Checker {
   constructor(
@@ -72,10 +96,45 @@ class Checker {
     private readonly file: string,
     /** Listed local asset path -> kind. */
     private readonly localKinds: Map<string, string>,
+    /** Listed local asset path -> parsed document. */
+    private readonly docs: Map<string, unknown>,
   ) {}
 
   warn(rule: string, msg: string): void {
     warn(this.ctx, rule, `${this.file}: ${msg}`, this.file);
+  }
+
+  /** An existing file inside the package, given as a package-relative path (not ./ or backslashes). */
+  packageFile(p: unknown): boolean {
+    if (typeof p !== "string" || p.length === 0 || p.startsWith("./") || p.includes("\\")) return false;
+    const norm = normalizeRelPath(p);
+    if (norm === null) return false;
+    const abs = path.join(this.ctx.root, norm);
+    return fileExists(abs) && staysInside(this.ctx.root, abs);
+  }
+
+  /**
+   * Appendix C.3: the actions (permissions[].actions) and decisions (authorities[].decisions) granted by
+   * the roles of a delegator that is a local ActorProfile; null when it is not one.
+   */
+  delegatorGrants(delegator: unknown): { actions: Set<string>; decisions: Set<string> } | null {
+    if (typeof delegator !== "string" || this.localKinds.get(delegator) !== "ActorProfile") return null;
+    const specOf = (p: unknown): Obj => {
+      const d = typeof p === "string" ? this.docs.get(p) : undefined;
+      return isObj(d) && isObj(d.spec) ? d.spec : {};
+    };
+    const actions = new Set<string>();
+    const decisions = new Set<string>();
+    for (const role of values(specOf(delegator).roleRefs)) {
+      const r = specOf(role);
+      for (const p of Array.isArray(r.permissions) ? r.permissions : []) {
+        for (const a of values(isObj(p) ? p.actions : undefined)) if (typeof a === "string") actions.add(a);
+      }
+      for (const a of Array.isArray(r.authorities) ? r.authorities : []) {
+        for (const d of values(isObj(a) ? a.decisions : undefined)) if (typeof d === "string") decisions.add(d);
+      }
+    }
+    return { actions, decisions };
   }
 
   /** Value-set member, or `<extension>:<value>` with a declared extension. */
@@ -135,6 +194,10 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       const pattern = sub(s, "pattern");
       if (!("kind" in pattern)) c.warn("experimental.field", "spec.pattern.kind is required");
       else c.value(pattern.kind, "workPatterns", "spec.pattern.kind");
+      if ("family" in pattern) c.value(pattern.family, "workNodeFamilies", "spec.pattern.family");
+      for (const f of ["inputContracts", "outputContracts"]) for (const r of values(s[f])) c.localRef(r, ["ArtifactContract"], `spec.${f}`);
+      if (present(s.worldViewRef)) c.localRef(s.worldViewRef, ["WorldViewProfile"], "spec.worldViewRef");
+      checkGraph(c, sub(s, "graph"));
       break;
     }
     case "ArtifactContract": {
@@ -142,6 +205,11 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       if (!("type" in artifact)) c.warn("experimental.field", "spec.artifact.type is required");
       else c.value(artifact.type, "artifactTypes", "spec.artifact.type");
       if ("representation" in artifact) c.value(artifact.representation, "artifactRepresentations", "spec.artifact.representation");
+      for (const v of values(s.allowedOperations)) c.value(v, "artifactOperations", "spec.allowedOperations");
+      if (present(s.schemaRef) && !c.packageFile(s.schemaRef)) c.warn("experimental.reference", `spec.schemaRef ${JSON.stringify(s.schemaRef)} must be a file in the package`);
+      if (present(s.supersedes) && !(typeof s.supersedes === "string" && PINNED_RE.test(s.supersedes))) {
+        c.warn("experimental.field", "spec.supersedes must be a pinned <name>@<version> reference");
+      }
       break;
     }
     case "ArtifactTemplate":
@@ -153,9 +221,10 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       if (actor === undefined || actor === null) c.warn("experimental.field", "spec.actor.kind is required");
       else c.value(actor, "actorKinds", "spec.actor.kind");
       c.localRef(s.worldViewRef, ["WorldViewProfile"], "spec.worldViewRef");
-      const present = ACTOR_BLOCKS.filter((b) => b in s);
-      if (typeof actor === "string" && ACTOR_BLOCKS.includes(actor) && present.some((b) => b !== actor)) {
-        c.warn("experimental.field", `only the spec.${actor} block may be present for actor kind ${actor} (found ${present.join(", ")})`);
+      if (present(sub(s, "actor").ref)) c.localRef(sub(s, "actor").ref, ["ActorProfile"], "spec.actor.ref");
+      const blocks = ACTOR_BLOCKS.filter((b) => b in s);
+      if (typeof actor === "string" && ACTOR_BLOCKS.includes(actor) && blocks.some((b) => b !== actor)) {
+        c.warn("experimental.field", `only the spec.${actor} block may be present for actor kind ${actor} (found ${blocks.join(", ")})`);
       }
       for (const r of values(sub(s, "human").artifactContractRefs)) c.localRef(r, ["ArtifactContract"], "spec.human.artifactContractRefs");
       for (const r of values(sub(sub(s, "agent"), "toolScope").capabilityRefs)) c.localRef(r, null, "spec.agent.toolScope.capabilityRefs");
@@ -176,6 +245,36 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       c.content(sub(s, "content"));
       break;
     }
+    case "ActorProfile":
+      if (!("actorType" in s)) c.warn("experimental.field", "spec.actorType is required");
+      else c.value(s.actorType, "actorTypes", "spec.actorType");
+      for (const r of values(s.roleRefs)) c.localRef(r, ["RoleProfile"], "spec.roleRefs");
+      for (const r of values(s.capabilityRefs)) c.localRef(r, ["CapabilityContract"], "spec.capabilityRefs");
+      if (present(s.agentRef)) c.localRef(s.agentRef, ["AgentProfile"], "spec.agentRef");
+      for (const r of values(s.memberOf)) c.localRef(r, ["ActorProfile"], "spec.memberOf");
+      break;
+    case "DelegationProfile": {
+      for (const f of ["delegator", "delegatee"]) c.localRef(s[f], ["ActorProfile"], `spec.${f}`);
+      for (const r of values(sub(s, "revocation").by)) c.localRef(r, ["ActorProfile"], "spec.revocation.by");
+      for (const r of values(sub(s, "escalation").to)) c.localRef(r, ["ActorProfile"], "spec.escalation.to");
+      const start = s.validFrom;
+      const end = s.expiresAt;
+      for (const [f, v] of [["validFrom", start], ["expiresAt", end]] as const) {
+        if (present(v) && !isUtcTimestamp(v)) c.warn("experimental.field", `spec.${f} must be UTC YYYY-MM-DDTHH:MM:SSZ`);
+      }
+      if (isUtcTimestamp(start) && isUtcTimestamp(end) && !(start < end)) c.warn("experimental.field", "spec.validFrom must be before spec.expiresAt");
+      const granted = c.delegatorGrants(s.delegator);
+      if (granted) {
+        const over = [
+          ...values(s.permittedActions).filter((a) => !(typeof a === "string" && (granted.actions.has(a) || granted.decisions.has(a)))),
+          ...values(sub(s, "authorityCeiling").decisions).filter((d) => !(typeof d === "string" && granted.decisions.has(d))),
+        ];
+        if (over.length > 0) {
+          c.warn("experimental.delegation-exceeds-authority", `delegates ${over.map(String).join(", ")}, which the delegator's roles do not grant`);
+        }
+      }
+      break;
+    }
     case "KnowledgeExtractionProfile": {
       c.localRef(s.source, ["KnowledgeAsset"], "spec.source");
       const query = sub(s, "query");
@@ -189,6 +288,51 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       break;
     }
   }
+}
+
+/**
+ * Appendix C.2: work pattern graph — unique string ids for nodes, guards, and events; node families and
+ * pattern kinds from their value sets; transitions, events, and loops refer to declared nodes and guards;
+ * loop maxIterations is a positive integer.
+ */
+function checkGraph(c: Checker, graph: Obj): void {
+  if (Object.keys(graph).length === 0) return;
+  const items = (section: string): Obj[] => (Array.isArray(graph[section]) ? (graph[section] as unknown[]).filter(isObj) : []);
+  const ids = (section: string): unknown[] => items(section).map((x) => x.id);
+  const nodes = ids("nodes");
+  for (const section of ["nodes", "guards", "events"]) {
+    const seen = ids(section);
+    const duplicate = seen.some((x, i) => seen.indexOf(x) !== i);
+    if (duplicate || seen.some((x) => typeof x !== "string" || x.length === 0)) c.warn("experimental.field", `spec.graph.${section} need unique string ids`);
+  }
+  (Array.isArray(graph.nodes) ? graph.nodes : []).forEach((n, i) => {
+    if (!isObj(n)) return;
+    if ("family" in n) c.value(n.family, "workNodeFamilies", `spec.graph.nodes[${i}].family`);
+    if ("patternKind" in n) c.value(n.patternKind, "workPatterns", `spec.graph.nodes[${i}].patternKind`);
+  });
+  const guards = ids("guards");
+  const events = ids("events");
+  const ref = (v: unknown) => JSON.stringify(v ?? null);
+  (Array.isArray(graph.transitions) ? graph.transitions : []).forEach((t, i) => {
+    if (!isObj(t)) return;
+    for (const end of ["from", "to"]) if (!nodes.includes(t[end])) c.warn("experimental.reference", `spec.graph.transitions[${i}].${end} ${ref(t[end])} is not a node`);
+    if (present(t.guard) && !guards.includes(t.guard)) c.warn("experimental.reference", `spec.graph.transitions[${i}].guard ${ref(t.guard)} is not a declared guard`);
+    if (present(t.event) && !events.includes(t.event)) c.warn("experimental.reference", `spec.graph.transitions[${i}].event ${ref(t.event)} is not a declared event`);
+  });
+  (Array.isArray(graph.events) ? graph.events : []).forEach((e, i) => {
+    for (const target of values(isObj(e) ? e.triggers : undefined)) {
+      if (!nodes.includes(target)) c.warn("experimental.reference", `spec.graph.events[${i}].triggers ${ref(target)} is not a node`);
+    }
+  });
+  (Array.isArray(graph.loops) ? graph.loops : []).forEach((l, i) => {
+    if (!isObj(l)) return;
+    for (const n of values(l.nodes)) if (!nodes.includes(n)) c.warn("experimental.reference", `spec.graph.loops[${i}].nodes ${ref(n)} is not a node`);
+    if (present(l.until) && !guards.includes(l.until)) c.warn("experimental.reference", `spec.graph.loops[${i}].until ${ref(l.until)} is not a declared guard`);
+    const bound = l.maxIterations;
+    if (present(bound) && !(typeof bound === "number" && Number.isInteger(bound) && bound >= 1)) {
+      c.warn("experimental.field", `spec.graph.loops[${i}].maxIterations must be a positive integer`);
+    }
+  });
 }
 
 /** Appendix C.1: an observations entry has a type, a non-empty id column list, and a non-empty values mapping. */
@@ -222,6 +366,12 @@ export function checkMultiLatest(ctx: Context): void {
   }
 }
 
+function localDocs(ctx: Context): Map<string, unknown> {
+  const m = new Map<string, unknown>();
+  for (const a of ctx.localAssets) if (!m.has(a.rawPath)) m.set(a.rawPath, a.doc);
+  return m;
+}
+
 function localKinds(ctx: Context): Map<string, string> {
   const m = new Map<string, string>();
   for (const a of ctx.localAssets) if (!m.has(a.rawPath)) m.set(a.rawPath, a.kind);
@@ -231,7 +381,7 @@ function localKinds(ctx: Context): Map<string, string> {
 /** One experimental asset document; runs after all assets are collected so references to later-listed assets resolve. */
 export function checkExperimentalAsset(ctx: Context, a: LocalAsset, kinds = localKinds(ctx)): void {
   if (!isObj(a.doc)) return;
-  const c = new Checker(ctx, a.rawPath, kinds);
+  const c = new Checker(ctx, a.rawPath, kinds, localDocs(ctx));
   for (const p of structureProblems(a.doc, EXPERIMENTAL_STRUCTURES[a.kind], ctx.extensionNames)) {
     if (p.rule === "schema.unknown-field") c.warn("experimental.field", p.msg);
     else error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);

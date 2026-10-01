@@ -2,14 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:owp:schema:experimental:KnowledgeExtractionProfile:v1alpha1",
   "title": "KnowledgeExtractionProfile (experimental)",
-  "description": "Experimental asset kind (spec Appendix C.1). Violations are warnings, not errors.",
+  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
   "type": "object",
-  "required": [
-    "apiVersion",
-    "kind",
-    "metadata",
-    "spec"
-  ],
   "properties": {
     "apiVersion": {
       "const": "openworld/v1alpha1"
@@ -46,7 +40,7 @@
         },
         "parameters": {
           "type": "object",
-          "description": "Open container: parameter name -> {type: string|number|boolean}."
+          "description": "Parameter name -> {type: string|number|boolean}."
         },
         "query": {
           "type": "object",
@@ -79,7 +73,7 @@
               },
               "values": {
                 "type": "object",
-                "description": "Open container: values key -> result column."
+                "description": "Observation values key -> result column."
               },
               "multi": {
                 "type": "boolean"
@@ -114,6 +108,12 @@
     }
   },
   "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
   "$defs": {
     "extensions": {
       "description": "Extension data (spec section 13): declared extension name -> mapping.",

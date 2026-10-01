@@ -696,6 +696,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
 | `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
+| `experimental.delegation-exceeds-authority` | C.3 | a delegation grants actions or decisions the delegator's roles do not hold |
 | `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
@@ -725,10 +726,13 @@ The kinds below are marked `stability: experimental` in `vocab/asset-kinds.yaml`
 | Kind | Purpose | Main fields |
 |---|---|---|
 | `TaskSetProfile` | domain-specific bundle of work | `task.workPatterns`, `requires.worldViews`, `requires.knowledge`, `mayUse`, `produces.artifacts`, `evaluationRefs` |
-| `WorkPatternProfile` | domain-independent shape of work | `pattern.kind` (value set `workPatterns`), `inputs.semanticRoles`, `outputs.semanticRoles`, `optionalCapabilities` |
-| `ArtifactContract` | contract for an output a person or system keeps | `artifact.type`, `artifact.representation`, `structure`, `serialization.formats`, `delivery`, `governance` |
+| `WorkPatternProfile` | domain-independent shape of work (C.2) | `pattern.kind` (value set `workPatterns`), `pattern.family` (value set `workNodeFamilies`), `objective`, `inputContracts`, `outputContracts`, `graph`, `worldViewRef`, `governanceRefs`, `evaluationRefs` |
+| `ArtifactContract` | contract for an output a person or system keeps | `artifact.type`, `artifact.representation`, `structure`, `schemaRef`, `serialization.formats`, `storage`, `delivery`, `allowedOperations` (value set `artifactOperations`), `sourceRefs`, `evidenceRefs`, `governance`, `supersedes` |
 | `ArtifactTemplate` | template for an artifact contract | `artifactContractRef`, `format`, `content` (`path` or ExternalRef) |
-| `ConsumerRepresentationProfile` | how a View is delivered to one kind of actor | `actor.kind` (value set `actorKinds`), `worldViewRef`, `representation`, and one block named after the actor kind: `human`, `agent`, `model`, or `system` |
+| `ConsumerRepresentationProfile` | how a View is delivered to one kind of actor | `actor.kind` (value set `actorKinds`), `actor.ref` (ActorProfile), `worldViewRef`, `representation`, and one block named after the actor kind: `human`, `agent`, `model`, or `system` |
+| `ActorProfile` | someone or something that acts in a World (C.3) | `actorType` (value set `actorTypes`), `roleRefs`, `capabilityRefs`, `agentRef`, `memberOf` |
+| `RoleProfile` | what a role may do, decide, and answer for (C.3) | `permissions`, `authorities`, `responsibilities`, `accountabilities` |
+| `DelegationProfile` | a bounded, time-limited transfer of permission or authority (C.3) | `delegator`, `delegatee`, `scope`, `permittedActions`, `authorityCeiling`, `validFrom`, `expiresAt`, `revocation`, `escalation`, `evidenceRefs` |
 | `KnowledgeExtractionProfile` | turns query results over a knowledge graph into observations (C.1) | `source`, `parameters`, `query.language` (value set `queryLanguages`), `query.text`, `observations` |
 | `KnowledgeAsset` | reusable knowledge | `roles`, `representation`, `format`, `conformsTo`, `snapshot`, `content` (`path` or ExternalRef), `license`, `access`, `sensitivity` |
 
@@ -773,3 +777,37 @@ Running the query is outside this specification. Given the result rows (each a m
 5. `spec.provenance` records `extraction` (`<name>@<version>`, or the name when unversioned), `parameters` when any were given, and `snapshot` when known.
 
 Invalid input is `extraction.input` and nothing is produced. A State Compiler binding with `select: latest` that reads a type an extraction marks `multi: true` is the warning `compiler.multi-latest`; such types are read with `select: all`.
+
+### C.2 Work pattern graph
+
+A WorkPatternProfile describes a shape of work independent of any workflow engine. `graph` is optional:
+
+```yaml
+graph:
+  nodes:
+  - {id: gather, family: observe_knowledge}
+  - {id: hypothesize, family: analyze_reason}
+  - {id: test, family: evaluate_recover}
+  - {id: report, family: create_modify}
+  transitions:
+  - {from: gather, to: hypothesize}
+  - {from: hypothesize, to: test}
+  - {from: test, to: hypothesize, guard: hypothesis_rejected}
+  - {from: test, to: report, guard: hypothesis_supported}
+  guards: [{id: hypothesis_rejected}, {id: hypothesis_supported}]
+  events: [{id: new_evidence, triggers: [gather]}]
+  loops: [{nodes: [hypothesize, test], maxIterations: 5, until: hypothesis_supported}]
+```
+
+Node ids, guard ids, and event ids are unique strings. Transitions, events, and loops refer only to declared nodes and guards; `maxIterations` is a positive integer. Node families come from the value set `workNodeFamilies` (`observe_knowledge`, `analyze_reason`, `create_modify`, `decide_plan`, `execute_operate`, `evaluate_recover`); each work pattern in `workPatterns` names its family. A work pattern is semantic structure; a runtime graph (for example in a workflow engine) is an implementation of it and is bound through an extension (section 13).
+
+### C.3 Actors, roles, and delegation
+
+These kinds keep apart concepts that are often conflated:
+
+- An **actor** (ActorProfile) is a person, AI agent, team, organization, external institution, or automated system that acts in a World. A **role** (RoleProfile) is a position an actor occupies. A persona (a user-experience archetype) is not modeled.
+- A **capability** (CapabilityContract) is what an actor is able to achieve; a **permission** is what it is allowed to do on a system (`permissions[].actions` within a `scope`); an **authority** is what it may decide (`authorities[].decisions` within a `scope`, with an optional `ceiling`).
+- A **responsibility** is work an actor must perform; an **accountability** is an outcome it answers for.
+- An ActorProfile with `actorType: ai_agent` MAY point at an `AgentProfile` (`agentRef`) that describes how the agent is implemented; the ActorProfile describes its place in the World.
+
+A DelegationProfile transfers part of a delegator's permissions or authority to a delegatee for a `scope` and a period (`validFrom` before `expiresAt`, UTC timestamps). Its `permittedActions` and `authorityCeiling.decisions` stay within what the delegator's roles grant; otherwise the warning `experimental.delegation-exceeds-authority` applies. `revocation.by` and `escalation.to` name ActorProfiles. Organization-specific approval chains, HR evaluations, and legal liability are policy bindings outside this profile.

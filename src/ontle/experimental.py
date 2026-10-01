@@ -34,10 +34,23 @@ TABLES: dict[str, dict[str, Any]] = {
     }),
     "WorkPatternProfile": _document({
         "pattern": closed({"kind": VALUE, "family": VALUE}),
+        "objective": VALUE,
         "inputs": closed({"semanticRoles": VALUE}),
         "outputs": closed({"semanticRoles": VALUE}),
+        "inputContracts": VALUE,
+        "outputContracts": VALUE,
         "requiredContracts": VALUE,
         "optionalCapabilities": VALUE,
+        "graph": closed({
+            "nodes": array(closed({"id": VALUE, "family": VALUE, "patternKind": VALUE, "description": VALUE})),
+            "transitions": array(closed({"from": VALUE, "to": VALUE, "guard": VALUE, "event": VALUE})),
+            "guards": array(closed({"id": VALUE, "description": VALUE})),
+            "events": array(closed({"id": VALUE, "triggers": VALUE, "description": VALUE})),
+            "loops": array(closed({"nodes": VALUE, "maxIterations": VALUE, "until": VALUE})),
+        }),
+        "worldRef": VALUE,
+        "worldViewRef": VALUE,
+        "governanceRefs": VALUE,
         "evaluationRefs": VALUE,
     }),
     "ArtifactContract": _document({
@@ -50,6 +63,12 @@ TABLES: dict[str, dict[str, Any]] = {
         "serialization": closed({"formats": VALUE}),
         "delivery": closed({"destinations": VALUE}),
         "governance": closed({"approvalRequired": VALUE, "policyRefs": VALUE}),
+        "schemaRef": VALUE,
+        "sourceRefs": VALUE,
+        "evidenceRefs": VALUE,
+        "allowedOperations": VALUE,
+        "storage": closed({"kind": VALUE, "uri": VALUE}),
+        "supersedes": VALUE,
         "validationRefs": VALUE,
         "evaluationRefs": VALUE,
     }),
@@ -59,7 +78,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "content": CONTENT,
     }),
     "ConsumerRepresentationProfile": _document({
-        "actor": closed({"kind": VALUE}),
+        "actor": closed({"kind": VALUE, "ref": VALUE}),
         "worldViewRef": VALUE,
         "representation": closed({"mode": VALUE, "freshness": OPEN, "provenance": VALUE}),
         "human": closed({"artifactContractRefs": VALUE, "presentation": VALUE, "locale": VALUE,
@@ -92,6 +111,31 @@ TABLES: dict[str, dict[str, Any]] = {
             "type": VALUE, "id": VALUE, "values": OPEN, "multi": VALUE,
             "observedAt": closed({"column": VALUE, "default": VALUE}),
         })),
+    }),
+    "ActorProfile": _document({
+        "actorType": VALUE,
+        "roleRefs": VALUE,
+        "capabilityRefs": VALUE,
+        "agentRef": VALUE,
+        "memberOf": VALUE,
+    }),
+    "RoleProfile": _document({
+        "permissions": array(closed({"actions": VALUE, "scope": VALUE})),
+        "authorities": array(closed({"decisions": VALUE, "scope": VALUE, "ceiling": OPEN})),
+        "responsibilities": VALUE,
+        "accountabilities": VALUE,
+    }),
+    "DelegationProfile": _document({
+        "delegator": VALUE,
+        "delegatee": VALUE,
+        "scope": VALUE,
+        "permittedActions": VALUE,
+        "authorityCeiling": closed({"decisions": VALUE, "limits": OPEN}),
+        "validFrom": VALUE,
+        "expiresAt": VALUE,
+        "revocation": closed({"by": VALUE}),
+        "escalation": closed({"to": VALUE, "when": VALUE}),
+        "evidenceRefs": VALUE,
     }),
 }
 
@@ -142,9 +186,82 @@ def _check_local_ref(ref: Any, kinds: tuple[str, ...] | None, where: str, rel: s
         warnings.append(f"experimental.reference: {rel}: {where} {ref!r} is a {kind}, expected {' or '.join(kinds)}")
 
 
+def _file_in_package(root: Path, rel: Any) -> bool:
+    from .ontology import _inside
+    return _inside(root, rel)
+
+
+def _valid_timestamp(value: Any) -> bool:
+    from .ews import _valid_timestamp as valid  # local import: ews depends on core
+    return valid(value)
+
+
+def _delegator_grants(delegator: Any, local_kinds: dict[str, str], docs: dict[str, dict[str, Any]]) -> tuple[set[str], set[str]] | None:
+    """(permitted actions, decisions) the delegator's local roles grant, or None when the delegator is not a local ActorProfile."""
+    if local_kinds.get(delegator) != "ActorProfile":
+        return None
+    actions: set[str] = set()
+    decisions: set[str] = set()
+    for role in _values(((docs.get(delegator) or {}).get("spec") or {}).get("roleRefs")):
+        rspec = (docs.get(role) or {}).get("spec") or {}
+        for p in rspec.get("permissions") or []:
+            actions |= {a for a in _values(p.get("actions") if isinstance(p, dict) else None) if isinstance(a, str)}
+        for a in rspec.get("authorities") or []:
+            decisions |= {d for d in _values(a.get("decisions") if isinstance(a, dict) else None) if isinstance(d, str)}
+    return actions, decisions
+
+
+def _check_graph(graph: dict[str, Any], rel: str, declared: set[str], errors: list[str], warnings: list[str]) -> None:
+    """Work-pattern graph: unique node ids, known families, and references between nodes, guards, and events."""
+    if not graph:
+        return
+    def ids(section: str) -> list[Any]:
+        return [x.get("id") for x in graph.get(section) or [] if isinstance(x, dict)]
+    nodes = ids("nodes")
+    for section, seen_ids in (("nodes", nodes), ("guards", ids("guards")), ("events", ids("events"))):
+        duplicates = {i for i in seen_ids if seen_ids.count(i) > 1}
+        if duplicates or any(not isinstance(i, str) or not i for i in seen_ids):
+            warnings.append(f"experimental.field: {rel}: spec.graph.{section} need unique string ids")
+    for i, node in enumerate(graph.get("nodes") or []):
+        if isinstance(node, dict):
+            if "family" in node:
+                _check_value(node["family"], "workNodeFamilies", f"spec.graph.nodes[{i}].family", rel, declared, errors, warnings)
+            if "patternKind" in node:
+                _check_value(node["patternKind"], "workPatterns", f"spec.graph.nodes[{i}].patternKind", rel, declared, errors, warnings)
+    guards, events = set(ids("guards")), set(ids("events"))
+    for i, t in enumerate(graph.get("transitions") or []):
+        if not isinstance(t, dict):
+            continue
+        for end in ("from", "to"):
+            if t.get(end) not in nodes:
+                warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].{end} {t.get(end)!r} is not a node")
+        if t.get("guard") is not None and t["guard"] not in guards:
+            warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].guard {t['guard']!r} is not a declared guard")
+        if t.get("event") is not None and t["event"] not in events:
+            warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].event {t['event']!r} is not a declared event")
+    for i, e in enumerate(graph.get("events") or []):
+        for target in _values(e.get("triggers") if isinstance(e, dict) else None):
+            if target not in nodes:
+                warnings.append(f"experimental.reference: {rel}: spec.graph.events[{i}].triggers {target!r} is not a node")
+    for i, loop in enumerate(graph.get("loops") or []):
+        if not isinstance(loop, dict):
+            continue
+        for node in _values(loop.get("nodes")):
+            if node not in nodes:
+                warnings.append(f"experimental.reference: {rel}: spec.graph.loops[{i}].nodes {node!r} is not a node")
+        if loop.get("until") is not None and loop["until"] not in guards:
+            warnings.append(f"experimental.reference: {rel}: spec.graph.loops[{i}].until {loop['until']!r} is not a declared guard")
+        bound = loop.get("maxIterations")
+        integral = isinstance(bound, int) or (isinstance(bound, float) and bound.is_integer())  # JSON data model: 1.0 == 1
+        if bound is not None and (isinstance(bound, bool) or not integral or bound < 1):
+            warnings.append(f"experimental.field: {rel}: spec.graph.loops[{i}].maxIterations must be a positive integer")
+
+
 def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, spec_manifest: dict[str, Any],
-                        local_kinds: dict[str, str], declared: set[str]) -> tuple[list[str], list[str]]:
+                        local_kinds: dict[str, str], declared: set[str],
+                        docs: dict[str, dict[str, Any]] | None = None) -> tuple[list[str], list[str]]:
     """Errors (extension rules only) and warnings for one experimental asset document."""
+    docs = docs or {}
     errors: list[str] = []
     warnings: list[str] = []
     for issue in structure.structure_errors(doc, TABLES[kind], rel, declared):
@@ -172,6 +289,14 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             warnings.append(f"experimental.field: {rel}: spec.pattern.kind is required")
         else:
             _check_value(sub("pattern")["kind"], "workPatterns", "spec.pattern.kind", rel, declared, errors, warnings)
+        if "family" in sub("pattern"):
+            _check_value(sub("pattern")["family"], "workNodeFamilies", "spec.pattern.family", rel, declared, errors, warnings)
+        for field in ("inputContracts", "outputContracts"):
+            for ref in _values(spec.get(field)):
+                _check_local_ref(ref, ("ArtifactContract",), f"spec.{field}", rel, local_kinds, warnings)
+        if spec.get("worldViewRef") is not None:
+            _check_local_ref(spec["worldViewRef"], ("WorldViewProfile",), "spec.worldViewRef", rel, local_kinds, warnings)
+        _check_graph(sub("graph"), rel, declared, errors, warnings)
     elif kind == "ArtifactContract":
         artifact = sub("artifact")
         if "type" not in artifact:
@@ -180,6 +305,14 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             _check_value(artifact["type"], "artifactTypes", "spec.artifact.type", rel, declared, errors, warnings)
         if "representation" in artifact:
             _check_value(artifact["representation"], "artifactRepresentations", "spec.artifact.representation", rel, declared, errors, warnings)
+        for v in _values(spec.get("allowedOperations")):
+            _check_value(v, "artifactOperations", "spec.allowedOperations", rel, declared, errors, warnings)
+        if spec.get("schemaRef") is not None and not _file_in_package(root, spec["schemaRef"]):
+            warnings.append(f"experimental.reference: {rel}: spec.schemaRef {spec['schemaRef']!r} must be a file in the package")
+        from .core import PINNED_REF_RE  # local import: core imports this module
+        supersedes = spec.get("supersedes")
+        if supersedes is not None and not (isinstance(supersedes, str) and PINNED_REF_RE.match(supersedes)):
+            warnings.append(f"experimental.field: {rel}: spec.supersedes must be a pinned <name>@<version> reference")
     elif kind == "ArtifactTemplate":
         _check_local_ref(spec.get("artifactContractRef"), ("ArtifactContract",), "spec.artifactContractRef", rel, local_kinds, warnings)
         _check_content(sub("content"), rel, root, declared, errors, warnings)
@@ -190,6 +323,8 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
         else:
             _check_value(actor, "actorKinds", "spec.actor.kind", rel, declared, errors, warnings)
         _check_local_ref(spec.get("worldViewRef"), ("WorldViewProfile",), "spec.worldViewRef", rel, local_kinds, warnings)
+        if sub("actor").get("ref") is not None:
+            _check_local_ref(sub("actor")["ref"], ("ActorProfile",), "spec.actor.ref", rel, local_kinds, warnings)
         present = [b for b in ACTOR_BLOCKS if b in spec]
         if isinstance(actor, str) and actor in ACTOR_BLOCKS and present not in ([], [actor]):
             warnings.append(f"experimental.field: {rel}: only the spec.{actor} block may be present for actor kind {actor} (found {', '.join(present)})")
@@ -214,6 +349,40 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             if ontology not in dependency_refs:
                 warnings.append(f"experimental.reference: {rel}: spec.conformsTo.ontology {ontology!r} must also be listed in spec.dependencies")
         _check_content(sub("content"), rel, root, declared, errors, warnings)
+    elif kind == "ActorProfile":
+        if "actorType" not in spec:
+            warnings.append(f"experimental.field: {rel}: spec.actorType is required")
+        else:
+            _check_value(spec["actorType"], "actorTypes", "spec.actorType", rel, declared, errors, warnings)
+        for ref in _values(spec.get("roleRefs")):
+            _check_local_ref(ref, ("RoleProfile",), "spec.roleRefs", rel, local_kinds, warnings)
+        for ref in _values(spec.get("capabilityRefs")):
+            _check_local_ref(ref, ("CapabilityContract",), "spec.capabilityRefs", rel, local_kinds, warnings)
+        if spec.get("agentRef") is not None:
+            _check_local_ref(spec["agentRef"], ("AgentProfile",), "spec.agentRef", rel, local_kinds, warnings)
+        for ref in _values(spec.get("memberOf")):
+            _check_local_ref(ref, ("ActorProfile",), "spec.memberOf", rel, local_kinds, warnings)
+    elif kind == "DelegationProfile":
+        for field in ("delegator", "delegatee"):
+            _check_local_ref(spec.get(field), ("ActorProfile",), f"spec.{field}", rel, local_kinds, warnings)
+        for field in ("by",):
+            for ref in _values(sub("revocation").get(field)):
+                _check_local_ref(ref, ("ActorProfile",), "spec.revocation.by", rel, local_kinds, warnings)
+        for ref in _values(sub("escalation").get("to")):
+            _check_local_ref(ref, ("ActorProfile",), "spec.escalation.to", rel, local_kinds, warnings)
+        start, end = spec.get("validFrom"), spec.get("expiresAt")
+        for field, value in (("validFrom", start), ("expiresAt", end)):
+            if value is not None and not _valid_timestamp(value):
+                warnings.append(f"experimental.field: {rel}: spec.{field} must be UTC YYYY-MM-DDTHH:MM:SSZ")
+        if _valid_timestamp(start) and _valid_timestamp(end) and not start < end:
+            warnings.append(f"experimental.field: {rel}: spec.validFrom must be before spec.expiresAt")
+        granted = _delegator_grants(spec.get("delegator"), local_kinds, docs)
+        if granted is not None:
+            actions, decisions = granted
+            over = [a for a in _values(spec.get("permittedActions")) if a not in actions | decisions]
+            over += [d for d in _values(sub("authorityCeiling").get("decisions")) if d not in decisions]
+            if over:
+                warnings.append(f"experimental.delegation-exceeds-authority: {rel}: delegates {', '.join(map(str, over))}, which the delegator's roles do not grant")
     elif kind == "KnowledgeExtractionProfile":
         _check_local_ref(spec.get("source"), ("KnowledgeAsset",), "spec.source", rel, local_kinds, warnings)
         if "language" not in sub("query"):

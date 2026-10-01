@@ -604,6 +604,71 @@ cases:
     satisfiedProfile: model-ready
     warnings: [compiler.multi-latest]
     rule: "Reading a multi-valued extracted type with select: latest is a warning."
+  artifact-contract-full:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental]
+    rule: "ArtifactContract keeps type, representation, format, and storage apart and lists allowed operations."
+  artifact-operation-unknown:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.value]
+    rule: "allowedOperations come from the value set artifactOperations."
+  artifact-supersedes-unpinned:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "supersedes is a pinned <name>@<version> reference."
+  work-pattern-graph:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental]
+    rule: "A work pattern graph of nodes, transitions, guards, events, and loops."
+  work-pattern-graph-dangling:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "Transitions refer to declared nodes."
+  work-pattern-graph-duplicate-node:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "Node ids are unique."
+  work-pattern-node-family-unknown:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.value]
+    rule: "Node families come from the value set workNodeFamilies."
+  work-pattern-loop-bound:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "maxIterations is a positive integer."
+  actor-role-delegation:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental]
+    rule: "Actors occupy roles that grant permissions and authority; a delegation stays within the delegator's grants."
+  actor-type-unknown:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.value]
+    rule: "actorType comes from the value set actorTypes; persona is not an actor type."
+  delegation-exceeds-authority:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.delegation-exceeds-authority]
+    rule: "A delegation cannot grant actions or decisions the delegator's roles do not hold."
+  delegation-bad-period:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "validFrom is before expiresAt."
+  consumer-actor-ref:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "ConsumerRepresentationProfile actor.ref names an ActorProfile."
 resolutionCases:
   grounded:
     valid: true

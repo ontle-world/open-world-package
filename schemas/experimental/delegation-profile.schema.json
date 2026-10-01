@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:experimental:DelegationProfile:v1alpha1",
+  "title": "DelegationProfile (experimental)",
+  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "DelegationProfile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "delegator": {
+          "type": "string"
+        },
+        "delegatee": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "permittedActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authorityCeiling": {
+          "type": "object",
+          "properties": {
+            "decisions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "limits": {
+              "type": "object",
+              "description": "Open container: keys are not checked."
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "validFrom": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "revocation": {
+          "type": "object",
+          "properties": {
+            "by": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "escalation": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "when": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "externalRef": {
+      "description": "Reference to an artifact outside the package (spec section 5.1).",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "anyOf": [
+            {
+              "enum": [
+                "huggingface",
+                "oci",
+                "git",
+                "https",
+                "s3",
+                "gcs",
+                "doi"
+              ]
+            },
+            {
+              "pattern": "^[a-z][a-z0-9-]{0,62}:.+$"
+            }
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "bound",
+            "unbound"
+          ],
+          "default": "bound"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

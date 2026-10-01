@@ -1,0 +1,23 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  pattern: {kind: diagnose, family: analyze_reason}
+  objective: identify_root_cause
+  worldViewRef: views/task.yaml
+  graph:
+    nodes:
+    - {id: gather, family: observe_knowledge}
+    - {id: hypothesize, family: analyze_reason}
+    - {id: test, family: evaluate_recover}
+    - {id: report, family: create_modify}
+    transitions:
+    - {from: gather, to: hypothesize}
+    - {from: hypothesize, to: test}
+    - {from: test, to: hypothesize, guard: rejected}
+    - {from: test, to: report, guard: supported}
+    guards: [{id: rejected}, {id: supported}]
+    events: [{id: new_evidence, triggers: [gather]}]
+    loops: [{nodes: [hypothesize, test], maxIterations: 0, until: supported}]

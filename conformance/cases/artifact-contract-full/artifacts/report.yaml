@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  artifact: {type: report, representation: document}
+  schemaRef: schemas/report.schema.json
+  serialization: {formats: [docx]}
+  storage: {kind: object_store, uri: 's3://reports/'}
+  allowedOperations: [create, edit, validate, version, publish]
+  sourceRefs: []
+  evidenceRefs: []
+  supersedes: report@0.0.1

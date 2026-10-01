@@ -45,8 +45,7 @@
           "type": "string"
         },
         "format": {
-          "type": "string",
-          "description": "Serialization of the content, for example turtle, nquads, jsonld, csv, parquet."
+          "type": "string"
         },
         "conformsTo": {
           "type": "object",

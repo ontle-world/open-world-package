@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata: {name: planning-agent}
+spec:
+  actor: {kind: agent, ref: actors/planning-agent.yaml}
+  worldViewRef: views/scientist.yaml
+  representation: {mode: structured_context, freshness: {maxAge: PT4H}, provenance: required}
+  agent:
+    toolScope: {capabilityRefs: [capabilities/assay-design.yaml]}
+    memoryScope: {retention: campaign}
+    feasibleActions: [schedule_run]
+    contextBudget: {maxItems: 200}

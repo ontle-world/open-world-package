@@ -38,4 +38,8 @@ spec:
   - {kind: EvaluationProfile, path: eval/assay-validation.yaml}
   - {kind: ScenarioProfile, path: scenarios/reagent-change.yaml}
   - {kind: TaskSetProfile, path: tasks/optimize-assay.yaml}
+  - {kind: KnowledgeAsset, path: knowledge/plate-graph.yaml}
+  - {kind: KnowledgeAsset, path: knowledge/sop-library.yaml}
+  - {kind: KnowledgeExtractionProfile, path: extraction/campaign-wells.yaml}
+  - {kind: ConsumerRepresentationProfile, path: consumers/planning-agent.yaml}
   - {kind: PackageExample, path: examples/baseline-observations.yaml}

@@ -4,6 +4,26 @@ metadata:
   name: prioritize
 spec:
   pattern: {kind: prioritize, family: decide_plan}
+  objective: rank_accounts_by_expected_value
   inputs: {semanticRoles: [candidate, objective, evidence, constraint]}
   outputs: {semanticRoles: [priority, recommendation]}
+  outputContracts: [artifacts/priority-board.yaml]
   optionalCapabilities: [rule, llm, ml_ranking, solver]
+  worldViewRef: views/account-manager.yaml
+  graph:
+    nodes:
+    - {id: collect, family: observe_knowledge, patternKind: retrieve}
+    - {id: score, family: analyze_reason, patternKind: analyze}
+    - {id: rank, family: decide_plan, patternKind: prioritize}
+    - {id: review, family: evaluate_recover, patternKind: review}
+    - {id: publish, family: execute_operate, patternKind: publish}
+    transitions:
+    - {from: collect, to: score}
+    - {from: score, to: rank}
+    - {from: rank, to: review}
+    - {from: review, to: score, guard: manager_rejects}
+    - {from: review, to: publish, guard: manager_approves}
+    - {from: publish, to: collect, event: quarter_rollover}
+    guards: [{id: manager_rejects}, {id: manager_approves}]
+    events: [{id: quarter_rollover, triggers: [collect]}]
+    loops: [{nodes: [score, rank, review], maxIterations: 3, until: manager_approves}]

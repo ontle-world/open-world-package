@@ -5,6 +5,13 @@ metadata:
   name: manipulation-basic
   version: 0.2.0
 spec:
+  assessmentKind: evaluation
+  subject: {kind: model, ref: openworld-examples/multimodal-action-world-model@0.1.0}
+  objective: verified_pick_and_place
+  criteria:
+  - {metric: task_success, rubric: object pose verified in the target zone, threshold: 0.9}
+  - {metric: constraint_violation_rate, rubric: share of episodes with a safety violation, threshold: 0.01}
+  verifierRef: pick-place-effect-verifier@0.1.0
   tasks: [pick_place]
   metrics: [task_success, constraint_violation_rate, effect_verified_rate]
   supersedes: manipulation-basic@0.1.0

@@ -1,0 +1,22 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: region-contacts
+  version: 0.1.0
+spec:
+  source: knowledge/account-graph.yaml
+  parameters:
+    region: {type: string}
+  query:
+    language: sparql
+    text: |
+      PREFIX s: <https://w3id.org/openworld-examples/sales#>
+      SELECT ?account ?contact ?title WHERE {
+        ?account s:region $region ; s:hasContact ?contact .
+        ?contact s:title ?title .
+      }
+  observations:
+  - type: KG.account_contact
+    id: [account, contact]
+    values: {title: title}
+    multi: true

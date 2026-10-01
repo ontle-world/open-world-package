@@ -1,0 +1,7 @@
+@prefix l: <https://w3id.org/openworld-examples/lab#> .
+
+# Illustrative plate layout graph; no real laboratory data.
+l:plate-7 a l:Plate ; l:campaign "C-1" ; l:hasWell l:A1 , l:A2 , l:B1 .
+l:A1 l:control "positive" ; l:reagentLot "R-11" .
+l:A2 l:control "negative" ; l:reagentLot "R-11" .
+l:B1 l:control "sample" ; l:reagentLot "R-12" .

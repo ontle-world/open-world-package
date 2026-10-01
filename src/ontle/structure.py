@@ -6,6 +6,7 @@ its listed fields plus an ``extensions`` block; an open object accepts any key.
 """
 from __future__ import annotations
 
+import difflib
 import re
 from typing import Any
 
@@ -221,7 +222,9 @@ def _walk(value: Any, node: Any, path: str, where: str, declared: set[str] | Non
         elif key in fields:
             _walk(sub, fields[key], child, where, declared, errors)
         else:
-            errors.append(f"schema.unknown-field: {where}: {child} is not a defined field (extension data belongs in an extensions block)")
+            close = difflib.get_close_matches(str(key), list(fields), n=1, cutoff=0.75)
+            hint = f"; did you mean {close[0]!r}?" if close else " (extension data belongs in an extensions block)"
+            errors.append(f"schema.unknown-field: {where}: {child} is not a defined field{hint}")
 
 
 def extension_block_errors(block: Any, path: str, where: str, declared: set[str] | None) -> list[str]:

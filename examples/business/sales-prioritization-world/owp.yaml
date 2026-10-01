@@ -41,6 +41,10 @@ spec:
     path: artifacts/priority-board.yaml
   - kind: KnowledgeAsset
     path: knowledge/win-loss-playbook.yaml
+  - kind: KnowledgeAsset
+    path: knowledge/account-graph.yaml
+  - kind: KnowledgeExtractionProfile
+    path: extraction/region-contacts.yaml
   - kind: CapabilityContract
     path: capabilities/crm-read.yaml
   - kind: ActorProfile

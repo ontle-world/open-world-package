@@ -6,6 +6,7 @@ spec:
   requires:
     worldViews: [views/scientist.yaml]
     actors: [actors/scientist.yaml, actors/planning-agent.yaml, actors/lab-robot.yaml]
+    knowledge: [knowledge/sop-library.yaml, knowledge/plate-graph.yaml]
   workPatternRefs: [patterns/design-test-learn.yaml]
   mayUse:
     capabilities: [capabilities/assay-design.yaml]

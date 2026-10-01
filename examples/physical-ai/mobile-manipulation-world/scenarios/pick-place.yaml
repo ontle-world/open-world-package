@@ -4,3 +4,12 @@ metadata:
   name: pick-place
 spec:
   objective: Pick a target object and place it in the target zone without violating safety constraints.
+  baselineStateRef: examples/expected-ews.yaml
+  assumptions: [object_mass_within_gripper_limit, lighting_nominal]
+  intervention: {action: reach_and_grasp, target: target_object}
+  engine: {kind: simulation, ref: environment/reference-environment.yaml}
+  timeHorizon: PT30S
+  constraints: [safety_constraints]
+  uncertainty: {graspSuccess: {low: 0.8, high: 0.95}}
+  confidence: 0.8
+  expectedOutcome: {objectInTargetZone: true}

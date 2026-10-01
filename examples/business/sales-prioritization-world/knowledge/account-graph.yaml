@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeAsset
+metadata:
+  name: account-graph
+  version: 2026.10.1
+spec:
+  roles: [graph]
+  representation: graph
+  format: turtle
+  snapshot: {asOf: "2026-10-01T00:00:00Z"}
+  content: {path: kg/accounts.ttl}
+  access: private
+  sensitivity: confidential

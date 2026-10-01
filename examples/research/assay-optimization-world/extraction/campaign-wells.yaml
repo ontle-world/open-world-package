@@ -1,0 +1,21 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: campaign-wells
+  version: 0.1.0
+spec:
+  source: knowledge/plate-graph.yaml
+  parameters:
+    campaign: {type: string}
+  query:
+    language: sparql
+    text: |
+      PREFIX l: <https://w3id.org/openworld-examples/lab#>
+      SELECT ?plate ?well ?control ?lot WHERE {
+        ?plate l:campaign $campaign ; l:hasWell ?well .
+        ?well l:control ?control ; l:reagentLot ?lot .
+      }
+  observations:
+  - type: KG.well_layout
+    id: [plate, well]
+    values: {control: control, reagentLot: lot}

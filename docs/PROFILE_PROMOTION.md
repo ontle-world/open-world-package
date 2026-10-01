@@ -19,18 +19,18 @@ When a profile is promoted, its warnings become errors where the spec says MUST,
 
 | Profile | Semantic | Portability | Example domains | Machine contract | Interoperability |
 |---|---|---|---|---|---|
-| ActorProfile, RoleProfile, DelegationProfile (C.3) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations |
-| WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations |
-| WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, research | schema, cases | 2 implementations |
-| ArtifactContract (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations |
-| EvaluationProfile fields (C.4) | reviewed | yes | manufacturing, research | schema, cases | 2 implementations |
-| ScenarioProfile fields (C.4) | reviewed | yes | manufacturing, research | schema, cases | 2 implementations |
-| CapabilityContract fields (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations |
-| TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations |
-| KnowledgeAsset (C) | reviewed | yes | manufacturing, sales | schema, cases | 2 implementations |
-| KnowledgeExtractionProfile (C.1) | reviewed | yes | manufacturing | schema, cases | 2 implementations |
-| ConsumerRepresentationProfile (C) | reviewed | yes | manufacturing, sales | schema, cases | 2 implementations |
+| ActorProfile, RoleProfile, DelegationProfile (C.3) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| ArtifactContract (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| EvaluationProfile fields (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
+| ScenarioProfile fields (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
+| CapabilityContract fields (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| KnowledgeAsset (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| KnowledgeExtractionProfile (C.1) | reviewed | yes | manufacturing, sales, research | schema, cases, extraction suite | 2 implementations, round trips |
+| ConsumerRepresentationProfile (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 
-Profiles used in fewer than three domains do not yet pass the Example gate.
+Round trips: every example and valid conformance case keeps its verdict, error ids, and warning ids after `ontle pack` and unpacking (`tests/test_roundtrip.py`) and after every YAML file is re-serialized in a different layout (Python `tests/test_roundtrip.py`, TypeScript `scripts/check-roundtrip.mjs`).
 
-"Reviewed" means the maintainers checked the semantic gate; independent review is still open for every profile. Round-trip export and import tests are not yet in the suite. Both implementations live in this repository, so interoperability evidence from an independently maintained implementation is also still open (see `ROADMAP.md` section 6).
+Still open for every profile: independent review of the semantic gate, an implementation maintained outside this repository (see `ROADMAP.md` section 6), and the maintainers' publication decision.

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Every experimental profile is used in at least three example domains (manufacturing, sales, research, robotics); see `docs/PROFILE_PROMOTION.md`.
+- Round-trip checks: `tests/test_roundtrip.py` (pack/unpack and YAML re-serialization) and the TypeScript `scripts/check-roundtrip.mjs`.
+- `schema.unknown-field` messages suggest the closest defined field. `docs/QUICKSTART.md` covers ontology binding, actors and tasks, extensions, and publishing.
 - Add `docs/GLOSSARY.md` (actor, role, capability, permission, authority, responsibility, accountability, artifact type/representation/format/storage, verification/validation/evaluation/review/approval, scenario) and `docs/PROFILE_PROMOTION.md` (gates and status for experimental profiles).
 - `ontle add actor|role|delegation|capability`; `ontle inspect --graph` shows actor, role, delegation, view, task, evaluation, and scenario relations.
 - Examples: `research/assay-optimization-world` (third domain); `manufacturing-quality-world` and `sales-prioritization-world` gain actors, roles, delegations, capabilities, a work pattern graph, an evaluation, and a scenario.

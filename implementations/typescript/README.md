@@ -13,8 +13,9 @@ Requires Node.js 20 or later.
 ```bash
 npm ci
 npm run build
-npm test                # build + vocab check + conformance + examples
-npm run vocab           # checks src/vocab.ts against ../../vocab/asset-kinds.yaml
+npm test                # build + vocab check + conformance + examples + round trip
+npm run vocab           # checks src/vocab.ts against ../../vocab/asset-kinds.yaml and value-sets.yaml
+npm run roundtrip       # re-serializes every example and valid case in flow style; verdicts and ids must not change
 npm run conformance     # runs ../../conformance (all five sections)
 npm run examples        # validates ../../examples, resolves models, compiles example EWS
 
@@ -78,6 +79,7 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | distribution | + lock `owp-lock/v1alpha2` externals and vendoring checks, detached evidence (9.1), local `index:` sources (11.1); no new conformance cases (checked against reference-built archives and indexes) | 212/212 (includes two later extraction cases) (maintainer update, not clean-room) |
 | work, artifacts, actors | + work pattern graphs (C.2), ArtifactContract additions, ActorProfile, RoleProfile, DelegationProfile (C.3), `experimental.delegation-exceeds-authority`; 13 validation cases | 223/223 after the update (maintainer update, not clean-room) |
 | standard-kind fields | + defined fields for WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract; their experimental fields (C.4); TaskSetProfile composition; 13 validation cases | 236/236 after the update (maintainer update, not clean-room) |
+| round trip | + `scripts/check-roundtrip.mjs` (docs/PROFILE_PROMOTION.md, Interoperability): every example and every valid case keeps its verdict, error ids, and warning ids after YAML re-serialization | 72/72 packages |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 

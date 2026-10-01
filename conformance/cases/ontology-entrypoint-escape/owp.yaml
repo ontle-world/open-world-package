@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: conformance
+  name: onto
+  version: 0.1.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://example.org/q#
+    entrypoints:
+    - {path: ../ontology-bad-iri/ONTOLOGY.md, format: turtle, role: labels}
+  assets: []

@@ -276,7 +276,7 @@
         },
         "conformance": {
           "type": "object",
-          "description": "WorldPackage only. Profiles are cumulative; absent means descriptive.",
+          "description": "WorldPackage or OntologyPackage. Profiles are cumulative.",
           "properties": {
             "profile": {
               "enum": [
@@ -284,7 +284,11 @@
                 "viewable",
                 "stateful",
                 "model-ready",
-                "action-ready"
+                "action-ready",
+                "vocabulary",
+                "schema",
+                "constrained",
+                "mapped"
               ]
             },
             "extensions": {
@@ -301,7 +305,96 @@
         },
         "ontology": {
           "type": "object",
-          "description": "OntologyPackage only. Open container in this alpha."
+          "description": "OntologyPackage only (spec section 3.1).",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "iri": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:\\S+$"
+            },
+            "prefixes": {
+              "type": "object",
+              "description": "Prefix name -> namespace IRI.",
+              "propertyNames": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "entrypoints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "format",
+                  "role"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "format": {
+                    "enum": [
+                      "owp-yaml",
+                      "turtle",
+                      "jsonld",
+                      "owl-xml",
+                      "ntriples",
+                      "linkml",
+                      "sssom-tsv"
+                    ]
+                  },
+                  "role": {
+                    "enum": [
+                      "schema",
+                      "shapes",
+                      "mappings",
+                      "labels"
+                    ]
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "termIndex": {
+              "type": "string",
+              "minLength": 1
+            },
+            "externalImports": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "iri",
+                  "ref"
+                ],
+                "properties": {
+                  "iri": {
+                    "type": "string"
+                  },
+                  "ref": {
+                    "$ref": "#/$defs/externalRef"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
         },
         "extensionDefinition": {
           "type": "object",

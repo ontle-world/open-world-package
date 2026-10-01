@@ -55,8 +55,10 @@ export interface Context {
   extensionNames: Set<string>;
   errors: Issue[];
   warnings: Issue[];
-  satisfiedProfile?: Profile | null;
-  declaredProfile?: Profile;
+  /** Highest satisfied conformance profile: a World profile (spec 6.1) or an ontology profile (spec 3.1). */
+  satisfiedProfile?: string | null;
+  /** Declared (or, for a WorldPackage, defaulted) conformance profile. */
+  declaredProfile?: string;
 }
 
 export function error(ctx: Pick<Context, "errors">, code: string, message: string, file?: string): void {

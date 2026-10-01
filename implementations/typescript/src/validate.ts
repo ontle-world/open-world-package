@@ -1,11 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Context, error, Issue, Profile, warn } from "./context.js";
+import { Context, error, Issue, warn } from "./context.js";
 import { checkManifest } from "./rules/manifest.js";
 import { checkSemanticAssetShape, collectAssets } from "./rules/assets.js";
 import { checkWorldPackage } from "./rules/world.js";
 import { checkWorldModelPackage, Grounding } from "./rules/worldmodel.js";
 import { checkEvaluation } from "./rules/evaluation.js";
+import { checkOntologyPackage } from "./rules/ontology.js";
 import { checkDependencies } from "./rules/dependencies.js";
 import { checkAssetStructure, checkExtensionDeclarations, checkExtensionDefinition, checkManifestStructure } from "./rules/extensions.js";
 import { isObj, loadYamlFile } from "./util.js";
@@ -17,10 +18,10 @@ export interface ValidationResult {
   valid: boolean;
   errors: Issue[];
   warnings: Issue[];
-  /** WorldPackage only: highest profile satisfied independent of the declaration (null if none). */
-  satisfiedProfile?: Profile | null;
-  /** WorldPackage only: the declared (or defaulted) profile. */
-  declaredProfile?: Profile;
+  /** WorldPackage and OntologyPackage: highest profile satisfied independent of the declaration (null if none). */
+  satisfiedProfile?: string | null;
+  /** WorldPackage: the declared (or defaulted) profile; OntologyPackage: the declared profile, if any. */
+  declaredProfile?: string;
   kind?: string;
   identity?: string;
 }
@@ -95,14 +96,13 @@ export function validatePackage(dir: string): ValidationResult {
       grounding = checkWorldModelPackage(ctx);
       break;
     case "OntologyPackage":
-      // Appendix A `ontology.spec` (no body text in the spec): OntologyPackage requires spec.ontology.
-      if (!isObj(ctx.manifest.spec) || ctx.manifest.spec.ontology === undefined) {
-        error(ctx, "ontology.spec", "OntologyPackage requires spec.ontology", "owp.yaml");
-      }
+      checkOntologyPackage(ctx);
       break;
   }
-  if (ctx.packageKind !== "WorldPackage" && isObj(ctx.manifest.spec) && ctx.manifest.spec.conformance !== undefined) {
-    warn(ctx, "manifest.conformance-ignored", "spec.conformance applies to WorldPackage only and is ignored", "owp.yaml");
+  // Spec 3.1 / 6.1: conformance profiles exist for WorldPackage and OntologyPackage only.
+  const hasProfiles = ctx.packageKind === "WorldPackage" || ctx.packageKind === "OntologyPackage";
+  if (!hasProfiles && isObj(ctx.manifest.spec) && ctx.manifest.spec.conformance !== undefined) {
+    warn(ctx, "manifest.conformance-ignored", "spec.conformance applies to WorldPackage and OntologyPackage only and is ignored", "owp.yaml");
   }
   checkEvaluation(ctx, grounding);
 
@@ -113,7 +113,7 @@ export function validatePackage(dir: string): ValidationResult {
     kind: ctx.packageKind || undefined,
     identity: ctx.identity,
   };
-  if (ctx.packageKind === "WorldPackage") {
+  if (ctx.packageKind === "WorldPackage" || ctx.packageKind === "OntologyPackage") {
     result.satisfiedProfile = ctx.satisfiedProfile ?? null;
     result.declaredProfile = ctx.declaredProfile;
   }

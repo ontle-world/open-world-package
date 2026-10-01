@@ -36,6 +36,29 @@ COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
 
+ONTOLOGY = closed({
+    "description": VALUE,
+    "iri": VALUE,
+    "prefixes": OPEN,
+    "entrypoints": array(closed({"path": VALUE, "format": VALUE, "role": VALUE})),
+    "termIndex": VALUE,
+    "externalImports": array(closed({"iri": VALUE, "ref": EXTERNAL_REF})),
+})
+
+
+SEMANTIC_PROFILE = closed({"apiVersion": VALUE, "kind": VALUE, "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}), "spec": closed({
+    "types": array(closed({
+        "id": VALUE, "label": OPEN, "description": VALUE, "subClassOf": VALUE, "enum": VALUE,
+        "properties": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "range": VALUE, "cardinality": VALUE})),
+    })),
+    "relations": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "domain": VALUE, "range": VALUE})),
+})}, extensions=False)
+
+TERM_INDEX = closed({"apiVersion": VALUE, "kind": VALUE, "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}), "spec": closed({
+    "terms": array(closed({"iri": VALUE, "type": VALUE, "label": VALUE})),
+})}, extensions=False)
+
+
 MANIFEST = closed({
     "apiVersion": VALUE,
     "kind": VALUE,
@@ -62,7 +85,7 @@ MANIFEST = closed({
             "temporal": OPEN,
             "validity": OPEN,
         }),
-        "ontology": OPEN,
+        "ontology": ONTOLOGY,
         "extensionDefinition": closed({"description": VALUE, "kinds": VALUE, "schemas": VALUE}),
         "domains": VALUE,
         "capabilities": VALUE,
@@ -103,7 +126,11 @@ EFFECTIVE_WORLD_STATE = closed({
 
 # Asset kinds whose document fields are defined; other kinds are checked only for
 # top-level metadata/spec extension blocks.
-ASSET_STRUCTURES = {"CompatibilityEvidence": COMPATIBILITY_EVIDENCE}
+ASSET_STRUCTURES = {
+    "CompatibilityEvidence": COMPATIBILITY_EVIDENCE,
+    "SemanticProfile": SEMANTIC_PROFILE,
+    "OntologyTermIndex": TERM_INDEX,
+}
 
 
 def structure_errors(doc: Any, table: dict[str, Any], where: str, declared: set[str] | None) -> list[str]:

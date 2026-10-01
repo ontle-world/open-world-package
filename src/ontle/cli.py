@@ -8,8 +8,9 @@ from pathlib import Path
 import yaml
 
 from . import __version__
-from .core import OWPError, deterministic_pack, inspect_package, validate_package, verify_archive
+from .core import OWPError, deterministic_pack, inspect_package, load_manifest, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
+from .ontology import export_rdf, write_term_index
 from .resolve import resolve_package, validate_resolved
 from .scaffold import add_asset, add_extension, init_project
 
@@ -56,6 +57,20 @@ def cmd_ews_check(args):
     for e in errors:
         print(f"ERROR: {e}", file=sys.stderr)
     return 1
+
+
+def cmd_ontology_index(args):
+    root, _ = load_manifest(args.path)
+    print(write_term_index(root, root / "owp.yaml"))
+    return 0
+
+
+def cmd_export(args):
+    root, manifest = load_manifest(args.path)
+    if manifest.get("kind") != "OntologyPackage":
+        raise OWPError("ontle export reads an OntologyPackage")
+    print(export_rdf(root, manifest, args.format), end="")
+    return 0
 
 
 def cmd_inspect(args):
@@ -130,6 +145,17 @@ def build_parser():
     x.add_argument("--graph", action="store_true", help="include the reference graph between the package, its dependencies, and its assets")
     x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes applied")
     x.set_defaults(func=cmd_inspect)
+
+    x = sp.add_parser("ontology", help="ontology tooling")
+    osp = x.add_subparsers(dest="ontology_command", required=True)
+    y = osp.add_parser("index", help="write spec.ontology.termIndex from the schema entrypoints (RDF needs: pip install 'ontle-open-world[rdf]')")
+    y.add_argument("path", nargs="?", default=".")
+    y.set_defaults(func=cmd_ontology_index)
+
+    x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
+    x.add_argument("path", nargs="?", default=".")
+    x.add_argument("--format", choices=["turtle", "jsonld"], default="turtle")
+    x.set_defaults(func=cmd_export)
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")

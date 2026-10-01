@@ -3,5 +3,7 @@ kind: SemanticProfile
 metadata:
   name: core
 spec:
-  types: []
+  types:
+  - id: ex:Thing
+    label: {en: Thing}
   relations: []

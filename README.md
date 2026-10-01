@@ -86,12 +86,17 @@ ontle add artifact priority-board
 ontle add consumer sales-manager
 ontle add knowledge win-loss-playbook
 ontle inspect . --graph --resolved-views
+
+# ontology packages
+ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle-open-world[rdf]')
+ontle export --format turtle
 ```
 
 ## Examples
 
 - `examples/business/manufacturing-quality-world` — business/manufacturing World package
 - `examples/business/quality-transition-world-model` — World Model bound to a business World
+- `examples/ontology/quality-ontology` — ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World
 - `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers (experimental kinds)
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package

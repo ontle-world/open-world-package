@@ -1,0 +1,23 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld-examples
+  name: quality-ontology
+  version: 0.1.0
+  title: Manufacturing Quality Ontology
+  license: Apache-2.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/openworld-examples/quality#
+    prefixes:
+      q: https://w3id.org/openworld-examples/quality#
+    entrypoints:
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+    - {path: semantics/shapes.ttl, format: turtle, role: shapes}
+    - {path: mappings/isa95.sssom.tsv, format: sssom-tsv, role: mappings}
+  conformance:
+    profile: mapped
+  assets:
+  - kind: SemanticProfile
+    path: semantics/core.yaml

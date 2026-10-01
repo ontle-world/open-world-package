@@ -28,7 +28,7 @@ rules:
   asset.yaml: {severity: error, section: "8", summary: "local YAML asset (including a PackageExample) does not parse"}
   asset.kind-mismatch: {severity: error, section: "8", summary: "file kind differs from manifest kind"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
-  profile.unknown: {severity: error, section: "6.1", summary: "undefined spec.conformance.profile"}
+  profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
   profile.descriptive: {severity: error, section: "6.1", summary: "no definition and no WorldDefinition asset"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
   profile.viewable.world-ref: {severity: error, section: "6.1", summary: "default View worldRef is not self or the package identity"}
@@ -50,6 +50,18 @@ rules:
   worldmodel.adapter-source: {severity: error, section: "6", summary: "Representation Adapter missing, not referenced locally, or not sourced from EWS"}
   worldmodel.input-contract: {severity: error, section: "6", summary: "inputs.contract is not EffectiveWorldState"}
   ontology.spec: {severity: error, section: "3", summary: "OntologyPackage without spec.ontology"}
+  ontology.iri: {severity: error, section: "3.1", summary: "iri is not an absolute IRI"}
+  ontology.prefix: {severity: error, section: "3.1", summary: "malformed prefixes"}
+  ontology.entrypoint: {severity: error, section: "3.1", summary: "entrypoint not a mapping, missing file, or unknown role"}
+  ontology.format: {severity: error, section: "3.1", summary: "unknown entrypoint format"}
+  ontology.parse: {severity: error, section: "3.1", summary: "owp-yaml entrypoint is not a SemanticProfile document"}
+  ontology.prefix-undeclared: {severity: error, section: "3.1", summary: "SemanticProfile identifier uses an undeclared prefix"}
+  ontology.term-index: {severity: error, section: "3.1", summary: "termIndex missing, not an OntologyTermIndex, or a malformed term"}
+  ontology.external-import: {severity: error, section: "3.1", summary: "externalImports entry without an absolute iri or a ref"}
+  profile.ontology.vocabulary: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
+  profile.ontology.schema: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
+  profile.ontology.constrained: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
+  profile.ontology.mapped: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
   eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierPackage metadata.version not SemVer"}
   eval.supersedes: {severity: error, section: "9", summary: "supersedes not pinned"}
   evidence.subject: {severity: error, section: "9", summary: "subject missing or not the package identity"}
@@ -98,7 +110,7 @@ rules:
   eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierPackage without metadata.version"}
   asset.kind-unknown: {severity: warning, section: "8", summary: "kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
-  manifest.conformance-ignored: {severity: warning, section: "6.1", summary: "spec.conformance on a package other than WorldPackage"}
+  manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   ref.legacy-shape: {severity: warning, section: "5.1", summary: "ExternalRef uses repository instead of uri"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}

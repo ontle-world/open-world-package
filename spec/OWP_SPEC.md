@@ -93,7 +93,46 @@ OWP does not standardize model weight bytes. Architecture names (VLM, VLA, video
 
 ### OntologyPackage
 
-Human card: `ONTOLOGY.md`. An OntologyPackage MUST declare `spec.ontology` as a mapping.
+Human card: `ONTOLOGY.md`. An OntologyPackage MUST declare `spec.ontology` as a mapping. Section 3.1 defines its fields.
+
+### 3.1 Ontology contract
+
+```yaml
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/acme/quality#              # namespace IRI of the ontology
+    prefixes:
+      q: https://w3id.org/acme/quality#
+    entrypoints:
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+    - {path: semantics/shapes.ttl, format: turtle, role: shapes}
+    - {path: mappings/isa95.sssom.tsv, format: sssom-tsv, role: mappings}
+    termIndex: semantics/terms.yaml                  # required when no schema entrypoint is owp-yaml
+    externalImports:                                 # ontologies outside OWP, pinned (section 5.1)
+    - iri: http://qudt.org/schema/qudt/
+      ref: {provider: https, uri: https://qudt.org/2.1/schema/qudt, digest: "sha256:..."}
+  conformance:
+    profile: mapped
+```
+
+- Ontology packages this ontology builds on are listed in `spec.dependencies`; there is no separate import list.
+- `iri` and every `prefixes` value are absolute IRIs; prefix names match `[A-Za-z][A-Za-z0-9_-]*`.
+- Each entrypoint has a package-relative `path` naming an existing file inside the package, a `format` (`owp-yaml`, `turtle`, `jsonld`, `owl-xml`, `ntriples`, `linkml`, `sssom-tsv`), and a `role` (`schema`, `shapes`, `mappings`, `labels`).
+- An `owp-yaml` entrypoint is a `SemanticProfile` document (`schemas/semantic-profile.schema.json`): `types` (each with `id`, optional `label`, `subClassOf`, `enum`, and `properties` with `id` and `range`) and `relations` (`id`, `domain`, `range`). Identifiers are CURIEs whose prefixes are declared in `prefixes`, or absolute IRIs.
+- `termIndex` names an `OntologyTermIndex` document inside the package (`schemas/ontology-term-index.schema.json`) listing term IRIs with a type (`class`, `property`, `individual`, `datatype`, `concept`). The reference CLI writes it with `ontle ontology index`, and `ontle pack` writes it when it is required and missing and the optional RDF tooling is installed.
+- Validation reads only the manifest, OWP YAML documents, and file existence. RDF, LinkML, and SSSOM content is not parsed for validity, so every implementation reaches the same verdict. Tooling may check that content and report it separately.
+
+The terms an ontology defines are the expanded identifiers of its `owp-yaml` schema entrypoints (types, their properties, and relations) together with the terms in its `termIndex`.
+
+**Ontology conformance profiles.** An OntologyPackage MAY declare `spec.conformance`; when present, its `profile` MUST be one of the profiles below. Profiles are cumulative; when `spec.conformance` is absent, no profile is required, and a validator SHOULD still report the highest satisfied profile.
+
+| Profile | Adds |
+|---|---|
+| `vocabulary` | `iri` and at least one entrypoint |
+| `schema` | an entrypoint with role `schema`; if none of them is `owp-yaml`, a `termIndex` |
+| `constrained` | an entrypoint with role `shapes` (for example SHACL) |
+| `mapped` | an entrypoint with role `mappings` (for example SSSOM) |
 
 ## 4. Common package layout
 
@@ -256,7 +295,7 @@ Precise meaning of the checks above:
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **Typed local YAML assets:** every local `.yaml`/`.yml` asset MUST parse. If an asset other than `PackageExample` declares a top-level `kind`, that kind MUST equal the manifest entry's `kind`. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not compared.
 - **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: a kind without `:` that is not in the vocabulary is a warning; a vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
-- **Defined fields:** the manifest, CompatibilityEvidence assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, and OntologyTermIndex assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
@@ -467,7 +506,7 @@ spec:
     schemas: [schemas/line-balancing.schema.json]   # package-relative JSON Schema files
 ```
 
-`kinds` entries are PascalCase names; `schemas` entries are package-relative paths that MUST exist. This alpha recommends an OntologyPackage for extension definitions; no separate package kind exists.
+`kinds` entries are PascalCase names; `schemas` entries are package-relative paths of existing files inside the package. This alpha recommends an OntologyPackage for extension definitions; no separate package kind exists.
 
 ### 13.3 Using an extension
 
@@ -509,7 +548,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.yaml` | 8 | local YAML asset (including a `PackageExample`) does not parse |
 | `asset.kind-mismatch` | 8 | file `kind` differs from manifest `kind` |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
-| `profile.unknown` | 6.1 | undefined `spec.conformance.profile` |
+| `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
 | `profile.descriptive` | 6.1 | no definition and no WorldDefinition asset |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
 | `profile.viewable.world-ref` | 6.1 | default View `worldRef` is not `self` or the package identity |
@@ -528,6 +567,15 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `worldmodel.adapter`, `worldmodel.adapter-ref`, `worldmodel.adapter-source` | 6 | Representation Adapter missing, not referenced locally, or not sourced from EWS |
 | `worldmodel.input-contract` | 6 | `inputs.contract` is not `EffectiveWorldState` |
 | `ontology.spec` | 3 | OntologyPackage without `spec.ontology` |
+| `ontology.iri` | 3.1 | `iri` is not an absolute IRI |
+| `ontology.prefix` | 3.1 | malformed `prefixes` |
+| `ontology.entrypoint` | 3.1 | entrypoint not a mapping, missing file, or unknown `role` |
+| `ontology.format` | 3.1 | unknown entrypoint `format` |
+| `ontology.parse` | 3.1 | `owp-yaml` entrypoint is not a SemanticProfile document |
+| `ontology.prefix-undeclared` | 3.1 | SemanticProfile identifier uses an undeclared prefix |
+| `ontology.term-index` | 3.1 | `termIndex` missing, not an OntologyTermIndex, or a malformed term |
+| `ontology.external-import` | 3.1 | `externalImports` entry without an absolute `iri` or a `ref` |
+| `profile.ontology.vocabulary`, `profile.ontology.schema`, `profile.ontology.constrained`, `profile.ontology.mapped` | 3.1 | declared ontology profile not satisfied |
 | `eval.version` | 9 | EvaluationProfile/VerifierPackage `metadata.version` not SemVer |
 | `eval.supersedes` | 9 | `supersedes` not pinned |
 | `evidence.subject` | 9 | `subject` missing or not the package identity |
@@ -573,7 +621,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
 | `asset.kind-unknown` | 8 | kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
-| `manifest.conformance-ignored` | 6.1 | `spec.conformance` on a package other than WorldPackage |
+| `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |

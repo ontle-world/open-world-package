@@ -1,0 +1,3 @@
+@prefix q: <https://example.org/q#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+q:Claim a owl:Class .

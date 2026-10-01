@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - id: q:Claim
+    properties:
+    - {id: q:claimStatus, range: q:ClaimStatus}
+  - id: z:ClaimStatus
+    enum: [open, closed]
+  - id: q:Lot
+  relations:
+  - {id: q:affectsLot, domain: q:Claim, range: q:Lot}
+  - {id: q:hasLot, domain: q:Claim, range: 'https://example.org/other#Lot'}

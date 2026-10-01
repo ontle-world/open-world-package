@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Define the ontology contract (spec section 3.1): `spec.ontology` with `iri`, `prefixes`, typed `entrypoints` (`format`, `role`), `termIndex`, and pinned `externalImports`; ontology conformance profiles `vocabulary`, `schema`, `constrained`, `mapped`. Validation reads only the manifest, OWP YAML documents, and file existence; RDF content is not parsed for validity.
+- Add `SemanticProfile` and `OntologyTermIndex` schemas; `OntologyTermIndex` joins the vocabulary.
+- Add `ontle ontology index` (term index from schema entrypoints; RDF needs the optional `rdf` extra), `ontle export --format turtle|jsonld`, and term-index generation in `ontle pack` when it is required and missing.
+- Breaking: `spec.ontology` is no longer free-form (for example the old `formats` key is rejected); the ontology template uses the new contract. `spec.conformance` is now allowed on OntologyPackages.
+- Add the `examples/ontology/quality-ontology` example (owp-yaml schema, SHACL shapes, SSSOM mappings; profile `mapped`).
 - Add experimental asset kinds (spec Appendix C): `TaskSetProfile`, `WorkPatternProfile`, `ArtifactContract`, `ArtifactTemplate`, `ConsumerRepresentationProfile` (one block per actor kind: `human`, `agent`, `model`, `system`), and `KnowledgeAsset`. They are checked against `schemas/experimental/` with warnings only (`experimental.field`, `experimental.value`, `experimental.reference`); extension rules stay errors.
 - Add experimental value sets in `vocab/value-sets.yaml`, including 22 work patterns.
 - Add experimental World View specialization: `spec.specializes` and `spec.projection.exclude`; `ontle inspect --resolved-views` shows resolved Views.
@@ -31,7 +36,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 107 validation, 23 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
+- Conformance suite: 128 validation, 23 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

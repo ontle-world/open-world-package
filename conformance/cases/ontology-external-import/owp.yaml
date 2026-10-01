@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: conformance
+  name: onto
+  version: 0.1.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://example.org/q#
+    prefixes: {q: https://example.org/q#}
+    externalImports:
+    - iri: http://qudt.org/schema/qudt/
+      ref: {provider: https, uri: 'https://qudt.org/2.1/schema/qudt', digest: 'sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd'}
+  assets: []

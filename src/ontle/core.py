@@ -12,6 +12,7 @@ from typing import Any
 import yaml
 
 from . import experimental, structure
+from . import ontology as ontology_module
 
 MANIFEST = "owp.yaml"
 KINDS = {"WorldPackage", "WorldModelPackage", "OntologyPackage"}
@@ -295,8 +296,8 @@ def validate_package(path: str | Path) -> ValidationResult:
     errors.extend(structure.extension_definition_errors(spec))
     definition = spec.get("extensionDefinition")
     for rel in (definition.get("schemas") or []) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
-        if isinstance(rel, str) and rel and not (root / rel).is_file():
-            errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} does not exist")
+        if isinstance(rel, str) and rel and not ontology_module._inside(root, rel):
+            errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} must be an existing file inside the package")
 
     card = {
         "WorldPackage": "WORLD.md",
@@ -342,6 +343,10 @@ def validate_package(path: str | Path) -> ValidationResult:
         ontology = spec.get("ontology")
         if not isinstance(ontology, dict):
             errors.append("ontology.spec: OntologyPackage requires spec.ontology")
+        else:
+            onto_errors, onto_warnings = ontology_module.ontology_issues(root, spec, extension_names)
+            errors.extend(onto_errors)
+            warnings.extend(onto_warnings)
 
     assets = spec.get("assets", []) or []
     if not isinstance(assets, list):
@@ -451,8 +456,15 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.append(f"profile.unknown: spec.conformance.profile must be one of {WORLD_PROFILES}")
         else:
             errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, identity))
+    elif kind == "OntologyPackage" and spec.get("conformance") is not None:
+        conformance = spec.get("conformance")
+        profile = conformance.get("profile") if isinstance(conformance, dict) else None
+        if profile not in ontology_module.ONTOLOGY_PROFILES:
+            errors.append(f"profile.unknown: spec.conformance.profile must be one of {ontology_module.ONTOLOGY_PROFILES} for an OntologyPackage")
+        else:
+            errors.extend(ontology_module.ontology_profile_errors(profile, root, spec))
     elif spec.get("conformance") is not None:
-        warnings.append("manifest.conformance-ignored: spec.conformance applies to WorldPackage only and is ignored")
+        warnings.append("manifest.conformance-ignored: spec.conformance applies to WorldPackage and OntologyPackage only and is ignored")
 
     _validate_evaluation_lineage(spec, kind, identity, local_asset_kinds, local_asset_docs, errors, warnings)
 
@@ -473,6 +485,10 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
             "satisfied": satisfied_world_profile(spec, {k for k in kinds.values()} | _ref_asset_kinds(spec), kinds, docs,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
+    if data.get("kind") == "OntologyPackage" and isinstance(spec, dict):
+        conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
+        summary["conformance"] = {"declared": conformance.get("profile"),
+                                  "satisfied": ontology_module.satisfied_ontology_profile(root, spec)}
     if graph or resolved_views:
         kinds, docs = _local_assets(root, spec if isinstance(spec, dict) else {})
         if graph:
@@ -559,6 +575,8 @@ def build_lock(root: Path, files: list[Path]) -> dict[str, Any]:
 
 def deterministic_pack(path: str | Path, output: str | Path | None = None) -> Path:
     root, manifest = load_manifest(path)
+    _ensure_term_index(root, manifest)
+    root, manifest = load_manifest(path)
     result = validate_package(root)
     if not result.valid:
         raise OWPError("package is invalid: " + "; ".join(result.errors))
@@ -587,6 +605,22 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None) -> Pa
         zi.external_attr = (0o644 & 0xFFFF) << 16
         zf.writestr(zi, lock_bytes)
     return output
+
+
+def _ensure_term_index(root: Path, manifest: dict[str, Any]) -> None:
+    """DD-2: an OntologyPackage whose schema is not owp-yaml needs a term index; generate it when it is missing and rdflib is available."""
+    if manifest.get("kind") != "OntologyPackage":
+        return
+    onto = (manifest.get("spec") or {}).get("ontology")
+    if not isinstance(onto, dict) or onto.get("termIndex"):
+        return
+    schema = [e for e in onto.get("entrypoints") or [] if isinstance(e, dict) and e.get("role") == "schema"]
+    if schema and not any(e.get("format") == "owp-yaml" for e in schema):
+        try:
+            import rdflib  # noqa: F401
+        except ImportError:
+            return  # validation reports the missing index
+        ontology_module.write_term_index(root, root / MANIFEST)
 
 
 def verify_archive(path: str | Path) -> tuple[bool, list[str]]:

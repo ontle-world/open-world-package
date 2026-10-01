@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:semantic-profile:v1alpha1",
+  "title": "SemanticProfile",
+  "description": "Ontology schema in the OWP YAML format (spec section 3.1). Identifiers are CURIEs or absolute IRIs.",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "SemanticProfile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "object",
+                "description": "Language tag -> text. Open container."
+              },
+              "description": {
+                "type": "string"
+              },
+              "subClassOf": {
+                "type": [
+                  "string",
+                  "array"
+                ]
+              },
+              "enum": {
+                "type": "array"
+              },
+              "properties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "object",
+                      "description": "Language tag -> text. Open container."
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "range": {
+                      "type": "string"
+                    },
+                    "cardinality": {
+                      "type": "string"
+                    },
+                    "extensions": {
+                      "$ref": "#/$defs/extensions"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "object",
+                "description": "Language tag -> text. Open container."
+              },
+              "description": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "range": {
+                "type": "string"
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

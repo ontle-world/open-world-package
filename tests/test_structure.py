@@ -50,6 +50,8 @@ class StructureMatchesJsonSchema(unittest.TestCase):
             ("compatibility-evidence", structure.COMPATIBILITY_EVIDENCE),
             ("observation-set", structure.OBSERVATION_SET),
             ("effective-world-state", structure.EFFECTIVE_WORLD_STATE),
+            ("semantic-profile", structure.SEMANTIC_PROFILE),
+            ("ontology-term-index", structure.TERM_INDEX),
         ):
             with self.subTest(schema=name):
                 schema = json.loads((SCHEMAS / f"{name}.schema.json").read_text(encoding="utf-8"))

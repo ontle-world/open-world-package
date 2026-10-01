@@ -34,7 +34,7 @@ function takeFlag(args: string[], name: string): boolean {
 }
 
 function printResult(label: string, r: ValidationResult & { resolved?: unknown[] }): void {
-  const prof = r.satisfiedProfile !== undefined ? ` (declared: ${r.declaredProfile}, satisfied: ${r.satisfiedProfile ?? "none"})` : "";
+  const prof = r.satisfiedProfile !== undefined ? ` (declared: ${r.declaredProfile ?? "none"}, satisfied: ${r.satisfiedProfile ?? "none"})` : "";
   process.stdout.write(`${r.valid ? "VALID" : "INVALID"} ${label}${prof}\n`);
   for (const e of r.errors) process.stdout.write(`  error   [${e.code}] ${e.message}\n`);
   for (const w of r.warnings) process.stdout.write(`  warning [${w.code}] ${w.message}\n`);

@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: conformance
+  name: onto
+  version: 0.1.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    formats: [yaml]
+  assets: []

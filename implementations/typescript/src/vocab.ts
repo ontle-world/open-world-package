@@ -10,7 +10,7 @@ export type Stability = "standard" | "experimental";
 const S: Stability = "standard";
 const X: Stability = "experimental";
 export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
-  semanticWorld: { SemanticProfile: S, WorldDefinition: S, WorldViewProfile: S, StateCompilerProfile: S },
+  semanticWorld: { SemanticProfile: S, OntologyTermIndex: S, WorldDefinition: S, WorldViewProfile: S, StateCompilerProfile: S },
   interfaceIntegration: {
     SourceSystemSchemaProfile: S,
     SourceAdapterProfile: S,

@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyTermIndex
+metadata: {name: terms}
+spec:
+  terms:
+  - {iri: 'https://example.org/q#Claim', type: class}

@@ -21,6 +21,10 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 
+[project.optional-dependencies]
+# RDF tooling for `ontle ontology index` on RDF entrypoints. Validation never needs it.
+rdf = ["rdflib>=7.0"]
+
 [project.scripts]
 ontle = "ontle.cli:main"
 

@@ -1,0 +1,46 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata:
+  name: quality-core
+spec:
+  types:
+  - id: q:QualityIncident
+    label: {en: Quality incident, ko: 품질 사고}
+    properties:
+    - {id: q:incidentStatus, range: q:IncidentStatus, cardinality: "1"}
+  - id: q:IncidentStatus
+    enum: [open, investigating, closed]
+  - id: q:Claim
+    label: {en: Claim, ko: 클레임}
+    properties:
+    - {id: q:claimStatus, range: q:ClaimStatus, cardinality: "1"}
+  - id: q:ClaimStatus
+    enum: [open, investigating, closed]
+  - id: q:Lot
+    label: {en: Production lot, ko: 생산 로트}
+    properties:
+    - {id: q:derivedFrom, range: q:Lot}
+  - id: q:Equipment
+    label: {en: Equipment, ko: 설비}
+    properties:
+    - {id: q:conditionEvent}
+  - id: q:Inspection
+    label: {en: Inspection, ko: 검사}
+    properties:
+    - {id: q:inspectionResult}
+  - id: q:Evidence
+    label: {en: Evidence, ko: 근거}
+    properties:
+    - {id: q:openHypothesis}
+  - id: q:Capa
+    label: {en: Corrective and preventive action, ko: 시정 및 예방 조치}
+    properties:
+    - {id: q:capaStatus}
+  - id: q:Decision
+  - id: q:Outcome
+  - id: q:Constraint
+  - id: q:ProposeCapa
+    label: {en: Propose CAPA}
+  relations:
+  - {id: q:affectsLot, domain: q:Claim, range: q:Lot}
+  - {id: q:supportedBy, domain: q:Decision, range: q:Evidence}

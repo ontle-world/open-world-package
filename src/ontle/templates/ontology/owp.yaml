@@ -9,7 +9,13 @@ metadata:
 spec:
   ontology:
     description: ONTOLOGY.md
-    formats: [yaml]
+    iri: https://example.org/my-ontology#
+    prefixes:
+      ex: https://example.org/my-ontology#
     entrypoints:
-      - semantics/core.yaml
-  assets: []
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+  conformance:
+    profile: schema
+  assets:
+  - kind: SemanticProfile
+    path: semantics/core.yaml

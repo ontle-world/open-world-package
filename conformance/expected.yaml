@@ -485,6 +485,90 @@ cases:
     satisfiedProfile: viewable
     warnings: [experimental.reference]
     rule: "specializes must name a local WorldViewProfile; otherwise a warning."
+  ontology-no-profile:
+    valid: true
+    rule: "Without spec.conformance no ontology profile is required."
+  ontology-vocabulary:
+    valid: true
+    satisfiedProfile: schema
+    rule: "vocabulary requires iri and at least one entrypoint."
+  ontology-schema-owp-yaml:
+    valid: true
+    satisfiedProfile: schema
+    rule: "schema is satisfied by an owp-yaml schema entrypoint."
+  ontology-schema-rdf-with-index:
+    valid: true
+    satisfiedProfile: schema
+    rule: "An RDF schema entrypoint satisfies schema together with a termIndex; RDF content is not parsed for validity."
+  ontology-schema-rdf-without-index:
+    valid: false
+    errors: [profile.ontology.schema]
+    satisfiedProfile: vocabulary
+    rule: "A schema without an owp-yaml entrypoint requires termIndex."
+  ontology-constrained-missing-shapes:
+    valid: false
+    errors: [profile.ontology.constrained]
+    satisfiedProfile: schema
+    rule: "constrained requires an entrypoint with role shapes."
+  ontology-mapped:
+    valid: true
+    satisfiedProfile: mapped
+    rule: "mapped requires shapes and mappings entrypoints."
+  ontology-missing-iri:
+    valid: false
+    errors: [profile.ontology.vocabulary]
+    rule: "vocabulary requires spec.ontology.iri."
+  ontology-bad-iri:
+    valid: false
+    errors: [ontology.iri]
+    rule: "iri must be an absolute IRI."
+  ontology-bad-prefix:
+    valid: false
+    errors: [ontology.prefix]
+    rule: "prefix values must be absolute IRIs."
+  ontology-entrypoint-missing-file:
+    valid: false
+    errors: [ontology.entrypoint]
+    rule: "An entrypoint path must exist in the package."
+  ontology-unknown-format:
+    valid: false
+    errors: [ontology.format]
+    rule: "An entrypoint format must be one of the listed formats."
+  ontology-prefix-undeclared:
+    valid: false
+    errors: [ontology.prefix-undeclared]
+    rule: "SemanticProfile identifiers use prefixes declared in spec.ontology.prefixes."
+  ontology-owp-yaml-not-semantic-profile:
+    valid: false
+    errors: [ontology.parse]
+    rule: "An owp-yaml entrypoint must be a SemanticProfile document."
+  ontology-term-index-malformed:
+    valid: false
+    errors: [ontology.term-index]
+    rule: "Term index entries need an absolute iri and a known type."
+  ontology-external-import:
+    valid: true
+    rule: "externalImports entries name an IRI and a pinned ExternalRef."
+  ontology-external-import-missing-ref:
+    valid: false
+    errors: [ontology.external-import]
+    rule: "An externalImports entry needs a ref."
+  ontology-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    rule: "spec.ontology accepts only its defined fields (the old formats key is unknown)."
+  ontology-profile-unknown:
+    valid: false
+    errors: [profile.unknown]
+    rule: "An OntologyPackage profile must be an ontology profile."
+  ontology-semantic-profile-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    rule: "SemanticProfile documents accept only their defined fields."
+  ontology-entrypoint-escape:
+    valid: false
+    errors: [ontology.entrypoint]
+    rule: "Entrypoint paths name files inside the package; a path that resolves outside is rejected even if the file exists."
 resolutionCases:
   grounded:
     valid: true

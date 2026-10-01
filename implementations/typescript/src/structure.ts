@@ -27,6 +27,14 @@ export const leaves = (...names: string[]): Record<string, Shape> => Object.from
 /** schemas/owp-manifest.schema.json $defs/externalRef (spec 5.1). */
 export const EXTERNAL_REF: Shape = closed(leaves("provider", "uri", "revision", "digest", "mediaType", "size", "status", "repository"));
 
+/** schemas/owp-manifest.schema.json spec.ontology (spec 3.1); `prefixes` is an open map. */
+export const ONTOLOGY: Shape = closed({
+  ...leaves("description", "iri", "termIndex"),
+  prefixes: OPEN,
+  entrypoints: list(closed(leaves("path", "format", "role"))),
+  externalImports: list(closed({ iri: ANY, ref: EXTERNAL_REF })),
+});
+
 /** schemas/owp-manifest.schema.json */
 export const MANIFEST: Shape = closed(
   {
@@ -49,7 +57,7 @@ export const MANIFEST: Shape = closed(
         temporal: OPEN,
         validity: OPEN,
       }),
-      ontology: OPEN,
+      ontology: ONTOLOGY,
       extensionDefinition: closed(leaves("description", "kinds", "schemas")),
       domains: ANY,
       capabilities: ANY,
@@ -61,6 +69,31 @@ export const MANIFEST: Shape = closed(
 
 /** `metadata` of a local asset document (schemas/compatibility-evidence.schema.json, schemas/experimental/). */
 export const ASSET_METADATA: Shape = closed(leaves("name", "version", "title", "description"));
+
+/** schemas/semantic-profile.schema.json (spec 3.1 owp-yaml entrypoints). */
+export const SEMANTIC_PROFILE: Shape = closed(
+  {
+    ...leaves("apiVersion", "kind"),
+    metadata: ASSET_METADATA,
+    spec: closed({
+      types: list(
+        closed({
+          ...leaves("id", "description", "subClassOf", "enum"),
+          label: OPEN,
+          properties: list(closed({ ...leaves("id", "description", "range", "cardinality"), label: OPEN })),
+        }),
+      ),
+      relations: list(closed({ ...leaves("id", "description", "domain", "range"), label: OPEN })),
+    }),
+  },
+  false,
+);
+
+/** schemas/ontology-term-index.schema.json */
+export const TERM_INDEX: Shape = closed(
+  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: list(closed(leaves("iri", "type", "label"))) }) },
+  false,
+);
 
 /** schemas/compatibility-evidence.schema.json */
 export const COMPATIBILITY_EVIDENCE: Shape = closed(
@@ -101,7 +134,11 @@ export const EFFECTIVE_WORLD_STATE: Shape = closed(
 );
 
 /** Asset kinds whose documents have a JSON Schema; other kinds are checked only for top-level extension blocks. */
-export const ASSET_STRUCTURES: Record<string, Shape> = { CompatibilityEvidence: COMPATIBILITY_EVIDENCE };
+export const ASSET_STRUCTURES: Record<string, Shape> = {
+  CompatibilityEvidence: COMPATIBILITY_EVIDENCE,
+  SemanticProfile: SEMANTIC_PROFILE,
+  OntologyTermIndex: TERM_INDEX,
+};
 
 export interface Problem {
   rule: string;

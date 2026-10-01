@@ -1,0 +1,3 @@
+subject_id	predicate_id	object_id	mapping_justification	comment
+q:Lot	skos:closeMatch	isa95:MaterialLot	semapv:ManualMappingCuration	ISA-95 object name; no ISA-95 artifact is bundled
+q:Equipment	skos:closeMatch	isa95:Equipment	semapv:ManualMappingCuration	

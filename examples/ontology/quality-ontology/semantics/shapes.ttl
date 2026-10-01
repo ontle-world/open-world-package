@@ -1,0 +1,11 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix q: <https://w3id.org/openworld-examples/quality#> .
+
+q:ClaimShape a sh:NodeShape ;
+    sh:targetClass q:Claim ;
+    sh:property [
+        sh:path q:claimStatus ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:in ( "open" "investigating" "closed" )
+    ] .

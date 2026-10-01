@@ -12,6 +12,7 @@ kind: AssetKindVocabulary
 groups:
   semanticWorld:
     SemanticProfile: {stability: standard}
+    OntologyTermIndex: {stability: standard}
     WorldDefinition: {stability: standard}
     WorldViewProfile: {stability: standard}
     StateCompilerProfile: {stability: standard}

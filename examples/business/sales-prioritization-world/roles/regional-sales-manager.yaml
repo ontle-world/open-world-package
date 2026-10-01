@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata: {name: regional-sales-manager}
+spec:
+  permissions:
+  - {actions: [read_accounts, propose_meeting, draft_follow_up], scope: region}
+  authorities:
+  - {decisions: [assign_account_owner], scope: region}
+  responsibilities: [maintain_account_priorities]
+  accountabilities: [regional_pipeline]

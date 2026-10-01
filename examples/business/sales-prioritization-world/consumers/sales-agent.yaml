@@ -3,7 +3,7 @@ kind: ConsumerRepresentationProfile
 metadata:
   name: sales-agent
 spec:
-  actor: {kind: agent}
+  actor: {kind: agent, ref: actors/sales-agent.yaml}
   worldViewRef: views/account-agent.yaml
   representation:
     mode: structured_context

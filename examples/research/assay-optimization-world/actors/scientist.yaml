@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: scientist}
+spec:
+  actorType: human
+  roleRefs: [roles/principal-investigator.yaml]
+  capabilityRefs: [capabilities/assay-design.yaml]

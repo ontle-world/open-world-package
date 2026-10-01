@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: DelegationProfile
+metadata: {name: plan-runs}
+spec:
+  delegator: actors/scientist.yaml
+  delegatee: actors/planning-agent.yaml
+  scope: assay_campaign
+  permittedActions: [schedule_run]
+  authorityCeiling: {decisions: [], limits: {runsPerDay: 4}}
+  validFrom: "2026-10-01T00:00:00Z"
+  expiresAt: "2026-11-30T00:00:00Z"
+  revocation: {by: [actors/scientist.yaml]}
+  escalation: {to: [actors/scientist.yaml], when: [protocol_change_needed]}

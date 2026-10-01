@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - id: run-001-zf
+    type: LAB.assay_quality
+    observedAt: "2026-09-20T10:00:00Z"
+    values: {z_factor: 0.48, cv_percent: 11.2}

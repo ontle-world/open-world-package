@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": ["run_id", "plate", "well", "signal", "control"],
+  "properties": {
+    "run_id": {"type": "string"},
+    "plate": {"type": "string"},
+    "well": {"type": "string"},
+    "signal": {"type": "number"},
+    "control": {"enum": ["positive", "negative", "sample"]}
+  }
+}

@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: AgentProfile
+metadata: {name: planner}
+spec:
+  description: Proposes the next experiment runs from past measurements.

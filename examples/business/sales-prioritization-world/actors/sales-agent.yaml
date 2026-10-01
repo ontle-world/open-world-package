@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: sales-agent}
+spec:
+  actorType: ai_agent
+  capabilityRefs: [capabilities/crm-read.yaml]

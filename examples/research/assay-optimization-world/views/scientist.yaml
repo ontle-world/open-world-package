@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: scientist}
+spec:
+  worldRef: self
+  specializes: views/assay-base.yaml
+  purpose:
+    actorScope: principal_investigator
+    actorRef: actors/scientist.yaml
+    roleRef: roles/principal-investigator.yaml
+    taskRef: tasks/optimize-assay.yaml
+  conditioning: {authorityScope: approve_protocols}
+  constraints: [biosafety_level_2, reagent_budget]

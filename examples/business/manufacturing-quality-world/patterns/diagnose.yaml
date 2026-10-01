@@ -3,7 +3,30 @@ kind: WorkPatternProfile
 metadata:
   name: diagnose
 spec:
-  pattern: {kind: diagnose, family: analyze_explain}
+  pattern: {kind: diagnose, family: analyze_reason}
+  objective: identify_root_cause
   inputs: {semanticRoles: [symptom, evidence, constraint]}
   outputs: {semanticRoles: [cause_hypothesis, confidence]}
+  outputContracts: [artifacts/rca-report.yaml]
   optionalCapabilities: [rule, llm, causal_model]
+  worldViewRef: views/quality-incident-task.yaml
+  graph:
+    nodes:
+    - {id: gather, family: observe_knowledge, patternKind: retrieve}
+    - {id: hypothesize, family: analyze_reason, patternKind: diagnose}
+    - {id: test, family: evaluate_recover, patternKind: review}
+    - {id: propose, family: decide_plan, patternKind: recommend}
+    - {id: report, family: create_modify, patternKind: create}
+    transitions:
+    - {from: gather, to: hypothesize}
+    - {from: hypothesize, to: test}
+    - {from: test, to: gather, guard: evidence_missing}
+    - {from: test, to: propose, guard: hypothesis_supported}
+    - {from: propose, to: report}
+    guards:
+    - {id: evidence_missing}
+    - {id: hypothesis_supported}
+    events:
+    - {id: new_inspection_result, triggers: [gather]}
+    loops:
+    - {nodes: [gather, hypothesize, test], maxIterations: 5, until: hypothesis_supported}

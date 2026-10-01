@@ -8,5 +8,11 @@ spec:
   requires:
     worldViews: [views/quality-incident-task.yaml]
     knowledge: [knowledge/rca-playbook.yaml]
+    actors: [actors/quality-manager.yaml, actors/rca-agent.yaml]
+  workPatternRefs: [patterns/diagnose.yaml]
+  mayUse:
+    capabilities: [capabilities/rca-analysis.yaml]
+    scenarios: [scenarios/quality-hold.yaml]
   produces:
     artifacts: [artifacts/rca-report.yaml]
+  evaluationRefs: [rca-report-review@0.1.0]

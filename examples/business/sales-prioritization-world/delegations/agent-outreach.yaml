@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: DelegationProfile
+metadata: {name: agent-outreach}
+spec:
+  delegator: actors/sales-manager.yaml
+  delegatee: actors/sales-agent.yaml
+  scope: account_outreach
+  permittedActions: [propose_meeting, draft_follow_up]
+  authorityCeiling: {decisions: []}
+  validFrom: "2026-10-01T00:00:00Z"
+  expiresAt: "2027-03-31T00:00:00Z"
+  revocation: {by: [actors/sales-manager.yaml]}

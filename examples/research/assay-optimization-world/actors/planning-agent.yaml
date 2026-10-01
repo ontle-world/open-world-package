@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: planning-agent}
+spec:
+  actorType: ai_agent
+  agentRef: agents/planner.yaml

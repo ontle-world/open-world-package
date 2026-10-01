@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata: {name: optimize-assay}
+spec:
+  task: {workPatterns: [optimize, evaluate]}
+  requires:
+    worldViews: [views/scientist.yaml]
+    actors: [actors/scientist.yaml, actors/planning-agent.yaml, actors/lab-robot.yaml]
+  workPatternRefs: [patterns/design-test-learn.yaml]
+  mayUse:
+    capabilities: [capabilities/assay-design.yaml]
+    scenarios: [scenarios/reagent-change.yaml]
+  produces:
+    artifacts: [artifacts/protocol.yaml, artifacts/results-table.yaml]
+  evaluationRefs: [assay-validation@0.1.0]

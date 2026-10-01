@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata: {name: principal-investigator}
+spec:
+  permissions:
+  - {actions: [schedule_run, read_measurements], scope: lab_3}
+  authorities:
+  - {decisions: [approve_protocol], scope: assay_campaign, ceiling: {reagentBudget: 5000}}
+  responsibilities: [design_experiments]
+  accountabilities: [assay_validity]

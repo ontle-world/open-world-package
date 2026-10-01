@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata: {name: quality-manager}
+spec:
+  permissions:
+  - {actions: [read_claims, read_lot_genealogy, propose_capa, request_reinspection], scope: plant_3}
+  authorities:
+  - {decisions: [approve_capa, request_quality_hold], scope: plant_3, ceiling: {costLimit: 10000}}
+  responsibilities: [investigate_claims, maintain_capa_log]
+  accountabilities: [capa_effectiveness]

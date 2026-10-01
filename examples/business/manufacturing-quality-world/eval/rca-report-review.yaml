@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata: {name: rca-report-review, version: 0.1.0}
+spec:
+  assessmentKind: evaluation
+  subject: {kind: artifact, ref: artifacts/rca-report.yaml}
+  objective: report_supports_capa_decision
+  criteria:
+  - {metric: evidence_coverage, rubric: share of hypotheses linked to evidence, threshold: 0.9}
+  - {metric: capa_traceability, rubric: every CAPA item traces to a hypothesis, threshold: 1.0}
+  evaluatorRef: actors/quality-manager.yaml
+  metrics: [evidence_coverage, capa_traceability]

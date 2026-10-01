@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: DelegationProfile
+metadata: {name: rca-agent}
+spec:
+  delegator: actors/quality-manager.yaml
+  delegatee: actors/rca-agent.yaml
+  scope: claim_rca
+  permittedActions: [read_claims, read_lot_genealogy, propose_capa]
+  authorityCeiling: {decisions: [], limits: {costLimit: 0}}
+  validFrom: "2026-10-01T00:00:00Z"
+  expiresAt: "2026-12-31T00:00:00Z"
+  revocation: {by: [actors/quality-manager.yaml]}
+  escalation: {to: [actors/plant-director.yaml], when: [cost_over_ceiling, safety_risk]}

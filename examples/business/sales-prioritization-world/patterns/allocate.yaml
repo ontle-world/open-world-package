@@ -3,7 +3,7 @@ kind: WorkPatternProfile
 metadata:
   name: allocate
 spec:
-  pattern: {kind: allocate, family: decide_optimize}
+  pattern: {kind: allocate, family: decide_plan}
   inputs: {semanticRoles: [candidate, resource, constraint]}
   outputs: {semanticRoles: [assignment]}
   optionalCapabilities: [rule, solver]

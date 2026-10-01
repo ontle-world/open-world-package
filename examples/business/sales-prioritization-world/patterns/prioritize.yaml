@@ -3,7 +3,7 @@ kind: WorkPatternProfile
 metadata:
   name: prioritize
 spec:
-  pattern: {kind: prioritize, family: decide_optimize}
+  pattern: {kind: prioritize, family: decide_plan}
   inputs: {semanticRoles: [candidate, objective, evidence, constraint]}
   outputs: {semanticRoles: [priority, recommendation]}
   optionalCapabilities: [rule, llm, ml_ranking, solver]

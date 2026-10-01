@@ -85,6 +85,10 @@ ontle add pattern prioritize
 ontle add artifact priority-board
 ontle add consumer sales-manager
 ontle add knowledge win-loss-playbook
+ontle add actor quality-manager
+ontle add role quality-manager
+ontle add delegation manager-to-agent
+ontle add capability rca-analysis
 ontle inspect . --graph --resolved-views
 
 # knowledge extraction (experimental; SPARQL needs the rdf extra)
@@ -111,6 +115,7 @@ ontle export --format turtle
 - `examples/business/manufacturing-quality-world` — business/manufacturing World package
 - `examples/business/quality-transition-world-model` — World Model bound to a business World
 - `examples/ontology/quality-ontology` — ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World
+- `examples/research/assay-optimization-world` — laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario (experimental kinds)
 - `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers (experimental kinds)
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package

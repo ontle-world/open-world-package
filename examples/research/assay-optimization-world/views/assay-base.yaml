@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: assay-base}
+spec:
+  worldRef: self
+  purpose: {task: assay_optimization, objective: robust_assay_signal}
+  projection:
+    include: [assay, plate, reagent, instrument, experiment_run, measurement, protocol]
+    principle: minimal_sufficient_representation
+  conditioning: {authorityScope: read_only, timeScope: current_campaign, resolution: well}

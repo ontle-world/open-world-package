@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata: {name: reagent-change}
+spec:
+  objective: decide_whether_to_requalify_assay
+  baselineStateRef: examples/baseline-observations.yaml
+  assumptions: [instrument_calibration_unchanged]
+  intervention: {action: switch_reagent_lot, reagent: detection_antibody}
+  engine: {kind: ml_prediction}
+  timeHorizon: P30D
+  constraints: [reagent_budget]
+  uncertainty: {zFactor: {low: 0.42, high: 0.61}}
+  confidence: 0.6
+  expectedOutcome: {zFactor: 0.52}

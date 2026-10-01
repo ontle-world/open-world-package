@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: plant-director}
+spec:
+  actorType: human

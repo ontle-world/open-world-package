@@ -318,7 +318,8 @@ def build_parser():
 
     x = sp.add_parser("add", help="add optional scaffolding to an existing package")
     x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension",
-                                         "task", "pattern", "artifact", "template", "consumer", "knowledge"])
+                                         "task", "pattern", "artifact", "template", "consumer", "knowledge",
+                                         "actor", "role", "delegation", "capability"])
     x.add_argument("name", help="asset name, or for 'extension' the defining package <namespace>/<name>@<version>")
     x.add_argument("--path", default=".")
     x.add_argument("--as", dest="as_name", help="extension: local name (default: package name without a trailing -extension)")

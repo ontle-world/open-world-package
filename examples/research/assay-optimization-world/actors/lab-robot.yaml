@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: lab-robot}
+spec:
+  actorType: automated_system

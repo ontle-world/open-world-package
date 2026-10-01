@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: CapabilityContract
+metadata: {name: assay-design}
+spec:
+  description: Design and adjust screening assay protocols.
+  outcomeRefs: [artifacts/protocol.yaml]
+  context: {domain: high_throughput_screening}
+  requiredInputs: [measurement, reagent]
+  capacity: {protocolsPerMonth: 4}
+  maturity: established

@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: CapabilityContract
+metadata: {name: rca-analysis}
+spec:
+  description: Trace a quality claim to production and equipment evidence and propose corrective action.
+  outcomeRefs: [artifacts/rca-report.yaml]
+  context: {domain: manufacturing_quality}
+  requiredInputs: [claim, lot_genealogy, inspection_results]
+  capacity: {claimsPerWeek: 20}
+  maturity: piloted

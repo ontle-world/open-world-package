@@ -12,6 +12,7 @@ ontle validate examples/physical-ai/mobile-manipulation-world
 ontle validate examples/physical-ai/multimodal-action-world-model
 ontle validate examples/business/sales-prioritization-world
 ontle validate examples/ontology/quality-ontology
+ontle validate examples/research/assay-optimization-world
 ontle export examples/ontology/quality-ontology --format turtle >/dev/null
 ontle export examples/ontology/quality-ontology --format jsonld >/dev/null
 
@@ -39,6 +40,10 @@ ontle add pattern triage --path "$TMP/demo-world"
 ontle add task triage-task --path "$TMP/demo-world"
 ontle add consumer manager --path "$TMP/demo-world"
 ontle add template report-template --path "$TMP/demo-world"
+ontle add actor manager --path "$TMP/demo-world"
+ontle add role manager-role --path "$TMP/demo-world"
+ontle add capability analysis --path "$TMP/demo-world"
+ontle add delegation manager-to-agent --path "$TMP/demo-world"
 ontle validate "$TMP/demo-world"
 ontle validate "$TMP/demo-ontology"
 ontle validate "$TMP/demo-model"

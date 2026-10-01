@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata: {name: protocol, version: 0.1.0}
+spec:
+  artifact: {type: document, representation: document}
+  structure:
+    required: [objective, materials, steps, controls, acceptance_criteria]
+  serialization: {formats: [markdown, pdf]}
+  storage: {kind: document_store}
+  allowedOperations: [create, edit, compare, validate, version, supersede, publish]
+  governance: {approvalRequired: true}

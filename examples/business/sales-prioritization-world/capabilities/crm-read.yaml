@@ -5,3 +5,6 @@ metadata:
 spec:
   description: Read accounts, opportunities, and activities in the agent's region.
   effect: none
+  context: {systems: [crm]}
+  requiredInputs: [region]
+  maturity: production

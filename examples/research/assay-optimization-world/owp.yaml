@@ -1,0 +1,41 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: openworld-examples
+  name: assay-optimization-world
+  version: 0.1.0
+  title: Assay Optimization World
+  license: Apache-2.0
+spec:
+  domains:
+  - scientific_research
+  - laboratory
+  world:
+    description: WORLD.md
+    definition: Assays, plates, reagents, instruments, experiment runs, measurements, and the protocols that produce them.
+    boundary:
+      included: [assay, plate, reagent, instrument, experiment_run, measurement, protocol]
+      excluded: [lims_implementation, instrument_control_software]
+    defaultView: views/scientist.yaml
+  conformance:
+    profile: viewable
+  validity:
+    limitations:
+    - Illustrative example; no real laboratory data. Uses experimental asset kinds (spec Appendix C).
+  assets:
+  - {kind: WorldViewProfile, path: views/assay-base.yaml}
+  - {kind: WorldViewProfile, path: views/scientist.yaml}
+  - {kind: ActorProfile, path: actors/scientist.yaml}
+  - {kind: ActorProfile, path: actors/planning-agent.yaml}
+  - {kind: ActorProfile, path: actors/lab-robot.yaml}
+  - {kind: RoleProfile, path: roles/principal-investigator.yaml}
+  - {kind: AgentProfile, path: agents/planner.yaml}
+  - {kind: DelegationProfile, path: delegations/plan-runs.yaml}
+  - {kind: CapabilityContract, path: capabilities/assay-design.yaml}
+  - {kind: WorkPatternProfile, path: patterns/design-test-learn.yaml}
+  - {kind: ArtifactContract, path: artifacts/protocol.yaml}
+  - {kind: ArtifactContract, path: artifacts/results-table.yaml}
+  - {kind: EvaluationProfile, path: eval/assay-validation.yaml}
+  - {kind: ScenarioProfile, path: scenarios/reagent-change.yaml}
+  - {kind: TaskSetProfile, path: tasks/optimize-assay.yaml}
+  - {kind: PackageExample, path: examples/baseline-observations.yaml}

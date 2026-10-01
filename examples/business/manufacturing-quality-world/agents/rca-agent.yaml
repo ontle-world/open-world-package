@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: AgentProfile
+metadata: {name: rca-agent}
+spec:
+  description: Gathers evidence and drafts root-cause hypotheses for quality claims.

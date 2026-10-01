@@ -1,0 +1,30 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata: {name: design-test-learn}
+spec:
+  pattern: {kind: optimize, family: decide_plan}
+  objective: improve_assay_robustness
+  inputContracts: [artifacts/protocol.yaml]
+  outputContracts: [artifacts/results-table.yaml]
+  worldViewRef: views/scientist.yaml
+  graph:
+    nodes:
+    - {id: design, family: decide_plan, patternKind: schedule}
+    - {id: run, family: execute_operate, patternKind: execute}
+    - {id: measure, family: observe_knowledge, patternKind: observe}
+    - {id: assess, family: evaluate_recover, patternKind: evaluate}
+    - {id: report, family: create_modify, patternKind: create}
+    transitions:
+    - {from: design, to: run}
+    - {from: run, to: measure}
+    - {from: measure, to: assess}
+    - {from: assess, to: design, guard: below_threshold}
+    - {from: assess, to: report, guard: meets_threshold}
+    - {from: run, to: design, event: instrument_fault}
+    guards:
+    - {id: below_threshold, description: Z-factor below 0.5}
+    - {id: meets_threshold, description: Z-factor at least 0.5}
+    events:
+    - {id: instrument_fault, triggers: [design]}
+    loops:
+    - {nodes: [design, run, measure, assess], maxIterations: 6, until: meets_threshold}

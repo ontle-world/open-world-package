@@ -536,8 +536,9 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
     edges: list[dict[str, str]] = []
 
     def edge(source: str, relation: str, target: Any) -> None:
-        if isinstance(target, str) and target:
-            edges.append({"from": source, "relation": relation, "to": target})
+        item = {"from": source, "relation": relation, "to": target}
+        if isinstance(target, str) and target and item not in edges:
+            edges.append(item)
 
     for dep in spec.get("dependencies") or []:
         ref = dep.get("ref") if isinstance(dep, dict) else dep
@@ -552,6 +553,34 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "compiles_view", s.get("worldViewRef"))
         elif kind == "WorldViewProfile":
             edge(rel, "specializes", s.get("specializes"))
+            purpose = s.get("purpose") or {}
+            edge(rel, "for_actor", purpose.get("actorRef"))
+            edge(rel, "for_role", purpose.get("roleRef"))
+            edge(rel, "for_task", purpose.get("taskRef"))
+        elif kind == "ActorProfile":
+            for v in _values(s.get("roleRefs")):
+                edge(rel, "occupies_role", v)
+            for v in _values(s.get("capabilityRefs")):
+                edge(rel, "has_capability", v)
+            edge(rel, "implemented_by", s.get("agentRef"))
+            for v in _values(s.get("memberOf")):
+                edge(rel, "member_of", v)
+        elif kind == "DelegationProfile":
+            edge(rel, "delegated_by", s.get("delegator"))
+            edge(rel, "delegated_to", s.get("delegatee"))
+        elif kind == "WorkPatternProfile":
+            for v in _values(s.get("inputContracts")):
+                edge(rel, "consumes_contract", v)
+            for v in _values(s.get("outputContracts")):
+                edge(rel, "produces_contract", v)
+        elif kind == "EvaluationProfile":
+            subject = s.get("subject") or {}
+            edge(rel, "evaluates", subject.get("ref") if isinstance(subject, dict) else None)
+            edge(rel, "evaluated_by_actor", s.get("evaluatorRef"))
+        elif kind == "ScenarioProfile":
+            edge(rel, "baseline", s.get("baselineStateRef"))
+            engine = s.get("engine") or {}
+            edge(rel, "uses_engine", engine.get("ref") if isinstance(engine, dict) else None)
         elif kind == "TaskSetProfile":
             for v in _values((s.get("task") or {}).get("workPatterns")):
                 for prel, pkind in local_kinds.items():
@@ -561,6 +590,12 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
                 edge(rel, "requires_view", v)
             for v in _values((s.get("requires") or {}).get("knowledge")):
                 edge(rel, "requires_knowledge", v)
+            for v in _values((s.get("requires") or {}).get("actors")):
+                edge(rel, "performed_by", v)
+            for v in _values(s.get("workPatternRefs")):
+                edge(rel, "uses_pattern", v)
+            for v in _values((s.get("mayUse") or {}).get("scenarios")):
+                edge(rel, "may_use_scenario", v)
             for v in _values((s.get("produces") or {}).get("artifacts")):
                 edge(rel, "produces_artifact", v)
             for v in _values(s.get("evaluationRefs")):
@@ -569,6 +604,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "template_for", s.get("artifactContractRef"))
         elif kind == "ConsumerRepresentationProfile":
             edge(rel, "represents_view", s.get("worldViewRef"))
+            edge(rel, "for_actor", (s.get("actor") or {}).get("ref") if isinstance(s.get("actor"), dict) else None)
             for v in _values((s.get("human") or {}).get("artifactContractRefs")):
                 edge(rel, "consumes_contract", v)
             edge(rel, "uses_adapter", (s.get("model") or {}).get("adapterRef"))

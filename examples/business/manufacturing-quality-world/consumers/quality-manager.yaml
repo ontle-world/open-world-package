@@ -3,7 +3,7 @@ kind: ConsumerRepresentationProfile
 metadata:
   name: quality-manager
 spec:
-  actor: {kind: human}
+  actor: {kind: human, ref: actors/quality-manager.yaml}
   worldViewRef: views/quality-incident-task.yaml
   representation: {mode: report, provenance: required}
   human:

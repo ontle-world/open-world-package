@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactContract
+metadata: {name: results-table, version: 0.1.0}
+spec:
+  artifact: {type: dataset, representation: table}
+  schemaRef: schemas/results.schema.json
+  serialization: {formats: [csv, parquet]}
+  storage: {kind: object_store}
+  allowedOperations: [create, inspect, validate, version, share]

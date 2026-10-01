@@ -18,6 +18,7 @@ validate-examples:
 	ontle validate examples/physical-ai/multimodal-action-world-model
 	ontle validate examples/business/sales-prioritization-world
 	ontle validate examples/ontology/quality-ontology
+	ontle validate examples/research/assay-optimization-world
 
 build:
 	python -m pip install build

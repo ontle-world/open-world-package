@@ -8,5 +8,7 @@ spec:
   requires:
     worldViews: [views/account-manager.yaml]
     knowledge: [knowledge/win-loss-playbook.yaml]
+    actors: [actors/sales-manager.yaml, actors/sales-agent.yaml]
+  workPatternRefs: [patterns/prioritize.yaml, patterns/allocate.yaml]
   produces:
     artifacts: [artifacts/priority-board.yaml]

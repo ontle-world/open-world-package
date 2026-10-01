@@ -43,6 +43,14 @@ spec:
     path: knowledge/win-loss-playbook.yaml
   - kind: CapabilityContract
     path: capabilities/crm-read.yaml
+  - kind: ActorProfile
+    path: actors/sales-manager.yaml
+  - kind: ActorProfile
+    path: actors/sales-agent.yaml
+  - kind: RoleProfile
+    path: roles/regional-sales-manager.yaml
+  - kind: DelegationProfile
+    path: delegations/agent-outreach.yaml
   - kind: ConsumerRepresentationProfile
     path: consumers/sales-manager.yaml
   - kind: ConsumerRepresentationProfile

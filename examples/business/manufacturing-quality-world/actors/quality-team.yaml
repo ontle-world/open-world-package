@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: quality-team}
+spec:
+  actorType: team

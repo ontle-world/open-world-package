@@ -76,6 +76,15 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
     if kind == "ConsumerRepresentationProfile":
         return {"actor": {"kind": "human"}, "worldViewRef": world.get("defaultView"),
                 "representation": {"mode": "board"}, "human": {"artifactContractRefs": [], "presentation": "board"}}
+    if kind == "ActorProfile":
+        return {"actorType": "human", "roleRefs": [], "capabilityRefs": []}
+    if kind == "RoleProfile":
+        return {"permissions": [], "authorities": [], "responsibilities": [], "accountabilities": []}
+    if kind == "DelegationProfile":
+        return {"delegator": None, "delegatee": None, "scope": None, "permittedActions": [],
+                "authorityCeiling": {"decisions": []}, "validFrom": None, "expiresAt": None}
+    if kind == "CapabilityContract":
+        return {"description": None, "outcomeRefs": [], "requiredInputs": []}
     if kind == "KnowledgeAsset":
         return {"roles": ["definition"], "representation": "documents", "content": {"ref": {"status": "unbound"}}}
     return {}
@@ -110,6 +119,10 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
         "template": ("artifacts/templates", "ArtifactTemplate"),
         "consumer": ("consumers", "ConsumerRepresentationProfile"),
         "knowledge": ("knowledge", "KnowledgeAsset"),
+        "actor": ("actors", "ActorProfile"),
+        "role": ("roles", "RoleProfile"),
+        "delegation": ("delegations", "DelegationProfile"),
+        "capability": ("capabilities", "CapabilityContract"),
     }
     if asset_kind not in mapping:
         raise OWPError(f"asset kind must be one of {sorted(mapping)}")

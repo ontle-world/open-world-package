@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata: {name: assay-validation, version: 0.1.0}
+spec:
+  assessmentKind: validation
+  subject: {kind: process, ref: patterns/design-test-learn.yaml}
+  objective: assay_separates_controls
+  criteria:
+  - {metric: z_factor, rubric: separation between positive and negative controls, threshold: 0.5}
+  - {metric: cv_percent, rubric: coefficient of variation of controls, threshold: 10}
+  evaluatorRef: actors/scientist.yaml
+  metrics: [z_factor, cv_percent]

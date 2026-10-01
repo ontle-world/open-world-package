@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `docs/GLOSSARY.md` (actor, role, capability, permission, authority, responsibility, accountability, artifact type/representation/format/storage, verification/validation/evaluation/review/approval, scenario) and `docs/PROFILE_PROMOTION.md` (gates and status for experimental profiles).
+- `ontle add actor|role|delegation|capability`; `ontle inspect --graph` shows actor, role, delegation, view, task, evaluation, and scenario relations.
+- Examples: `research/assay-optimization-world` (third domain); `manufacturing-quality-world` and `sales-prioritization-world` gain actors, roles, delegations, capabilities, a work pattern graph, an evaluation, and a scenario.
 - WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract have JSON Schemas; undefined keys are errors. Experimental fields (spec Appendix C.4): World View `purpose.actorRef`/`roleRef`/`taskRef`, `constraints`, `evidenceRefs`; Evaluation `assessmentKind` (verification, validation, evaluation, review, approval), `subject`, `objective`, `criteria`, `verifierRef`, `evaluatorRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; Scenario `baselineStateRef`, `assumptions`, `intervention`, `engine` (value set `scenarioEngines`), `timeHorizon`, `constraints`, `uncertainty`, `confidence`, `expectedOutcome`; Capability `outcomeRefs`, `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`.
 - TaskSetProfile composes actors (`requires.actors`), work patterns (`workPatternRefs`), and `mayUse.scenarios`/`skills`/`tools`.
 - Experimental actors, roles, and delegation (spec Appendix C.3): `ActorProfile` (`actorType` from the value set `actorTypes`), `RoleProfile` (permissions, authorities with ceilings, responsibilities, accountabilities), and `DelegationProfile` (scope, period, revocation, escalation; the warning `experimental.delegation-exceeds-authority`). ConsumerRepresentationProfile gains `actor.ref`.

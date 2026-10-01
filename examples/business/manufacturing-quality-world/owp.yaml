@@ -71,6 +71,26 @@ spec:
     path: knowledge/plant-kg.yaml
   - kind: KnowledgeExtractionProfile
     path: extraction/claim-context.yaml
+  - kind: ActorProfile
+    path: actors/quality-manager.yaml
+  - kind: ActorProfile
+    path: actors/quality-team.yaml
+  - kind: ActorProfile
+    path: actors/rca-agent.yaml
+  - kind: ActorProfile
+    path: actors/plant-director.yaml
+  - kind: RoleProfile
+    path: roles/quality-manager.yaml
+  - kind: AgentProfile
+    path: agents/rca-agent.yaml
+  - kind: DelegationProfile
+    path: delegations/rca-agent.yaml
+  - kind: CapabilityContract
+    path: capabilities/rca-analysis.yaml
+  - kind: EvaluationProfile
+    path: eval/rca-report-review.yaml
+  - kind: ScenarioProfile
+    path: scenarios/quality-hold.yaml
   - kind: TaskSetProfile
     path: tasks/claim-rca.yaml
   - kind: ConsumerRepresentationProfile

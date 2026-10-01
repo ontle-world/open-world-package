@@ -7,6 +7,8 @@ Start here:
 3. `docs/QUICKSTART.md`
 4. `spec/OWP_SPEC.md`
 5. `docs/CONCEPTS.md`
+   - `docs/GLOSSARY.md` — terms OWP keeps apart (actor, role, capability, permission, authority, ...)
+   - `docs/PROFILE_PROMOTION.md` — gates for promoting experimental profiles
 6. `docs/EXAMPLE_CONVENTIONS.md`
 7. `examples/business/`
 8. `examples/physical-ai/`

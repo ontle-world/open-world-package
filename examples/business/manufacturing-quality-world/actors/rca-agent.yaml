@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: rca-agent}
+spec:
+  actorType: ai_agent
+  agentRef: agents/rca-agent.yaml
+  memberOf: [actors/quality-team.yaml]

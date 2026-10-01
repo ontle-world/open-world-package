@@ -8,6 +8,10 @@ The package is intentionally not a full MES or QMS database schema. Native syste
 
 Declared profile: `action-ready` — a World View, a State Compiler with a concrete EWS schema, and action/commit/effect-verification interfaces.
 
+## Semantics
+
+`semantics/quality-terms.yaml` binds the World's names, all seven EWS fields, the observation types, and the actions to terms of `openworld-examples/quality-ontology` (a dependency). Check it with `ontle validate --resolve --source examples`.
+
 ## Work (experimental)
 
 `tasks/claim-rca.yaml` combines the Diagnose and Recommend work patterns, needs the quality-incident View and the RCA playbook (`knowledge/rca-playbook.yaml`), and produces the RCA report described by `artifacts/rca-report.yaml`. `consumers/quality-manager.yaml` describes how the quality manager receives the View. These asset kinds are experimental (spec Appendix C).

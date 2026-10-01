@@ -43,11 +43,12 @@ class ResolveTests(unittest.TestCase):
                 self.assertLessEqual(set(exp.get("errors", [])), rule_ids(result.errors), result.errors)
 
     def test_examples_resolve_across_packages(self):
-        for model in (MODEL, EXAMPLES / "business" / "quality-transition-world-model"):
+        # The business World depends on the quality ontology, so its model's closure has three packages.
+        for model, size in ((MODEL, 2), (EXAMPLES / "business" / "quality-transition-world-model", 3)):
             with self.subTest(model=model.name):
                 result, resolution = validate_resolved(model, [str(EXAMPLES)])
                 self.assertTrue(result.valid, result.errors)
-                self.assertEqual(len(resolution.packages), 2)
+                self.assertEqual(len(resolution.packages), size)
 
     def test_unresolved_without_sources(self):
         with mock.patch.dict(os.environ, {"ONTLE_PATH": ""}):

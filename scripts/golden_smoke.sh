@@ -15,6 +15,7 @@ ontle validate examples/ontology/quality-ontology
 ontle export examples/ontology/quality-ontology --format turtle >/dev/null
 ontle export examples/ontology/quality-ontology --format jsonld >/dev/null
 
+ontle validate --resolve --source examples examples/business/manufacturing-quality-world
 ontle validate --resolve --source examples examples/business/quality-transition-world-model
 ontle validate --resolve --source examples examples/physical-ai/multimodal-action-world-model
 
@@ -49,6 +50,7 @@ ontle verify "$ARCHIVE"
 W=examples/business/manufacturing-quality-world
 ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-05T00:00:00Z > "$TMP/quality-ews.yaml"
 ontle ews check "$TMP/quality-ews.yaml" --world "$W"
+ontle ews compile "$W" --compiler state/quality-incident-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-05T00:00:00Z --jsonld --source examples >/dev/null
 W=examples/physical-ai/mobile-manipulation-world
 ontle ews compile "$W" --compiler state/pick-place-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-01T12:00:03Z > "$TMP/pick-place-ews.yaml"
 ontle ews check "$TMP/pick-place-ews.yaml" --world "$W"

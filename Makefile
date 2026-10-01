@@ -12,6 +12,7 @@ smoke:
 
 validate-examples:
 	ontle validate examples/business/manufacturing-quality-world
+	ontle validate --resolve --source examples examples/business/manufacturing-quality-world
 	ontle validate examples/business/quality-transition-world-model
 	ontle validate examples/physical-ai/mobile-manipulation-world
 	ontle validate examples/physical-ai/multimodal-action-world-model

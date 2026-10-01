@@ -28,27 +28,27 @@ export function expandCurie(curie: string, prefixes: Record<string, unknown>): s
   return curie.includes("://") || curie.startsWith("urn:") ? curie : null;
 }
 
-/** [where, value] for every identifier a SemanticProfile defines or uses. */
-function profileIdentifiers(doc: Obj): Array<[string, unknown]> {
-  const out: Array<[string, unknown]> = [];
+/** [where, value, defines] for every identifier a SemanticProfile defines (types, properties, relations) or uses. */
+function profileIdentifiers(doc: Obj): Array<[string, unknown, boolean]> {
+  const out: Array<[string, unknown, boolean]> = [];
   const spec = isObj(doc.spec) ? doc.spec : {};
   const types = Array.isArray(spec.types) ? spec.types : [];
   types.forEach((t, i) => {
     if (!isObj(t)) return;
-    out.push([`spec.types[${i}].id`, t.id]);
+    out.push([`spec.types[${i}].id`, t.id, true]);
     const parents = Array.isArray(t.subClassOf) ? t.subClassOf : t.subClassOf ? [t.subClassOf] : [];
-    for (const p of parents) out.push([`spec.types[${i}].subClassOf`, p]);
+    for (const p of parents) out.push([`spec.types[${i}].subClassOf`, p, false]);
     (Array.isArray(t.properties) ? t.properties : []).forEach((p, j) => {
       if (!isObj(p)) return;
-      out.push([`spec.types[${i}].properties[${j}].id`, p.id]);
+      out.push([`spec.types[${i}].properties[${j}].id`, p.id, true]);
       // A range without ':' is a datatype name such as `string`, not an identifier.
-      if (typeof p.range === "string" && p.range.includes(":")) out.push([`spec.types[${i}].properties[${j}].range`, p.range]);
+      if (typeof p.range === "string" && p.range.includes(":")) out.push([`spec.types[${i}].properties[${j}].range`, p.range, false]);
     });
   });
   (Array.isArray(spec.relations) ? spec.relations : []).forEach((r, i) => {
     if (!isObj(r)) return;
-    out.push([`spec.relations[${i}].id`, r.id]);
-    for (const k of ["domain", "range"]) if (typeof r[k] === "string") out.push([`spec.relations[${i}].${k}`, r[k]]);
+    out.push([`spec.relations[${i}].id`, r.id, true]);
+    for (const k of ["domain", "range"]) if (typeof r[k] === "string") out.push([`spec.relations[${i}].${k}`, r[k], false]);
   });
   return out;
 }
@@ -65,6 +65,37 @@ function packageFile(ctx: Context, p: unknown): string | null {
 function loadDoc(abs: string): Obj | undefined {
   const l = loadYamlFile(abs);
   return l.ok && isObj(l.value) ? l.value : undefined;
+}
+
+/**
+ * Spec 3.1: the prefixes an OntologyPackage declares and the terms it defines — the expanded
+ * identifiers its owp-yaml schema entrypoints define (types, their properties, relations) plus
+ * the terms of its termIndex. Used by the cross-package binding rules (spec 14).
+ */
+export function ontologyTerms(dir: string, manifest: Obj): { prefixes: Record<string, string>; terms: Set<string> } {
+  const ontology = get(manifest, "spec", "ontology");
+  const o = isObj(ontology) ? ontology : {};
+  const prefixes: Record<string, string> = {};
+  if (isObj(o.prefixes)) for (const [k, v] of Object.entries(o.prefixes)) if (typeof v === "string") prefixes[k] = v;
+  const terms = new Set<string>();
+  const load = (p: unknown): Obj | undefined => {
+    if (typeof p !== "string") return undefined;
+    const norm = normalizeRelPath(p);
+    return norm === null ? undefined : loadDoc(path.join(dir, norm));
+  };
+  for (const e of Array.isArray(o.entrypoints) ? o.entrypoints : []) {
+    if (!isObj(e) || e.format !== "owp-yaml" || e.role !== "schema") continue;
+    const doc = load(e.path);
+    if (!doc) continue;
+    for (const [, value, defines] of profileIdentifiers(doc)) {
+      const iri = defines && typeof value === "string" ? expandCurie(value, prefixes) : null;
+      if (iri !== null) terms.add(iri);
+    }
+  }
+  const index = load(o.termIndex);
+  const list = get(index, "spec", "terms");
+  for (const t of Array.isArray(list) ? list : []) if (isObj(t) && typeof t.iri === "string") terms.add(t.iri);
+  return { prefixes, terms };
 }
 
 /** Single-package checks of spec.ontology (always applied, independent of the declared profile). */

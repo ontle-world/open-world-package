@@ -71,7 +71,7 @@ MANIFEST = closed({
         "assets": array(closed({"kind": VALUE, "path": VALUE, "ref": EXTERNAL_REF})),
         "conformance": closed({"profile": VALUE}),
         "world": closed({
-            "definition": VALUE, "description": VALUE, "defaultView": VALUE, "defaultStateCompiler": VALUE,
+            "definition": VALUE, "description": VALUE, "defaultView": VALUE, "defaultStateCompiler": VALUE, "semanticBinding": VALUE,
             "boundary": closed({"included": VALUE, "excluded": VALUE}),
         }),
         "worldModel": closed({

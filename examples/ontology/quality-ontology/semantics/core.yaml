@@ -41,6 +41,10 @@ spec:
   - id: q:Constraint
   - id: q:ProposeCapa
     label: {en: Propose CAPA}
+  - id: q:RequestQualityHold
+    label: {en: Request quality hold}
+  - id: q:RequestReinspection
+    label: {en: Request reinspection}
   relations:
   - {id: q:affectsLot, domain: q:Claim, range: q:Lot}
   - {id: q:supportedBy, domain: q:Decision, range: q:Evidence}

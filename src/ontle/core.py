@@ -11,6 +11,7 @@ from typing import Any
 
 import yaml
 
+from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
 
@@ -415,7 +416,9 @@ def validate_package(path: str | Path) -> ValidationResult:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
                 if isinstance(adata, dict):
                     local_asset_docs[rel] = adata
-                    if asset_kind in experimental.TABLES:
+                    if asset_kind == "SemanticBinding":
+                        pass  # checked by binding_issues after the asset loop
+                    elif asset_kind in experimental.TABLES:
                         experimental_docs.append((rel, asset_kind, adata))
                     elif asset_kind != "PackageExample":
                         errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
@@ -425,6 +428,12 @@ def validate_package(path: str | Path) -> ValidationResult:
         errors.extend(exp_errors)
         warnings.extend(exp_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
+    view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
+                     for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
+                     if isinstance(x, str)}
+    bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, view_includes, extension_names)
+    errors.extend(bind_errors)
+    warnings.extend(bind_warnings)
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:
@@ -485,6 +494,15 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
             "satisfied": satisfied_world_profile(spec, {k for k in kinds.values()} | _ref_asset_kinds(spec), kinds, docs,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
+    if data.get("kind") == "WorldPackage" and isinstance(spec, dict) and isinstance((spec.get("world") or {}).get("semanticBinding"), str):
+        kinds, docs = _local_assets(root, spec)
+        bdoc = docs.get(spec["world"]["semanticBinding"]) or {}
+        bound = set(((bdoc.get("spec") or {}).get("fields") or {}))
+        fields = set()
+        for rel, k in kinds.items():
+            if k == "StateCompilerProfile":
+                fields |= set((((docs.get(rel) or {}).get("spec") or {}).get("outputSchema") or {}).get("fields") or [])
+        summary["semanticCoverage"] = {"boundFields": len(bound & fields), "fields": len(fields)}
     if data.get("kind") == "OntologyPackage" and isinstance(spec, dict):
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {"declared": conformance.get("profile"),

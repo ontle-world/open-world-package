@@ -281,10 +281,28 @@ def _load_asset(pkg: ResolvedPackage, rel: str) -> dict[str, Any]:
     return doc if isinstance(doc, dict) else {}
 
 
+def _binding_grounding_errors(pkg: ResolvedPackage, resolution: Resolution) -> list[str]:
+    """SemanticBinding CURIEs resolve against the OntologyPackages this package depends on (spec section 14)."""
+    from .binding import grounding_issues
+    from .ontology import terms as ontology_terms
+    binding_docs = {item["path"]: _load_asset(pkg, item["path"]) for item in (pkg.manifest.get("spec") or {}).get("assets", []) or []
+                    if isinstance(item, dict) and item.get("kind") == "SemanticBinding" and isinstance(item.get("path"), str)}
+    if not binding_docs:
+        return []
+    ontologies = []
+    for ref, _ in _dependency_refs(pkg.manifest):
+        dep = resolution.packages.get(ref)
+        if dep is not None and dep.kind == "OntologyPackage":
+            prefixes, defined = ontology_terms(dep.root, dep.manifest)
+            ontologies.append((ref, prefixes, defined))
+    return grounding_issues(pkg.identity, binding_docs, ontologies)
+
+
 def cross_package_errors(resolution: Resolution) -> list[str]:
     """Rules that need more than one package: extension definitions and World Model grounding against the referenced World."""
     errors: list[str] = []
     for pkg in resolution.packages.values():
+        errors += _binding_grounding_errors(pkg, resolution)
         deps = (pkg.manifest.get("spec") or {}).get("dependencies") or []
         for dep in deps if isinstance(deps, list) else []:
             if not (isinstance(dep, dict) and isinstance(dep.get("as"), str) and isinstance(dep.get("ref"), str)):
@@ -338,3 +356,22 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
             errors += [f"resolve.dependency-invalid: {ident}: {e}" for e in validate_package(pkg.root).errors]
     errors += cross_package_errors(resolution)
     return ValidationResult(not errors, errors, warnings, result.manifest), resolution
+
+
+def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] | None = None) -> dict[str, Any]:
+    """The EWS document as JSON with an @context mapping bound fields to ontology IRIs. The EWS content is unchanged."""
+    from .binding import jsonld_context
+    from .ontology import terms as ontology_terms
+    resolution = resolve_package(world_path, sources)
+    if resolution.errors:
+        raise OWPError("; ".join(resolution.errors))
+    world = resolution.root
+    binding_rel = ((world.manifest.get("spec") or {}).get("world") or {}).get("semanticBinding")
+    if not isinstance(binding_rel, str):
+        raise OWPError("the World declares no spec.world.semanticBinding")
+    prefixes: dict[str, str] = {}
+    for ref, _ in _dependency_refs(world.manifest):
+        dep = resolution.packages.get(ref)
+        if dep is not None and dep.kind == "OntologyPackage":
+            prefixes.update(ontology_terms(dep.root, dep.manifest)[0])
+    return {"@context": jsonld_context(_load_asset(world, binding_rel), prefixes), **ews}

@@ -183,7 +183,7 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
     out: set[str] = set()
     for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and isinstance(entry.get("path"), str):
+        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and isinstance(entry.get("path"), str):
             doc = _load(root / entry["path"])
             if isinstance(doc, dict):
                 for _, value, term_type in _profile_curies(doc):

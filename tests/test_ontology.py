@@ -73,5 +73,16 @@ class OntologyTests(unittest.TestCase):
             self.assertEqual(terms, [{"iri": "https://example.org/q#Claim", "type": "class"}])
 
 
+class SemanticBindingTests(unittest.TestCase):
+    def test_manufacturing_world_is_fully_bound(self):
+        from ontle.resolve import ews_jsonld, validate_resolved
+        world = ROOT / "examples" / "business" / "manufacturing-quality-world"
+        result, _ = validate_resolved(world, [str(ROOT / "examples")])
+        self.assertTrue(result.valid, result.errors)
+        self.assertEqual(inspect_package(world)["semanticCoverage"], {"boundFields": 7, "fields": 7})
+        doc = ews_jsonld(world, {"apiVersion": "openworld/v1alpha1", "kind": "EffectiveWorldState", "spec": {}}, [str(ROOT / "examples")])
+        self.assertEqual(doc["@context"]["claim.status"], {"@id": "https://w3id.org/openworld-examples/quality#claimStatus"})
+
+
 if __name__ == "__main__":
     unittest.main()

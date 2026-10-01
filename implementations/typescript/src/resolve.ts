@@ -1,6 +1,6 @@
 /**
  * Spec section 11: dependency resolution over ordered package sources
- * (directory, .owp.zip archive, git) plus cross-package rules (extension definitions, WorldModel grounding).
+ * (directory, .owp.zip archive, git) plus cross-package rules (extension definitions, semantic binding, WorldModel grounding).
  */
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
@@ -12,6 +12,8 @@ import { Issue } from "./context.js";
 import { readZip } from "./zip.js";
 import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependencies.js";
 import { parseContractRef } from "./rules/worldmodel.js";
+import { bindingGroundingProblems } from "./rules/binding.js";
+import { ontologyTerms } from "./rules/ontology.js";
 import { validatePackage, ValidationResult } from "./validate.js";
 
 export interface Candidate {
@@ -371,12 +373,31 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
     }
   }
 
+  // Spec 14: SemanticBinding CURIEs resolve against the package's dependency OntologyPackages.
+  for (const n of nodes.values()) for (const p of bindingGrounding(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
+
   // Cross-package rules for every WorldModelPackage in the closure.
   for (const n of nodes.values()) {
     if (n.kind === "WorldModelPackage") for (const m of crossPackageProblems(n, nodes)) err(m.rule, `${n.identity}: ${m.msg}`);
   }
 
   return { ...base, errors, warnings, valid: errors.length === 0, resolved };
+}
+
+function bindingGrounding(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {
+  const assets = get(pkg.manifest, "spec", "assets");
+  const docs: Array<[string, unknown]> = [];
+  for (const a of Array.isArray(assets) ? assets : []) {
+    if (!isObj(a) || a.kind !== "SemanticBinding" || typeof a.path !== "string") continue;
+    const l = loadYamlFile(path.join(pkg.dir, a.path));
+    docs.push([a.path, l.ok ? l.value : undefined]);
+  }
+  if (docs.length === 0) return [];
+  const ontologies = pkg.deps
+    .map((d) => nodes.get(d.ref))
+    .filter((d): d is Node => d !== undefined && d.kind === "OntologyPackage")
+    .map((d) => ({ ref: d.identity, ...ontologyTerms(d.dir, d.manifest) }));
+  return bindingGroundingProblems(docs, ontologies);
 }
 
 function crossPackageProblems(model: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {

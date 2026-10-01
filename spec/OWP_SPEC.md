@@ -295,7 +295,7 @@ Precise meaning of the checks above:
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **Typed local YAML assets:** every local `.yaml`/`.yml` asset MUST parse. If an asset other than `PackageExample` declares a top-level `kind`, that kind MUST equal the manifest entry's `kind`. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not compared.
 - **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: a kind without `:` that is not in the vocabulary is a warning; a vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
-- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, and OntologyTermIndex assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, and SemanticBinding assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
@@ -520,6 +520,44 @@ An `extensions` block maps extension names to mappings. In a package, every name
 
 Extensions MUST NOT change the meaning of standard fields. A tool that ignores every extension still interprets the package correctly, apart from extensions declared with `mustUnderstand: true`. `extensions` is reserved: this specification does not use the name for any other field.
 
+## 14. Semantic binding
+
+A SemanticBinding connects the names a World uses to terms of the ontologies it depends on, so two packages can be compared by meaning rather than by spelling.
+
+```yaml
+kind: SemanticBinding
+metadata:
+  name: quality-terms
+spec:
+  terms:                                   # World name -> class
+    claim: q:Claim
+    lot: q:Lot
+  fields:                                  # EWS field -> class and property path
+    claim.status: {class: q:Claim, path: [q:claimStatus]}
+    lot.genealogy: {class: q:Lot, path: [q:derivedFrom]}
+  observationTypes:                        # observation type -> class
+    QMS.claim: q:Claim
+  actions:                                 # action name -> term
+    propose-capa: q:ProposeCapa
+```
+
+A WorldPackage names its binding with `spec.world.semanticBinding`, the path of a local `SemanticBinding` asset. The binding declares no prefixes: they come from the OntologyPackages in `spec.dependencies` (section 3.1).
+
+Single-package rules:
+
+- `spec.world.semanticBinding`, when present, is a listed local SemanticBinding asset.
+- Every value in `terms`, `observationTypes`, and `actions`, and every `class` and `path` entry in `fields`, is a CURIE `<prefix>:<local name>`.
+- Every key of `fields` is a field of some local State Compiler's `outputSchema.fields`.
+- A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.
+- SemanticBinding documents contain only the fields of `schemas/semantic-binding.schema.json` and `extensions` blocks.
+
+Cross-package rules (section 11), for every package in the closure that has SemanticBinding assets:
+
+- The prefixes of all dependency OntologyPackages are merged. Two ontologies that declare the same prefix with different IRIs are an error.
+- Every CURIE expands with a merged prefix, and the expanded IRI is a term of one of those ontologies (section 3.1).
+
+The reference CLI reports `semanticCoverage` (bound fields out of compiler fields) in `ontle inspect`, and `ontle ews compile --jsonld` prints an EWS document with a JSON-LD `@context` built from the binding. Neither changes the EWS document.
+
 ## Appendix A. Rule ids
 
 Each error has a stable rule id. Implementations SHOULD prefix error messages with `<rule-id>: `. The conformance suite lists, for each invalid case, the rule ids a conforming implementation MUST report; it MAY report additional ids for consequential errors. Message wording is implementation-defined.
@@ -603,6 +641,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.field-unknown` | 12.1 | field outside `outputSchema` |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
+| `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
+| `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
+| `binding.field-unknown` | 14 | bound field is not in any local State Compiler `outputSchema.fields` |
+| `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
+| `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |
+| `grounding.ontology-term` | 14 | expanded binding IRI is not a term of a dependency OntologyPackage |
 | `schema.unknown-field` | 8, 12 | a key that is neither a defined field nor an `extensions` block |
 | `extension.name` | 13.1 | `as` malformed or reserved |
 | `extension.duplicate` | 13.1 | extension name declared twice |
@@ -622,6 +666,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `asset.kind-unknown` | 8 | kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
+| `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `ref.legacy-shape` | 5.1 | ExternalRef uses `repository` instead of `uri` |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |

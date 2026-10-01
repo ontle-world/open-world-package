@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import { Context, error } from "../context.js";
 import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, RESERVED_EXTENSION_NAMES, structureProblems } from "../structure.js";
+import { checkSemanticBindings } from "./binding.js";
 import { checkExperimentalAsset, checkViewSpecialization, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
 
@@ -69,7 +70,8 @@ export function checkAssetStructure(ctx: Context): void {
   for (const a of ctx.localAssets) {
     const doc = a.doc;
     // Spec 8 / 13.3: PackageExample files may hold any document, so they are not checked.
-    if (!isObj(doc) || a.kind === "PackageExample") continue;
+    // SemanticBinding documents are checked by checkSemanticBindings (spec 14).
+    if (!isObj(doc) || a.kind === "PackageExample" || a.kind === "SemanticBinding") continue;
     // Appendix C: experimental kinds are checked with warnings (extension rules stay errors).
     if (a.kind in EXPERIMENTAL_STRUCTURES) {
       checkExperimentalAsset(ctx, a);
@@ -87,4 +89,5 @@ export function checkAssetStructure(ctx: Context): void {
     for (const p of problems) error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
   }
   checkViewSpecialization(ctx);
+  checkSemanticBindings(ctx);
 }

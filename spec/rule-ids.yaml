@@ -97,6 +97,12 @@ rules:
   ews.unresolved-alternatives: {severity: error, section: "12.1", summary: "unresolved field with fewer than two alternatives"}
   ews.provenance-orphan: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
   ews.provenance-required: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
+  binding.asset: {severity: error, section: "14", summary: "spec.world.semanticBinding is not a local SemanticBinding asset"}
+  binding.curie: {severity: error, section: "14", summary: "binding value or section is not a CURIE or a mapping as required"}
+  binding.field-unknown: {severity: error, section: "14", summary: "bound field is not in any local State Compiler outputSchema.fields"}
+  grounding.prefix-unknown: {severity: error, section: "14", summary: "binding CURIE uses a prefix no dependency OntologyPackage declares"}
+  grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}
+  grounding.ontology-term: {severity: error, section: "14", summary: "expanded binding IRI is not a term of a dependency OntologyPackage"}
   schema.unknown-field: {severity: error, section: "8, 12", summary: "a key that is neither a defined field nor an extensions block"}
   extension.name: {severity: error, section: "13.1", summary: "as malformed or reserved"}
   extension.duplicate: {severity: error, section: "13.1", summary: "extension name declared twice"}
@@ -111,6 +117,7 @@ rules:
   asset.kind-unknown: {severity: warning, section: "8", summary: "kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
+  binding.term-unscoped: {severity: warning, section: "14", summary: "binding term outside the World boundary and every View projection"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   ref.legacy-shape: {severity: warning, section: "5.1", summary: "ExternalRef uses repository instead of uri"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}

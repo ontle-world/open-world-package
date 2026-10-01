@@ -3,7 +3,7 @@ import re
 import unittest
 from pathlib import Path
 
-from ontle import experimental, structure
+from ontle import binding, experimental, structure
 
 SCHEMAS = Path(__file__).resolve().parent.parent / "schemas"
 
@@ -52,6 +52,7 @@ class StructureMatchesJsonSchema(unittest.TestCase):
             ("effective-world-state", structure.EFFECTIVE_WORLD_STATE),
             ("semantic-profile", structure.SEMANTIC_PROFILE),
             ("ontology-term-index", structure.TERM_INDEX),
+            ("semantic-binding", binding.SEMANTIC_BINDING),
         ):
             with self.subTest(schema=name):
                 schema = json.loads((SCHEMAS / f"{name}.schema.json").read_text(encoding="utf-8"))

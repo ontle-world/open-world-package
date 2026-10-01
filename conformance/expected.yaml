@@ -569,6 +569,40 @@ cases:
     valid: false
     errors: [ontology.entrypoint]
     rule: "Entrypoint paths name files inside the package; a path that resolves outside is rejected even if the file exists."
+  binding-valid:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "A SemanticBinding binds World names, EWS fields, observation types, and actions to CURIEs."
+  binding-asset-missing:
+    valid: false
+    errors: [binding.asset]
+    satisfiedProfile: model-ready
+    rule: "spec.world.semanticBinding must be a listed local SemanticBinding asset."
+  binding-not-curie:
+    valid: false
+    errors: [binding.curie]
+    satisfiedProfile: model-ready
+    rule: "Binding values are CURIEs."
+  binding-field-unknown:
+    valid: false
+    errors: [binding.field-unknown]
+    satisfiedProfile: model-ready
+    rule: "A bound field must be in some local State Compiler outputSchema.fields."
+  binding-term-unscoped:
+    valid: true
+    satisfiedProfile: model-ready
+    warnings: [binding.term-unscoped]
+    rule: "A term outside the World boundary and every View projection is a warning."
+  binding-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: model-ready
+    rule: "SemanticBinding documents accept only their defined fields."
+  binding-field-shape:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: model-ready
+    rule: "A fields entry has class and path only."
 resolutionCases:
   grounded:
     valid: true
@@ -659,6 +693,21 @@ resolutionCases:
     valid: false
     errors: [extension.definition]
     rule: "A dependency declared with 'as' must resolve to a package that declares spec.extensionDefinition."
+  binding-grounded:
+    valid: true
+    rule: "Binding CURIEs expand with the dependency ontology's prefixes to terms it defines."
+  binding-prefix-unknown:
+    valid: false
+    errors: [grounding.prefix-unknown]
+    rule: "A binding prefix must be declared by a dependency OntologyPackage."
+  binding-term-unknown:
+    valid: false
+    errors: [grounding.ontology-term]
+    rule: "An expanded binding IRI must be a term of a dependency OntologyPackage."
+  binding-prefix-conflict:
+    valid: false
+    errors: [grounding.prefix-conflict]
+    rule: "Two dependency ontologies may not declare one prefix with different IRIs."
 ewsCases:
   latest-picks-newest:
     compiler: state/task-compiler.yaml

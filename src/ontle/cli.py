@@ -11,7 +11,7 @@ from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, load_manifest, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
-from .resolve import resolve_package, validate_resolved
+from .resolve import ews_jsonld, resolve_package, validate_resolved
 from .scaffold import add_asset, add_extension, init_project
 
 
@@ -44,6 +44,9 @@ def cmd_ews_compile(args):
     if not isinstance(observations, dict):
         raise OWPError("observations file must contain a YAML mapping")
     ews = compile_ews(args.world, args.compiler, observations, args.as_of)
+    if args.jsonld:
+        print(json.dumps(ews_jsonld(args.world, ews, args.source), indent=2, ensure_ascii=False))
+        return 0
     print(yaml.safe_dump(ews, sort_keys=False, allow_unicode=True), end="")
     return 0
 
@@ -134,6 +137,8 @@ def build_parser():
     y.add_argument("--compiler", required=True, help="StateCompilerProfile asset path inside the World package")
     y.add_argument("--observations", required=True, help="ObservationSet YAML file")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
+    y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
+    y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.set_defaults(func=cmd_ews_compile)
     y = esp.add_parser("check", help="check an EWS document against its State Compiler output contract")
     y.add_argument("ews", help="EffectiveWorldState YAML file")

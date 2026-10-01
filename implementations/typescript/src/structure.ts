@@ -45,7 +45,7 @@ export const MANIFEST: Shape = closed(
       assets: list(closed({ ...leaves("kind", "path"), ref: EXTERNAL_REF })),
       conformance: closed(leaves("profile")),
       world: closed({
-        ...leaves("definition", "description", "defaultView", "defaultStateCompiler"),
+        ...leaves("definition", "description", "defaultView", "defaultStateCompiler", "semanticBinding"),
         boundary: closed(leaves("included", "excluded")),
       }),
       worldModel: closed({
@@ -94,6 +94,13 @@ export const TERM_INDEX: Shape = closed(
   { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: list(closed(leaves("iri", "type", "label"))) }) },
   false,
 );
+
+/** schemas/semantic-binding.schema.json (spec 14): sections are maps; `fields` entries are checked with FIELD_BINDING. */
+export const SEMANTIC_BINDING: Shape = closed(
+  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN }) },
+  false,
+);
+export const FIELD_BINDING: Shape = closed(leaves("class", "path"));
 
 /** schemas/compatibility-evidence.schema.json */
 export const COMPATIBILITY_EVIDENCE: Shape = closed(

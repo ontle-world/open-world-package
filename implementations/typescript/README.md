@@ -36,6 +36,7 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/manifest.ts`, `src/rules/assets.ts`, `src/rules/dependencies.ts` | 2, 3, 5, 8 |
 | `src/rules/externalref.ts` | 5.1 ExternalRef (`spec.assets[].ref`) |
 | `src/rules/ontology.ts` | 3.1 OntologyPackage contract and ontology conformance profiles |
+| `src/rules/binding.ts` | 14 SemanticBinding (single-package; cross-package grounding called from `src/resolve.ts`) |
 | `src/rules/experimental.ts` | Appendix C experimental kinds (warnings) and World View `specializes` |
 | `src/structure.ts` | 8 defined fields: field tables mirroring `schemas/*.schema.json` |
 | `src/rules/extensions.ts` | 13 extension declarations, definitions, `extensions` blocks |
@@ -43,7 +44,7 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/world.ts` | 6.1 conformance profiles |
 | `src/rules/worldmodel.ts` | 3, 6 |
 | `src/rules/evaluation.ts` | 9 |
-| `src/resolve.ts`, `src/zip.ts` | 7, 11, 13.1 |
+| `src/resolve.ts`, `src/zip.ts` | 7, 11, 13.1, 14 |
 | `src/ews.ts` | 12 |
 | `src/conformance.ts` | conformance runner |
 
@@ -69,7 +70,8 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | external refs | + ExternalRef (section 5.1), 14 `ref-*` cases | 156/156 after the update (maintainer update, not clean-room) |
 | experimental kinds | + Appendix C experimental kinds, value sets, View `specializes`; expected `warnings` checked by the runner; 10 `experimental-*`/`view-specializes*` cases | 166/166 after the update (maintainer update, not clean-room) |
 | ontology contract | + OntologyPackage contract (section 3.1): entrypoints, prefixes, SemanticProfile and OntologyTermIndex documents, external imports, ontology profiles; 20 `ontology-*` cases | 186/186 after the update (maintainer update, not clean-room) |
+| semantic binding | + SemanticBinding (section 14): single-package rules and grounding against dependency ontologies; 7 validation and 4 resolution `binding-*` cases | 198/198 after the update (maintainer update, not clean-room) |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 
-After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); and the ontology contract (section 3.1). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.
+After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); and semantic binding (section 14). The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.

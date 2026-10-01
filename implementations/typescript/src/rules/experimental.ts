@@ -219,3 +219,32 @@ export function checkViewSpecialization(ctx: Context): void {
     }
   }
 }
+
+/**
+ * Appendix C: a View's resolved `projection.include` — the base View's resolved include ∪ its own
+ * include − its own exclude, following `specializes` through local WorldViewProfiles (cycles stop the chain).
+ */
+export function resolvedInclude(p: string, docs: Map<string, unknown>, kinds: Map<string, string>, seen: string[] = []): string[] {
+  const s = isObj(docs.get(p)) ? (docs.get(p) as Obj).spec : undefined;
+  const spec = isObj(s) ? s : {};
+  const projection = isObj(spec.projection) ? spec.projection : {};
+  const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  const exclude = new Set(strings(projection.exclude));
+  const base = spec.specializes;
+  const include: string[] = [];
+  if (typeof base === "string" && kinds.get(base) === "WorldViewProfile" && !seen.includes(base) && base !== p) {
+    include.push(...resolvedInclude(base, docs, kinds, [...seen, p]));
+  }
+  for (const x of strings(projection.include)) if (!include.includes(x)) include.push(x);
+  return include.filter((x) => !exclude.has(x));
+}
+
+/** Union of the resolved projection.include of every local World View. */
+export function localViewIncludes(ctx: Context): Set<string> {
+  const kinds = localKinds(ctx);
+  const docs = new Map<string, unknown>();
+  for (const a of ctx.localAssets) if (!docs.has(a.rawPath)) docs.set(a.rawPath, a.doc);
+  const out = new Set<string>();
+  for (const [p, k] of kinds) if (k === "WorldViewProfile") for (const x of resolvedInclude(p, docs, kinds)) out.add(x);
+  return out;
+}

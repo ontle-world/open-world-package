@@ -7,6 +7,8 @@ metadata:
   title: Manufacturing Quality World
   license: Apache-2.0
 spec:
+  dependencies:
+  - openworld-examples/quality-ontology@0.1.0
   domains:
   - manufacturing
   - quality
@@ -29,6 +31,7 @@ spec:
       - complete_qms_implementation
     defaultView: views/quality-incident-task.yaml
     defaultStateCompiler: state/quality-incident-compiler.yaml
+    semanticBinding: semantics/quality-terms.yaml
   conformance:
     profile: action-ready
   capabilities:
@@ -42,6 +45,8 @@ spec:
   assets:
   - kind: WorldViewProfile
     path: views/quality-incident-task.yaml
+  - kind: SemanticBinding
+    path: semantics/quality-terms.yaml
   - kind: StateCompilerProfile
     path: state/quality-incident-compiler.yaml
   - kind: SourceSystemSchemaProfile

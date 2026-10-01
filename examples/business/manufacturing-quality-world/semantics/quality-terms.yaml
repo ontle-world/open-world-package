@@ -1,0 +1,35 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticBinding
+metadata:
+  name: quality-terms
+spec:
+  terms:
+    quality_incident: q:QualityIncident
+    lot: q:Lot
+    equipment: q:Equipment
+    inspection: q:Inspection
+    claim: q:Claim
+    decision: q:Decision
+    capa: q:Capa
+    outcome: q:Outcome
+    evidence: q:Evidence
+    constraint: q:Constraint
+  fields:
+    quality_incident.status: {class: q:QualityIncident, path: [q:incidentStatus]}
+    claim.status: {class: q:Claim, path: [q:claimStatus]}
+    lot.genealogy: {class: q:Lot, path: [q:derivedFrom]}
+    equipment.condition_events: {class: q:Equipment, path: [q:conditionEvent]}
+    inspection.results: {class: q:Inspection, path: [q:inspectionResult]}
+    evidence.open_hypotheses: {class: q:Evidence, path: [q:openHypothesis]}
+    capa.status: {class: q:Capa, path: [q:capaStatus]}
+  observationTypes:
+    QMS.nonconformance: q:QualityIncident
+    QMS.claim: q:Claim
+    MES.production_lot: q:Lot
+    MES.equipment: q:Equipment
+    QMS.inspection: q:Inspection
+    QMS.capa: q:Capa
+  actions:
+    propose_capa: q:ProposeCapa
+    request_quality_hold: q:RequestQualityHold
+    request_reinspection: q:RequestReinspection

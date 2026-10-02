@@ -27,7 +27,7 @@ Order matters: each item can change verdicts, so both implementations and the su
 1. ~~**YAML profile for all OWP documents.**~~ Done: spec section 5.2; both implementations read every OWP YAML document with the YAML 1.2 core schema and reject duplicate keys.
 2. ~~**`outputSchemaRef` resolution.**~~ Done: spec section 12.1; the EWS fields are the top-level `properties` of a package-relative JSON Schema, and the field rules apply to them.
 3. ~~**Warnings in the suite.**~~ Done: cases may list `warnings`; warning ids are in spec Appendix A.
-4. **Recorded revisions.** Add the expected `git:<commit>` / `sha256:<digest>` revisions to resolution cases so recorded revisions are compared across implementations.
+4. ~~**Recorded revisions.**~~ Done: valid resolution cases list `resolved` (identity and recorded revision); both implementations match them.
 5. ~~**Machine-readable rule ids.**~~ Done: `spec/rule-ids.yaml`, checked by `tests/test_rule_ids.py`.
 
 ## 3. Bind the examples to real external artifacts

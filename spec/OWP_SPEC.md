@@ -298,6 +298,8 @@ A resolver finds each reference in an ordered list of package sources. This alph
 | archive | a path ending in `.owp.zip`; its `owp.lock.json` hashes MUST verify before use | `sha256:<archive digest>` |
 | git | `git+<url>@<rev>[#subdir=<path>]`; `<url>` may be a remote URL, a local repository path, or a `git bundle` file; a relative local path is resolved like a directory source; `<rev>` SHOULD be an immutable tag or commit; `<subdir>` is scanned like a directory source | `git:<commit>` |
 
+A resolver records, for every package in the closure other than the root, the revision in the table: none for a directory source, `sha256:<archive digest>` for an archive (also one found in a directory source), `git:<commit>` with the full commit hash `<rev>` resolved to. The revision depends only on the bytes fetched, so two resolvers given the same sources record the same revisions.
+
 Resolution rules:
 
 - Dependencies are resolved transitively, in declaration order, depth first.

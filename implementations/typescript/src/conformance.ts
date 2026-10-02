@@ -54,10 +54,14 @@ let cacheDir: string;
 const runResolution: Runner = (dir, id, exp) => {
   const base = path.join(dir, "resolution", id);
   const r = validateWithResolution(path.join(base, "root"), { sources: [path.join(base, "packages")], cacheDir });
+  // `resolved`: every package of the closure except the root, with its recorded revision (null: none).
+  const checkResolved = isObj(exp.resolved);
+  const recorded = canon(Object.fromEntries(r.resolved.map((p) => [p.identity, p.revision ?? null])));
+  const revisionsOk = !checkResolved || recorded === canon(exp.resolved);
   return {
-    expected: `valid=${fmt(exp.valid)}`,
-    got: `valid=${fmt(r.valid)}`,
-    ok: r.valid === exp.valid,
+    expected: `valid=${fmt(exp.valid)}` + (checkResolved ? ` resolved=${canon(exp.resolved)}` : ""),
+    got: `valid=${fmt(r.valid)}` + (checkResolved ? ` resolved=${recorded}` : ""),
+    ok: r.valid === exp.valid && revisionsOk,
     details: [
       ...r.errors.map((e) => `[${e.code}] ${e.message}`),
       ...r.resolved.map((p) => `resolved ${p.identity}${p.revision ? ` ${p.revision}` : ""}`),

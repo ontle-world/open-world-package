@@ -61,13 +61,7 @@ Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detac
 1. OCI source type: push and pull `.owp.zip` with ORAS to existing registries (GHCR, Docker Hub); record the OCI digest as the revision.
 2. Static package index: a git repository of JSON index files served as static pages, listing identities, versions, and digests.
 
-## 6. Independence and governance
-
-1. Move `implementations/typescript/` to its own repository and publish to npm once it has maintainers of its own; keep running it against this suite in CI.
-2. Invite a third-party implementation; a clean-room implementation by the same authors is weaker evidence than one by an independent party.
-3. Define the promotion criteria for `openworld/v1beta1`: at least two independently maintained implementations, no open High-severity spec ambiguities, and a spec change process (proposal, suite update, both implementations updated).
-
-## 7. Hosted ONTLE Registry (separate platform)
+## 6. Hosted ONTLE Registry (separate platform)
 
 Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here.
 

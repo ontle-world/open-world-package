@@ -71,9 +71,11 @@ ontle init enterprise-core --template ontology --namespace example
 ## 7. Create a World Model package
 
 ```bash
-ontle init quality-model --template worldmodel --namespace example
-ontle init embodied-model --template worldmodel-multimodal --namespace example
+ontle init quality-model --template worldmodel --namespace example --world ./my-world
+ontle init embodied-model --template worldmodel-multimodal --namespace example --world example/robot-world@0.1.0
 ```
+
+`--world` grounds the model in a World and adds it to `spec.dependencies`: a World directory supplies its identity, default View, and default State Compiler; a `<namespace>/<name>@<version>` reference assumes the starter's `views/default.yaml` and `state/default-compiler.yaml`. Without it, replace the `replace-with-...` placeholders yourself.
 
 Both templates expose the same `ModelArtifact + RepresentationAdapter + EvaluationProfile` skeleton. Every World Model must also declare its compatible World View(s) and State Compiler(s) as `<worldRef>#<asset path>`; the multimodal variant additionally declares modality and temporal contracts.
 

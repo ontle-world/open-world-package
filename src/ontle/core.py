@@ -122,8 +122,10 @@ def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[l
     if ref is None:
         return fields, []
     bad = f"compiler.output-schema-ref: StateCompilerProfile {rel} spec.outputSchemaRef"
+    if not isinstance(ref, str) or not ref or ref.startswith(("./", "/")) or "\\" in ref:
+        return fields, [f"{bad} {ref!r} must be a relative POSIX path without a leading './'"]
     if not ontology_module.inside_package(root, ref):
-        return fields, [f"{bad} {ref!r} must name a file inside the package by a relative POSIX path without a leading './'"]
+        return fields, [f"{bad} {ref!r} does not name a file in the package"]
     try:
         doc = json.loads((root / ref).read_text(encoding="utf-8"), parse_constant=_reject_constant)
     except (OSError, ValueError) as exc:

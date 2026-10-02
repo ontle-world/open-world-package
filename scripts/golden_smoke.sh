@@ -25,7 +25,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 ontle init demo-world --namespace smoke --destination "$TMP/demo-world"
 ontle init demo-ontology --template ontology --namespace smoke --destination "$TMP/demo-ontology"
-ontle init demo-model --template worldmodel --namespace smoke --destination "$TMP/demo-model"
+ontle init demo-model --template worldmodel --namespace smoke --destination "$TMP/demo-model" --world "$TMP/demo-world"
 ontle init demo-vla --template worldmodel-multimodal --namespace smoke --destination "$TMP/demo-vla"
 ontle add source mes --path "$TMP/demo-world"
 ontle add scenario smoke --path "$TMP/demo-world"

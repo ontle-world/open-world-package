@@ -66,6 +66,31 @@ class OntleTests(unittest.TestCase):
             self.assertTrue((p / "views" / "default.yaml").exists())
             self.assertTrue((p / "state" / "default-compiler.yaml").exists())
 
+    def test_init_titles_the_package_from_its_name(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("cafe-world", "test", "minimal", Path(td) / "w")
+            self.assertEqual(yaml.safe_load((p / "owp.yaml").read_text())["metadata"]["title"], "Cafe World")
+            self.assertEqual((p / "WORLD.md").read_text().splitlines()[0], "# Cafe World")
+
+    def test_init_world_model_grounded_in_a_world(self):
+        from ontle.core import OWPError
+        from ontle.resolve import validate_resolved
+        with tempfile.TemporaryDirectory() as td:
+            world = init_project("cafe-world", "lab", "minimal", Path(td) / "src" / "cafe-world")
+            for template in ("worldmodel", "worldmodel-multimodal"):
+                with self.subTest(template=template):
+                    model = init_project("cafe-model", "lab", template, Path(td) / template, world=str(world))
+                    spec = yaml.safe_load((model / "owp.yaml").read_text())["spec"]
+                    self.assertEqual(spec["dependencies"], ["lab/cafe-world@0.1.0"])
+                    self.assertEqual(spec["worldModel"]["semanticGrounding"]["compatibleWorldViews"],
+                                     ["lab/cafe-world@0.1.0#views/default.yaml"])
+                    result, _ = validate_resolved(model, [str(Path(td) / "src")])
+                    self.assertTrue(result.valid, result.errors)
+            with self.assertRaises(OWPError):
+                init_project("w", "lab", "minimal", Path(td) / "w", world="lab/cafe-world@0.1.0")
+            with self.assertRaises(OWPError):
+                init_project("m", "lab", "worldmodel", Path(td) / "m", world="not-a-world")
+
     def test_init_enterprise_validates(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "enterprise", Path(td) / "demo")

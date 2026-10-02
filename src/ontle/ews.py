@@ -97,8 +97,10 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
     if not isinstance(bindings, dict):
         return [f"compiler.binding: StateCompilerProfile {rel} spec.bindings must be a mapping of EWS field to binding"]
     errors: list[str] = []
+    # An outputSchemaRef that does not resolve is already an error; its fields are unknown, so keys are not checked.
+    unknown = fields is None and compiler.get("outputSchemaRef") is not None
     for field, b in bindings.items():
-        if field not in (fields or []):
+        if not unknown and field not in (fields or []):
             errors.append(f"compiler.binding: StateCompilerProfile {rel} binds {field!r}, which is not one of its EWS fields")
         if not isinstance(b, dict) or not isinstance(b.get("from"), str) or not isinstance(b.get("value"), str):
             errors.append(f"compiler.binding: StateCompilerProfile {rel} binding {field!r} must declare string from and value")

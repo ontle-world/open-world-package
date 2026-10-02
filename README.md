@@ -60,7 +60,7 @@ The generated project contains only the authoring surface. `.ontle/` is generato
 ontle init my-world --template minimal
 ontle init my-enterprise-world --template enterprise
 ontle init my-ontology --template ontology
-ontle init my-world-model --template worldmodel
+ontle init my-world-model --template worldmodel --world ./my-world
 ontle init my-vla-world-model --template worldmodel-multimodal
 ```
 

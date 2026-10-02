@@ -67,7 +67,30 @@ def _template_dir(template: str):
     return resources.files("ontle").joinpath("templates", template)
 
 
-def init_project(name: str, namespace: str, template: str = "minimal", destination: str | Path | None = None) -> Path:
+WORLD_MODEL_TEMPLATES = {"worldmodel", "worldmodel-multimodal"}
+CARDS = ["WORLD.md", "WORLDMODEL.md", "ONTOLOGY.md"]
+
+
+def _grounding_target(world: str) -> tuple[str, str, str]:
+    """(identity, default View path, default State Compiler path) of a World given as a directory or a reference."""
+    path = Path(world).expanduser()
+    if (path / "owp.yaml").is_file():
+        manifest = load_yaml((path / "owp.yaml").read_text(encoding="utf-8")) or {}
+        md, spec = manifest.get("metadata") or {}, manifest.get("spec") or {}
+        w = spec.get("world") or {}
+        if manifest.get("kind") != "WorldPackage" or not (w.get("defaultView") and w.get("defaultStateCompiler")):
+            raise OWPError(f"{world} must be a WorldPackage that declares spec.world.defaultView and defaultStateCompiler")
+        return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}", w["defaultView"], w["defaultStateCompiler"]
+    if PACKAGE_REF_RE.match(world):
+        return world, "views/default.yaml", "state/default-compiler.yaml"  # the World starter's paths
+    raise OWPError(f"--world must be a World package directory or a <namespace>/<name>@<version> reference, not {world!r}")
+
+
+def init_project(name: str, namespace: str, template: str = "minimal", destination: str | Path | None = None,
+                 world: str | None = None) -> Path:
+    if world is not None and template not in WORLD_MODEL_TEMPLATES:
+        raise OWPError("--world applies to the worldmodel and worldmodel-multimodal templates")
+    grounding = _grounding_target(world) if world is not None else None
     dest = Path(destination or name).expanduser().resolve()
     if dest.exists() and any(dest.iterdir()):
         raise OWPError(f"destination is not empty: {dest}")
@@ -83,9 +106,27 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
 
     manifest = dest / "owp.yaml"
     data = load_yaml(manifest.read_text(encoding="utf-8"))
+    title = " ".join(part.capitalize() for part in name.replace("_", "-").split("-") if part)
     data["metadata"]["namespace"] = namespace
     data["metadata"]["name"] = name
+    data["metadata"]["title"] = title
+    if grounding is not None:
+        identity, view, compiler = grounding
+        spec = data["spec"]
+        spec["worldModel"]["semanticGrounding"] = {
+            "worldRef": identity,
+            "compatibleWorldViews": [f"{identity}#{view}"],
+            "compatibleStateCompilers": [f"{identity}#{compiler}"],
+        }
+        deps = [identity] + [d for d in spec.pop("dependencies", None) or [] if d != identity]
+        data["spec"] = {"dependencies": deps, **spec}
     manifest.write_text(MANIFEST_SCHEMA_LINE + dump_yaml(data), encoding="utf-8")
+    for card in CARDS:  # the card's first heading names the package
+        path = dest / card
+        if path.exists():
+            lines = path.read_text(encoding="utf-8").split("\n", 1)
+            if lines[0].startswith("# "):
+                path.write_text(f"# {title}\n" + (lines[1] if len(lines) > 1 else ""), encoding="utf-8")
 
     state = dest / ".ontle" / "project.yaml"
     state.parent.mkdir(parents=True, exist_ok=True)
@@ -93,7 +134,7 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
         "generator": "ontle",
         "template": template,
         "manifest": "owp.yaml",
-        "authoring": [p for p in ["WORLD.md", "WORLDMODEL.md", "ONTOLOGY.md"] if (dest / p).exists()],
+        "authoring": [p for p in CARDS if (dest / p).exists()],
     }), encoding="utf-8")
     return dest
 

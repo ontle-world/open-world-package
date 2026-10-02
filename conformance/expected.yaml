@@ -87,6 +87,11 @@ cases:
     errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
     satisfiedProfile: stateful
     rule: "outputSchemaRef must name a JSON Schema file in the package; an unresolvable reference gives no EWS fields."
+  compiler-output-schema-ref-missing-bindings:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "When outputSchemaRef does not resolve, its fields are unknown and binding keys are not checked against them, so stateful still holds."
   compiler-output-schema-ref-no-properties:
     valid: false
     errors: [compiler.output-schema-ref, profile.model-ready.output-schema]

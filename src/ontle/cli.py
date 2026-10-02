@@ -16,7 +16,7 @@ from .yamlio import dump_yaml, load_yaml
 
 
 def cmd_init(args):
-    path = init_project(args.name, args.namespace, args.template, args.destination)
+    path = init_project(args.name, args.namespace, args.template, args.destination, args.world)
     print(path)
     return 0
 
@@ -236,6 +236,8 @@ def build_parser():
     x.add_argument("--namespace", default="example")
     x.add_argument("--template", default="minimal", choices=["minimal", "enterprise", "ontology", "worldmodel", "worldmodel-multimodal"])
     x.add_argument("--destination")
+    x.add_argument("--world", help="World Model templates: ground the model in this World (a package directory or "
+                                    "<namespace>/<name>@<version>) and add it to spec.dependencies")
     x.set_defaults(func=cmd_init)
 
     x = sp.add_parser("validate", help="validate an OWP project")

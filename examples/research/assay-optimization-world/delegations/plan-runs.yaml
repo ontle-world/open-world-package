@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: DelegationProfile
 metadata: {name: plan-runs}
 spec:

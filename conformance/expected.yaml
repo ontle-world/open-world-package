@@ -121,21 +121,16 @@ cases:
     errors: [package.legacy-manifest]
     satisfiedProfile: descriptive
     rule: "package.yaml or world.yaml at the package root is rejected."
-  asset-kind-mismatch:
-    valid: false
-    errors: [asset.kind-mismatch]
-    satisfiedProfile: descriptive
-    rule: "A local YAML asset that declares kind must match the manifest kind."
   asset-missing-file:
     valid: false
     errors: [asset.missing-file]
     satisfiedProfile: descriptive
-    rule: "Local asset paths must exist."
+    rule: "A listed PackageExample path must exist."
   asset-path-escapes-package:
     valid: false
     errors: [asset.path-escape]
     satisfiedProfile: descriptive
-    rule: "Local asset paths must stay inside the package root."
+    rule: "A listed PackageExample path must stay inside the package."
   world-bad-binding-field:
     valid: false
     errors: [compiler.binding]
@@ -165,12 +160,12 @@ cases:
     valid: false
     errors: [asset.duplicate-path]
     satisfiedProfile: descriptive
-    rule: "The same local path may be listed once."
+    rule: "A PackageExample path is listed at most once."
   asset-dotslash-path:
     valid: false
     errors: [asset.path-form]
     satisfiedProfile: descriptive
-    rule: "Local paths must not start with './'."
+    rule: "A PackageExample path is a relative POSIX path without a leading ./."
   extension-kind-declared:
     valid: true
     satisfiedProfile: descriptive
@@ -334,6 +329,10 @@ cases:
   model-grounded:
     valid: true
     rule: "A World Model names compatible World Views and State Compilers as <worldRef>#<asset path>."
+  model-grounding-dotslash-path:
+    valid: false
+    errors: [worldmodel.grounding-ref]
+    rule: "The <asset path> of a grounding reference is a relative POSIX path in normal form, without a leading ./ (spec section 3)."
   model-missing-views:
     valid: false
     errors: [worldmodel.compatible-views]
@@ -391,7 +390,7 @@ cases:
   model-missing-adapter:
     valid: false
     errors: [worldmodel.adapter, worldmodel.adapter-ref]
-    rule: "A WorldModelPackage requires a local RepresentationAdapterProfile named by representation.adapterRef."
+    rule: "A WorldModelPackage needs a RepresentationAdapterProfile asset; no file in the package declares one."
   model-world-ref-not-package-reference:
     valid: false
     errors: [worldmodel.world-ref]
@@ -648,7 +647,7 @@ cases:
     valid: false
     errors: [binding.asset]
     satisfiedProfile: model-ready
-    rule: "spec.world.semanticBinding must be a listed local SemanticBinding asset."
+    rule: "spec.world.semanticBinding must name a local SemanticBinding asset; a file without an OWP apiVersion is not an asset."
   binding-not-curie:
     valid: false
     errors: [binding.curie]
@@ -832,7 +831,35 @@ cases:
   asset-header-omitted:
     valid: true
     satisfiedProfile: descriptive
-    rule: "A local asset may omit apiVersion and kind; it inherits the manifest's apiVersion and its entry's kind."
+    rule: "A YAML file without an OWP apiVersion is an ordinary package file, not an asset (spec section 5)."
+  asset-without-api-version:
+    valid: false
+    errors: [profile.viewable]
+    satisfiedProfile: descriptive
+    rule: "A View file without an OWP apiVersion is not an asset, so defaultView does not name a local WorldViewProfile."
+  asset-local-path-listed:
+    valid: false
+    errors: [asset.path-or-ref]
+    satisfiedProfile: descriptive
+    rule: "spec.assets lists external references and PackageExample files; a local asset is found by its own apiVersion and kind."
+  asset-unknown-kind:
+    valid: false
+    errors: [asset.kind]
+    satisfiedProfile: descriptive
+    rule: "A file with an OWP apiVersion names an asset kind of the vocabulary, a document kind, or an extension kind."
+  asset-missing-kind:
+    valid: false
+    errors: [asset.kind]
+    satisfiedProfile: descriptive
+    rule: "A file with an OWP apiVersion declares its kind."
+  asset-foreign-yaml:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "YAML files without an OWP apiVersion (here a Kubernetes manifest) are ordinary package files."
+  asset-nested-package:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Discovery does not enter a subdirectory with its own owp.yaml; that package's assets are not this package's."
   asset-api-version-mismatch:
     valid: false
     errors: [asset.api-version]
@@ -889,7 +916,7 @@ resolutionCases:
   archive-source:
     valid: true
     resolved:
-      conformance/world@0.1.0: sha256:b32748eba0d6b9aadb09ba4a00c641ab85a133515e708b636195b292773156dd
+      conformance/world@0.1.0: sha256:fcaf730ed9aebdd3fcb2ec02885d30cbffaccef44e4366de074e564eeadbe0c6
     rule: "A .owp.zip in a directory source is resolved after its lock verifies."
   archive-tampered:
     valid: false
@@ -921,7 +948,7 @@ resolutionCases:
   git-bundle-source:
     valid: true
     resolved:
-      conformance/world@0.1.0: git:36e992e5f32a922a5b75ff0f2dae8c3916dffdd2
+      conformance/world@0.1.0: git:d07ed2af956c01a6e2f59f4e591114ff80d14e81
     rule: "A git source (here a git bundle, resolved relative to the declaring package) is fetched at the tag; the package is found under #subdir."
   git-missing-rev:
     valid: false

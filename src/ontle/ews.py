@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 from typing import Any
 
-from .core import EWS, OWPError, load_manifest, output_schema_fields
+from .core import EWS, OWPError, load_manifest, local_assets, output_schema_fields
 from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
 from .yamlio import YAMLError, load_yaml
 
@@ -63,11 +63,8 @@ def _identity(manifest: dict[str, Any]) -> str:
     return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
 
 
-def _asset_kind(manifest: dict[str, Any], rel: str) -> str | None:
-    for item in (manifest.get("spec") or {}).get("assets", []) or []:
-        if isinstance(item, dict) and item.get("path") == rel:
-            return item.get("kind")
-    return None
+def _asset_kind(root: Path, manifest: dict[str, Any], rel: str) -> str | None:
+    return local_assets(root, manifest.get("spec") or {})[0].get(rel)
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -81,7 +78,7 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 
 def load_compiler(world_root: Path, manifest: dict[str, Any], compiler_path: str) -> dict[str, Any]:
-    if _asset_kind(manifest, compiler_path) != "StateCompilerProfile":
+    if _asset_kind(world_root, manifest, compiler_path) != "StateCompilerProfile":
         raise OWPError(f"ews.state-compiler: {compiler_path} is not a StateCompilerProfile asset of {_identity(manifest)}")
     spec = _load_yaml(world_root / compiler_path).get("spec")
     if not isinstance(spec, dict):

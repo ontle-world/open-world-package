@@ -32,19 +32,5 @@ spec:
   validity:
     limitations: []
   assets:
-  - kind: WorldViewProfile
-    path: views/default.yaml
-  - kind: StateCompilerProfile
-    path: state/default-compiler.yaml
-  - kind: SourceSystemSchemaProfile
-    path: interfaces/sources.yaml
-  - kind: ObservationAcquisitionProfile
-    path: interfaces/observations.yaml
-  - kind: ActionBindingProfile
-    path: interfaces/actions.yaml
-  - kind: CommitContract
-    path: interfaces/commit.yaml
-  - kind: EffectVerificationProfile
-    path: interfaces/effect-verification.yaml
   - kind: PackageExample
     path: examples/basic.yaml

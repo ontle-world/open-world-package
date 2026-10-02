@@ -1,0 +1,4 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfle
+metadata: {name: broken-in-the-nested-package}
+spec: {}

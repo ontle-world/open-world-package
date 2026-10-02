@@ -23,9 +23,5 @@ spec:
   validity:
     limitations: []
   assets:
-  - kind: WorldViewProfile
-    path: views/default.yaml
-  - kind: StateCompilerProfile
-    path: state/default-compiler.yaml
   - kind: PackageExample
     path: examples/basic.yaml

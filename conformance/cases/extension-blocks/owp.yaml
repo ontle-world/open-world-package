@@ -5,20 +5,18 @@ metadata:
   name: world
   version: 0.1.0
   extensions:
-    acme: {steward: quality-office}
+    acme:
+      steward: quality-office
 spec:
   dependencies:
   - ref: acme/safety-extension@1.0.0
     as: acme
   extensions:
-    acme: {plantCode: P-07}
+    acme:
+      plantCode: P-07
   world:
     description: WORLD.md
     definition: Conformance fixture World.
     extensions:
-      acme: {site: line-3}
-  assets:
-  - kind: ScenarioProfile
-    path: scenarios/s.yaml
-    extensions:
-      acme: {owner: line-engineering}
+      acme:
+        site: line-3

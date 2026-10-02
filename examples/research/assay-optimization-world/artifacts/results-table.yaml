@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: ArtifactContract
 metadata: {name: results-table, version: 0.1.0}
 spec:

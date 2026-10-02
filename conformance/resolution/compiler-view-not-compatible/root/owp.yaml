@@ -9,7 +9,8 @@ spec:
   - conformance/world@0.1.0
   worldModel:
     description: WORLDMODEL.md
-    roles: [dynamics_prediction]
+    roles:
+    - dynamics_prediction
     semanticGrounding:
       worldRef: conformance/world@0.1.0
       compatibleWorldViews:
@@ -20,10 +21,3 @@ spec:
       contract: EffectiveWorldState
     representation:
       adapterRef: models/adapter.yaml
-  assets:
-  - kind: ModelArtifact
-    path: models/model-artifact.yaml
-  - kind: RepresentationAdapterProfile
-    path: models/adapter.yaml
-  - kind: EvaluationProfile
-    path: eval/profile.yaml

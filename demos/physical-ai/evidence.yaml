@@ -6,7 +6,7 @@ metadata:
   description: Offline replay of episode 0 of hf://datasets/k-chan-l/lekiwi_pick_and_place2 (de33a7ae7c1769d042e1303894df3b7ea804de21) with a hold-position stub, not a trained model.
 spec:
   subject: openworld-examples/multimodal-action-world-model@0.1.0
-  subjectDigest: sha256:7f02ba7ae44fe14583f38ead83063a4e703dd9e00e0d555f7aaa5f7de45da6af
+  subjectDigest: sha256:58f176c5856e54cd950a125e8549ca8f61abc53b9bb18995a0b067e8ff39b0ba
   evaluationProfile: offline-action-replay@0.1.0
   scope:
     worldRef: openworld-examples/mobile-manipulation-world@0.1.0

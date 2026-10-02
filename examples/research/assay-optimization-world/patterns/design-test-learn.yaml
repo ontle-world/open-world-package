@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: WorkPatternProfile
 metadata: {name: design-test-learn}
 spec:

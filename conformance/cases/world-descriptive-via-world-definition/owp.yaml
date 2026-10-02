@@ -7,6 +7,3 @@ metadata:
 spec:
   world:
     description: WORLD.md
-  assets:
-  - kind: WorldDefinition
-    path: semantics/definition.yaml

@@ -5,14 +5,14 @@ from pathlib import Path
 import yaml
 
 from ontle.core import deterministic_pack, inspect_package, validate_package, verify_archive
-from ontle.scaffold import add_extension, init_project, add_asset, sync_assets
+from ontle.scaffold import add_extension, init_project, new_asset
 
 
 class OntleTests(unittest.TestCase):
     def test_generated_files_point_editors_at_schemas(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            view = add_asset(p, "view", "manager")
+            view = new_asset(p, "WorldViewProfile", "views/manager.yaml")
             add_extension(p, "acme/quality-extension@1.2.0")
             self.assertTrue((p / "owp.yaml").read_text().startswith("# yaml-language-server: $schema=") )
             self.assertIn("world-view-profile.schema.json", view.read_text().splitlines()[0])
@@ -25,16 +25,16 @@ class OntleTests(unittest.TestCase):
         self.assertEqual(len(lines), len(result.errors))
         self.assertTrue(lines[0].startswith("ERROR: schema.unknown-field:"))
 
-    def test_sync_adds_unlisted_assets(self):
+    def test_assets_are_found_by_apiversion_and_kind(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")
+            before = (p / "owp.yaml").read_text()
             (p / "scenarios").mkdir()
             (p / "scenarios" / "s.yaml").write_text("apiVersion: openworld/v1alpha1\nkind: ScenarioProfile\nmetadata: {name: s}\nspec: {objective: x}\n")
             (p / "notes.yaml").write_text("just: data\n")
-            added, missing = sync_assets(p)
-            self.assertEqual((added, missing), (["scenarios/s.yaml"], []))
             self.assertTrue(validate_package(p).valid)
-            self.assertEqual(sync_assets(p), ([], []))
+            self.assertEqual(inspect_package(p)["asset_count"], 4)  # view, compiler, example, scenario
+            self.assertEqual((p / "owp.yaml").read_text(), before)
 
     def test_add_extension_declares_dependency(self):
         with tempfile.TemporaryDirectory() as td:
@@ -119,25 +119,24 @@ class OntleTests(unittest.TestCase):
             self.assertTrue(result.valid, result.errors)
             self.assertTrue((p / "models" / "adapter.yaml").exists())
 
-    def test_add_interface_assets_updates_manifest(self):
+    def test_new_writes_skeletons_that_validate(self):
+        from ontle.core import OWPError
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            for kind in ["source", "observation", "action", "commit", "effect"]:
-                add_asset(p, kind, kind)
+            before = (p / "owp.yaml").read_text()
+            for kind, rel in [("SourceSystemSchemaProfile", "interfaces/source.yaml"), ("ActionBindingProfile", "interfaces/action.yaml"),
+                              ("WorldViewProfile", "views/operator.yaml"), ("StateCompilerProfile", "state/operator.yaml")]:
+                target = new_asset(p, kind, rel)
+                doc = yaml.safe_load(target.read_text())
+                self.assertEqual((doc["apiVersion"], doc["kind"], doc["metadata"]["name"]), ("openworld/v1alpha1", kind, target.stem))
+            new_asset(p, "WorldViewProfile", "views/regional.yaml", specializes="views/default.yaml")
             result = validate_package(p)
             self.assertTrue(result.valid, result.errors)
-            for name in ["source", "observation", "action", "commit", "effect"]:
-                self.assertTrue((p / "interfaces" / f"{name}.yaml").exists())
-
-    def test_add_view_and_compiler_assets_updates_manifest(self):
-        with tempfile.TemporaryDirectory() as td:
-            p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            add_asset(p, "view", "operator-view")
-            add_asset(p, "compiler", "operator-state")
-            result = validate_package(p)
-            self.assertTrue(result.valid, result.errors)
-            self.assertTrue((p / "views" / "operator-view.yaml").exists())
-            self.assertTrue((p / "state" / "operator-state.yaml").exists())
+            self.assertEqual((p / "owp.yaml").read_text(), before)
+            for kind, rel in [("NotAKind", "x.yaml"), ("WorldViewProfile", "views/operator.yaml"), ("WorldViewProfile", "../x.yaml"),
+                              ("PackageExample", "examples/x.yaml")]:
+                with self.assertRaises(OWPError):
+                    new_asset(p, kind, rel)
 
     def test_deterministic_pack_and_verify(self):
         with tempfile.TemporaryDirectory() as td:
@@ -180,24 +179,10 @@ class OntleTests(unittest.TestCase):
             self.assertFalse(result.valid)
             self.assertTrue(any("does not exist" in e for e in result.errors))
 
-    def test_asset_kind_mismatch_rejected(self):
-        with tempfile.TemporaryDirectory() as td:
-            p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            target = add_asset(p, "source", "erp")
-            data = yaml.safe_load(target.read_text(encoding="utf-8"))
-            data["kind"] = "ActionBindingProfile"
-            target.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
-            result = validate_package(p)
-            self.assertFalse(result.valid)
-            self.assertTrue(any("asset kind mismatch" in e for e in result.errors))
-
     def test_multimodal_without_adapter_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo-vla", "test", "worldmodel-multimodal", Path(td) / "demo-vla")
-            manifest = p / "owp.yaml"
-            data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
-            data["spec"]["assets"] = [a for a in data["spec"]["assets"] if a["kind"] != "RepresentationAdapterProfile"]
-            manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+            (p / "models" / "adapter.yaml").unlink()
             result = validate_package(p)
             self.assertFalse(result.valid)
             self.assertTrue(any("RepresentationAdapterProfile" in e for e in result.errors))
@@ -205,10 +190,7 @@ class OntleTests(unittest.TestCase):
     def test_generic_worldmodel_without_adapter_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo-model", "test", "worldmodel", Path(td) / "demo-model")
-            manifest = p / "owp.yaml"
-            data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
-            data["spec"]["assets"] = [a for a in data["spec"]["assets"] if a["kind"] != "RepresentationAdapterProfile"]
-            manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+            (p / "models" / "adapter.yaml").unlink()
             result = validate_package(p)
             self.assertFalse(result.valid)
             self.assertTrue(any("RepresentationAdapterProfile" in e for e in result.errors))
@@ -216,10 +198,7 @@ class OntleTests(unittest.TestCase):
     def test_world_without_view_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            manifest = p / "owp.yaml"
-            data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
-            data["spec"]["assets"] = [a for a in data["spec"]["assets"] if a["kind"] != "WorldViewProfile"]
-            manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+            (p / "views" / "default.yaml").unlink()
             result = validate_package(p)
             self.assertFalse(result.valid)
             self.assertTrue(any("WorldViewProfile" in e for e in result.errors))
@@ -230,7 +209,8 @@ class OntleTests(unittest.TestCase):
             manifest = p / "owp.yaml"
             data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
             data["spec"]["conformance"]["profile"] = "descriptive"
-            data["spec"]["assets"] = [a for a in data["spec"]["assets"] if a["kind"] not in {"WorldViewProfile", "StateCompilerProfile"}]
+            (p / "views" / "default.yaml").unlink()
+            (p / "state" / "default-compiler.yaml").unlink()
             for key in ("defaultView", "defaultStateCompiler"):
                 data["spec"]["world"].pop(key)
             manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
@@ -257,8 +237,8 @@ class OntleTests(unittest.TestCase):
     def test_add_eval_and_verifier_are_versioned(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo-model", "test", "worldmodel", Path(td) / "demo-model")
-            for kind in ["eval", "verifier"]:
-                target = add_asset(p, kind, f"{kind}-v")
+            for kind in ["EvaluationProfile", "VerifierPackage"]:
+                target = new_asset(p, kind, f"eval/{kind.lower()}.yaml")
                 self.assertEqual(yaml.safe_load(target.read_text(encoding="utf-8"))["metadata"]["version"], "0.1.0")
             result = validate_package(p)
             self.assertTrue(result.valid, result.errors)

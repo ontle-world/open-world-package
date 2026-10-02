@@ -11,16 +11,3 @@ spec:
     defaultView: views/task.yaml
   conformance:
     profile: viewable
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: ActorProfile
-    path: actors/manager.yaml
-  - kind: RoleProfile
-    path: roles/manager.yaml
-  - kind: WorkPatternProfile
-    path: patterns/diagnose.yaml
-  - kind: ScenarioProfile
-    path: scenarios/hold.yaml
-  - kind: TaskSetProfile
-    path: tasks/rca.yaml

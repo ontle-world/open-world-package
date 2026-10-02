@@ -11,6 +11,3 @@ spec:
   world:
     description: WORLD.md
     definition: Conformance fixture World.
-  assets:
-  - kind: acme:safety:Case
-    path: assets/safety.yaml

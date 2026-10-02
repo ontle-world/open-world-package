@@ -181,60 +181,36 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
     return {}
 
 
-def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str | None = None) -> Path:
+def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None = None) -> Path:
+    """Write a skeleton asset file. Discovery finds it by its apiVersion and kind; owp.yaml is not changed."""
+    from .core import KNOWN_ASSET_KINDS, local_assets
+    from .structure import EXTENSION_KIND_RE
     root = Path(project).expanduser().resolve()
     manifest_path = root / "owp.yaml"
     if not manifest_path.exists():
         raise OWPError(f"missing owp.yaml in {root}")
-
-    mapping = {
-        "view": ("views", "WorldViewProfile"),
-        "compiler": ("state", "StateCompilerProfile"),
-        "source": ("interfaces", "SourceSystemSchemaProfile"),
-        "observation": ("interfaces", "ObservationAcquisitionProfile"),
-        "action": ("interfaces", "ActionBindingProfile"),
-        "commit": ("interfaces", "CommitContract"),
-        "effect": ("interfaces", "EffectVerificationProfile"),
-        "model": ("models", "WorldModelContract"),
-        "adapter": ("models", "RepresentationAdapterProfile"),
-        "scenario": ("scenarios", "ScenarioProfile"),
-        "dataset": ("datasets", "Dataset"),
-        "eval": ("eval", "EvaluationProfile"),
-        "verifier": ("eval", "VerifierPackage"),
-        "test": ("tests", "AcceptanceCase"),
-        "asset": ("assets", "OperationalAsset"),
-        # experimental kinds (spec Appendix C)
-        "task": ("tasks", "TaskSetProfile"),
-        "pattern": ("patterns", "WorkPatternProfile"),
-        "artifact": ("artifacts", "ArtifactContract"),
-        "template": ("artifacts/templates", "ArtifactTemplate"),
-        "consumer": ("consumers", "ConsumerRepresentationProfile"),
-        "knowledge": ("knowledge", "KnowledgeAsset"),
-        "actor": ("actors", "ActorProfile"),
-        "role": ("roles", "RoleProfile"),
-        "delegation": ("delegations", "DelegationProfile"),
-        "capability": ("capabilities", "CapabilityContract"),
-    }
-    if asset_kind not in mapping:
-        raise OWPError(f"asset kind must be one of {sorted(mapping)}")
-    folder, kind = mapping[asset_kind]
-    target = root / folder / f"{name}.yaml"
-    target.parent.mkdir(parents=True, exist_ok=True)
+    if kind not in KNOWN_ASSET_KINDS and not EXTENSION_KIND_RE.match(kind):
+        raise OWPError(f"{kind!r} is not an asset kind of the vocabulary or an <extension>:<Kind>")
+    if kind == "PackageExample":
+        raise OWPError("PackageExample files are listed in spec.assets; write the example and add a {kind, path} entry")
+    if not rel.endswith((".yaml", ".yml")) or rel.startswith(("/", "./")) or ".." in Path(rel).parts:
+        raise OWPError(f"path must be a package-relative .yaml file, for example views/{Path(rel).stem or 'name'}.yaml: {rel}")
+    target = root / rel
     if target.exists():
-        raise OWPError(f"asset already exists: {target}")
+        raise OWPError(f"file already exists: {target}")
     manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
-    metadata = {"name": name}
+    metadata = {"name": target.stem}
     if kind in {"EvaluationProfile", "VerifierPackage"}:
         metadata["version"] = "0.1.0"
     skeleton = _skeleton_spec(kind, manifest)
     if specializes is not None:
         if kind != "WorldViewProfile":
-            raise OWPError("--specializes applies to 'view' only")
-        listed = {a.get("path"): a.get("kind") for a in (manifest.get("spec") or {}).get("assets", []) or [] if isinstance(a, dict)}
-        if listed.get(specializes) != "WorldViewProfile":
+            raise OWPError("--specializes applies to WorldViewProfile only")
+        if local_assets(root, manifest.get("spec") or {})[0].get(specializes) != "WorldViewProfile":
             raise OWPError(f"--specializes must name a local WorldViewProfile asset: {specializes}")
         skeleton = {"worldRef": "self", "specializes": specializes, "purpose": {"actorScope": None},
                     "projection": {"include": [], "exclude": []}, "conditioning": {}}
+
     def blank(value):  # editors validate against the schemas: placeholders are empty strings, not null
         if isinstance(value, dict):
             return {k: blank(v) for k, v in value.items()}
@@ -242,19 +218,13 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
             return [blank(v) for v in value]
         return "" if value is None else value
 
-    skeleton = blank(skeleton)
-    target.write_text(_header(kind) + dump_yaml({  # apiVersion is inherited from owp.yaml (spec section 5)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(_header(kind) + dump_yaml({
+        "apiVersion": manifest.get("apiVersion", "openworld/v1alpha1"),  # with kind, this is how the file is found
         "kind": kind,
         "metadata": metadata,
-        "spec": skeleton,
+        "spec": blank(skeleton),
     }), encoding="utf-8")
-
-    spec = manifest.setdefault("spec", {})
-    assets = spec.setdefault("assets", [])
-    rel = target.relative_to(root).as_posix()
-    if not any(isinstance(a, dict) and a.get("path") == rel for a in assets):
-        assets.append({"kind": kind, "path": rel})
-    write_manifest(manifest_path, manifest)
     return target
 
 
@@ -285,34 +255,3 @@ def add_extension(project: str | Path, ref: str, name: str | None = None, must_u
     deps.append(entry)
     write_manifest(manifest_path, manifest)
     return name
-
-
-def sync_assets(project: str | Path) -> tuple[list[str], list[str]]:
-    """List every OWP asset file of the package in spec.assets. Returns (added paths, listed paths that do not exist)."""
-    from .core import KNOWN_ASSET_KINDS, package_files
-    from .structure import EXTENSION_KIND_RE
-    root = Path(project).expanduser().resolve()
-    manifest_path = root / "owp.yaml"
-    if not manifest_path.exists():
-        raise OWPError(f"missing owp.yaml in {root}")
-    manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
-    assets = manifest.setdefault("spec", {}).setdefault("assets", [])
-    listed = {a.get("path") for a in assets if isinstance(a, dict)}
-    added: list[str] = []
-    for path in package_files(root):
-        rel = path.relative_to(root).as_posix()
-        if rel == "owp.yaml" or rel in listed or path.suffix not in {".yaml", ".yml"} or any(p.startswith(".") for p in Path(rel).parts):
-            continue
-        try:
-            doc = load_yaml(path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        kind = doc.get("kind") if isinstance(doc, dict) else None
-        if isinstance(doc, dict) and doc.get("apiVersion", manifest.get("apiVersion")) == manifest.get("apiVersion") and isinstance(kind, str) \
-                and (kind in KNOWN_ASSET_KINDS or EXTENSION_KIND_RE.match(kind)) and kind != "PackageExample":
-            assets.append({"kind": kind, "path": rel})
-            added.append(rel)
-    missing = sorted(p for p in listed if isinstance(p, str) and not (root / p).exists())
-    if added:
-        write_manifest(manifest_path, manifest)
-    return added, missing

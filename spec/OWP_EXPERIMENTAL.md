@@ -22,7 +22,7 @@ The kinds below are marked `stability: experimental` in `vocab/asset-kinds.yaml`
 
 Experimental checks:
 
-- References written as package-relative paths (for example `TaskSetProfile.spec.requires.worldViews`, `ConsumerRepresentationProfile.spec.worldViewRef`) name a listed local asset of the expected kind. References containing `#` point into another package and are not checked.
+- References written as package-relative paths (for example `TaskSetProfile.spec.requires.worldViews`, `ConsumerRepresentationProfile.spec.worldViewRef`) name a local asset of the expected kind. References containing `#` point into another package and are not checked.
 - A ConsumerRepresentationProfile carries at most the actor block that matches `actor.kind`. The `model` block's `adapterRef` names a local RepresentationAdapterProfile; the model input path remains the one in section 6.
 - `KnowledgeAsset.spec.conformsTo.ontology` is a package reference that is also listed in `spec.dependencies`.
 

@@ -12,12 +12,3 @@ spec:
     defaultStateCompiler: state/task-compiler.yaml
   conformance:
     profile: model-ready
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: WorldViewProfile
-    path: views/planning.yaml
-  - kind: StateCompilerProfile
-    path: state/task-compiler.yaml
-  - kind: StateCompilerProfile
-    path: state/planning-compiler.yaml

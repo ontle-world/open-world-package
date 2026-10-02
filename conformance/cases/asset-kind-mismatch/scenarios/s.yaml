@@ -1,5 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: ActionBindingProfile
-metadata:
-  name: s
-spec: {}

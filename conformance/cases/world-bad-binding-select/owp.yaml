@@ -12,8 +12,3 @@ spec:
     defaultStateCompiler: state/task-compiler.yaml
   conformance:
     profile: stateful
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: StateCompilerProfile
-    path: state/task-compiler.yaml

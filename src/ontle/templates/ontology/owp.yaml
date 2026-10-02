@@ -13,9 +13,8 @@ spec:
     prefixes:
       ex: https://example.org/my-ontology#
     entrypoints:
-    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+    - path: semantics/core.yaml
+      format: owp-yaml
+      role: schema
   conformance:
     profile: schema
-  assets:
-  - kind: SemanticProfile
-    path: semantics/core.yaml

@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: ActorProfile
 metadata: {name: planning-agent}
 spec:

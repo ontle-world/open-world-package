@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: TaskSetProfile
 metadata: {name: optimize-assay}
 spec:

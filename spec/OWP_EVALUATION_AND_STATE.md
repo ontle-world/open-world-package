@@ -86,10 +86,10 @@ Values are compared in the JSON data model: types must match (a boolean never eq
 
 A State Compiler's EWS fields are `spec.outputSchema.fields`, or the field names listed by `spec.outputSchemaRef`:
 
-- `outputSchemaRef` is a package-relative path; null counts as absent in the form of a local asset path (section 5): relative POSIX, without a leading `./`, inside the package. The file need not be listed in `spec.assets`.
-- The file is a JSON document holding a JSON Schema whose top-level `properties` is a non-empty object. Its keys are the EWS fields. The subschemas are informative in this alpha; validators do not apply them to EWS values.
+- `outputSchemaRef` is a package-relative path in the form of a local asset path (section 5): relative POSIX, without a leading `./`, naming a file inside the package. The file need not be listed in `spec.assets`. `outputSchemaRef: null` counts as absent.
+- The file is a UTF-8 JSON document (RFC 8259; `NaN` and `Infinity` are not JSON) holding a JSON Schema whose top-level `properties` is a non-empty object. Its keys are the EWS fields. The subschemas are informative in this alpha; validators do not apply them to EWS values.
 - A reference that is malformed, missing, unreadable, not JSON, or lacks such `properties` is the error `compiler.output-schema-ref`, and it contributes no fields.
-- A compiler that declares both MUST list the same set of fields in each (`compiler.output-schema-mismatch`); `outputSchema.fields` is then used.
+- A compiler that declares both MUST list the same set of fields in each (`compiler.output-schema-mismatch`); `outputSchema.fields`, in its order, is then used.
 
 An EWS document conforms to its State Compiler when:
 

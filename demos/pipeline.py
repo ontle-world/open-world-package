@@ -13,12 +13,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
 
-from ontle.core import deterministic_pack
+from ontle.core import build_lock, deterministic_pack, package_files
 from ontle.distribution import check_detached_evidence
 from ontle.ews import canonical, check_ews, compile_ews, ews_equal
 from ontle.yamlio import dump_yaml, load_yaml
@@ -65,8 +64,7 @@ def finish(here: Path, subject_package: Path, archive_name: str, expected_ews: d
     if args.check:
         # The committed archive must still hold the World Model package as it is now. Compare the locked file
         # hashes, not the archive bytes, which depend on the zlib build.
-        with tempfile.TemporaryDirectory() as tmp:
-            fresh = locked_files(deterministic_pack(subject_package, Path(tmp) / archive_name))
+        fresh = build_lock(subject_package, package_files(subject_package), {}, {})["files"]
         if fresh != locked_files(archive):
             raise SystemExit(f"{archive_name} is stale: the World Model package changed; rerun without --check")
     else:

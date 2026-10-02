@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { parseDocument } from "yaml";
+import { isScalar, parseDocument, visit } from "yaml";
 
 /** SemVer 2.0 core+prerelease+build, as in schemas/owp-manifest.schema.json. */
 export const SEMVER_RE =
@@ -51,6 +51,17 @@ export function loadYamlFile(file: string): YamlLoad {
     if (doc.errors.length > 0) {
       return { ok: false, error: doc.errors.map((e) => e.message).join("; ") };
     }
+    // Spec 5.2: mapping keys are strings, as in the JSON data model.
+    let badKey: string | undefined;
+    visit(doc, {
+      Pair(_, pair) {
+        if (!isScalar(pair.key) || typeof pair.key.value !== "string") {
+          badKey = String(isScalar(pair.key) ? pair.key.value : pair.key);
+          return visit.BREAK;
+        }
+      },
+    });
+    if (badKey !== undefined) return { ok: false, error: `mapping key ${badKey} is not a string` };
     return { ok: true, value: doc.toJS() };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
@@ -81,6 +92,18 @@ export function fileExists(abs: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * An existing file inside the package, named by a package-relative path (relative POSIX, no leading ./).
+ * Returns its absolute path, or null.
+ */
+export function packageFile(root: string, p: unknown): string | null {
+  if (typeof p !== "string" || p.length === 0 || p.startsWith("./")) return null;
+  const norm = normalizeRelPath(p);
+  if (norm === null) return null;
+  const abs = path.join(root, norm);
+  return fileExists(abs) && staysInside(root, abs) ? abs : null;
 }
 
 /** Resolve the real path and confirm it stays inside root (guards symlink escapes). */

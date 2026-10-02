@@ -8,7 +8,7 @@ import { FIELD_BINDING, Problem, SEMANTIC_BINDING, structureProblems } from "../
 import { get, isObj, Obj } from "../util.js";
 import { localViewIncludes } from "./experimental.js";
 import { expandCurie } from "./ontology.js";
-import { outputSchemaFields } from "./world.js";
+import { compilerFields } from "./world.js";
 
 const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
 const isCurie = (v: unknown): v is string => typeof v === "string" && CURIE_RE.test(v);
@@ -47,8 +47,7 @@ export function checkSemanticBindings(ctx: Context): void {
   const schemaFields = new Set<string>();
   for (const a of ctx.localAssets) {
     if (a.kind !== "StateCompilerProfile") continue;
-    const spec = get(a.doc, "spec");
-    for (const x of outputSchemaFields(ctx.root, isObj(spec) ? spec : undefined, a.rawPath).fields ?? []) schemaFields.add(x);
+    for (const x of compilerFields(ctx, a).fields ?? []) schemaFields.add(x);
   }
   const boundary = get(w, "boundary", "included");
   const scope = new Set([...(Array.isArray(boundary) ? boundary.filter((x): x is string => typeof x === "string") : []), ...localViewIncludes(ctx)]);

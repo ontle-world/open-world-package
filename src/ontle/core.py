@@ -105,6 +105,10 @@ def _spec_of(doc: Any) -> dict[str, Any]:
     return spec if isinstance(spec, dict) else {}
 
 
+def _reject_constant(name: str) -> Any:
+    raise ValueError(f"{name} is not JSON")
+
+
 def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[list[str] | None, list[str]]:
     """EWS fields of a State Compiler (spec section 12.1) and the errors resolving them.
 
@@ -121,22 +125,29 @@ def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[l
     if not ontology_module.inside_package(root, ref):
         return fields, [f"{bad} {ref!r} must name a file inside the package by a relative POSIX path without a leading './'"]
     try:
-        doc = json.loads((root / ref).read_text(encoding="utf-8"))
+        doc = json.loads((root / ref).read_text(encoding="utf-8"), parse_constant=_reject_constant)
     except (OSError, ValueError) as exc:
         return fields, [f"{bad} {ref!r} is not a readable JSON document: {exc}"]
     properties = doc.get("properties") if isinstance(doc, dict) else None
     if not isinstance(properties, dict) or not properties:
         return fields, [f"{bad} {ref!r} must be a JSON Schema with a non-empty top-level properties object"]
-    if fields is not None and set(fields) != set(properties):
-        return fields, [f"compiler.output-schema-mismatch: StateCompilerProfile {rel} spec.outputSchema.fields and the properties of {ref!r} list different fields"]
+    if fields is not None:  # both declared: they must agree, and outputSchema.fields (with its order) is used
+        if set(fields) != set(properties):
+            return fields, [f"compiler.output-schema-mismatch: StateCompilerProfile {rel} spec.outputSchema.fields and the properties of {ref!r} list different fields"]
+        return fields, []
     return list(properties), []
 
 
 def compiler_fields(root: Path, local_asset_kinds: dict[str, str],
-                    local_asset_docs: dict[str, dict[str, Any]]) -> dict[str, list[str] | None]:
-    """EWS fields of every local State Compiler, keyed by asset path."""
-    return {rel: output_schema_fields(root, _spec_of(local_asset_docs.get(rel)), rel)[0]
-            for rel, kind in local_asset_kinds.items() if kind == "StateCompilerProfile"}
+                    local_asset_docs: dict[str, dict[str, Any]]) -> tuple[dict[str, list[str] | None], list[str]]:
+    """EWS fields of every local State Compiler, keyed by asset path, and the errors resolving them."""
+    fields: dict[str, list[str] | None] = {}
+    errors: list[str] = []
+    for rel, kind in sorted(local_asset_kinds.items()):
+        if kind == "StateCompilerProfile":
+            fields[rel], field_errors = output_schema_fields(root, _spec_of(local_asset_docs.get(rel)), rel)
+            errors.extend(field_errors)
+    return fields, errors
 
 
 def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[str],
@@ -493,11 +504,8 @@ def validate_package(path: str | Path) -> ValidationResult:
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
                      for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
                      if isinstance(x, str)}
-    ews_fields: dict[str, list[str] | None] = {}
-    for rel, asset_kind in sorted(local_asset_kinds.items()):
-        if asset_kind == "StateCompilerProfile":
-            ews_fields[rel], field_errors = output_schema_fields(root, _spec_of(local_asset_docs.get(rel)), rel)
-            errors.extend(field_errors)
+    ews_fields, field_errors = compiler_fields(root, local_asset_kinds, local_asset_docs)
+    errors.extend(field_errors)
     bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, ews_fields, view_includes, extension_names)
     errors.extend(bind_errors)
     warnings.extend(bind_warnings)
@@ -555,7 +563,7 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
     summary: dict[str, Any] = {}
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict):
         kinds, docs = _local_assets(root, spec)
-        ews_fields = compiler_fields(root, kinds, docs)
+        ews_fields, _ = compiler_fields(root, kinds, docs)
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {
             "declared": conformance.get("profile", DEFAULT_WORLD_PROFILE),
@@ -622,7 +630,8 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 
 
 def package_files(root: Path) -> list[Path]:
-    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "dist", "build"}
+    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "dist", "build",
+                     ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
     files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():
@@ -757,7 +766,11 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
         else:
             from .distribution import lock_externals
             recorded = [{k: v for k, v in e.items() if k != "vendoredPath"} for e in lock.get("externals") or []]
-            if recorded != lock_externals(load_yaml(zf.read(MANIFEST)) or {}):
+            try:
+                manifest = load_yaml(zf.read(MANIFEST)) or {}
+            except Exception as exc:
+                return False, errors + [f"cannot parse {MANIFEST}: {exc}"]
+            if recorded != lock_externals(manifest):
                 errors.append("lock externals do not match the manifest's external references")
             for entry in lock.get("externals") or []:
                 if entry.get("vendoredPath") and entry["vendoredPath"] not in locked:

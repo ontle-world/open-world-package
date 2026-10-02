@@ -1,7 +1,8 @@
 """YAML 1.2 core schema loading and dumping for OWP documents (spec section 5.2).
 
 PyYAML implements YAML 1.1 implicit typing (`yes` -> true, `0755` -> 493, `1:20` -> 80, dates, `<<` merge keys).
-OWP documents are read with the YAML 1.2 core schema instead, and duplicate mapping keys are errors.
+OWP documents are read with the YAML 1.2 core schema instead. Mapping keys are strings, as in the JSON data
+model, and duplicate keys are errors.
 """
 from __future__ import annotations
 
@@ -9,6 +10,8 @@ import re
 from typing import Any
 
 import yaml
+
+YAMLError = yaml.YAMLError
 
 _CORE_RESOLVERS = [
     ("tag:yaml.org,2002:null", re.compile(r"^(?:~|null|Null|NULL|)$"), ["~", "n", "N", ""]),
@@ -29,7 +32,7 @@ def _resolvers(base: dict | None = None) -> dict:
 
 
 class CoreLoader(yaml.SafeLoader):
-    """SafeLoader with YAML 1.2 core schema scalars; duplicate keys raise an error."""
+    """SafeLoader with YAML 1.2 core schema scalars; non-string and duplicate keys raise an error."""
 
     yaml_implicit_resolvers = _resolvers()
 
@@ -37,12 +40,13 @@ class CoreLoader(yaml.SafeLoader):
         if isinstance(node, yaml.MappingNode):
             seen = set()
             for key_node, _ in node.value:
-                key = self.construct_object(key_node, deep=True)
-                if isinstance(key, (str, int, float, bool)) or key is None:
-                    if (type(key), key) in seen:
-                        raise yaml.constructor.ConstructorError(
-                            "while constructing a mapping", node.start_mark, f"found duplicate key {key!r}", key_node.start_mark)
-                    seen.add((type(key), key))
+                if not (isinstance(key_node, yaml.ScalarNode) and key_node.tag == "tag:yaml.org,2002:str"):
+                    raise yaml.constructor.ConstructorError(
+                        "while constructing a mapping", node.start_mark, "found a key that is not a string", key_node.start_mark)
+                if key_node.value in seen:
+                    raise yaml.constructor.ConstructorError(
+                        "while constructing a mapping", node.start_mark, f"found duplicate key {key_node.value!r}", key_node.start_mark)
+                seen.add(key_node.value)
         return super().construct_mapping(node, deep=deep)
 
 

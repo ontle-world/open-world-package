@@ -13,7 +13,7 @@ from typing import Any
 
 from .core import EWS, OWPError, load_manifest, output_schema_fields
 from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
-from .yamlio import load_yaml
+from .yamlio import YAMLError, load_yaml
 
 SELECTORS = {"latest", "all"}
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -21,7 +21,10 @@ TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 def load_document(path: str | Path) -> Any:
     """Load an ObservationSet or EWS document (YAML 1.2 core schema: timestamps stay text)."""
-    return load_yaml(Path(path).read_text(encoding="utf-8"))
+    try:
+        return load_yaml(Path(path).read_text(encoding="utf-8"))
+    except YAMLError as exc:
+        raise OWPError(f"cannot parse {path}: {exc}") from exc
 
 
 def _valid_timestamp(value: Any) -> bool:

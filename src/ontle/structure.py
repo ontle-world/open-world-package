@@ -285,7 +285,7 @@ def external_ref_issues(ref: Any, where: str, declared: set[str]) -> tuple[list[
         return [f"ref.shape: {where} must be a mapping"], []
     errors: list[str] = []
     warnings: list[str] = []
-    status = ref.get("status", "bound")
+    status = "bound" if ref.get("status") is None else ref["status"]  # null counts as absent
     if status not in {"bound", "unbound"}:
         errors.append(f"ref.shape: {where}.status must be bound or unbound")
         return errors, warnings
@@ -363,7 +363,7 @@ def standard_binding_issues(bindings: Any, where: str, declared: set[str]) -> tu
                 errors.append(f"standard.unpinned: {message.strip()}")
             else:
                 warnings.append(warning)
-        bound = isinstance(entry["ref"], dict) and entry["ref"].get("status", "bound") == "bound"
+        bound = isinstance(entry["ref"], dict) and entry["ref"].get("status") in (None, "bound")
         if bound and not ref_errors and license_ is None:
             errors.append(f"standard.license: {at} binds an artifact and must declare license")
     return errors, warnings

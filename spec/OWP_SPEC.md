@@ -153,7 +153,7 @@ ref:
   digest: "sha256:<64 lowercase hex>"
   mediaType: application/vnd.openworld.filelist+json
   size: 1234567890                        # informative
-  status: bound                           # bound (default) | unbound
+  status: bound                           # bound (default; also when null) | unbound
 ```
 
 - A bound reference declares `provider` and `uri`. An `unbound` reference records that no artifact has been chosen yet; its other fields are optional. Examples MUST NOT invent artifacts; they use `status: unbound` instead.
@@ -178,6 +178,7 @@ Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS d
 - A plain (unquoted) scalar is null for `~`, `null`, `Null`, `NULL`, or nothing; a boolean for `true`, `True`, `TRUE`, `false`, `False`, `FALSE`; an integer for `[-+]?[0-9]+` (decimal, also with leading zeros), `0o[0-7]+`, or `0x[0-9a-fA-F]+`; a number for `[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?`, `[-+]?.inf` (any of `inf`, `Inf`, `INF`), or `.nan` (`nan`, `NaN`, `NAN`). Every other plain scalar is a string.
 - So `yes`, `no`, `on`, `off`, `1:20`, `1_000`, and `2026-01-01` are strings; `0755` is the integer 755.
 - `<<` is an ordinary key; there are no merge keys.
+- Mapping keys are strings, as in the JSON data model: a key that reads as null, a boolean, or a number (`1:`, `true:`), or a key that is a sequence or mapping, does not parse. Quote such keys (`"1":`).
 - A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
 
 Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.

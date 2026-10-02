@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
 import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, list, OPEN, Shape, structureProblems } from "../structure.js";
 import { isUtcTimestamp } from "../ews.js";
-import { fileExists, isObj, normalizeRelPath, Obj, PINNED_RE, staysInside } from "../util.js";
+import { fileExists, isObj, normalizeRelPath, Obj, packageFile as packageFileAt, PINNED_RE, staysInside } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 import { externalRefProblems } from "./externalref.js";
 
@@ -107,11 +107,7 @@ class Checker {
 
   /** An existing file inside the package, given as a package-relative path (not ./ or backslashes). */
   packageFile(p: unknown): boolean {
-    if (typeof p !== "string" || p.length === 0 || p.startsWith("./") || p.includes("\\")) return false;
-    const norm = normalizeRelPath(p);
-    if (norm === null) return false;
-    const abs = path.join(this.ctx.root, norm);
-    return fileExists(abs) && staysInside(this.ctx.root, abs);
+    return packageFileAt(this.ctx.root, p) !== null;
   }
 
   /**

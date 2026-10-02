@@ -6,7 +6,7 @@
 import * as path from "node:path";
 import { Context, error, warn } from "../context.js";
 import { SEMANTIC_PROFILE, structureProblems, TERM_INDEX } from "../structure.js";
-import { fileExists, get, isObj, loadYamlFile, normalizeRelPath, Obj, staysInside } from "../util.js";
+import { get, isObj, loadYamlFile, normalizeRelPath, Obj, packageFile as packageFileAt } from "../util.js";
 import { externalRefProblems } from "./externalref.js";
 
 export const ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"] as const;
@@ -55,11 +55,7 @@ function profileIdentifiers(doc: Obj): Array<[string, unknown, boolean]> {
 
 /** An existing package-relative file (not starting with ./), as an absolute path; null otherwise. */
 function packageFile(ctx: Context, p: unknown): string | null {
-  if (typeof p !== "string" || p.length === 0 || p.startsWith("./")) return null;
-  const norm = normalizeRelPath(p);
-  if (norm === null) return null;
-  const abs = path.join(ctx.root, norm);
-  return fileExists(abs) && staysInside(ctx.root, abs) ? abs : null;
+  return packageFileAt(ctx.root, p);
 }
 
 function loadDoc(abs: string): Obj | undefined {

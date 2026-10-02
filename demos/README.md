@@ -11,7 +11,7 @@ OWP standardizes the World, View, State Compiler, EWS, and evidence documents. T
 | Demo | Data | World / World Model | Stub | Evidence |
 |---|---|---|---|---|
 | `physical-ai/` | episode 0 of the LeRobot dataset the World binds (`k-chan-l/lekiwi_pick_and_place2` at a pinned commit, Apache-2.0), one frame per second | `mobile-manipulation-world` / `multimodal-action-world-model` | hold position | `offline-action-replay@0.1.0`: error against the recorded teleoperation commands |
-| `business-ai/` | sample MES/QMS records (`records/*.csv`, illustrative) mapped through the World's ISA-95 binding | `manufacturing-quality-world` / `quality-transition-world-model` | claim-escalation rule | `quality-basic@0.1.0`: traceability to the production lot, declared uncertainty |
+| `business-ai/` | sample MES/QMS records (`records/*.csv`, illustrative) mapped through the World's ISA-95 binding | `manufacturing-quality-world` / `quality-transition-world-model` | claim-escalation rule | `quality-basic@0.1.0`: traceability to the production lot (the uncertainty check is not run: the stub has no uncertainty model) |
 
 Each demo compiles one EWS per step and checks it against the output contract (spec 12.1), then writes:
 

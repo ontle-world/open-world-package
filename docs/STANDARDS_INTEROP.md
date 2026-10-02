@@ -49,10 +49,10 @@ The examples use this convention:
 
 Both implementations check `standardBindings` in every local asset: the binding shape, the ExternalRef, pinning (`standard.unpinned`), and the license of a bound artifact (`standard.license`). Domain validators may layer checks on top, for example that a `ros2` term names a real message type.
 
-## What is still missing
+## Evidence of interoperability
 
-Interoperability is demonstrated by independent implementations, not by one toolchain reading its own packages. The next evidence needed is:
+Interoperability is shown by implementations agreeing, not by one toolchain reading its own packages:
 
-1. an independent parser/validator passing `conformance/`;
-2. two runtimes that compile the same View into the same EWS contract and bind the same World Model;
-3. end-to-end Physical AI and Business AI demos over the bound external references (the example bindings are now pinned to real artifacts).
+1. a clean-room TypeScript validator passes `conformance/` alongside the Python reference;
+2. both compile the same View into the same EWS (`ewsCases`) and record the same resolution revisions;
+3. `demos/` runs Physical AI and Business AI data over the bound external references into evidence that both implementations check.

@@ -1,4 +1,4 @@
-import { EXTENSION_NAME_RE, Problem } from "../structure.js";
+import { closed, EXTENSION_NAME_RE, EXTERNAL_REF, leaves, OPEN, Problem, Shape, structureProblems } from "../structure.js";
 import { isObj } from "../util.js";
 
 /** Spec 5.1: listed ExternalRef providers; others are `<extension>:<provider>`. */
@@ -64,6 +64,49 @@ export function externalRefProblems(ref: unknown, at: string, declared: Set<stri
   if (typeof digest !== "string" && !commitPinned) {
     const how = provider === "git" || provider === "huggingface" ? "a commit-hash revision or a digest" : "a digest";
     warnings.push({ rule: "ref.unpinned", msg: `${at} (${String(provider)}) is not pinned; declare ${how}` });
+  }
+  return { errors, warnings };
+}
+
+/** Spec 5.3: one entry of an asset's spec.standardBindings. */
+const STANDARD_BINDING: Shape = closed({ ...leaves("standard", "license"), ref: EXTERNAL_REF, terms: OPEN });
+
+/**
+ * Spec 5.3: errors and warnings for spec.standardBindings, a mapping of binding name to
+ * {standard, ref, license, terms}. A bound reference must be pinned and declare a license.
+ */
+export function standardBindingProblems(bindings: unknown, at: string, declared: Set<string>): { errors: Problem[]; warnings: Problem[] } {
+  const errors: Problem[] = [];
+  const warnings: Problem[] = [];
+  const bad = (msg: string) => errors.push({ rule: "standard.binding", msg });
+  if (!isObj(bindings)) {
+    bad(`${at} must be a mapping of binding name to binding`);
+    return { errors, warnings };
+  }
+  for (const [name, entry] of Object.entries(bindings)) {
+    const where = `${at}.${name}`;
+    if (!isObj(entry)) {
+      bad(`${where} must be a mapping`);
+      continue;
+    }
+    for (const p of structureProblems(entry, STANDARD_BINDING, declared)) errors.push({ rule: p.rule, msg: `${where}: ${p.msg}` });
+    if (typeof entry.standard !== "string" || entry.standard === "") bad(`${where}.standard must be a non-empty string`);
+    const terms = entry.terms;
+    if (terms !== undefined && !(isObj(terms) && Object.values(terms).every((v) => typeof v === "string"))) bad(`${where}.terms must map names to strings`);
+    if (!has(entry, "ref") && terms === undefined) bad(`${where} must declare ref, terms, or both`);
+    const license = entry.license;
+    if (license !== undefined && !(typeof license === "string" && license !== "")) bad(`${where}.license must be a non-empty SPDX license expression`);
+    if (!has(entry, "ref")) continue;
+    const r = externalRefProblems(entry.ref, `${where}.ref`, declared);
+    errors.push(...r.errors);
+    for (const w of r.warnings) {
+      if (w.rule === "ref.unpinned") errors.push({ rule: "standard.unpinned", msg: w.msg });
+      else warnings.push(w);
+    }
+    const bound = isObj(entry.ref) && (entry.ref.status ?? "bound") === "bound";
+    if (bound && r.errors.length === 0 && license === undefined) {
+      errors.push({ rule: "standard.license", msg: `${where} binds an artifact and must declare license` });
+    }
   }
   return { errors, warnings };
 }

@@ -25,6 +25,9 @@ rules:
   asset.duplicate-path: {severity: error, section: "8", summary: "same local path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "local path resolves outside the package root"}
   asset.missing-file: {severity: error, section: "8", summary: "local path does not exist"}
+  standard.binding: {severity: error, section: "5.3", summary: "malformed spec.standardBindings: not a mapping, an entry without standard, terms not a mapping of strings, an empty license, or neither ref nor terms"}
+  standard.unpinned: {severity: error, section: "5.3", summary: "a bound ref in a standard binding is not pinned"}
+  standard.license: {severity: error, section: "5.3", summary: "a standard binding binds an artifact without license"}
   asset.yaml: {severity: error, section: "5.2, 8", summary: "local YAML asset (including a PackageExample) does not parse, including duplicate keys"}
   asset.kind-mismatch: {severity: error, section: "8", summary: "file kind differs from manifest kind"}
   asset.api-version: {severity: error, section: "5", summary: "asset file apiVersion differs from the manifest's"}

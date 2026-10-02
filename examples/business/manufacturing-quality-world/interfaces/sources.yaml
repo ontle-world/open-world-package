@@ -8,8 +8,12 @@ spec:
     QMS: [inspection, nonconformance, claim, capa, verification]
   standardBindings:
     isa95:
-      production_lot: MaterialLot
-      equipment: Equipment
-      operation_execution: OperationsPerformance
+      standard: isa95
+      terms:
+        production_lot: MaterialLot
+        equipment: Equipment
+        operation_execution: OperationsPerformance
     opcua:
-      equipment: companion_specification_unbound
+      standard: opcua
+      ref:
+        status: unbound

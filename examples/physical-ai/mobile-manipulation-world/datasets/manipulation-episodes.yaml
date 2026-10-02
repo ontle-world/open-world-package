@@ -6,7 +6,8 @@ spec:
   worldViewRef: views/pick-place-task.yaml
   structure: episodic
   standardBindings:
-    format: lerobot
-    ref:
-      status: unbound
+    episodes:
+      standard: lerobot
+      ref:
+        status: unbound
   note: Bind an immutable LeRobot/Hugging Face dataset revision when publishing concrete episodes.

@@ -12,7 +12,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 173 validation, 27 resolution, 21 EWS compile, 17 EWS check, 12 extraction cases.
+- Conformance suite: 177 validation, 27 resolution, 21 EWS compile, 17 EWS check, 12 extraction cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3
@@ -42,7 +42,7 @@ The examples currently declare which standard each part uses but leave the artif
 | manufacturing-quality-world | ISA-95 object models | bound by name |
 | manufacturing-quality-world | OPC UA companion specification | unbound |
 
-1. Define the `standardBindings` shape in the spec (standard, ref, immutable revision or digest, license, status) and validate that bound references are pinned.
+1. ~~Define the `standardBindings` shape in the spec and validate that bound references are pinned.~~ Done: spec section 5.3 (`standard`, `ref`, `license`, `terms`); a bound reference must be pinned and licensed. The examples use this shape.
 2. Choose public artifacts with compatible licenses: a LeRobot dataset revision, an OpenUSD scene, and an OPC UA companion specification identifier.
 3. Bind them in the examples. Do not invent repositories or revisions; leave a binding unbound until a real artifact is chosen.
 

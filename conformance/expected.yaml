@@ -422,6 +422,25 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "An unpinned bound reference is a warning (ref.unpinned), not an error."
+  standard-binding-valid:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "spec.standardBindings maps names to {standard, ref, license, terms}; a binding may map names to terms, leave its ref unbound, or bind a pinned, licensed artifact (spec section 5.3)."
+  standard-binding-unpinned:
+    valid: false
+    errors: [standard.unpinned]
+    satisfiedProfile: descriptive
+    rule: "A bound reference in a standard binding must be pinned; a branch name is not a commit hash."
+  standard-binding-unlicensed:
+    valid: false
+    errors: [standard.license]
+    satisfiedProfile: descriptive
+    rule: "A standard binding that binds an artifact declares its license."
+  standard-binding-shape:
+    valid: false
+    errors: [standard.binding, schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "A standard binding names its standard; keys outside standard, ref, license, terms, and extensions are errors."
   ref-missing-uri:
     valid: false
     errors: [ref.shape]

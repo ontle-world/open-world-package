@@ -468,6 +468,11 @@ def validate_package(path: str | Path) -> ValidationResult:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
                 if isinstance(adata, dict):
                     local_asset_docs[rel] = adata
+                    aspec = adata.get("spec")
+                    if asset_kind != "PackageExample" and isinstance(aspec, dict) and "standardBindings" in aspec:
+                        sb_errors, sb_warnings = structure.standard_binding_issues(aspec["standardBindings"], f"{rel}: spec.standardBindings", extension_names)
+                        errors.extend(sb_errors)
+                        warnings.extend(sb_warnings)
                     if asset_kind == "SemanticBinding":
                         pass  # checked by binding_issues after the asset loop
                     elif asset_kind in experimental.TABLES:

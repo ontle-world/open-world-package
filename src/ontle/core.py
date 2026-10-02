@@ -118,15 +118,10 @@ def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[l
     if ref is None:
         return fields, []
     bad = f"compiler.output-schema-ref: StateCompilerProfile {rel} spec.outputSchemaRef"
-    if not isinstance(ref, str) or not ref or ref.startswith("./") or "\\" in ref or ref.startswith("/"):
-        return fields, [f"{bad} must be a relative POSIX path without a leading './'"]
-    target = (root / ref).resolve()
+    if not ontology_module.inside_package(root, ref):
+        return fields, [f"{bad} {ref!r} must name a file inside the package by a relative POSIX path without a leading './'"]
     try:
-        target.relative_to(root.resolve())
-    except ValueError:
-        return fields, [f"{bad} {ref!r} escapes the package root"]
-    try:
-        doc = json.loads(target.read_text(encoding="utf-8"))
+        doc = json.loads((root / ref).read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return fields, [f"{bad} {ref!r} is not a readable JSON document: {exc}"]
     properties = doc.get("properties") if isinstance(doc, dict) else None
@@ -344,7 +339,7 @@ def validate_package(path: str | Path) -> ValidationResult:
     errors.extend(structure.extension_definition_errors(spec))
     definition = spec.get("extensionDefinition")
     for rel in (definition.get("schemas") or []) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
-        if isinstance(rel, str) and rel and not ontology_module._inside(root, rel):
+        if isinstance(rel, str) and rel and not ontology_module.inside_package(root, rel):
             errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} must be an existing file inside the package")
 
     card = {
@@ -560,18 +555,18 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
     summary: dict[str, Any] = {}
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict):
         kinds, docs = _local_assets(root, spec)
+        ews_fields = compiler_fields(root, kinds, docs)
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {
             "declared": conformance.get("profile", DEFAULT_WORLD_PROFILE),
             "satisfied": satisfied_world_profile(spec, {k for k in kinds.values()} | _ref_asset_kinds(spec), kinds, docs,
-                                                 compiler_fields(root, kinds, docs),
+                                                 ews_fields,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict) and isinstance((spec.get("world") or {}).get("semanticBinding"), str):
-        kinds, docs = _local_assets(root, spec)
         bdoc = docs.get(spec["world"]["semanticBinding"]) or {}
         bound = set(((bdoc.get("spec") or {}).get("fields") or {}))
-        fields = {f for compiler in compiler_fields(root, kinds, docs).values() for f in compiler or []}
+        fields = {f for compiler in ews_fields.values() for f in compiler or []}
         summary["semanticCoverage"] = {"boundFields": len(bound & fields), "fields": len(fields)}
     if data.get("kind") == "OntologyPackage" and isinstance(spec, dict):
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}

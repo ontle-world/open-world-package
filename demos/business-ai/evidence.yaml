@@ -30,4 +30,5 @@ spec:
       '2026-09-10T18:00:00Z': low
     metrics:
       traceability_to_lot: 1.0
-      uncertainty_declared: 1.0
+    checksNotRun:
+      uncertainty_declared: the rule stub has no uncertainty model

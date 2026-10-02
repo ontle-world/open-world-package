@@ -92,10 +92,10 @@ export function standardBindingProblems(bindings: unknown, at: string, declared:
     for (const p of structureProblems(entry, STANDARD_BINDING, declared)) errors.push({ rule: p.rule, msg: `${where}: ${p.msg}` });
     if (typeof entry.standard !== "string" || entry.standard === "") bad(`${where}.standard must be a non-empty string`);
     const terms = entry.terms;
-    if (terms !== undefined && !(isObj(terms) && Object.values(terms).every((v) => typeof v === "string"))) bad(`${where}.terms must map names to strings`);
-    if (!has(entry, "ref") && terms === undefined) bad(`${where} must declare ref, terms, or both`);
+    if (present(terms) && !(isObj(terms) && Object.values(terms).every((v) => typeof v === "string"))) bad(`${where}.terms must map names to strings`);
+    if (!has(entry, "ref") && !present(terms)) bad(`${where} must declare ref, terms, or both`);
     const license = entry.license;
-    if (license !== undefined && !(typeof license === "string" && license !== "")) bad(`${where}.license must be a non-empty SPDX license expression`);
+    if (present(license) && !(typeof license === "string" && license !== "")) bad(`${where}.license must be a non-empty SPDX license expression`);
     if (!has(entry, "ref")) continue;
     const r = externalRefProblems(entry.ref, `${where}.ref`, declared);
     errors.push(...r.errors);
@@ -104,7 +104,7 @@ export function standardBindingProblems(bindings: unknown, at: string, declared:
       else warnings.push(w);
     }
     const bound = isObj(entry.ref) && (entry.ref.status ?? "bound") === "bound";
-    if (bound && r.errors.length === 0 && license === undefined) {
+    if (bound && r.errors.length === 0 && !present(license)) {
       errors.push({ rule: "standard.license", msg: `${where} binds an artifact and must declare license` });
     }
   }

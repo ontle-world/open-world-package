@@ -200,8 +200,8 @@ def _check_local_ref(ref: Any, kinds: tuple[str, ...] | None, where: str, rel: s
 
 
 def _file_in_package(root: Path, rel: Any) -> bool:
-    from .ontology import _inside
-    return _inside(root, rel)
+    from .ontology import inside_package
+    return inside_package(root, rel)
 
 
 def _valid_timestamp(value: Any) -> bool:

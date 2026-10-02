@@ -206,6 +206,7 @@ spec:
 - `ref` is an ExternalRef (section 5.1) to the artifact that realizes the binding, such as a scene, a dataset revision, or a specification document.
 - A binding declares `ref`, `terms`, or both. Other keys are errors (`schema.unknown-field`), apart from an `extensions` block.
 - A bound `ref` MUST be pinned as in section 5.1 (`standard.unpinned`; extension providers define their own pinning) and MUST come with `license`, an SPDX license expression for the artifact (`standard.license`). An `unbound` ref needs neither; examples leave a binding unbound until a real artifact is chosen.
+- A `license` or `terms` that is null counts as absent.
 
 ## 6. World/View/EWS/Model rule
 

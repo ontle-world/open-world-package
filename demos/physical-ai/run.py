@@ -44,8 +44,8 @@ def hold_position(model_input: dict) -> dict:
     return {"arm": model_input["joints"], "gripper": model_input["gripper"], "base_velocity": [0.0, 0.0, 0.0]}
 
 
-def mean(values: list[float]) -> float:
-    return round(sum(values) / len(values), 4)
+def mean(values: list[float]) -> float | None:
+    return round(sum(values) / len(values), 4) if values else None
 
 
 def main() -> None:

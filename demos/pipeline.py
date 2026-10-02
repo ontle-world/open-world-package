@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +50,11 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def locked_files(archive: Path) -> Any:
+    with zipfile.ZipFile(archive) as zf:
+        return json.loads(zf.read("owp.lock.json"))["files"]
+
+
 def finish(here: Path, subject_package: Path, archive_name: str, expected_ews: dict[str, Any],
            evidence: dict[str, Any], header: str) -> None:
     """Write (or with --check, compare) expected-ews.yaml, evidence.yaml, and the subject archive."""
@@ -54,7 +62,14 @@ def finish(here: Path, subject_package: Path, archive_name: str, expected_ews: d
     parser.add_argument("--check", action="store_true", help="compare with the committed files instead of writing")
     args = parser.parse_args()
     archive = here / archive_name
-    if not args.check:
+    if args.check:
+        # The committed archive must still hold the World Model package as it is now. Compare the locked file
+        # hashes, not the archive bytes, which depend on the zlib build.
+        with tempfile.TemporaryDirectory() as tmp:
+            fresh = locked_files(deterministic_pack(subject_package, Path(tmp) / archive_name))
+        if fresh != locked_files(archive):
+            raise SystemExit(f"{archive_name} is stale: the World Model package changed; rerun without --check")
+    else:
         deterministic_pack(subject_package, archive)
     evidence["spec"]["subjectDigest"] = sha256_file(archive)
     problems = check_detached_evidence(evidence, archive)

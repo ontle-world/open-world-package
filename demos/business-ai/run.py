@@ -6,10 +6,10 @@
    values, unresolved alternatives (uncertainty), and the provenance of each field.
 3. The model stub is a rule: an open leak finding without a verified CAPA is high claim-escalation risk, an
    open claim is medium, anything else is low. It is a stand-in, not a trained model.
-4. The World Model's quality-basic@0.1.0 checks are computed over the predictions: traceability_to_lot is the
-   share of steps whose lot genealogy traces to an MES production-lot record; uncertainty_declared is the share
-   of steps with unresolved inputs whose prediction names them. The result is a detached CompatibilityEvidence
-   bound to the archive by digest.
+4. Of the World Model's quality-basic@0.1.0 checks, traceability_to_lot is computed: the share of steps whose
+   lot genealogy traces to an MES production-lot record. uncertainty_declared is not run, because the rule stub
+   has no uncertainty model; the evidence says so. The result is a detached CompatibilityEvidence bound to the
+   archive by digest.
 
     python demos/business-ai/run.py           # write expected-ews.yaml, evidence.yaml, the archive
     python demos/business-ai/run.py --check   # compare with the committed files
@@ -37,7 +37,7 @@ def adapt(ews: dict) -> dict:
 
 
 def escalation_risk(model_input: dict) -> dict:
-    values, alternatives = model_input["values"], model_input["alternatives"]
+    values = model_input["values"]
     inspections = values.get("inspection.results") or []
     capa = values.get("capa.status")
     if inspections and inspections[-1].endswith("_detected") and capa != "verified":
@@ -46,22 +46,19 @@ def escalation_risk(model_input: dict) -> dict:
         risk = "medium"
     else:
         risk = "low"
-    return {"risk": risk, "unresolvedInputs": sorted(alternatives)}
+    return {"risk": risk}
 
 
 def main() -> None:
     observations = load(HERE / "observations.yaml")
     steps = compile_steps(WORLD, COMPILER, observations, STEPS)
-    predictions, traced, uncertain, declared = {}, 0, 0, 0
+    predictions, traced = {}, 0
     for ews in steps:
         model_input = adapt(ews)
         prediction = escalation_risk(model_input)
         predictions[ews["spec"]["context"]["asOf"]] = prediction["risk"]
         lot_sources = model_input["provenance"].get("lot.genealogy") or []
         traced += bool(lot_sources) and all(o.startswith("mes-production-lot-") for o in lot_sources)
-        if model_input["alternatives"]:
-            uncertain += 1
-            declared += prediction["unresolvedInputs"] == sorted(model_input["alternatives"])
 
     evidence = {
         "apiVersion": "openworld/v1alpha1",
@@ -85,8 +82,8 @@ def main() -> None:
                 "model": "escalation_rule_stub",
                 "steps": len(steps),
                 "predictions": predictions,
-                "metrics": {"traceability_to_lot": round(traced / len(steps), 4),
-                            "uncertainty_declared": round(declared / uncertain, 4) if uncertain else 1.0},
+                "metrics": {"traceability_to_lot": round(traced / len(steps), 4)},
+                "checksNotRun": {"uncertainty_declared": "the rule stub has no uncertainty model"},
             },
         },
     }

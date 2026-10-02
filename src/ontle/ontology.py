@@ -21,7 +21,7 @@ PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
 IRI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:\S+$")
 CURIE_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):([^\s/][^\s]*)$")
 
-def _inside(root: Path, rel: Any) -> bool:
+def inside_package(root: Path, rel: Any) -> bool:
     """rel is a package-relative path of an existing file inside the package root."""
     if not isinstance(rel, str) or not rel or rel.startswith("./") or "\\" in rel:
         return False
@@ -102,7 +102,7 @@ def ontology_issues(root: Path, spec: dict[str, Any], declared: set[str]) -> tup
             errors.append(f"ontology.entrypoint: spec.ontology.entrypoints[{i}] must be a mapping with path, format, and role")
             continue
         path, fmt, role = entry.get("path"), entry.get("format"), entry.get("role")
-        if not _inside(root, path):
+        if not inside_package(root, path):
             errors.append(f"ontology.entrypoint: spec.ontology.entrypoints[{i}].path {path!r} must be an existing file inside the package")
             continue
         if fmt not in FORMATS:
@@ -120,7 +120,7 @@ def ontology_issues(root: Path, spec: dict[str, Any], declared: set[str]) -> tup
                     errors.append(f"ontology.prefix-undeclared: {path}: {where} {value!r} uses a prefix that spec.ontology.prefixes does not declare")
     term_index = ontology.get("termIndex")
     if term_index is not None:
-        doc = _load(root / term_index) if _inside(root, term_index) else None
+        doc = _load(root / term_index) if inside_package(root, term_index) else None
         if not isinstance(doc, dict) or doc.get("kind") != "OntologyTermIndex":
             errors.append(f"ontology.term-index: spec.ontology.termIndex {term_index!r} must be an existing OntologyTermIndex document")
         else:

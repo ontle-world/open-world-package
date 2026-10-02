@@ -169,11 +169,22 @@ export function checkWorldPackage(ctx: Context): void {
  * `properties` keys of the package-relative JSON Schema named by spec.outputSchemaRef.
  * `fields` is null when the compiler declares no field list.
  */
-export function outputSchemaFields(root: string, spec: Obj | undefined, file: string): { fields: string[] | null; problems: Problem[] } {
+type SchemaFields = { fields: string[] | null; problems: Problem[] };
+/** Resolved once per compiler document: the profile checks, bindings, and EWS code all ask. */
+const schemaFieldsCache = new WeakMap<Obj, SchemaFields>();
+
+export function outputSchemaFields(root: string, spec: Obj | undefined, file: string): SchemaFields {
+  if (!spec) return resolveOutputSchemaFields(root, spec, file);
+  let r = schemaFieldsCache.get(spec);
+  if (!r) schemaFieldsCache.set(spec, (r = resolveOutputSchemaFields(root, spec, file)));
+  return r;
+}
+
+function resolveOutputSchemaFields(root: string, spec: Obj | undefined, file: string): SchemaFields {
   const declared = get(spec, "outputSchema", "fields");
   const fields = Array.isArray(declared) ? declared.filter((f): f is string => typeof f === "string") : null;
   const ref = spec?.outputSchemaRef;
-  if (ref === undefined) return { fields, problems: [] };
+  if (ref === undefined || ref === null) return { fields, problems: [] }; // null counts as absent
   const bad = (msg: string) => ({ fields, problems: [{ rule: "compiler.output-schema-ref", msg: `StateCompilerProfile ${file} spec.outputSchemaRef ${msg}` }] });
   if (typeof ref !== "string" || ref.startsWith("./")) return bad("must be a relative POSIX path without a leading './'");
   const rel = normalizeRelPath(ref);

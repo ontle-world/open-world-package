@@ -97,6 +97,10 @@ cases:
     errors: [compiler.output-schema-mismatch]
     satisfiedProfile: model-ready
     rule: "When a compiler declares both, outputSchema.fields and the properties of outputSchemaRef list the same fields."
+  compiler-output-schema-ref-null:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "outputSchemaRef: null (an empty value) counts as absent, like other optional fields."
   package-legacy-manifest:
     valid: false
     errors: [package.legacy-manifest]
@@ -436,6 +440,11 @@ cases:
     errors: [standard.license]
     satisfiedProfile: descriptive
     rule: "A standard binding that binds an artifact declares its license."
+  standard-binding-license-null:
+    valid: false
+    errors: [standard.license]
+    satisfiedProfile: descriptive
+    rule: "license: null counts as absent, so a bound artifact without a license value is standard.license."
   standard-binding-shape:
     valid: false
     errors: [standard.binding, schema.unknown-field]

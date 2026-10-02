@@ -21,7 +21,7 @@ import tempfile
 import zipfile
 from typing import Any
 
-from .core import MANIFEST, SEMVER_PATTERN, OWPError, ValidationResult, load_manifest, validate_package, verify_archive
+from .core import MANIFEST, SEMVER_PATTERN, OWPError, ValidationResult, load_manifest, local_assets, validate_package, verify_archive
 from .yamlio import load_yaml
 
 PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@\s]+)/(?P<name>[^/@\s]+)@(?P<version>{SEMVER_PATTERN})$")
@@ -294,10 +294,7 @@ def resolve_package(path: str | Path, sources: list[str] | None = None) -> Resol
 
 
 def _local_asset_kind(pkg: ResolvedPackage, rel: str) -> str | None:
-    for item in (pkg.manifest.get("spec") or {}).get("assets", []) or []:
-        if isinstance(item, dict) and item.get("path") == rel:
-            return item.get("kind")
-    return None
+    return local_assets(pkg.root, pkg.manifest.get("spec") or {})[0].get(rel)
 
 
 def _load_asset(pkg: ResolvedPackage, rel: str) -> dict[str, Any]:
@@ -312,8 +309,8 @@ def _binding_grounding_errors(pkg: ResolvedPackage, resolution: Resolution) -> l
     """SemanticBinding CURIEs resolve against the OntologyPackages this package depends on (spec section 14)."""
     from .binding import grounding_issues
     from .ontology import terms as ontology_terms
-    binding_docs = {item["path"]: _load_asset(pkg, item["path"]) for item in (pkg.manifest.get("spec") or {}).get("assets", []) or []
-                    if isinstance(item, dict) and item.get("kind") == "SemanticBinding" and isinstance(item.get("path"), str)}
+    kinds, docs = local_assets(pkg.root, pkg.manifest.get("spec") or {})
+    binding_docs = {rel: docs.get(rel) or {} for rel, kind in kinds.items() if kind == "SemanticBinding"}
     if not binding_docs:
         return []
     ontologies = []

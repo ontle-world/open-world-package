@@ -11,6 +11,7 @@ import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 import { bindingProblems, outputSchemaFields } from "./rules/world.js";
+import { localAssetKinds } from "./discovery.js";
 import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
 const UTC_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/;
@@ -54,9 +55,7 @@ function loadWorld(worldDir: string): { identity?: string; manifest?: Obj; probl
 
 /** Load a local StateCompilerProfile asset of the World. */
 function loadCompiler(worldDir: string, manifest: Obj, identity: string, compilerPath: string): WorldCompiler | string {
-  const assets = get(manifest, "spec", "assets");
-  const listed = Array.isArray(assets) && assets.some((a) => isObj(a) && a.kind === "StateCompilerProfile" && a.path === compilerPath);
-  if (!listed) return `${compilerPath} is not a local StateCompilerProfile asset of ${identity}`;
+  if (localAssetKinds(worldDir, manifest).get(compilerPath) !== "StateCompilerProfile") return `${compilerPath} is not a local StateCompilerProfile asset of ${identity}`;
   const l = loadYamlFile(path.join(worldDir, compilerPath));
   if (!l.ok || !isObj(l.value)) return `cannot read State Compiler ${compilerPath}`;
   const spec = get(l.value, "spec");

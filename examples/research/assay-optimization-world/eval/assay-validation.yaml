@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: EvaluationProfile
 metadata: {name: assay-validation, version: 0.1.0}
 spec:

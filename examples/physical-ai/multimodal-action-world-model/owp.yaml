@@ -54,14 +54,3 @@ spec:
       - Example contract; no weights bundled.
     inputs:
       contract: EffectiveWorldState
-  assets:
-  - kind: ModelArtifact
-    path: models/model-artifact.yaml
-  - kind: RepresentationAdapterProfile
-    path: models/adapter.yaml
-  - kind: EvaluationProfile
-    path: eval/manipulation.yaml
-  - kind: VerifierPackage
-    path: eval/verifier.yaml
-  - kind: CompatibilityEvidence
-    path: eval/evidence-reference-sim.yaml

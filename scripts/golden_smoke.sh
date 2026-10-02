@@ -25,26 +25,26 @@ trap 'rm -rf "$TMP"' EXIT
 
 ontle init demo-world --namespace smoke --destination "$TMP/demo-world"
 ontle init demo-ontology --template ontology --namespace smoke --destination "$TMP/demo-ontology"
-ontle init demo-model --template worldmodel --namespace smoke --destination "$TMP/demo-model"
+ontle init demo-model --template worldmodel --namespace smoke --destination "$TMP/demo-model" --world "$TMP/demo-world"
 ontle init demo-vla --template worldmodel-multimodal --namespace smoke --destination "$TMP/demo-vla"
-ontle add source mes --path "$TMP/demo-world"
-ontle add scenario smoke --path "$TMP/demo-world"
-ontle add view smoke-view --path "$TMP/demo-world"
-ontle add compiler smoke-state --path "$TMP/demo-world"
-ontle add verifier smoke-verifier --path "$TMP/demo-model"
+N="ontle new --package $TMP/demo-world"
+$N SourceSystemSchemaProfile interfaces/mes.yaml
+$N ScenarioProfile scenarios/smoke.yaml
+$N WorldViewProfile views/smoke-view.yaml
+$N StateCompilerProfile state/smoke-state.yaml
+ontle new VerifierPackage eval/smoke-verifier.yaml --package "$TMP/demo-model"
 ontle add extension acme/quality-extension@1.2.0 --path "$TMP/demo-world"
-ontle add view regional-view --specializes views/default.yaml --path "$TMP/demo-world"
-ontle add knowledge playbook --path "$TMP/demo-world"
-ontle add artifact report --path "$TMP/demo-world"
-ontle add pattern triage --path "$TMP/demo-world"
-ontle add task triage-task --path "$TMP/demo-world"
-ontle add consumer manager --path "$TMP/demo-world"
-ontle add template report-template --path "$TMP/demo-world"
-ontle add actor manager --path "$TMP/demo-world"
-ontle add role manager-role --path "$TMP/demo-world"
-ontle add capability analysis --path "$TMP/demo-world"
-ontle add delegation manager-to-agent --path "$TMP/demo-world"
-ontle sync "$TMP/demo-world"
+$N WorldViewProfile views/regional-view.yaml --specializes views/default.yaml
+$N KnowledgeAsset knowledge/playbook.yaml
+$N ArtifactContract artifacts/report.yaml
+$N WorkPatternProfile patterns/triage.yaml
+$N TaskSetProfile tasks/triage-task.yaml
+$N ConsumerRepresentationProfile consumers/manager.yaml
+$N ArtifactTemplate artifacts/templates/report-template.yaml
+$N ActorProfile actors/manager.yaml
+$N RoleProfile roles/manager-role.yaml
+$N CapabilityContract capabilities/analysis.yaml
+$N DelegationProfile delegations/manager-to-agent.yaml
 ontle validate "$TMP/demo-world"
 ontle validate "$TMP/demo-ontology"
 ontle validate "$TMP/demo-model"

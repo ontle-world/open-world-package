@@ -11,7 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from .core import OWPError, load_manifest
+from .core import OWPError, load_manifest, local_assets
 from .yamlio import YAMLError, load_yaml
 
 PARAMETER_TYPES = {"string": str, "number": (int, float), "boolean": bool}
@@ -119,7 +119,7 @@ def _load(path: Path) -> Any:
 def run_extraction(package: str | Path, profile_path: str, parameters: dict[str, Any], results: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Load a KnowledgeExtractionProfile from a package, run its SPARQL query over the source KnowledgeAsset (unless results are given), and transform."""
     root, manifest = load_manifest(package)
-    kinds = {a.get("path"): a.get("kind") for a in (manifest.get("spec") or {}).get("assets", []) or [] if isinstance(a, dict)}
+    kinds = local_assets(root, manifest.get("spec") or {})[0]
     if kinds.get(profile_path) != "KnowledgeExtractionProfile":
         raise OWPError(f"{profile_path} is not a KnowledgeExtractionProfile asset of the package")
     profile = _load(root / profile_path)

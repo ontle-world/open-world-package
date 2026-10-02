@@ -48,9 +48,9 @@ ontle inspect .
 ontle pack .
 
 # Generated files point editors (VS Code YAML, yaml-language-server) at their JSON Schema.
-# After adding YAML files by hand, list them in owp.yaml with:
-ontle sync .
 ```
+
+Each asset file says what it is with `apiVersion` and `kind`; `owp.yaml` does not list local assets. Write a file by hand, or let `ontle new` write a skeleton:
 
 The generated project contains only the authoring surface. `.ontle/` is generator-owned metadata and can be ignored by most users.
 
@@ -60,39 +60,19 @@ The generated project contains only the authoring surface. `.ontle/` is generato
 ontle init my-world --template minimal
 ontle init my-enterprise-world --template enterprise
 ontle init my-ontology --template ontology
-ontle init my-world-model --template worldmodel
+ontle init my-world-model --template worldmodel --world ./my-world
 ontle init my-vla-world-model --template worldmodel-multimodal
 ```
 
-Progressive scaffolding:
+Adding assets:
 
 ```bash
-ontle add view manager-view
-ontle add compiler manager-state
-ontle add source mes
-ontle add observation quality-events
-ontle add action propose-capa
-ontle add commit qms-approval
-ontle add effect verified-outcome
-ontle add scenario claim-rca
-ontle add adapter state-adapter
-ontle add eval baseline
-ontle add verifier outcome-check
-ontle add test smoke
-ontle add asset sop-template
-ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension
-
-# experimental (spec Appendix C)
-ontle add view regional-view --specializes views/default.yaml
-ontle add task account-priority
-ontle add pattern prioritize
-ontle add artifact priority-board
-ontle add consumer sales-manager
-ontle add knowledge win-loss-playbook
-ontle add actor quality-manager
-ontle add role quality-manager
-ontle add delegation manager-to-agent
-ontle add capability rca-analysis
+ontle new WorldViewProfile views/manager.yaml          # any asset kind; the file is found by its kind
+ontle new StateCompilerProfile state/manager.yaml
+ontle new ScenarioProfile scenarios/claim-rca.yaml
+ontle new WorldViewProfile views/regional.yaml --specializes views/default.yaml   # experimental
+ontle new TaskSetProfile tasks/account-priority.yaml                              # experimental
+ontle add extension acme/quality-extension@1.2.0       # declare a publisher extension in owp.yaml
 ontle inspect . --graph --resolved-views
 
 # knowledge extraction (experimental; SPARQL needs the rdf extra)

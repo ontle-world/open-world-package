@@ -12,12 +12,3 @@ spec:
     defaultStateCompiler: state/task-compiler.yaml
   conformance:
     profile: action-ready
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: StateCompilerProfile
-    path: state/task-compiler.yaml
-  - kind: ActionBindingProfile
-    path: interfaces/actions.yaml
-  - kind: EffectVerificationProfile
-    path: interfaces/effect.yaml

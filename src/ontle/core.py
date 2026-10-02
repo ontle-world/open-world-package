@@ -5,9 +5,10 @@ from importlib import resources
 from pathlib import Path
 import hashlib
 import json
+import posixpath
 import re
 import zipfile
-from typing import Any
+from typing import Any, Iterator
 
 from . import binding as binding_module
 from . import experimental, structure
@@ -31,6 +32,7 @@ def _load_vocabulary() -> dict[str, str]:
 
 ASSET_KIND_STABILITY = _load_vocabulary()
 KNOWN_ASSET_KINDS = set(ASSET_KIND_STABILITY)
+DOCUMENT_KINDS = {"ObservationSet", "EffectiveWorldState"}  # OWP documents that are package files, not assets
 SEMVER_PATTERN = r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
 SEMVER_RE = re.compile(rf"^{SEMVER_PATTERN}$")
 # Exact reference to a versioned asset: <name>@<semver>. Ranges are not allowed.
@@ -90,14 +92,10 @@ def load_manifest(path: str | Path) -> tuple[Path, dict[str, Any]]:
     return root, data
 
 
-def _local_asset_paths(spec: dict[str, Any]) -> list[str]:
-    out: list[str] = []
-    for item in spec.get("assets", []) or []:
-        if isinstance(item, str):
-            out.append(item)
-        elif isinstance(item, dict) and isinstance(item.get("path"), str):
-            out.append(item["path"])
-    return out
+def _asset_path_form(path: str) -> bool:
+    """A package-relative POSIX path in normal form: no leading './' or '/', no '..', '//', or trailing '/' (spec 3)."""
+    return (bool(path) and "\\" not in path and not re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", path)
+            and posixpath.normpath(path) == path and not path.startswith(("/", "../")) and path not in {".", ".."})
 
 
 def _spec_of(doc: Any) -> dict[str, Any]:
@@ -122,8 +120,10 @@ def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[l
     if ref is None:
         return fields, []
     bad = f"compiler.output-schema-ref: StateCompilerProfile {rel} spec.outputSchemaRef"
+    if not isinstance(ref, str) or not ref or ref.startswith(("./", "/")) or "\\" in ref:
+        return fields, [f"{bad} {ref!r} must be a relative POSIX path without a leading './'"]
     if not ontology_module.inside_package(root, ref):
-        return fields, [f"{bad} {ref!r} must name a file inside the package by a relative POSIX path without a leading './'"]
+        return fields, [f"{bad} {ref!r} does not name a file in the package"]
     try:
         doc = json.loads((root / ref).read_text(encoding="utf-8"), parse_constant=_reject_constant)
     except (OSError, ValueError) as exc:
@@ -390,7 +390,7 @@ def validate_package(path: str | Path) -> ValidationResult:
                 errors.append(f"worldmodel.world-ref: semanticGrounding.worldRef {world_ref!r} must be <namespace>/<name>@<exact-semver>")
             for field, refs in (("compatibleWorldViews", views), ("compatibleStateCompilers", compilers)):
                 for ref in refs if isinstance(refs, list) and isinstance(world_ref, str) else []:
-                    if isinstance(ref, str) and (ref.partition("#")[0] != world_ref or not ref.partition("#")[2]):
+                    if isinstance(ref, str) and (ref.partition("#")[0] != world_ref or not _asset_path_form(ref.partition("#")[2])):
                         errors.append(f"worldmodel.grounding-ref: semanticGrounding.{field} entry {ref!r} must have the form <worldRef>#<asset path> with worldRef {world_ref}")
 
     if kind == "OntologyPackage":
@@ -406,13 +406,33 @@ def validate_package(path: str | Path) -> ValidationResult:
     if not isinstance(assets, list):
         errors.append("asset.list: spec.assets must be a list when present")
         assets = []
-    seen_paths: set[str] = set()
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
     experimental_kind_counts: dict[str, int] = {}
     standard_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
     asset_kinds: set[str] = set()
+
+    def kind_issues(asset_kind: str, where: str, discovered: bool) -> bool:
+        """Errors and warnings for one asset kind; False when the kind cannot be used."""
+        if ":" in asset_kind:
+            match = structure.EXTENSION_KIND_RE.match(asset_kind)
+            if not match:
+                errors.append(f"asset.kind: {where} {asset_kind!r} must be <extension>:<Kind>")
+                return False
+            if match.group(1) not in extension_names:
+                errors.append(f"extension.undeclared: {where} {asset_kind!r} uses extension {match.group(1)!r}, which spec.dependencies does not declare with 'as'")
+        elif asset_kind not in KNOWN_ASSET_KINDS:
+            if discovered:  # a file that says it is an OWP document must name a kind OWP knows (spec section 5)
+                errors.append(f"asset.kind: {where} {asset_kind!r} is not an asset kind of the vocabulary or an extension kind")
+                return False
+            warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
+        elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
+            experimental_kind_counts[asset_kind] = experimental_kind_counts.get(asset_kind, 0) + 1
+        return True
+
+    # The manifest lists external assets (ref) and PackageExample files; other local assets are discovered.
+    example_paths: set[str] = set()
     for idx, item in enumerate(assets):
         if not isinstance(item, dict):
             errors.append(f"asset.entry: spec.assets[{idx}] must be a mapping")
@@ -422,71 +442,80 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.append(f"asset.kind: spec.assets[{idx}].kind is required")
         else:
             asset_kinds.add(asset_kind)
-            if ":" in asset_kind:
-                match = structure.EXTENSION_KIND_RE.match(asset_kind)
-                if not match:
-                    errors.append(f"asset.kind: spec.assets[{idx}].kind {asset_kind!r} must be <extension>:<Kind>")
-                elif match.group(1) not in extension_names:
-                    errors.append(f"extension.undeclared: spec.assets[{idx}].kind {asset_kind!r} uses extension {match.group(1)!r}, which spec.dependencies does not declare with 'as'")
-            elif asset_kind not in KNOWN_ASSET_KINDS:
-                warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
-            elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
-                experimental_kind_counts[asset_kind] = experimental_kind_counts.get(asset_kind, 0) + 1
+            kind_issues(asset_kind, f"spec.assets[{idx}].kind", discovered=False)
         has_path = isinstance(item.get("path"), str) and bool(item.get("path").strip())
         has_ref = "ref" in item
         if has_ref:
             ref_errors, ref_warnings = structure.external_ref_issues(item["ref"], f"spec.assets[{idx}].ref", extension_names)
             errors.extend(ref_errors)
             warnings.extend(ref_warnings)
+        if has_path and asset_kind != "PackageExample":
+            errors.append(f"asset.path-or-ref: spec.assets[{idx}] lists the local file {item['path']!r}; local assets are found by their "
+                          "apiVersion and kind, and only PackageExample files are listed")
+            continue
         if has_path == has_ref:
             errors.append(f"asset.path-or-ref: spec.assets[{idx}] must declare exactly one of path or ref")
             continue
-        if has_path:
-            rel = item["path"]
-            if rel.startswith("./") or "\\" in rel:
-                errors.append(f"asset.path-form: local asset path {rel!r} must be a relative POSIX path without a leading './'")
-            if rel in seen_paths:
-                errors.append(f"asset.duplicate-path: duplicate local asset path: {rel}")
-                continue
-            seen_paths.add(rel)
-            if isinstance(asset_kind, str):
-                local_asset_kinds[rel] = asset_kind
-            target = (root / rel).resolve()
+        if not has_path:
+            continue
+        rel = item["path"]
+        if rel.startswith("./") or "\\" in rel:
+            errors.append(f"asset.path-form: local asset path {rel!r} must be a relative POSIX path without a leading './'")
+        if rel in example_paths:
+            errors.append(f"asset.duplicate-path: duplicate local asset path: {rel}")
+            continue
+        example_paths.add(rel)
+        local_asset_kinds[rel] = "PackageExample"
+        target = (root / rel).resolve()
+        try:
+            target.relative_to(root)
+        except ValueError:
+            errors.append(f"asset.path-escape: asset path escapes package root: {rel}")
+            continue
+        if not target.exists():
+            errors.append(f"asset.missing-file: local asset path does not exist: {rel}")
+            continue
+        if target.suffix.lower() in {".yaml", ".yml"}:
             try:
-                target.relative_to(root)
-            except ValueError:
-                errors.append(f"asset.path-escape: asset path escapes package root: {rel}")
+                adata = load_yaml(target.read_text(encoding="utf-8"))
+            except Exception as exc:
+                errors.append(f"asset.yaml: cannot parse asset YAML {rel}: {exc}")
                 continue
-            if not target.exists():
-                errors.append(f"asset.missing-file: local asset path does not exist: {rel}")
-                continue
-            if target.suffix.lower() in {".yaml", ".yml"}:
-                try:
-                    adata = load_yaml(target.read_text(encoding="utf-8"))
-                except Exception as exc:
-                    errors.append(f"asset.yaml: cannot parse asset YAML {rel}: {exc}")
-                    continue
-                # A typed asset may omit apiVersion (it inherits the manifest's); when present it must match.
-                if asset_kind != "PackageExample" and isinstance(adata, dict) and "apiVersion" in adata and adata["apiVersion"] != data.get("apiVersion"):
-                    errors.append(f"asset.api-version: {rel} declares apiVersion {adata['apiVersion']!r}; it must be omitted or equal the manifest's {data.get('apiVersion')!r}")
-                # Examples may be any document (for example an ObservationSet), so their kind is not checked.
-                if asset_kind != "PackageExample" and isinstance(adata, dict) and adata.get("kind") and adata.get("kind") != asset_kind:
-                    errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
-                if isinstance(adata, dict):
-                    local_asset_docs[rel] = adata
-                    aspec = adata.get("spec")
-                    if asset_kind != "PackageExample" and isinstance(aspec, dict) and "standardBindings" in aspec:
-                        sb_errors, sb_warnings = structure.standard_binding_issues(aspec["standardBindings"], f"{rel}: spec.standardBindings", extension_names)
-                        errors.extend(sb_errors)
-                        warnings.extend(sb_warnings)
-                    if asset_kind == "SemanticBinding":
-                        pass  # checked by binding_issues after the asset loop
-                    elif asset_kind in experimental.TABLES:
-                        experimental_docs.append((rel, asset_kind, adata))
-                    elif asset_kind != "PackageExample":
-                        errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
-                        if asset_kind in {"WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"}:
-                            standard_docs.append((rel, asset_kind, adata))
+            if isinstance(adata, dict):
+                local_asset_docs[rel] = adata  # examples may be any document; their kind is not checked
+
+    for rel, adata in package_documents(root, skip=example_paths):
+        if isinstance(adata, Exception):
+            errors.append(f"asset.yaml: cannot parse YAML {rel}: {adata}")
+            continue
+        if not is_owp_document(adata):
+            continue  # not an OWP document: an ordinary package file
+        if adata["apiVersion"] != data.get("apiVersion"):
+            errors.append(f"asset.api-version: {rel} declares apiVersion {adata['apiVersion']!r}; it must equal the manifest's {data.get('apiVersion')!r}")
+        asset_kind = adata.get("kind")
+        if asset_kind in DOCUMENT_KINDS:
+            continue  # an ObservationSet or EWS document, not an asset
+        if not isinstance(asset_kind, str) or not asset_kind:
+            errors.append(f"asset.kind: {rel} declares apiVersion {adata['apiVersion']!r} but no kind")
+            continue
+        if not kind_issues(asset_kind, f"{rel}: kind", discovered=True):
+            continue
+        asset_kinds.add(asset_kind)
+        local_asset_kinds[rel] = asset_kind
+        local_asset_docs[rel] = adata
+        aspec = adata.get("spec")
+        if isinstance(aspec, dict) and "standardBindings" in aspec:
+            sb_errors, sb_warnings = structure.standard_binding_issues(aspec["standardBindings"], f"{rel}: spec.standardBindings", extension_names)
+            errors.extend(sb_errors)
+            warnings.extend(sb_warnings)
+        if asset_kind == "SemanticBinding":
+            pass  # checked by binding_issues after the asset loop
+        elif asset_kind in experimental.TABLES:
+            experimental_docs.append((rel, asset_kind, adata))
+        elif asset_kind != "PackageExample":
+            errors.extend(_asset_structure_errors(adata, asset_kind, rel, extension_names))
+            if asset_kind in {"WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"}:
+                standard_docs.append((rel, asset_kind, adata))
 
     for asset_kind, count in experimental_kind_counts.items():
         warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change ({count} asset{'s' if count > 1 else ''})")
@@ -562,7 +591,7 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
     spec = data.get("spec") or {}
     summary: dict[str, Any] = {}
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict):
-        kinds, docs = _local_assets(root, spec)
+        kinds, docs = local_assets(root, spec)
         ews_fields, _ = compiler_fields(root, kinds, docs)
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {
@@ -580,10 +609,10 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {"declared": conformance.get("profile"),
                                   "satisfied": ontology_module.satisfied_ontology_profile(root, spec)}
-    kinds_used, docs_used = _local_assets(root, spec if isinstance(spec, dict) else {})
+    kinds_used, docs_used = local_assets(root, spec if isinstance(spec, dict) else {})
     summary["experimental"] = experimental.usage(kinds_used, docs_used, ASSET_KIND_STABILITY)
     if graph or resolved_views:
-        kinds, docs = _local_assets(root, spec if isinstance(spec, dict) else {})
+        kinds, docs = local_assets(root, spec if isinstance(spec, dict) else {})
         if graph:
             summary["graph"] = experimental.reference_graph(data, docs, kinds)
         if resolved_views:
@@ -596,7 +625,7 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
         "valid": result.valid,
         "errors": result.errors,
         "warnings": result.warnings,
-        "asset_count": len(spec.get("assets", []) or []),
+        "asset_count": len(local_assets(root, spec)[0]) + len([a for a in spec.get("assets", []) or [] if isinstance(a, dict) and "ref" in a]),
         "domains": spec.get("domains", []),
         "extensions": [
             {"name": d["as"], "ref": d.get("ref"), "mustUnderstand": bool(d.get("mustUnderstand", False))}
@@ -606,22 +635,53 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
     }
 
 
-def _local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
-    """Kinds and parsed YAML documents of local assets, keyed by package-relative path."""
+def is_owp_document(doc: Any) -> bool:
+    """A YAML document that declares an OWP apiVersion (spec section 5)."""
+    return isinstance(doc, dict) and isinstance(doc.get("apiVersion"), str) and doc["apiVersion"].startswith("openworld/")
+
+
+def package_documents(root: Path, skip: set[str] = frozenset()) -> Iterator[tuple[str, Any]]:
+    """Every YAML file that asset discovery reads (spec section 5), with its parsed content or the parse error.
+
+    Discovery skips owp.yaml, the paths in skip, path components that start with '.', the directories that
+    packing ignores, and subdirectories that hold their own owp.yaml (a nested package).
+    """
+    nested = [p.parent.relative_to(root).parts for p in root.rglob(MANIFEST) if p.parent != root]
+    for path in package_files(root):
+        parts = path.relative_to(root).parts
+        rel = "/".join(parts)
+        if path.suffix.lower() not in {".yaml", ".yml"} or rel == MANIFEST or rel in skip:
+            continue
+        if any(part.startswith(".") for part in parts) or any(parts[:len(n)] == n for n in nested):
+            continue
+        try:
+            path.resolve().relative_to(root.resolve())
+        except ValueError:
+            continue  # a link that leads outside the package
+        try:
+            yield rel, load_yaml(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            yield rel, exc
+
+
+def local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+    """Kinds and parsed YAML documents of local assets (discovered, plus listed PackageExample files), by path."""
     kinds: dict[str, str] = {}
     docs: dict[str, dict[str, Any]] = {}
-    for item in spec.get("assets", []) or []:
-        if not isinstance(item, dict) or not isinstance(item.get("path"), str) or not isinstance(item.get("kind"), str):
-            continue
-        kinds[item["path"]] = item["kind"]
-        target = (root / item["path"]).resolve()
+    examples = {item["path"] for item in spec.get("assets", []) or []
+                if isinstance(item, dict) and item.get("kind") == "PackageExample" and isinstance(item.get("path"), str)}
+    for rel in examples:
+        kinds[rel] = "PackageExample"
         try:
-            target.relative_to(root)
-            doc = load_yaml(target.read_text(encoding="utf-8"))
+            doc = load_yaml((root / rel).read_text(encoding="utf-8"))
         except Exception:
             continue
         if isinstance(doc, dict):
-            docs[item["path"]] = doc
+            docs[rel] = doc
+    for rel, doc in package_documents(root, skip=examples):
+        if is_owp_document(doc) and isinstance(doc.get("kind"), str) and doc["kind"] not in DOCUMENT_KINDS:
+            kinds[rel] = doc["kind"]
+            docs[rel] = doc
     return kinds, docs
 
 
@@ -630,8 +690,8 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 
 
 def package_files(root: Path) -> list[Path]:
-    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "dist", "build",
-                     ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
+    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "node_modules",
+                     "dist", "build", ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
     files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():

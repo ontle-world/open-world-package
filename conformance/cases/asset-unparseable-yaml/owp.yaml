@@ -8,6 +8,3 @@ spec:
   world:
     description: WORLD.md
     definition: Conformance fixture World.
-  assets:
-  - kind: ScenarioProfile
-    path: scenarios/s.yaml

@@ -19,7 +19,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from .core import MANIFEST, OWPError, load_manifest, sha256_bytes, write_manifest
+from .core import MANIFEST, OWPError, load_manifest, local_assets, sha256_bytes, write_manifest
 from .yamlio import dump_yaml, load_yaml
 
 FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
@@ -331,12 +331,12 @@ def catalog(package: str | Path, fmt: str) -> str:
     spec = manifest.get("spec") or {}
     identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
     refs = external_refs(manifest)
-    for item in spec.get("assets") or []:  # content refs of local KnowledgeAsset and Dataset descriptions
-        if isinstance(item, dict) and item.get("kind") in {"KnowledgeAsset", "Dataset"} and isinstance(item.get("path"), str):
-            doc = load_yaml((root / item["path"]).read_text(encoding="utf-8")) or {}
-            ref = ((doc.get("spec") or {}).get("content") or {}).get("ref")
+    kinds, docs = local_assets(root, spec)
+    for rel, kind in sorted(kinds.items()):  # content refs of local KnowledgeAsset and Dataset descriptions
+        if kind in {"KnowledgeAsset", "Dataset"}:
+            ref = (((docs.get(rel) or {}).get("spec") or {}).get("content") or {}).get("ref")
             if isinstance(ref, dict) and ref.get("status", "bound") == "bound":
-                refs.append({"pointer": item["path"], "ref": ref})
+                refs.append({"pointer": rel, "ref": ref})
     if fmt == "dcat":
         distributions = [{"@type": "dcat:Distribution", "dcat:downloadURL": r["ref"].get("uri"),
                           **({"spdx:checksum": {"@type": "spdx:Checksum", "spdx:algorithm": "spdx:checksumAlgorithm_sha256",

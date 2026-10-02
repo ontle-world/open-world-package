@@ -5,6 +5,7 @@
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { localAssetKinds } from "./discovery.js";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { get, isObj, loadYamlFile, Obj } from "./util.js";
@@ -475,12 +476,11 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
 }
 
 function bindingGrounding(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {
-  const assets = get(pkg.manifest, "spec", "assets");
   const docs: Array<[string, unknown]> = [];
-  for (const a of Array.isArray(assets) ? assets : []) {
-    if (!isObj(a) || a.kind !== "SemanticBinding" || typeof a.path !== "string") continue;
-    const l = loadYamlFile(path.join(pkg.dir, a.path));
-    docs.push([a.path, l.ok ? l.value : undefined]);
+  for (const [rel, kind] of localAssetKinds(pkg.dir, pkg.manifest)) {
+    if (kind !== "SemanticBinding") continue;
+    const l = loadYamlFile(path.join(pkg.dir, rel));
+    docs.push([rel, l.ok ? l.value : undefined]);
   }
   if (docs.length === 0) return [];
   const ontologies = pkg.deps
@@ -505,12 +505,8 @@ function crossPackageProblems(model: Node, nodes: Map<string, Node>): Array<{ ru
     out.push({ rule: "grounding.world-kind", msg: `semanticGrounding.worldRef ${worldRef} resolves to a ${world.kind}, not a WorldPackage` });
     return out;
   }
-  const assets = get(world.manifest, "spec", "assets");
-  const assetKind = (p: string): string | undefined => {
-    if (!Array.isArray(assets)) return undefined;
-    const a = assets.find((x) => isObj(x) && x.path === p);
-    return isObj(a) && typeof a.kind === "string" ? a.kind : undefined;
-  };
+  const worldKinds = localAssetKinds(world.dir, world.manifest);
+  const assetKind = (p: string): string | undefined => worldKinds.get(p);
   const paths = (key: string) => {
     const list = get(sg, key);
     return (Array.isArray(list) ? list : [])

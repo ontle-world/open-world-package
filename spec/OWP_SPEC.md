@@ -87,7 +87,7 @@ semanticGrounding:
   - example/mobile-manipulation-world@0.1.0#state/pick-place-compiler.yaml
 ```
 
-References and package-relative paths are compared as exact strings, without normalization. Local asset paths, `defaultView`, `defaultStateCompiler`, `worldViewRef`, and `<asset path>` MUST be relative POSIX paths without a leading `./`, written exactly as they appear in `spec.assets`. Validating a single package does not resolve the referenced World; section 11 defines the cross-package checks.
+References and package-relative paths are compared as exact strings, without normalization. Local asset paths, `defaultView`, `defaultStateCompiler`, `worldViewRef`, and `<asset path>` MUST be relative POSIX paths in normal form, without a leading `./`, written exactly as the file's path in the package. Validating a single package does not resolve the referenced World; section 11 defines the cross-package checks.
 
 OWP does not standardize model weight bytes. Architecture names (VLM, VLA, video world model, solver) are expressed as `roles` and modalities, not as separate package kinds.
 
@@ -116,18 +116,33 @@ assets/           optional
 
 ## 5. Assets
 
-`spec.assets` can reference local package assets or external artifacts. An entry has `kind`, exactly one of `path` and `ref`, and optionally an `extensions` block. `kind` is a vocabulary kind or an extension kind `<extension>:<Kind>` (section 13).
+A local asset is a YAML file of the package that says what it is: its `apiVersion` is an OWP version and its `kind` is the asset kind. It is not listed in `owp.yaml`.
 
-Local example:
+```yaml
+# scenarios/pick-place.yaml
+apiVersion: openworld/v1alpha1
+kind: ScenarioProfile
+metadata:
+  name: pick-place
+spec: {}
+```
+
+Discovery reads every `.yaml`/`.yml` file of the package except `owp.yaml` and the listed `PackageExample` files. It skips path components that start with `.` or are named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, files that resolve outside the package root, and subdirectories that contain their own `owp.yaml` (a nested package). For each file read:
+
+- Every file MUST parse (`asset.yaml`, section 5.2).
+- A file whose top-level `apiVersion` is not a string starting with `openworld/` is an ordinary package file, not an asset. Configuration of other tools (for example a Kubernetes manifest) can sit in a package.
+- A file with an OWP `apiVersion` is an OWP document. Its `apiVersion` MUST equal the manifest's (`asset.api-version`), and it MUST declare `kind` (`asset.kind`).
+- `ObservationSet` and `EffectiveWorldState` documents are package files, not assets.
+- Any other `kind` MUST be a vocabulary kind or an extension kind `<extension>:<Kind>` (section 13); otherwise `asset.kind`. The file is then a local asset of that kind at its package-relative path.
+
+`spec.assets` lists what discovery cannot find: external artifacts (`ref`) and `PackageExample` files (`path`), whose content may be any document. An entry has `kind`, exactly one of `path` and `ref`, and optionally an `extensions` block. A `path` entry of any other kind is an error (`asset.path-or-ref`).
 
 ```yaml
 spec:
   assets:
-    - kind: ScenarioProfile
-      path: scenarios/pick-place.yaml
+    - kind: PackageExample
+      path: examples/observations.yaml
 ```
-
-A local YAML asset MAY omit `apiVersion` and `kind`: it inherits the manifest's `apiVersion` and its entry's `kind`. When present, `apiVersion` MUST equal the manifest's (`asset.api-version`) and `kind` MUST equal the entry's (`asset.kind-mismatch`, section 8). Generated assets omit `apiVersion`.
 
 External artifact example:
 
@@ -295,11 +310,11 @@ The reference validator checks at minimum:
 Precise meaning of the checks above:
 
 - **Legacy manifests:** `package.yaml` or `world.yaml` at the package root makes the package invalid.
-- **Local asset paths** are package-relative; a path that resolves outside the package root (for example `../x.yaml` or an absolute path) is invalid; the file must exist; the same path may be listed once.
+- **Listed PackageExample paths** are package-relative; a path that resolves outside the package root (for example `../x.yaml` or an absolute path) is invalid; the file must exist; the same path may be listed once.
 - **Dependencies:** every `spec.dependencies` entry is `<namespace>/<name>@<semver>` or a mapping whose `ref` is; otherwise the package is invalid.
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
-- **Typed local YAML assets:** every local `.yaml`/`.yml` asset MUST parse. If an asset other than `PackageExample` declares a top-level `kind`, that kind MUST equal the manifest entry's `kind`. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not compared.
-- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`) is open: a kind without `:` that is not in the vocabulary is a warning; a vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
+- **YAML files:** every `.yaml`/`.yml` file that discovery reads, and every listed `PackageExample`, MUST parse. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not checked.
+- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
 - **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
@@ -430,22 +445,21 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `manifest.spec` | 2 | `spec` is not a mapping |
 | `package.card` | 3 | required human card missing |
 | `package.legacy-manifest` | 8 | `package.yaml` or `world.yaml` at the root |
-| `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, missing entry `kind`, or a kind containing `:` that is not `<extension>:<Kind>` |
-| `asset.path-or-ref` | 5 | entry has both or neither of `path` and `ref` |
+| `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, missing entry `kind`, a kind containing `:` that is not `<extension>:<Kind>`, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind |
+| `asset.path-or-ref` | 5 | entry has both or neither of `path` and `ref`, or a `path` entry is not a `PackageExample` |
 | `ref.shape` | 5.1 | malformed ExternalRef: not a mapping, bad `status`, `digest`, `size`, or field type, or a bound reference without `provider` or `uri` |
 | `ref.provider` | 5.1 | `provider` is neither a listed provider nor `<extension>:<provider>` |
 | `asset.path-form` | 3 | local path is not a relative POSIX path, or starts with `./` |
 | `manifest.dependency` | 2 | `spec.dependencies` entry is not an exact package reference |
 | `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierPackage assets share `metadata.name` |
-| `asset.duplicate-path` | 8 | same local path listed twice |
-| `asset.path-escape` | 8 | local path resolves outside the package root |
-| `asset.missing-file` | 8 | local path does not exist |
+| `asset.duplicate-path` | 8 | same `PackageExample` path listed twice |
+| `asset.path-escape` | 8 | listed `PackageExample` path resolves outside the package root |
+| `asset.missing-file` | 8 | listed `PackageExample` path does not exist |
 | `standard.binding` | 5.3 | malformed `spec.standardBindings`: not a mapping, an entry without `standard`, `terms` not a mapping of strings, an empty `license`, or neither `ref` nor `terms` |
 | `standard.unpinned` | 5.3 | a bound `ref` in a standard binding is not pinned |
 | `standard.license` | 5.3 | a standard binding binds an artifact without `license` |
 | `asset.yaml` | 5.2, 8 | local YAML asset (including a `PackageExample`) does not parse, including duplicate keys |
-| `asset.kind-mismatch` | 8 | file `kind` differs from manifest `kind` |
-| `asset.api-version` | 5 | asset file `apiVersion` differs from the manifest's |
+| `asset.api-version` | 5 | a discovered OWP document's `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
 | `profile.descriptive` | 6.1 | no definition and no WorldDefinition asset |
@@ -505,7 +519,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `extraction.input` | C.1 | invalid extraction input; nothing is produced |
 | `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
 | `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
-| `ews.state-compiler` | 12 | named State Compiler is not a listed local asset, or has no `spec` |
+| `ews.state-compiler` | 12 | named State Compiler is not a local asset, or has no `spec` |
 | `ews.kind`, `ews.shape` | 12 | not an EffectiveWorldState document, or malformed sections |
 | `ews.world-ref`, `ews.world-view` | 12.1 | references do not match the World, compiler, and compiled View |
 | `ews.as-of` | 12.1 | `context.asOf` not a UTC timestamp |
@@ -535,7 +549,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `worldmodel.model-artifact-missing` | 8 | WorldModelPackage without a `ModelArtifact` asset |
 | `worldmodel.evaluation-profile-missing` | 8 | WorldModelPackage without an `EvaluationProfile` asset |
 | `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
-| `asset.kind-unknown` | 8 | kind without `:` outside the vocabulary |
+| `asset.kind-unknown` | 8 | external `spec.assets` entry kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
 | `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |

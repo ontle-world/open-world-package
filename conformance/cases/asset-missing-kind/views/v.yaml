@@ -1,0 +1,3 @@
+apiVersion: openworld/v1alpha1
+metadata: {name: v}
+spec: {worldRef: self}

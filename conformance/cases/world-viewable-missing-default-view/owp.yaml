@@ -10,6 +10,3 @@ spec:
     definition: Conformance fixture World.
   conformance:
     profile: viewable
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml

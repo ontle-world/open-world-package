@@ -29,7 +29,7 @@ Start with `WORLD.md` and `owp.yaml`. The generated project declares `conformanc
 
 ## 3. Validate and inspect
 
-Generated files start with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete them. If you create asset files by hand, `ontle sync .` adds them to `spec.assets`.
+Every asset file starts with `apiVersion` and `kind`; that is how the package finds it, so `owp.yaml` does not list local assets. Generated files also start with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete them. YAML files without an OWP `apiVersion` (CI configuration, for example) are ordinary files. Sample data that is not an asset (an `ObservationSet`, an expected EWS) is listed in `spec.assets` as a `PackageExample`.
 
 
 ```bash
@@ -39,12 +39,13 @@ ontle inspect .
 
 ## 4. Add only what you need
 
+Create the file, by hand or with `ontle new <Kind> <path>`, which writes a skeleton with `apiVersion`, `kind`, and `metadata.name`:
+
 ```bash
-ontle add view sales-manager
-ontle add compiler sales-manager-state
-ontle add source crm
-ontle add scenario qualification
-ontle add test basic
+ontle new WorldViewProfile views/sales-manager.yaml
+ontle new StateCompilerProfile state/sales-manager.yaml
+ontle new SourceSystemSchemaProfile interfaces/crm.yaml
+ontle new ScenarioProfile scenarios/qualification.yaml
 ```
 
 ## 5. Build a deterministic package archive
@@ -71,9 +72,11 @@ ontle init enterprise-core --template ontology --namespace example
 ## 7. Create a World Model package
 
 ```bash
-ontle init quality-model --template worldmodel --namespace example
-ontle init embodied-model --template worldmodel-multimodal --namespace example
+ontle init quality-model --template worldmodel --namespace example --world ./my-world
+ontle init embodied-model --template worldmodel-multimodal --namespace example --world example/robot-world@0.1.0
 ```
+
+`--world` grounds the model in a World and adds it to `spec.dependencies`: a World directory supplies its identity, default View, and default State Compiler; a `<namespace>/<name>@<version>` reference assumes the starter's `views/default.yaml` and `state/default-compiler.yaml`. Without it, replace the `replace-with-...` placeholders yourself.
 
 Both templates expose the same `ModelArtifact + RepresentationAdapter + EvaluationProfile` skeleton. Every World Model must also declare its compatible World View(s) and State Compiler(s) as `<worldRef>#<asset path>`; the multimodal variant additionally declares modality and temporal contracts.
 
@@ -92,14 +95,14 @@ ontle inspect .            # semanticCoverage shows how many EWS fields are boun
 ## 9. Describe who does the work (experimental)
 
 ```bash
-ontle add actor quality-manager
-ontle add role quality-manager
-ontle add delegation manager-to-agent
-ontle add capability rca-analysis
-ontle add task claim-rca
-ontle add pattern diagnose
-ontle add artifact rca-report
-ontle add consumer quality-manager
+ontle new ActorProfile actors/quality-manager.yaml
+ontle new RoleProfile roles/quality-manager.yaml
+ontle new DelegationProfile delegations/manager-to-agent.yaml
+ontle new CapabilityContract capabilities/rca-analysis.yaml
+ontle new TaskSetProfile tasks/claim-rca.yaml
+ontle new WorkPatternProfile patterns/diagnose.yaml
+ontle new ArtifactContract artifacts/rca-report.yaml
+ontle new ConsumerRepresentationProfile consumers/quality-manager.yaml
 ontle inspect . --graph    # who does what, with which View, producing which artifact
 ```
 

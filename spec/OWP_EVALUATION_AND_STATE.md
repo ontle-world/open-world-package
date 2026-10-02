@@ -86,7 +86,7 @@ Values are compared in the JSON data model: types must match (a boolean never eq
 
 A State Compiler's EWS fields are `spec.outputSchema.fields`, or the field names listed by `spec.outputSchemaRef`:
 
-- `outputSchemaRef` is a package-relative path in the form of a local asset path (section 5): relative POSIX, without a leading `./`, naming a file inside the package. The file need not be listed in `spec.assets`. `outputSchemaRef: null` counts as absent.
+- `outputSchemaRef` is a package-relative path in the form of a local asset path (section 5): relative POSIX, without a leading `./`, naming a file inside the package. It is an ordinary package file, not an asset. `outputSchemaRef: null` counts as absent.
 - The file is a UTF-8 JSON document (RFC 8259; `NaN` and `Infinity` are not JSON) holding a JSON Schema whose top-level `properties` is a non-empty object. Its keys are the EWS fields. The subschemas are informative in this alpha; validators do not apply them to EWS values.
 - A reference that is malformed, missing, unreadable, not JSON, or lacks such `properties` is the error `compiler.output-schema-ref`, and it contributes no fields.
 - A compiler that declares both MUST list the same set of fields in each (`compiler.output-schema-mismatch`); `outputSchema.fields`, in its order, is then used.
@@ -96,7 +96,7 @@ An EWS document conforms to its State Compiler when:
 - `worldRef` is the World's identity, `stateCompiler` is `<worldRef>#<compiler path>`, and `worldView` is `<worldRef>#<the compiler's worldViewRef>`.
 - When the compiler has EWS fields, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears.
 - Each `unresolved` field retains at least two distinct alternatives.
-- Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a listed local asset.
+- Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a local asset.
 - `provenance` has entries only for fields in `state` or `unresolved`; when the compiler declares `traceRequired: true`, every such field has non-empty provenance.
 
 Reference CLI: `ontle ews check <ews.yaml> --world <world package>`.
@@ -131,7 +131,7 @@ spec:
 
 Given an ObservationSet and `asOf`, a conforming compiler computes each schema field as follows:
 
-Preconditions: the compiler is a listed local `StateCompilerProfile` asset of the World; a compiler without `spec.bindings` is opaque and compiling it MUST be refused; the input document has `kind: ObservationSet`; each observation has a string `id` and `type`, a valid `observedAt`, and a `values` mapping. The World package itself need not be valid.
+Preconditions: the compiler is a local `StateCompilerProfile` asset of the World; a compiler without `spec.bindings` is opaque and compiling it MUST be refused; the input document has `kind: ObservationSet`; each observation has a string `id` and `type`, a valid `observedAt`, and a `values` mapping. The World package itself need not be valid.
 
 1. Candidates are observations with `type == from`, `observedAt <= asOf`, and a `values` key equal to `value`, ordered by (`observedAt`, `id`), with `id` compared by Unicode code point.
 2. No binding, or no candidates: the field is `missing`.

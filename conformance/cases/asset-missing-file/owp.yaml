@@ -9,5 +9,5 @@ spec:
     description: WORLD.md
     definition: Conformance fixture World.
   assets:
-  - kind: ScenarioProfile
+  - kind: PackageExample
     path: scenarios/missing.yaml

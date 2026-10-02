@@ -13,24 +13,23 @@ rules:
   manifest.spec: {severity: error, section: "2", summary: "spec is not a mapping"}
   package.card: {severity: error, section: "3", summary: "required human card missing"}
   package.legacy-manifest: {severity: error, section: "8", summary: "package.yaml or world.yaml at the root"}
-  asset.list: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, or a kind containing : that is not <extension>:<Kind>"}
-  asset.entry: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, or a kind containing : that is not <extension>:<Kind>"}
-  asset.kind: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, or a kind containing : that is not <extension>:<Kind>"}
-  asset.path-or-ref: {severity: error, section: "5", summary: "entry has both or neither of path and ref"}
+  asset.list: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.entry: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.kind: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.path-or-ref: {severity: error, section: "5", summary: "entry has both or neither of path and ref, or a path entry is not a PackageExample"}
   ref.shape: {severity: error, section: "5.1", summary: "malformed ExternalRef: not a mapping, bad status, digest, size, or field type, or a bound reference without provider or uri"}
   ref.provider: {severity: error, section: "5.1", summary: "provider is neither a listed provider nor <extension>:<provider>"}
   asset.path-form: {severity: error, section: "3", summary: "local path is not a relative POSIX path, or starts with ./"}
   manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies entry is not an exact package reference"}
   eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierPackage assets share metadata.name"}
-  asset.duplicate-path: {severity: error, section: "8", summary: "same local path listed twice"}
-  asset.path-escape: {severity: error, section: "8", summary: "local path resolves outside the package root"}
-  asset.missing-file: {severity: error, section: "8", summary: "local path does not exist"}
+  asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
+  asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
+  asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist"}
   standard.binding: {severity: error, section: "5.3", summary: "malformed spec.standardBindings: not a mapping, an entry without standard, terms not a mapping of strings, an empty license, or neither ref nor terms"}
   standard.unpinned: {severity: error, section: "5.3", summary: "a bound ref in a standard binding is not pinned"}
   standard.license: {severity: error, section: "5.3", summary: "a standard binding binds an artifact without license"}
   asset.yaml: {severity: error, section: "5.2, 8", summary: "local YAML asset (including a PackageExample) does not parse, including duplicate keys"}
-  asset.kind-mismatch: {severity: error, section: "8", summary: "file kind differs from manifest kind"}
-  asset.api-version: {severity: error, section: "5", summary: "asset file apiVersion differs from the manifest's"}
+  asset.api-version: {severity: error, section: "5", summary: "a discovered OWP document's apiVersion differs from the manifest's"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
   profile.descriptive: {severity: error, section: "6.1", summary: "no definition and no WorldDefinition asset"}
@@ -101,7 +100,7 @@ rules:
   extraction.input: {severity: error, section: "C.1", summary: "invalid extraction input; nothing is produced"}
   ews.input: {severity: error, section: "12.2", summary: "invalid ObservationSet or asOf; compilation refused"}
   ews.opaque-compiler: {severity: error, section: "12.2", summary: "compiler has no spec.bindings; compilation refused"}
-  ews.state-compiler: {severity: error, section: "12", summary: "named State Compiler is not a listed local asset, or has no spec"}
+  ews.state-compiler: {severity: error, section: "12", summary: "named State Compiler is not a local asset, or has no spec"}
   ews.kind: {severity: error, section: "12", summary: "not an EffectiveWorldState document, or malformed sections"}
   ews.shape: {severity: error, section: "12", summary: "not an EffectiveWorldState document, or malformed sections"}
   ews.world-ref: {severity: error, section: "12.1", summary: "references do not match the World, compiler, and compiled View"}
@@ -129,7 +128,7 @@ rules:
   worldmodel.model-artifact-missing: {severity: warning, section: "8", summary: "WorldModelPackage without a ModelArtifact asset"}
   worldmodel.evaluation-profile-missing: {severity: warning, section: "8", summary: "WorldModelPackage without an EvaluationProfile asset"}
   eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierPackage without metadata.version"}
-  asset.kind-unknown: {severity: warning, section: "8", summary: "kind without : outside the vocabulary"}
+  asset.kind-unknown: {severity: warning, section: "8", summary: "external spec.assets entry kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
   compiler.multi-latest: {severity: warning, section: "C.1", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}

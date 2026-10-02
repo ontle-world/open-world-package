@@ -11,24 +11,3 @@ spec:
     defaultView: views/task.yaml
   conformance:
     profile: viewable
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: ActorProfile
-    path: actors/manager.yaml
-  - kind: ActorProfile
-    path: actors/agent.yaml
-  - kind: ActorProfile
-    path: actors/quality-team.yaml
-  - kind: ActorProfile
-    path: actors/director.yaml
-  - kind: RoleProfile
-    path: roles/quality-manager.yaml
-  - kind: CapabilityContract
-    path: capabilities/rca.yaml
-  - kind: AgentProfile
-    path: agents/rca-agent.yaml
-  - kind: DelegationProfile
-    path: delegations/rca.yaml
-  - kind: ConsumerRepresentationProfile
-    path: consumers/manager.yaml

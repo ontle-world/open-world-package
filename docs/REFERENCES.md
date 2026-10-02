@@ -4,7 +4,7 @@ OWP has six reference forms. Each one is used in fixed places, so you never have
 
 | Form | Example | Points at | Used in |
 |---|---|---|---|
-| Local path | `views/manager.yaml` | a file in this package | most `...Ref` fields inside assets (`worldViewRef`, `actorRef`, `subject.ref`, ...), `spec.assets[].path` |
+| Local path | `views/manager.yaml` | a file in this package | most `...Ref` fields inside assets (`worldViewRef`, `actorRef`, `subject.ref`, ...), `spec.assets[].path` (PackageExample) |
 | Package reference | `acme/quality-world@1.2.0` | a whole package, exact version | `spec.dependencies[].ref`, `semanticGrounding.worldRef`, `verifierRef` (pinned form) |
 | Asset in another package | `acme/quality-world@1.2.0#views/manager.yaml` | one asset of a dependency | `compatibleWorldViews`, `compatibleStateCompilers`, `subject.ref` across packages |
 | CURIE | `qual:Defect` | an ontology term | SemanticBinding, ontology term index; the prefix comes from a dependency OntologyPackage (section 14) |

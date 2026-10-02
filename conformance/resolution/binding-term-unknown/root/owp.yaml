@@ -11,16 +11,11 @@ spec:
     description: WORLD.md
     definition: Conformance fixture World.
     boundary:
-      included: [claim, lot]
+      included:
+      - claim
+      - lot
     defaultView: views/task.yaml
     defaultStateCompiler: state/task-compiler.yaml
     semanticBinding: semantics/terms.yaml
   conformance:
     profile: model-ready
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: StateCompilerProfile
-    path: state/task-compiler.yaml
-  - kind: SemanticBinding
-    path: semantics/terms.yaml

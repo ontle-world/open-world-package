@@ -29,10 +29,3 @@ spec:
     validity:
       limitations:
       - Reference contract only; no implementation is bundled.
-  assets:
-  - kind: ModelArtifact
-    path: models/model-artifact.yaml
-  - kind: RepresentationAdapterProfile
-    path: models/adapter.yaml
-  - kind: EvaluationProfile
-    path: eval/basic.yaml

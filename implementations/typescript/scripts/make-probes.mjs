@@ -72,7 +72,33 @@ const withEvidence = (ev, extraFiles = {}) => ({
   ...extraFiles,
 });
 
+/**
+ * Spec 5: local assets are discovered by their apiVersion and kind. A manifest entry with a path is dropped
+ * when the probe supplies that file; entries for files the probe does not supply stay, so they are reported.
+ */
+function discovered(files) {
+  const m = files["owp.yaml"];
+  if (!m || typeof m !== "object" || !Array.isArray(m.spec?.assets)) return files;
+  const assets = m.spec.assets.filter((a) => !(a.path !== undefined && a.ref === undefined && a.kind !== "PackageExample" && a.path in files));
+  const spec = { ...m.spec };
+  if (assets.length) spec.assets = assets;
+  else delete spec.assets;
+  return { ...files, "owp.yaml": { ...m, spec } };
+}
+
+/** discovered() for every package in a tree of files (keys "<dir>/owp.yaml"). */
+function discoveredTree(files) {
+  const roots = Object.keys(files).filter((k) => k === "owp.yaml" || k.endsWith("/owp.yaml")).map((k) => k.slice(0, -"owp.yaml".length));
+  let outFiles = { ...files };
+  for (const pre of roots) {
+    const sub = Object.fromEntries(Object.entries(outFiles).filter(([k]) => k.startsWith(pre)).map(([k, v]) => [k.slice(pre.length), v]));
+    outFiles = { ...outFiles, [`${pre}owp.yaml`]: discovered(sub)["owp.yaml"] };
+  }
+  return outFiles;
+}
+
 function probe(id, files, exp) {
+  files = discovered(files);
   const dir = path.join(out, "cases", id);
   for (const [rel, content] of Object.entries(files)) {
     const f = path.join(dir, rel);
@@ -85,7 +111,7 @@ function probe(id, files, exp) {
 // --- Section 2/8: manifest and filesystem ---
 probe("p-baseline-stateful", { "owp.yaml": worldManifest(), ...worldFiles() }, { valid: true, satisfiedProfile: "model-ready", rule: "baseline" });
 probe("p-legacy-package-yaml", { "owp.yaml": worldManifest(), ...worldFiles(), "package.yaml": "name: legacy\n" }, { valid: false, satisfiedProfile: "model-ready", rule: "legacy manifest name next to owp.yaml (spec 8; names not listed)" });
-probe("p-second-manifest-owp-yml", { "owp.yaml": worldManifest(), ...worldFiles(), "owp.yml": stringify(worldManifest()) }, { valid: true, satisfiedProfile: "model-ready", rule: "spec 8 lists only package.yaml/world.yaml as legacy; owp.yml is not a manifest (round 2 reading)" });
+probe("p-second-manifest-owp-yml", { "owp.yaml": worldManifest(), ...worldFiles(), "owp.yml": stringify(worldManifest()) }, { valid: false, satisfiedProfile: "model-ready", rule: "owp.yml is not a manifest; with an OWP apiVersion and a package kind it is a document of no asset kind (asset.kind, spec 5)" });
 probe("p-missing-human-card", { "owp.yaml": worldManifest(), "views/task.yaml": view(), "state/task.yaml": compiler() }, { valid: false, satisfiedProfile: "model-ready", rule: "required human card (spec 8)" });
 probe("p-namespace-with-slash", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "a/b", name: "w", version: "0.1.0" } }, ...worldFiles(), "views/task.yaml": view("self") }, { valid: false, satisfiedProfile: "model-ready", rule: "identity <namespace>/<name>@<version> must be unambiguous (not stated in spec)" });
 probe("p-version-not-semver", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "1.0" } }, ...worldFiles(), "views/task.yaml": view("self") }, { valid: false, satisfiedProfile: "model-ready", rule: "Version uses SemVer (spec 2)" });
@@ -93,8 +119,8 @@ probe("p-ontology-minimal", { "owp.yaml": { apiVersion: AV, kind: "OntologyPacka
 
 // --- Section 5/8: assets ---
 probe("p-duplicate-asset-path", { "owp.yaml": worldManifest({}, {}, [
-  { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "WorldViewProfile", path: "views/task.yaml" }]), ...worldFiles() },
-  { valid: false, satisfiedProfile: "model-ready", rule: "duplicate asset paths (spec 8)" });
+  { kind: "PackageExample", path: "examples/a.yaml" }, { kind: "PackageExample", path: "examples/a.yaml" }]), ...worldFiles(), "examples/a.yaml": "a: 1\n" },
+  { valid: false, satisfiedProfile: "model-ready", rule: "a PackageExample path is listed once (spec 8)" });
 probe("p-duplicate-asset-path-dotslash", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "WorldViewProfile", path: "./views/task.yaml" }]), ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "duplicate detection after path normalization (unspecified)" });
@@ -104,19 +130,15 @@ probe("p-missing-asset-file", { "owp.yaml": worldManifest({}, {}, [
 probe("p-asset-path-escapes-root", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "ScenarioProfile", path: "../p-baseline-stateful/views/task.yaml" }]), ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "asset paths are package-relative (unspecified)" });
-probe("p-asset-kind-mismatch", { "owp.yaml": worldManifest({}, {}, [
-  { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "EnvironmentProfile", path: "scenarios/s.yaml" }]), ...worldFiles(),
-  "scenarios/s.yaml": { apiVersion: AV, kind: "ScenarioProfile", metadata: { name: "s" }, spec: {} } },
-  { valid: false, satisfiedProfile: "model-ready", rule: "typed local YAML asset: file kind must equal manifest kind (spec 8, not defined)" });
 probe("p-unknown-asset-kind", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "HologramProfile", path: "x/h.yaml" }]), ...worldFiles(),
   "x/h.yaml": { apiVersion: AV, kind: "HologramProfile", metadata: { name: "h" }, spec: {} } },
-  { valid: true, satisfiedProfile: "model-ready", rule: "is vocab/asset-kinds.yaml closed? (unspecified; this impl warns)" });
+  { valid: false, satisfiedProfile: "model-ready", rule: "a discovered OWP document must name a known asset kind (asset.kind, spec 5); a manifest ref's kind stays open" });
 probe("p-asset-path-and-ref", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "ModelArtifact", path: "views/task.yaml", ref: { provider: "hf" } }]), ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "asset has exactly one of path/ref (schema oneOf)" });
 probe("p-untyped-view-file", { "owp.yaml": worldManifest(), ...worldFiles(), "views/task.yaml": { spec: { worldRef: "probe/w@0.1.0" } } },
-  { valid: true, satisfiedProfile: "model-ready", rule: "typed YAML: kind is checked only when declared (spec 8 revised)" });
+  { valid: false, satisfiedProfile: "descriptive", rule: "a file without an OWP apiVersion is not an asset, so defaultView names no View (spec 5)" });
 
 // --- Section 6.1: profiles ---
 probe("p-descriptive-worlddefinition-asset", { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: "probe", name: "w", version: "0.1.0" },
@@ -131,7 +153,7 @@ probe("p-conformance-without-profile", { "owp.yaml": worldManifest({ conformance
 probe("p-descriptive-with-broken-default-view", { "owp.yaml": worldManifest({ conformance: { profile: "descriptive" } }, { defaultView: "views/missing.yaml" }), ...worldFiles() },
   { valid: true, satisfiedProfile: "descriptive", rule: "requirements of higher profiles are not checked when not declared" });
 probe("p-default-view-not-listed", { "owp.yaml": worldManifest({ conformance: { profile: "viewable" } }, { defaultView: "views/other.yaml" }), ...worldFiles(), "views/other.yaml": view() },
-  { valid: false, satisfiedProfile: "descriptive", rule: "defaultView must be the path of a listed local WorldViewProfile asset" });
+  { valid: true, satisfiedProfile: "viewable", rule: "a View file is an asset without being listed (spec 5)" });
 probe("p-default-view-dotslash", { "owp.yaml": worldManifest({}, { defaultView: "./views/task.yaml" }), ...worldFiles() },
   { valid: false, satisfiedProfile: "descriptive", rule: "paths are exact strings, no leading ./ (spec 3, round 3)" });
 probe("p-view-worldref-not-a-ref", { "owp.yaml": worldManifest(), ...worldFiles(), "views/task.yaml": view("anything") },
@@ -152,7 +174,8 @@ probe("p-conformance-on-model-package", { "owp.yaml": { ...modelManifest(), spec
   { valid: true, rule: "conformance on non-World package (schema: WorldPackage only; this impl warns)" });
 
 // --- Section 3/6: World Model ---
-probe("p-model-no-adapter-asset", { "owp.yaml": modelManifest({}, [{ kind: "EvaluationProfile", path: "eval/profile.yaml" }]), ...modelFiles() },
+const { "models/adapter.yaml": _adapter, ...modelFilesWithoutAdapter } = modelFiles();
+probe("p-model-no-adapter-asset", { "owp.yaml": modelManifest({}, [{ kind: "EvaluationProfile", path: "eval/profile.yaml" }]), ...modelFilesWithoutAdapter },
   { valid: false, rule: "Representation Adapter required (spec 8)" });
 probe("p-model-adapterref-not-asset", { "owp.yaml": modelManifest({ representation: { adapterRef: "models/other.yaml" } }), ...modelFiles(), "models/other.yaml": "x: 1\n" },
   { valid: false, rule: "adapterRef MUST point to the packaged Representation Adapter (spec 6)" });
@@ -251,7 +274,7 @@ const resModel = (deps, sgOver = {}) => {
 const resolution = {};
 function rprobe(id, root, packages, exp) {
   const dir = path.join(out, "resolution", id);
-  for (const [rel, content] of Object.entries({ ...prefixed("root", root), ...prefixed("packages", packages) })) {
+  for (const [rel, content] of Object.entries(discoveredTree({ ...prefixed("root", root), ...prefixed("packages", packages) }))) {
     const f = path.join(dir, rel);
     fs.mkdirSync(path.dirname(f), { recursive: true });
     fs.writeFileSync(f, typeof content === "string" ? content : stringify(content));

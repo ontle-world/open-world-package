@@ -67,7 +67,7 @@ A WorldPackage names its binding with `spec.world.semanticBinding`, the path of 
 
 Single-package rules:
 
-- `spec.world.semanticBinding`, when present, is a listed local SemanticBinding asset.
+- `spec.world.semanticBinding`, when present, is a local SemanticBinding asset.
 - Every value in `terms`, `observationTypes`, and `actions`, and every `class` and `path` entry in `fields`, is a CURIE `<prefix>:<local name>`.
 - Every key of `fields` is an EWS field (section 12.1) of some local State Compiler.
 - A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.

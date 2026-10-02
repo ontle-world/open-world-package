@@ -4,23 +4,44 @@ import { fileExists, isNonEmptyString, isObj, isYamlPath, loadYamlFile, normaliz
 import { EXTENSION_KIND_RE } from "../structure.js";
 import { externalRefProblems } from "./externalref.js";
 import { ASSET_KIND_STABILITY } from "../vocab.js";
+import { DOCUMENT_KINDS, isOwpDocument, packageDocuments } from "../discovery.js";
 
 /**
- * Spec section 5 + 8: `spec.assets` entries, local references, duplicate paths,
- * typed local YAML assets. Populates ctx.localAssets / ctx.refAssets for later rules.
+ * Spec section 5 + 8. The manifest lists external assets (`ref`) and PackageExample files; every other local
+ * asset is discovered from its own apiVersion and kind. Populates ctx.localAssets / ctx.refAssets.
  */
 export function collectAssets(ctx: Context): void {
   const spec = ctx.manifest.spec;
-  if (!isObj(spec) || spec.assets === undefined) return;
-  const assets = spec.assets;
-  if (!Array.isArray(assets)) {
-    error(ctx, "asset.list", "spec.assets must be a list", "owp.yaml");
-    return;
-  }
-
-  const seen = new Map<string, number>();
   const experimentalKinds = new Map<string, number>();
-  assets.forEach((a, i) => {
+  /** Kind rules shared by manifest entries and discovered files; false when the kind cannot be used. */
+  const kindOk = (kind: string, where: string, file: string, discovered: boolean): boolean => {
+    // A kind containing ':' is an extension kind (spec 13.3).
+    if (kind.includes(":")) {
+      const m = EXTENSION_KIND_RE.exec(kind);
+      if (!m) {
+        error(ctx, "asset.kind", `${where} "${kind}" contains ':' but is not <extension>:<Kind>`, file);
+        return false;
+      }
+      if (!ctx.extensionNames.has(m[1])) {
+        error(ctx, "extension.undeclared", `${where} "${kind}" uses extension "${m[1]}", which spec.dependencies does not declare with "as"`, file);
+      }
+    } else if (!ASSET_KIND_STABILITY.has(kind)) {
+      // A file that says it is an OWP document must name a kind OWP knows; a manifest entry's kind is open.
+      if (discovered) {
+        error(ctx, "asset.kind", `${where} "${kind}" is not an asset kind of the vocabulary or an extension kind`, file);
+        return false;
+      }
+      warn(ctx, "asset.kind-unknown", `${where} "${kind}" is not in the asset-kind vocabulary`, file);
+    } else if (ASSET_KIND_STABILITY.get(kind) === "experimental") {
+      experimentalKinds.set(kind, (experimentalKinds.get(kind) ?? 0) + 1);
+    }
+    return true;
+  };
+
+  const assets = isObj(spec) ? spec.assets : undefined;
+  if (assets !== undefined && !Array.isArray(assets)) error(ctx, "asset.list", "spec.assets must be a list", "owp.yaml");
+  const seen = new Map<string, number>();
+  (Array.isArray(assets) ? assets : []).forEach((a, i) => {
     const where = `spec.assets[${i}]`;
     if (!isObj(a)) {
       error(ctx, "asset.entry", `${where} must be a mapping`, "owp.yaml");
@@ -31,19 +52,7 @@ export function collectAssets(ctx: Context): void {
       return;
     }
     const kind = a.kind;
-    // Spec 8: the vocabulary is open. A kind containing ':' is an extension kind (spec 13.3).
-    if (kind.includes(":")) {
-      const m = EXTENSION_KIND_RE.exec(kind);
-      if (!m) {
-        error(ctx, "asset.kind", `${where}.kind "${kind}" contains ':' but is not <extension>:<Kind>`, "owp.yaml");
-      } else if (!ctx.extensionNames.has(m[1])) {
-        error(ctx, "extension.undeclared", `${where}.kind "${kind}" uses extension "${m[1]}", which spec.dependencies does not declare with "as"`, "owp.yaml");
-      }
-    } else if (!ASSET_KIND_STABILITY.has(kind)) {
-      warn(ctx, "asset.kind-unknown", `${where}.kind "${kind}" is not in the asset-kind vocabulary`, "owp.yaml");
-    } else if (ASSET_KIND_STABILITY.get(kind) === "experimental") {
-      experimentalKinds.set(kind, (experimentalKinds.get(kind) ?? 0) + 1);
-    }
+    kindOk(kind, `${where}.kind`, "owp.yaml", false);
     const hasPath = a.path !== undefined;
     // Spec 5.1: a present `ref` key is an ExternalRef, whatever its value.
     const hasRef = Object.prototype.hasOwnProperty.call(a, "ref");
@@ -51,6 +60,10 @@ export function collectAssets(ctx: Context): void {
       const r = externalRefProblems(a.ref, `${where}.ref`, ctx.extensionNames);
       for (const p of r.errors) error(ctx, p.rule, p.msg, "owp.yaml");
       for (const p of r.warnings) warn(ctx, p.rule, p.msg, "owp.yaml");
+    }
+    if (hasPath && kind !== "PackageExample") {
+      error(ctx, "asset.path-or-ref", `${where} lists the local file ${JSON.stringify(a.path)}; local assets are found by their apiVersion and kind, and only PackageExample files are listed`, "owp.yaml");
+      return;
     }
     if (hasPath === hasRef) {
       error(ctx, "asset.path-or-ref", `${where} must have exactly one of "path" or "ref"`, "owp.yaml");
@@ -103,9 +116,8 @@ export function collectAssets(ctx: Context): void {
       return;
     }
     asset.exists = true;
-    // Spec 8: every local YAML asset must parse, including PackageExample files.
+    // Spec 8: a listed PackageExample must parse; it may hold any document, so its kind is not compared.
     if (!isYamlPath(raw)) return;
-
     const loaded = loadYamlFile(abs);
     if (!loaded.ok) {
       asset.parseError = true;
@@ -113,19 +125,30 @@ export function collectAssets(ctx: Context): void {
       return;
     }
     asset.doc = loaded.value;
-    const doc = loaded.value;
-    // Spec 5: a local YAML asset MAY omit apiVersion and kind; it inherits the manifest's apiVersion and its
-    // entry's kind. When present they must agree. A PackageExample may hold any document (for example an
-    // ObservationSet), so neither is compared.
-    if (isObj(doc) && kind !== "PackageExample") {
-      if (doc.kind !== undefined && doc.kind !== null && doc.kind !== "" && doc.kind !== kind) {
-        error(ctx, "asset.kind-mismatch", `asset ${raw} declares kind ${JSON.stringify(doc.kind)} but owp.yaml declares ${kind}`, raw);
-      }
-      if (Object.prototype.hasOwnProperty.call(doc, "apiVersion") && doc.apiVersion !== ctx.manifest.apiVersion) {
-        error(ctx, "asset.api-version", `asset ${raw} declares apiVersion ${JSON.stringify(doc.apiVersion)}; it must be omitted or equal the manifest's ${JSON.stringify(ctx.manifest.apiVersion)}`, raw);
-      }
-    }
   });
+
+  // Discovery (spec 5): a YAML file with an OWP apiVersion is an OWP document; its kind says what it is.
+  const examples = new Set(ctx.localAssets.map((a) => a.rawPath));
+  for (const d of packageDocuments(ctx.root, examples)) {
+    if (!d.ok) {
+      error(ctx, "asset.yaml", `${d.rel} is not parseable YAML: ${d.error}`, d.rel);
+      continue;
+    }
+    const doc = d.value;
+    if (!isOwpDocument(doc)) continue; // an ordinary package file
+    if (doc.apiVersion !== ctx.manifest.apiVersion) {
+      error(ctx, "asset.api-version", `${d.rel} declares apiVersion ${JSON.stringify(doc.apiVersion)}; it must equal the manifest's ${JSON.stringify(ctx.manifest.apiVersion)}`, d.rel);
+    }
+    const kind = doc.kind;
+    if (typeof kind === "string" && DOCUMENT_KINDS.has(kind)) continue; // an ObservationSet or EWS document
+    if (!isNonEmptyString(kind)) {
+      error(ctx, "asset.kind", `${d.rel} declares apiVersion ${JSON.stringify(doc.apiVersion)} but no kind`, d.rel);
+      continue;
+    }
+    if (!kindOk(kind, `${d.rel}: kind`, d.rel, true)) continue;
+    ctx.localAssets.push({ index: -1, kind, rawPath: d.rel, path: d.rel, exists: true, doc });
+  }
+
   // One warning per experimental kind, with the number of assets that use it.
   for (const [kind, n] of experimentalKinds) {
     warn(ctx, "asset.kind-experimental", `asset kind ${kind} is experimental and may change or be removed (${n} asset${n > 1 ? "s" : ""})`, "owp.yaml");

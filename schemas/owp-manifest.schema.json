@@ -83,17 +83,23 @@
             "oneOf": [
               {
                 "required": [
-                  "path"
+                  "ref"
                 ]
               },
               {
                 "required": [
-                  "ref"
-                ]
+                  "path"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "PackageExample"
+                  }
+                }
               }
             ],
             "additionalProperties": false
-          }
+          },
+          "description": "External assets (ref) and PackageExample files (path). Other local assets are found by their own apiVersion and kind (spec section 5)."
         },
         "world": {
           "type": "object",

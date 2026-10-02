@@ -66,7 +66,7 @@ The assessed subject can be a model, agent, workflow, artifact, decision, proces
 | Term | Meaning | Where |
 |---|---|---|
 | Package | A versioned distribution envelope. | `owp.yaml` |
-| Asset | An independently identifiable reusable artifact inside a package. | `spec.assets` |
+| Asset | An independently identifiable reusable artifact: a package file that declares an OWP `apiVersion` and an asset `kind`, or an external `spec.assets` reference. | spec section 5 |
 | Extension | Publisher-defined kinds, fields, and values. | spec section 13 |
 | ExternalRef | A pinned reference to an artifact outside the package. | spec section 5.1 |
 | Evidence | A result bound to the exact evaluation, View, and State Compiler that produced it. | `CompatibilityEvidence` |

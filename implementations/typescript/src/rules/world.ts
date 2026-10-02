@@ -187,8 +187,11 @@ export function outputSchemaFields(root: string, spec: Obj | undefined, file: st
   const ref = spec?.outputSchemaRef;
   if (ref === undefined || ref === null) return { fields, problems: [] }; // null counts as absent
   const bad = (msg: string) => ({ fields, problems: [{ rule: "compiler.output-schema-ref", msg: `StateCompilerProfile ${file} spec.outputSchemaRef ${msg}` }] });
+  if (typeof ref !== "string" || ref === "" || ref.startsWith("./") || ref.startsWith("/") || ref.includes("\\")) {
+    return bad(`${JSON.stringify(ref)} must be a relative POSIX path without a leading './'`);
+  }
   const abs = packageFile(root, ref);
-  if (abs === null) return bad(`${JSON.stringify(ref)} must name a file inside the package by a relative POSIX path without a leading './'`);
+  if (abs === null) return bad(`${JSON.stringify(ref)} does not name a file in the package`);
   let doc: unknown;
   try {
     // fatal: invalid UTF-8 is an error, not U+FFFD (spec 12.1: a UTF-8 JSON document)
@@ -221,8 +224,10 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
   const b = spec.bindings;
   if (!isObj(b)) return ["spec.bindings must be a mapping"];
   const fields = new Set(ewsFields ?? []);
+  // An outputSchemaRef that does not resolve is already an error; its fields are unknown, so keys are not checked.
+  const unknown = ewsFields === null && spec.outputSchemaRef !== undefined && spec.outputSchemaRef !== null;
   for (const [key, v] of Object.entries(b)) {
-    if (!fields.has(key)) out.push(`binding "${key}" is not an EWS field of the compiler`);
+    if (!unknown && !fields.has(key)) out.push(`binding "${key}" is not an EWS field of the compiler`);
     if (!isObj(v)) {
       out.push(`binding "${key}" must be a mapping {from, value, select}`);
       continue;

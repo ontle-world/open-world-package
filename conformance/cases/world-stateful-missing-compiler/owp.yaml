@@ -11,6 +11,3 @@ spec:
     defaultView: views/task.yaml
   conformance:
     profile: stateful
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml

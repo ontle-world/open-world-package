@@ -1,3 +1,4 @@
+apiVersion: openworld/v1alpha1
 kind: RoleProfile
 metadata: {name: principal-investigator}
 spec:

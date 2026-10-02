@@ -14,8 +14,3 @@ spec:
     profile: model-ready
   dependencies:
   - conformance/base@0.1.0
-  assets:
-  - kind: WorldViewProfile
-    path: views/task.yaml
-  - kind: StateCompilerProfile
-    path: state/task-compiler.yaml

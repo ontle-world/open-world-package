@@ -40,24 +40,6 @@ spec:
     limitations:
     - Reference semantics and interfaces only.
   assets:
-  - kind: WorldViewProfile
-    path: views/pick-place-task.yaml
-  - kind: StateCompilerProfile
-    path: state/pick-place-compiler.yaml
-  - kind: ObservationAcquisitionProfile
-    path: interfaces/observations.yaml
-  - kind: ActionBindingProfile
-    path: interfaces/actions.yaml
-  - kind: CommitContract
-    path: interfaces/commit.yaml
-  - kind: EffectVerificationProfile
-    path: interfaces/effect-verification.yaml
-  - kind: EnvironmentProfile
-    path: environment/reference-environment.yaml
-  - kind: Dataset
-    path: datasets/manipulation-episodes.yaml
-  - kind: ScenarioProfile
-    path: scenarios/pick-place.yaml
   - kind: PackageExample
     path: examples/basic.yaml
   - kind: PackageExample

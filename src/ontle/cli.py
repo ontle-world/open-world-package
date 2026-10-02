@@ -11,12 +11,12 @@ from .core import OWPError, deterministic_pack, inspect_package, load_manifest, 
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
 from .resolve import ews_jsonld, resolve_package, validate_resolved
-from .scaffold import add_asset, add_extension, init_project, sync_assets
+from .scaffold import add_extension, init_project, new_asset
 from .yamlio import dump_yaml, load_yaml
 
 
 def cmd_init(args):
-    path = init_project(args.name, args.namespace, args.template, args.destination)
+    path = init_project(args.name, args.namespace, args.template, args.destination, args.world)
     print(path)
     return 0
 
@@ -179,17 +179,6 @@ def cmd_catalog(args):
     return 0
 
 
-def cmd_sync(args):
-    added, missing = sync_assets(args.path)
-    for rel in added:
-        print(f"added {rel}")
-    for rel in missing:
-        print(f"WARN: listed but missing: {rel}", file=sys.stderr)
-    if not added and not missing:
-        print("spec.assets is up to date")
-    return 0
-
-
 def cmd_inspect(args):
     print(json.dumps(inspect_package(args.path, graph=args.graph, resolved_views=args.resolved_views), indent=2, ensure_ascii=False))
     return 0
@@ -217,12 +206,13 @@ def cmd_verify(args):
 
 
 def cmd_add(args):
-    if args.asset_kind == "extension":
-        name = add_extension(args.path, args.name, args.as_name, args.must_understand)
-        print(f"declared extension {name} -> {args.name}")
-        return 0
-    target = add_asset(args.path, args.asset_kind, args.name, args.specializes)
-    print(target)
+    name = add_extension(args.path, args.name, args.as_name, args.must_understand)
+    print(f"declared extension {name} -> {args.name}")
+    return 0
+
+
+def cmd_new(args):
+    print(new_asset(args.package, args.kind, args.path, args.specializes))
     return 0
 
 
@@ -236,6 +226,8 @@ def build_parser():
     x.add_argument("--namespace", default="example")
     x.add_argument("--template", default="minimal", choices=["minimal", "enterprise", "ontology", "worldmodel", "worldmodel-multimodal"])
     x.add_argument("--destination")
+    x.add_argument("--world", help="World Model templates: ground the model in this World (a package directory or "
+                                    "<namespace>/<name>@<version>) and add it to spec.dependencies")
     x.set_defaults(func=cmd_init)
 
     x = sp.add_parser("validate", help="validate an OWP project")
@@ -289,10 +281,6 @@ def build_parser():
     x.add_argument("path", nargs="?", default=".")
     x.add_argument("--format", choices=["turtle", "jsonld"], default="turtle")
     x.set_defaults(func=cmd_export)
-
-    x = sp.add_parser("sync", help="add asset files that spec.assets does not list yet (by their kind)")
-    x.add_argument("path", nargs="?", default=".")
-    x.set_defaults(func=cmd_sync)
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")
@@ -352,15 +340,19 @@ def build_parser():
     x.add_argument("--format", required=True, choices=["dcat", "croissant", "hf-card"])
     x.set_defaults(func=cmd_catalog)
 
-    x = sp.add_parser("add", help="add optional scaffolding to an existing package")
-    x.add_argument("asset_kind", choices=["view", "compiler", "source", "observation", "action", "commit", "effect", "model", "adapter", "scenario", "dataset", "eval", "verifier", "test", "asset", "extension",
-                                         "task", "pattern", "artifact", "template", "consumer", "knowledge",
-                                         "actor", "role", "delegation", "capability"])
-    x.add_argument("name", help="asset name, or for 'extension' the defining package <namespace>/<name>@<version>")
+    x = sp.add_parser("new", help="write a skeleton asset file (found by its apiVersion and kind; owp.yaml is unchanged)")
+    x.add_argument("kind", help="asset kind, for example WorldViewProfile, StateCompilerProfile, or <extension>:<Kind>")
+    x.add_argument("path", help="package-relative file, for example views/barista.yaml")
+    x.add_argument("--package", default=".", help="package directory (default: current directory)")
+    x.add_argument("--specializes", help="WorldViewProfile: path of the local View this View specializes (experimental)")
+    x.set_defaults(func=cmd_new)
+
+    x = sp.add_parser("add", help="declare a publisher extension in spec.dependencies")
+    x.add_argument("what", choices=["extension"])
+    x.add_argument("name", help="the defining package <namespace>/<name>@<version>")
     x.add_argument("--path", default=".")
-    x.add_argument("--as", dest="as_name", help="extension: local name (default: package name without a trailing -extension)")
-    x.add_argument("--must-understand", action="store_true", help="extension: runtimes that do not implement it must not run the package")
-    x.add_argument("--specializes", help="view: path of the local World View this View specializes (experimental)")
+    x.add_argument("--as", dest="as_name", help="local name (default: package name without a trailing -extension)")
+    x.add_argument("--must-understand", action="store_true", help="runtimes that do not implement it must not run the package")
     x.set_defaults(func=cmd_add)
     return p
 

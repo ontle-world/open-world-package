@@ -585,6 +585,47 @@ Cross-package rules (section 11), for every package in the closure that has Sema
 
 The reference CLI reports `semanticCoverage` (bound fields out of compiler fields) in `ontle inspect`, and `ontle ews compile --jsonld` prints an EWS document with a JSON-LD `@context` built from the binding. Neither changes the EWS document.
 
+## 15. Evaluation, scenario, capability, and view fields
+
+These fields of standard kinds are part of the standard. Their schemas are under `schemas/`; undefined keys are errors (section 8).
+
+### 15.1 EvaluationProfile
+
+| Field | Meaning |
+|---|---|
+| `assessmentKind` | `verification` (conditions, facts, or specifications are met), `validation` (fit for purpose), `evaluation` (quality or performance against criteria), `review` (an examination activity), or `approval` (an authorized decision to use or execute); or an extension value |
+| `subject` | `kind` (`model`, `agent`, `workflow`, `artifact`, `decision`, `process`, `capability`, `environment`, or an extension value) and `ref` (a local asset path, or a reference containing `#` or `@`) |
+| `objective`, `criteria` | what is assessed; each criterion has `metric`, `rubric`, and `threshold` |
+| `verifierRef` | a local VerifierPackage path or a pinned `<name>@<version>` |
+| `evidenceRefs`, `validityScope` | supporting evidence; where the profile applies |
+| `resultSchemaRef` | a file in the package describing results |
+
+Rules: `evaluation.assessment-kind`, `evaluation.subject`, `evaluation.verifier-ref`, `evaluation.result-schema`.
+
+### 15.2 ScenarioProfile
+
+A scenario is not a prediction: it is a baseline, assumptions, an intervention, and an engine that yields an expected transition or outcome.
+
+| Field | Meaning |
+|---|---|
+| `baselineStateRef` | a file in the package (for example an EWS or ObservationSet document) or a URI |
+| `assumptions`, `constraints` | lists of conditions |
+| `intervention`, `uncertainty`, `expectedOutcome` | open mappings |
+| `engine` | `kind` (`rule`, `score_ranking`, `optimization`, `simulation`, `ml_prediction`, `world_model`, `llm_reasoning`, or an extension value) and `ref` |
+| `timeHorizon` | an ISO 8601 duration such as `P14D` |
+| `confidence` | a number from 0 to 1 |
+| `evidenceRefs` | supporting evidence |
+
+Rules: `scenario.engine-kind`, `scenario.baseline-ref`, `scenario.confidence`.
+
+### 15.3 CapabilityContract
+
+A capability is the ability to achieve a class of outcomes under a defined context. Fields: `description`, `effect`, `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`. Scoring or assessment methods are not part of the contract; publishers add them as extensions.
+
+### 15.4 WorldViewProfile
+
+Besides `worldRef`, `purpose`, `projection`, and `conditioning`, a View MAY list `constraints` and `evidenceRefs`.
+
 ## Appendix A. Rule ids
 
 Each error has a stable rule id. Implementations SHOULD prefix error messages with `<rule-id>: `. The conformance suite lists, for each invalid case, the rule ids a conforming implementation MUST report; it MAY report additional ids for consequential errors. Message wording is implementation-defined.
@@ -659,6 +700,13 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `grounding.world-kind` | 11 | `worldRef` does not resolve to a WorldPackage |
 | `grounding.world-view`, `grounding.state-compiler` | 11 | grounding path is not a View or State Compiler asset of the World |
 | `grounding.compiler-view` | 11 | a compatible compiler compiles a View outside `compatibleWorldViews` |
+| `evaluation.assessment-kind` | 15.1 | `assessmentKind` outside its value set |
+| `evaluation.subject` | 15.1 | `subject.kind` outside its value set, or `subject.ref` names nothing |
+| `evaluation.verifier-ref` | 15.1 | `verifierRef` is neither a local VerifierPackage nor a pinned reference |
+| `evaluation.result-schema` | 15.1 | `resultSchemaRef` is not a file in the package |
+| `scenario.engine-kind` | 15.2 | `engine.kind` outside its value set |
+| `scenario.baseline-ref` | 15.2 | `baselineStateRef` is neither a file in the package nor a URI |
+| `scenario.confidence` | 15.2 | `confidence` is not a number from 0 to 1 |
 | `extraction.input` | C.1 | invalid extraction input; nothing is produced |
 | `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
 | `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
@@ -815,15 +863,12 @@ A DelegationProfile transfers part of a delegator's permissions or authority to 
 
 ### C.4 Experimental fields of standard kinds
 
-Some standard kinds accept experimental fields. Their checks produce warnings only; the kinds' standard fields are checked as usual (section 8, schemas under `schemas/`).
+These fields of standard kinds are experimental; their checks produce warnings only. The other fields of these kinds are standard (sections 6, 9, 15).
 
 | Kind | Experimental fields | Checks (warnings) |
 |---|---|---|
-| `WorldViewProfile` | `specializes`, `projection.exclude` (C, View specialization); `purpose.actorRef`, `purpose.roleRef`, `purpose.taskRef`; `constraints`; `evidenceRefs` | the refs name a local ActorProfile, RoleProfile, TaskSetProfile |
-| `EvaluationProfile` | `assessmentKind` (value set `assessmentKinds`: verification, validation, evaluation, review, approval); `subject.kind` (value set `evaluationSubjects`) and `subject.ref`; `objective`; `criteria` (`metric`, `rubric`, `threshold`); `verifierRef`; `evaluatorRef`; `evidenceRefs`; `validityScope`; `resultSchemaRef` | value sets; `verifierRef` is a local VerifierPackage or a pinned `<name>@<version>`; `evaluatorRef` is a local ActorProfile; `resultSchemaRef` is a file in the package |
-| `ScenarioProfile` | `baselineStateRef`; `assumptions`; `intervention`; `engine.kind` (value set `scenarioEngines`: rule, score_ranking, optimization, simulation, ml_prediction, world_model, llm_reasoning) and `engine.ref`; `timeHorizon`; `constraints`; `uncertainty`; `confidence` (0 to 1); `expectedOutcome`; `evidenceRefs` | value set; `baselineStateRef` is a file in the package or a URI; `confidence` range |
-| `CapabilityContract` | `outcomeRefs`; `context`; `requiredInputs`; `evidenceRefs`; `capacity`; `maturity`; `validityScope` | none beyond the defined fields |
+| `WorldViewProfile` | `specializes`, `projection.exclude` (View specialization, Appendix C); `purpose.actorRef`, `purpose.roleRef`, `purpose.taskRef` | the refs name a local ActorProfile, RoleProfile, TaskSetProfile |
+| `EvaluationProfile` | `evaluatorRef` | names a local ActorProfile |
+| `CapabilityContract` | `outcomeRefs` | none |
 
 A TaskSetProfile composes these profiles: `requires.actors` (ActorProfile or RoleProfile), `workPatternRefs` (WorkPatternProfile), and `mayUse.scenarios`, `mayUse.skills`, `mayUse.tools` (ScenarioProfile, SkillProfile, ToolProfile), next to its Views, knowledge, models, capabilities, workflows, artifacts, and evaluations.
-
-The kinds distinguish assessment activities: **verification** checks that conditions, facts, or specifications are met; **validation** checks fitness for purpose; **evaluation** judges quality or performance against criteria; **review** is an examination activity; **approval** is an authorized decision to use or execute. A scenario is not a prediction: it is a baseline, assumptions, an intervention, and an engine that yields an expected transition or outcome.

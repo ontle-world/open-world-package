@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Promote experimental fields used in three domains that do not depend on experimental kinds (spec section 15): EvaluationProfile `assessmentKind`, `subject`, `objective`, `criteria`, `verifierRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; all ScenarioProfile fields; CapabilityContract `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`; WorldViewProfile `constraints`, `evidenceRefs`. Their checks are errors (`evaluation.*`, `scenario.*`); the value sets `assessmentKinds`, `evaluationSubjects`, `scenarioEngines` are standard.
+- `asset.kind-experimental` is reported once per kind with a count.
+- Generated files carry a `yaml-language-server` schema line and a one-line hint; placeholders are empty strings, so editors validate and complete them. `owp.yaml` keeps its leading comments when the CLI rewrites it.
+- `ontle sync` lists asset files that `spec.assets` is missing; `ontle inspect` reports the experimental kinds and fields a package uses.
 - Every experimental profile is used in at least three example domains (manufacturing, sales, research, robotics); see `docs/PROFILE_PROMOTION.md`.
 - Round-trip checks: `tests/test_roundtrip.py` (pack/unpack and YAML re-serialization) and the TypeScript `scripts/check-roundtrip.mjs`.
 - `schema.unknown-field` messages suggest the closest defined field. `docs/QUICKSTART.md` covers ontology binding, actors and tasks, extensions, and publishing.
@@ -61,7 +65,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 161 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
+- Conformance suite: 165 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

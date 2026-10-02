@@ -29,9 +29,14 @@ def appendix_ids() -> dict[str, str]:
 
 
 def python_ids() -> set[str]:
+    """Ids written as "<id>: message" or passed as a quoted argument, with a registered prefix."""
+    prefixes = {rule.split(".")[0] for rule in REGISTRY}
     ids: set[str] = set()
     for path in (ROOT / "src" / "ontle").glob("*.py"):
-        ids |= set(re.findall(rf"[\"']({ID_RE}): ", path.read_text(encoding="utf-8")))
+        source = path.read_text(encoding="utf-8")
+        ids |= set(re.findall(rf"[\"']({ID_RE}): ", source))
+        ids |= {s for s in re.findall(rf"[\"']({ID_RE})[\"']", source)
+                if s.split(".")[0] in prefixes and not re.search(r"\.(ya?ml|json|md|py)$", s)}
     return ids
 
 

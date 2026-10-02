@@ -15,6 +15,10 @@ Experimental kinds and fields (spec Appendix C) can change or be removed. A prof
 
 When a profile is promoted, its warnings become errors where the spec says MUST, its rule ids move from Appendix C to the main sections, and its conformance cases expect errors instead of warnings.
 
+## Promoted
+
+Promoted to the standard (spec section 15): EvaluationProfile `assessmentKind`, `subject`, `objective`, `criteria`, `verifierRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; ScenarioProfile fields; CapabilityContract `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`; WorldViewProfile `constraints`, `evidenceRefs`. They were used in at least three domains and do not reference experimental kinds. Fields that reference experimental kinds (`purpose.actorRef`, `roleRef`, `taskRef`, `evaluatorRef`, `outcomeRefs`) stay experimental until those kinds are promoted.
+
 ## Status
 
 | Profile | Semantic | Portability | Example domains | Machine contract | Interoperability |
@@ -23,9 +27,8 @@ When a profile is promoted, its warnings become errors where the spec says MUST,
 | WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | ArtifactContract (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| EvaluationProfile fields (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
-| ScenarioProfile fields (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
-| CapabilityContract fields (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| EvaluationProfile `evaluatorRef` (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
+| CapabilityContract `outcomeRefs` (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | KnowledgeAsset (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | KnowledgeExtractionProfile (C.1) | reviewed | yes | manufacturing, sales, research | schema, cases, extraction suite | 2 implementations, round trips |

@@ -85,6 +85,13 @@ rules:
   grounding.world-view: {severity: error, section: "11", summary: "grounding path is not a View or State Compiler asset of the World"}
   grounding.state-compiler: {severity: error, section: "11", summary: "grounding path is not a View or State Compiler asset of the World"}
   grounding.compiler-view: {severity: error, section: "11", summary: "a compatible compiler compiles a View outside compatibleWorldViews"}
+  evaluation.assessment-kind: {severity: error, section: "15.1", summary: "assessmentKind outside its value set"}
+  evaluation.subject: {severity: error, section: "15.1", summary: "subject.kind outside its value set, or subject.ref names nothing"}
+  evaluation.verifier-ref: {severity: error, section: "15.1", summary: "verifierRef is neither a local VerifierPackage nor a pinned reference"}
+  evaluation.result-schema: {severity: error, section: "15.1", summary: "resultSchemaRef is not a file in the package"}
+  scenario.engine-kind: {severity: error, section: "15.2", summary: "engine.kind outside its value set"}
+  scenario.baseline-ref: {severity: error, section: "15.2", summary: "baselineStateRef is neither a file in the package nor a URI"}
+  scenario.confidence: {severity: error, section: "15.2", summary: "confidence is not a number from 0 to 1"}
   extraction.input: {severity: error, section: "C.1", summary: "invalid extraction input; nothing is produced"}
   ews.input: {severity: error, section: "12.2", summary: "invalid ObservationSet or asOf; compilation refused"}
   ews.opaque-compiler: {severity: error, section: "12.2", summary: "compiler has no spec.bindings; compilation refused"}

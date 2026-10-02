@@ -687,10 +687,10 @@ cases:
     satisfiedProfile: viewable
     rule: "An EvaluationProfile may state its assessment kind, subject, criteria, verifier, and evaluator (C.4)."
   evaluation-assessment-kind-unknown:
-    valid: true
-    warnings: [experimental.value]
+    valid: false
+    errors: [evaluation.assessment-kind]
     satisfiedProfile: viewable
-    rule: "assessmentKind comes from the value set assessmentKinds."
+    rule: "assessmentKind must come from the value set assessmentKinds (spec section 15.1)."
   evaluation-unknown-field:
     valid: false
     errors: [schema.unknown-field]
@@ -701,15 +701,15 @@ cases:
     satisfiedProfile: viewable
     rule: "A ScenarioProfile is a baseline, assumptions, an intervention, and an engine (C.4)."
   scenario-engine-unknown:
-    valid: true
-    warnings: [experimental.value]
+    valid: false
+    errors: [scenario.engine-kind]
     satisfiedProfile: viewable
-    rule: "engine.kind comes from the value set scenarioEngines."
+    rule: "engine.kind must come from the value set scenarioEngines (spec section 15.2)."
   scenario-confidence-range:
-    valid: true
-    warnings: [experimental.field]
+    valid: false
+    errors: [scenario.confidence]
     satisfiedProfile: viewable
-    rule: "confidence is a number from 0 to 1."
+    rule: "confidence must be a number from 0 to 1 (spec section 15.2)."
   capability-minimal:
     valid: true
     satisfiedProfile: viewable
@@ -729,6 +729,26 @@ cases:
     warnings: [experimental.reference]
     satisfiedProfile: viewable
     rule: "workPatternRefs name local WorkPatternProfiles."
+  evaluation-verifier-ref-unpinned:
+    valid: false
+    errors: [evaluation.verifier-ref]
+    satisfiedProfile: viewable
+    rule: "verifierRef is a local VerifierPackage or a pinned <name>@<version> (spec section 15.1)."
+  evaluation-subject-missing:
+    valid: false
+    errors: [evaluation.subject]
+    satisfiedProfile: viewable
+    rule: "subject.ref names a listed local asset or a package/asset reference."
+  evaluation-result-schema-missing:
+    valid: false
+    errors: [evaluation.result-schema]
+    satisfiedProfile: viewable
+    rule: "resultSchemaRef is a file in the package."
+  scenario-baseline-missing:
+    valid: false
+    errors: [scenario.baseline-ref]
+    satisfiedProfile: viewable
+    rule: "baselineStateRef is a file in the package or a URI (spec section 15.2)."
 resolutionCases:
   grounded:
     valid: true

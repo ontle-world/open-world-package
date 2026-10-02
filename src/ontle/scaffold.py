@@ -5,8 +5,58 @@ from importlib import resources
 import shutil
 import yaml
 
-from .core import OWPError, PACKAGE_REF_RE
+from .core import MANIFEST_SCHEMA_LINE, OWPError, PACKAGE_REF_RE, write_manifest
 from .structure import EXTENSION_NAME_RE, RESERVED_EXTENSION_NAMES
+
+SCHEMA_BASE = "https://raw.githubusercontent.com/ontle-world/open-world-package/main/schemas/"
+SCHEMAS = {
+    "manifest": "owp-manifest.schema.json",
+    "WorldViewProfile": "world-view-profile.schema.json",
+    "EvaluationProfile": "evaluation-profile.schema.json",
+    "ScenarioProfile": "scenario-profile.schema.json",
+    "CapabilityContract": "capability-contract.schema.json",
+    "CompatibilityEvidence": "compatibility-evidence.schema.json",
+    "SemanticProfile": "semantic-profile.schema.json",
+    "OntologyTermIndex": "ontology-term-index.schema.json",
+    "SemanticBinding": "semantic-binding.schema.json",
+}
+HINTS = {
+    "WorldViewProfile": "Fill purpose (task, objective), projection.include, and conditioning (spec section 6).",
+    "StateCompilerProfile": "List the EWS fields in outputSchema.fields; add bindings to make the compiler declarative (spec section 12).",
+    "EvaluationProfile": "Set assessmentKind, subject, and criteria; bump metadata.version when they change (spec sections 9, 15.1).",
+    "ScenarioProfile": "Describe baseline, assumptions, intervention, and engine (spec section 15.2).",
+    "CapabilityContract": "Describe the outcomes this capability achieves and under which context (spec section 15.3).",
+    "TaskSetProfile": "Name the Views, actors, knowledge, work patterns, and artifacts this task uses (spec Appendix C).",
+    "WorkPatternProfile": "Pick pattern.kind from vocab/value-sets.yaml workPatterns; add a graph if the steps matter (Appendix C.2).",
+    "ArtifactContract": "Set artifact.type, representation, formats, and allowedOperations (Appendix C).",
+    "ConsumerRepresentationProfile": "Set actor.kind and keep only the matching human/agent/model/system block (Appendix C).",
+    "KnowledgeAsset": "Set roles, representation, and content (a path or an ExternalRef) (Appendix C).",
+    "ActorProfile": "actorType: human, ai_agent, team, organization, external_institution, or automated_system (Appendix C.3).",
+    "RoleProfile": "permissions: what the role may do; authorities: what it may decide (Appendix C.3).",
+    "DelegationProfile": "Delegate only actions and decisions the delegator's roles grant, for a bounded period (Appendix C.3).",
+}
+
+
+def schema_url(kind: str) -> str | None:
+    """Schema of a kind for editors (yaml-language-server), or None when the kind has no schema."""
+    if kind in SCHEMAS:
+        return SCHEMA_BASE + SCHEMAS[kind]
+    from .experimental import TABLES
+    if kind in TABLES:
+        import re as _re
+        return SCHEMA_BASE + "experimental/" + _re.sub(r"(?<!^)(?=[A-Z])", "-", kind).lower() + ".schema.json"
+    return None
+
+
+def _header(kind: str) -> str:
+    lines = []
+    url = schema_url(kind)
+    if url:
+        lines.append(f"# yaml-language-server: $schema={url}")
+    if kind in HINTS:
+        lines.append(f"# {HINTS[kind]}")
+    return "".join(line + "\n" for line in lines)
+
 
 TEMPLATES = {"minimal", "enterprise", "ontology", "worldmodel", "worldmodel-multimodal"}
 
@@ -35,7 +85,7 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
     data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
     data["metadata"]["namespace"] = namespace
     data["metadata"]["name"] = name
-    manifest.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    manifest.write_text(MANIFEST_SCHEMA_LINE + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
 
     state = dest / ".ontle" / "project.yaml"
     state.parent.mkdir(parents=True, exist_ok=True)
@@ -144,7 +194,15 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
             raise OWPError(f"--specializes must name a local WorldViewProfile asset: {specializes}")
         skeleton = {"worldRef": "self", "specializes": specializes, "purpose": {"actorScope": None},
                     "projection": {"include": [], "exclude": []}, "conditioning": {}}
-    target.write_text(yaml.safe_dump({
+    def blank(value):  # editors validate against the schemas: placeholders are empty strings, not null
+        if isinstance(value, dict):
+            return {k: blank(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [blank(v) for v in value]
+        return "" if value is None else value
+
+    skeleton = blank(skeleton)
+    target.write_text(_header(kind) + yaml.safe_dump({
         "apiVersion": "openworld/v1alpha1",
         "kind": kind,
         "metadata": metadata,
@@ -156,7 +214,7 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
     rel = target.relative_to(root).as_posix()
     if not any(isinstance(a, dict) and a.get("path") == rel for a in assets):
         assets.append({"kind": kind, "path": rel})
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    write_manifest(manifest_path, manifest)
     return target
 
 
@@ -185,5 +243,36 @@ def add_extension(project: str | Path, ref: str, name: str | None = None, must_u
     if must_understand:
         entry["mustUnderstand"] = True
     deps.append(entry)
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    write_manifest(manifest_path, manifest)
     return name
+
+
+def sync_assets(project: str | Path) -> tuple[list[str], list[str]]:
+    """List every OWP asset file of the package in spec.assets. Returns (added paths, listed paths that do not exist)."""
+    from .core import KNOWN_ASSET_KINDS, package_files
+    from .structure import EXTENSION_KIND_RE
+    root = Path(project).expanduser().resolve()
+    manifest_path = root / "owp.yaml"
+    if not manifest_path.exists():
+        raise OWPError(f"missing owp.yaml in {root}")
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    assets = manifest.setdefault("spec", {}).setdefault("assets", [])
+    listed = {a.get("path") for a in assets if isinstance(a, dict)}
+    added: list[str] = []
+    for path in package_files(root):
+        rel = path.relative_to(root).as_posix()
+        if rel == "owp.yaml" or rel in listed or path.suffix not in {".yaml", ".yml"} or any(p.startswith(".") for p in Path(rel).parts):
+            continue
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        kind = doc.get("kind") if isinstance(doc, dict) else None
+        if isinstance(doc, dict) and doc.get("apiVersion") == "openworld/v1alpha1" and isinstance(kind, str) \
+                and (kind in KNOWN_ASSET_KINDS or EXTENSION_KIND_RE.match(kind)) and kind != "PackageExample":
+            assets.append({"kind": kind, "path": rel})
+            added.append(rel)
+    missing = sorted(p for p in listed if isinstance(p, str) and not (root / p).exists())
+    if added:
+        write_manifest(manifest_path, manifest)
+    return added, missing

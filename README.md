@@ -46,6 +46,10 @@ cd my-world
 ontle validate .
 ontle inspect .
 ontle pack .
+
+# Generated files point editors (VS Code YAML, yaml-language-server) at their JSON Schema.
+# After adding YAML files by hand, list them in owp.yaml with:
+ontle sync .
 ```
 
 The generated project contains only the authoring surface. `.ontle/` is generator-owned metadata and can be ignored by most users.

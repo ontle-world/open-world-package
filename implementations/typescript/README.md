@@ -39,7 +39,8 @@ The conformance runner checks that the reported ids include every id a case list
 | `src/rules/externalref.ts` | 5.1 ExternalRef (`spec.assets[].ref`) |
 | `src/rules/ontology.ts` | 3.1 OntologyPackage contract and ontology conformance profiles |
 | `src/rules/binding.ts` | 14 SemanticBinding (single-package; cross-package grounding called from `src/resolve.ts`) |
-| `src/rules/experimental.ts` | Appendix C experimental kinds (warnings), World View `specializes`, work pattern graphs (C.2), actors, roles, and delegation (C.3), experimental fields of standard kinds (C.4) |
+| `src/rules/standard-fields.ts` | 15 EvaluationProfile and ScenarioProfile fields (errors) |
+| `src/rules/experimental.ts` | Appendix C experimental kinds (warnings), World View `specializes`, work pattern graphs (C.2), actors, roles, and delegation (C.3), remaining experimental fields of standard kinds (C.4) |
 | `src/structure.ts` | 8 defined fields: field tables mirroring `schemas/*.schema.json` (manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract, ObservationSet, EWS) |
 | `src/rules/extensions.ts` | 13 extension declarations, definitions, `extensions` blocks |
 | `src/vocab.ts` | 8 asset-kind vocabulary and Appendix C value sets (copies of `vocab/asset-kinds.yaml` and `vocab/value-sets.yaml`, checked by `scripts/check-vocab.mjs`) |
@@ -80,6 +81,7 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | work, artifacts, actors | + work pattern graphs (C.2), ArtifactContract additions, ActorProfile, RoleProfile, DelegationProfile (C.3), `experimental.delegation-exceeds-authority`; 13 validation cases | 223/223 after the update (maintainer update, not clean-room) |
 | standard-kind fields | + defined fields for WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract; their experimental fields (C.4); TaskSetProfile composition; 13 validation cases | 236/236 after the update (maintainer update, not clean-room) |
 | round trip | + `scripts/check-roundtrip.mjs` (docs/PROFILE_PROMOTION.md, Interoperability): every example and every valid case keeps its verdict, error ids, and warning ids after YAML re-serialization | 72/72 packages |
+| promotion | + section 15 (EvaluationProfile, ScenarioProfile fields promoted from Appendix C.4 warnings to errors); `asset.kind-experimental` reported once per kind with a count; 4 new invalid cases, 3 cases now invalid | 240/240 after the update; round trip 69/69 (maintainer update, not clean-room) |
 
 Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
 

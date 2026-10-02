@@ -173,6 +173,18 @@ def _check_value(value: Any, value_set: str, where: str, rel: str, declared: set
         warnings.append(f"experimental.value: {rel}: {where} {value!r} is not in the experimental value set {value_set}")
 
 
+def _check_standard_value(value: Any, value_set: str, rule: str, where: str, rel: str, declared: set[str], errors: list[str]) -> None:
+    """A value of a standard value set: one of its values, or a declared extension value."""
+    if not isinstance(value, str):
+        errors.append(f"{rule}: {rel}: {where} must be a string")
+    elif ":" in value:
+        name = value.split(":", 1)[0]
+        if name not in declared:
+            errors.append(f"extension.undeclared: {rel}: {where} {value!r} uses extension {name!r}, which spec.dependencies does not declare with 'as'")
+    elif value not in VALUE_SETS[value_set]:
+        errors.append(f"{rule}: {rel}: {where} {value!r} is not one of {sorted(VALUE_SETS[value_set])}")
+
+
 def _check_local_ref(ref: Any, kinds: tuple[str, ...] | None, where: str, rel: str,
                      local_kinds: dict[str, str], warnings: list[str]) -> None:
     """A package-relative path must name a listed local asset (of one of ``kinds``). Cross-package refs (with '#') are not checked here."""
@@ -431,7 +443,7 @@ def _check_content(content: dict[str, Any], rel: str, root: Path, declared: set[
 
 # --- experimental fields of standard kinds (spec Appendix C.4) ------------------
 
-def standard_kind_warnings(doc: dict[str, Any], kind: str, rel: str, root: Path, local_kinds: dict[str, str],
+def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, local_kinds: dict[str, str],
                            declared: set[str]) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -446,30 +458,34 @@ def standard_kind_warnings(doc: dict[str, Any], kind: str, rel: str, root: Path,
             if sub("purpose").get(field) is not None:
                 _check_local_ref(sub("purpose")[field], kinds, f"spec.purpose.{field}", rel, local_kinds, warnings)
     elif kind == "EvaluationProfile":
+        # Standard fields (spec section 15.1): errors.
         if "assessmentKind" in spec:
-            _check_value(spec["assessmentKind"], "assessmentKinds", "spec.assessmentKind", rel, declared, errors, warnings)
+            _check_standard_value(spec["assessmentKind"], "assessmentKinds", "evaluation.assessment-kind", "spec.assessmentKind", rel, declared, errors)
         if "kind" in sub("subject"):
-            _check_value(sub("subject")["kind"], "evaluationSubjects", "spec.subject.kind", rel, declared, errors, warnings)
-        if sub("subject").get("ref") is not None and "#" not in str(sub("subject")["ref"]) and "@" not in str(sub("subject")["ref"]):
-            _check_local_ref(sub("subject")["ref"], None, "spec.subject.ref", rel, local_kinds, warnings)
+            _check_standard_value(sub("subject")["kind"], "evaluationSubjects", "evaluation.subject", "spec.subject.kind", rel, declared, errors)
+        subject_ref = sub("subject").get("ref")
+        if subject_ref is not None and "#" not in str(subject_ref) and "@" not in str(subject_ref) and subject_ref not in local_kinds:
+            errors.append(f"evaluation.subject: {rel}: spec.subject.ref {subject_ref!r} is neither a listed local asset nor a package or asset reference")
         verifier = spec.get("verifierRef")
         if verifier is not None:
             from .core import PINNED_REF_RE  # local import: core imports this module
             if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierPackage")):
-                warnings.append(f"experimental.reference: {rel}: spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>")
+                errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>")
+        if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
+            errors.append(f"evaluation.result-schema: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
+        # Experimental field (Appendix C.4): warning.
         if spec.get("evaluatorRef") is not None:
             _check_local_ref(spec["evaluatorRef"], ("ActorProfile",), "spec.evaluatorRef", rel, local_kinds, warnings)
-        if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
-            warnings.append(f"experimental.reference: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
     elif kind == "ScenarioProfile":
+        # Standard fields (spec section 15.2): errors.
         if "kind" in sub("engine"):
-            _check_value(sub("engine")["kind"], "scenarioEngines", "spec.engine.kind", rel, declared, errors, warnings)
+            _check_standard_value(sub("engine")["kind"], "scenarioEngines", "scenario.engine-kind", "spec.engine.kind", rel, declared, errors)
         baseline = spec.get("baselineStateRef")
         if baseline is not None and "://" not in str(baseline) and "#" not in str(baseline) and not _file_in_package(root, baseline):
-            warnings.append(f"experimental.reference: {rel}: spec.baselineStateRef {baseline!r} must be a file in the package or a URI")
+            errors.append(f"scenario.baseline-ref: {rel}: spec.baselineStateRef {baseline!r} must be a file in the package or a URI")
         confidence = spec.get("confidence")
         if confidence is not None and (isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not 0 <= confidence <= 1):
-            warnings.append(f"experimental.field: {rel}: spec.confidence must be a number from 0 to 1")
+            errors.append(f"scenario.confidence: {rel}: spec.confidence must be a number from 0 to 1")
     return errors, warnings
 
 
@@ -621,3 +637,24 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
         edge(identity, "valid_for_compiler", v)
     edge(identity, "uses_adapter", (world_model.get("representation") or {}).get("adapterRef"))
     return {"nodes": nodes, "edges": edges}
+
+
+EXPERIMENTAL_FIELDS = {  # spec Appendix C.4
+    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("purpose", "actorRef"), ("purpose", "roleRef"), ("purpose", "taskRef")],
+    "EvaluationProfile": [("evaluatorRef",)],
+    "CapabilityContract": [("outcomeRefs",)],
+}
+
+
+def usage(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]], stability: dict[str, str]) -> dict[str, Any]:
+    """Experimental kinds and fields a package uses, for `ontle inspect`."""
+    kinds = sorted({k for k in local_kinds.values() if stability.get(k) == "experimental"})
+    fields = []
+    for rel, kind in sorted(local_kinds.items()):
+        for path in EXPERIMENTAL_FIELDS.get(kind, []):
+            node: Any = (docs.get(rel) or {}).get("spec") or {}
+            for part in path:
+                node = node.get(part) if isinstance(node, dict) else None
+            if node is not None:
+                fields.append(f"{rel}: spec.{'.'.join(path)}")
+    return {"kinds": kinds, "fields": fields}

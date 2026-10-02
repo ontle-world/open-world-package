@@ -12,7 +12,7 @@ from .core import OWPError, deterministic_pack, inspect_package, load_manifest, 
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
 from .resolve import ews_jsonld, resolve_package, validate_resolved
-from .scaffold import add_asset, add_extension, init_project
+from .scaffold import add_asset, add_extension, init_project, sync_assets
 
 
 def cmd_init(args):
@@ -158,6 +158,17 @@ def cmd_catalog(args):
     return 0
 
 
+def cmd_sync(args):
+    added, missing = sync_assets(args.path)
+    for rel in added:
+        print(f"added {rel}")
+    for rel in missing:
+        print(f"WARN: listed but missing: {rel}", file=sys.stderr)
+    if not added and not missing:
+        print("spec.assets is up to date")
+    return 0
+
+
 def cmd_inspect(args):
     print(json.dumps(inspect_package(args.path, graph=args.graph, resolved_views=args.resolved_views), indent=2, ensure_ascii=False))
     return 0
@@ -257,6 +268,10 @@ def build_parser():
     x.add_argument("path", nargs="?", default=".")
     x.add_argument("--format", choices=["turtle", "jsonld"], default="turtle")
     x.set_defaults(func=cmd_export)
+
+    x = sp.add_parser("sync", help="add asset files that spec.assets does not list yet (by their kind)")
+    x.add_argument("path", nargs="?", default=".")
+    x.set_defaults(func=cmd_sync)
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")

@@ -5,10 +5,30 @@ from pathlib import Path
 import yaml
 
 from ontle.core import deterministic_pack, inspect_package, validate_package, verify_archive
-from ontle.scaffold import add_extension, init_project, add_asset
+from ontle.scaffold import add_extension, init_project, add_asset, sync_assets
 
 
 class OntleTests(unittest.TestCase):
+    def test_generated_files_point_editors_at_schemas(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("demo", "test", "minimal", Path(td) / "demo")
+            view = add_asset(p, "view", "manager")
+            add_extension(p, "acme/quality-extension@1.2.0")
+            self.assertTrue((p / "owp.yaml").read_text().startswith("# yaml-language-server: $schema=") )
+            self.assertIn("world-view-profile.schema.json", view.read_text().splitlines()[0])
+            self.assertNotIn("null", view.read_text())
+
+    def test_sync_adds_unlisted_assets(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("demo", "test", "minimal", Path(td) / "demo")
+            (p / "scenarios").mkdir()
+            (p / "scenarios" / "s.yaml").write_text("apiVersion: openworld/v1alpha1\nkind: ScenarioProfile\nmetadata: {name: s}\nspec: {objective: x}\n")
+            (p / "notes.yaml").write_text("just: data\n")
+            added, missing = sync_assets(p)
+            self.assertEqual((added, missing), (["scenarios/s.yaml"], []))
+            self.assertTrue(validate_package(p).valid)
+            self.assertEqual(sync_assets(p), ([], []))
+
     def test_add_extension_declares_dependency(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")

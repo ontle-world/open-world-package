@@ -21,7 +21,7 @@ from typing import Any
 
 import yaml
 
-from .core import MANIFEST, OWPError, load_manifest, sha256_bytes
+from .core import MANIFEST, OWPError, load_manifest, sha256_bytes, write_manifest
 
 FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
 OCI_ARTIFACT_TYPE = "application/vnd.openworld.package.v1alpha1"
@@ -134,7 +134,7 @@ def pin_https_refs(package: str | Path) -> list[str]:
             ref["digest"] = f"sha256:{sha256_bytes(_download(ref['uri']))}"
             changed.append(item["pointer"])
     if changed:
-        (root / MANIFEST).write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True), encoding="utf-8")
+        write_manifest(root / MANIFEST, manifest)
     return changed
 
 

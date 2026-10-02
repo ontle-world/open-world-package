@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { Context, error } from "../context.js";
 import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, RESERVED_EXTENSION_NAMES, structureProblems } from "../structure.js";
 import { checkSemanticBindings } from "./binding.js";
+import { checkStandardFields } from "./standard-fields.js";
 import { checkExperimentalAsset, checkMultiLatest, checkStandardKindFields, checkViewSpecialization, STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
 
@@ -87,7 +88,10 @@ export function checkAssetStructure(ctx: Context): void {
             : [];
         });
     for (const p of problems) error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
-    if (STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS.includes(a.kind)) checkStandardKindFields(ctx, a);
+    if (STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS.includes(a.kind)) {
+      checkStandardFields(ctx, a); // spec 15: errors
+      checkStandardKindFields(ctx, a); // Appendix C.4: warnings
+    }
   }
   checkViewSpecialization(ctx);
   checkMultiLatest(ctx);

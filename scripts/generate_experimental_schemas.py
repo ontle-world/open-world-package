@@ -96,7 +96,7 @@ def main() -> None:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": f"urn:owp:schema:{file_name(kind).removesuffix('.schema.json')}:v1alpha1",
             "title": kind,
-            "description": f"{kind} (spec section 8). Fields listed in spec Appendix C.4 are experimental: accepted, with warnings only from their checks.",
+            "description": f"{kind} (spec sections 8 and 15). Fields listed in spec Appendix C.4 remain experimental: accepted, with warnings only from their checks.",
             **schema,
             "$defs": {"extensions": MANIFEST["$defs"]["extensions"]},
         }

@@ -260,7 +260,8 @@ def write_term_index(root: Path, manifest_path: Path) -> Path:
     }, sort_keys=False, allow_unicode=True), encoding="utf-8")
     if ontology.get("termIndex") != rel:
         ontology["termIndex"] = rel
-        manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True), encoding="utf-8")
+        from .core import write_manifest  # local import: core imports this module
+        write_manifest(manifest_path, manifest)
     return target
 
 

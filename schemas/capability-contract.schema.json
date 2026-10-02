@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:owp:schema:capability-contract:v1alpha1",
   "title": "CapabilityContract",
-  "description": "CapabilityContract (spec section 8). Fields listed in spec Appendix C.4 are experimental: accepted, with warnings only from their checks.",
+  "description": "CapabilityContract (spec sections 8 and 15). Fields listed in spec Appendix C.4 remain experimental: accepted, with warnings only from their checks.",
   "type": "object",
   "properties": {
     "apiVersion": {

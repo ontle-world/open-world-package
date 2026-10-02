@@ -19,6 +19,7 @@ export function collectAssets(ctx: Context): void {
   }
 
   const seen = new Map<string, number>();
+  const experimentalKinds = new Map<string, number>();
   assets.forEach((a, i) => {
     const where = `spec.assets[${i}]`;
     if (!isObj(a)) {
@@ -41,7 +42,7 @@ export function collectAssets(ctx: Context): void {
     } else if (!ASSET_KIND_STABILITY.has(kind)) {
       warn(ctx, "asset.kind-unknown", `${where}.kind "${kind}" is not in the asset-kind vocabulary`, "owp.yaml");
     } else if (ASSET_KIND_STABILITY.get(kind) === "experimental") {
-      warn(ctx, "asset.kind-experimental", `${where}.kind "${kind}" is experimental and may change or be removed`, "owp.yaml");
+      experimentalKinds.set(kind, (experimentalKinds.get(kind) ?? 0) + 1);
     }
     const hasPath = a.path !== undefined;
     // Spec 5.1: a present `ref` key is an ExternalRef, whatever its value.
@@ -124,6 +125,10 @@ export function collectAssets(ctx: Context): void {
       }
     }
   });
+  // One warning per experimental kind, with the number of assets that use it.
+  for (const [kind, n] of experimentalKinds) {
+    warn(ctx, "asset.kind-experimental", `asset kind ${kind} is experimental and may change or be removed (${n} asset${n > 1 ? "s" : ""})`, "owp.yaml");
+  }
 }
 
 /**

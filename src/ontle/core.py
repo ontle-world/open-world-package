@@ -58,6 +58,18 @@ class ValidationResult:
     manifest: dict[str, Any] | None = None
 
 
+MANIFEST_SCHEMA_LINE = "# yaml-language-server: $schema=https://raw.githubusercontent.com/ontle-world/open-world-package/main/schemas/owp-manifest.schema.json\n"
+
+
+def write_manifest(path: Path, data: dict[str, Any]) -> None:
+    """Write owp.yaml, keeping its leading comment lines (or adding the editor schema line to a new file)."""
+    head = MANIFEST_SCHEMA_LINE
+    if path.exists():
+        lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+        head = "".join(line for line in lines[:next((i for i, line in enumerate(lines) if not line.startswith("#")), len(lines))])
+    path.write_text(head + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+
+
 def package_root(path: str | Path) -> Path:
     p = Path(path).expanduser().resolve()
     if p.is_file():
@@ -355,6 +367,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         assets = []
     seen_paths: set[str] = set()
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
+    experimental_kind_counts: dict[str, int] = {}
     standard_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
@@ -377,7 +390,7 @@ def validate_package(path: str | Path) -> ValidationResult:
             elif asset_kind not in KNOWN_ASSET_KINDS:
                 warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
             elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
-                warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change")
+                experimental_kind_counts[asset_kind] = experimental_kind_counts.get(asset_kind, 0) + 1
         has_path = isinstance(item.get("path"), str) and bool(item.get("path").strip())
         has_ref = "ref" in item
         if has_ref:
@@ -426,12 +439,14 @@ def validate_package(path: str | Path) -> ValidationResult:
                         if asset_kind in {"WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"}:
                             standard_docs.append((rel, asset_kind, adata))
 
+    for asset_kind, count in experimental_kind_counts.items():
+        warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change ({count} asset{'s' if count > 1 else ''})")
     for rel, asset_kind, adata in experimental_docs:
         exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names, local_asset_docs)
         errors.extend(exp_errors)
         warnings.extend(exp_warnings)
     for rel, asset_kind, adata in standard_docs:
-        std_errors, std_warnings = experimental.standard_kind_warnings(adata, asset_kind, rel, root, local_asset_kinds, extension_names)
+        std_errors, std_warnings = experimental.standard_kind_checks(adata, asset_kind, rel, root, local_asset_kinds, extension_names)
         errors.extend(std_errors)
         warnings.extend(std_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
@@ -516,6 +531,8 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {"declared": conformance.get("profile"),
                                   "satisfied": ontology_module.satisfied_ontology_profile(root, spec)}
+    kinds_used, docs_used = _local_assets(root, spec if isinstance(spec, dict) else {})
+    summary["experimental"] = experimental.usage(kinds_used, docs_used, ASSET_KIND_STABILITY)
     if graph or resolved_views:
         kinds, docs = _local_assets(root, spec if isinstance(spec, dict) else {})
         if graph:

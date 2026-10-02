@@ -130,8 +130,8 @@ def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
     return closed({"apiVersion": VALUE, "kind": VALUE, "metadata": ASSET_METADATA, "spec": closed(spec_fields)}, extensions=False)
 
 
-# Standard kinds with defined fields. Fields marked "experimental" are spec Appendix C additions:
-# they are accepted, and the checks on them produce warnings only.
+# Standard kinds with defined fields (spec sections 8 and 15). Fields marked "experimental" are
+# listed in spec Appendix C.4: accepted, and the checks on them produce warnings only.
 WORLD_VIEW_PROFILE = _standard({
     "worldRef": VALUE,
     "specializes": VALUE,                                  # experimental
@@ -139,19 +139,18 @@ WORLD_VIEW_PROFILE = _standard({
                        "actorRef": VALUE, "roleRef": VALUE, "taskRef": VALUE}),   # *Ref: experimental
     "projection": closed({"include": VALUE, "exclude": VALUE, "principle": VALUE}),
     "conditioning": closed({"authorityScope": VALUE, "timeScope": VALUE, "scale": VALUE, "resolution": VALUE}),
-    "constraints": VALUE,                                  # experimental
-    "evidenceRefs": VALUE,                                 # experimental
+    "constraints": VALUE,
+    "evidenceRefs": VALUE,
 })
 
 EVALUATION_PROFILE = _standard({
     "supersedes": VALUE, "changedBecause": VALUE, "metrics": VALUE, "tasks": VALUE, "checks": VALUE,
-    # experimental
     "assessmentKind": VALUE,
     "subject": closed({"kind": VALUE, "ref": VALUE}),
     "objective": VALUE,
     "criteria": array(closed({"metric": VALUE, "rubric": VALUE, "threshold": VALUE})),
     "verifierRef": VALUE,
-    "evaluatorRef": VALUE,
+    "evaluatorRef": VALUE,                                 # experimental
     "evidenceRefs": VALUE,
     "validityScope": OPEN,
     "resultSchemaRef": VALUE,
@@ -159,7 +158,6 @@ EVALUATION_PROFILE = _standard({
 
 SCENARIO_PROFILE = _standard({
     "description": VALUE, "objective": VALUE, "standardBindings": OPEN,
-    # experimental
     "baselineStateRef": VALUE,
     "assumptions": VALUE,
     "intervention": OPEN,
@@ -174,8 +172,7 @@ SCENARIO_PROFILE = _standard({
 
 CAPABILITY_CONTRACT = _standard({
     "description": VALUE, "effect": VALUE,
-    # experimental
-    "outcomeRefs": VALUE,
+    "outcomeRefs": VALUE,                                  # experimental
     "context": OPEN,
     "requiredInputs": VALUE,
     "evidenceRefs": VALUE,

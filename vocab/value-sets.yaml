@@ -1,7 +1,7 @@
 apiVersion: openworld/v1alpha1
 kind: ValueSetVocabulary
-# Experimental value sets used by experimental asset kinds (spec Appendix C).
-# A value outside its set is a warning (experimental.value); an extension value
+# Value sets. For an experimental set, a value outside it is a warning (experimental.value);
+# for a standard set, it is an error with the rule id of the field (spec section 15). An extension value
 # <extension>:<value> is accepted when the extension is declared (section 13).
 # Labels are informative. A work pattern's family is its workNodeFamilies value.
 valueSets:
@@ -146,7 +146,7 @@ valueSets:
       external_institution: {label: External institution}
       automated_system: {label: Automated system}
   assessmentKinds:
-    stability: experimental
+    stability: standard
     usedBy: EvaluationProfile.spec.assessmentKind
     values:
       verification: {label: Verification, description: whether conditions, facts, or specifications are met}
@@ -155,7 +155,7 @@ valueSets:
       review: {label: Review, description: an examination activity}
       approval: {label: Approval, description: an authorized decision to use or execute}
   evaluationSubjects:
-    stability: experimental
+    stability: standard
     usedBy: EvaluationProfile.spec.subject.kind
     values:
       model: {label: Model}
@@ -167,7 +167,7 @@ valueSets:
       capability: {label: Capability}
       environment: {label: Environment}
   scenarioEngines:
-    stability: experimental
+    stability: standard
     usedBy: ScenarioProfile.spec.engine.kind
     values:
       rule: {label: Rule}

@@ -29,6 +29,9 @@ Start with `WORLD.md` and `owp.yaml`. The generated project declares `conformanc
 
 ## 3. Validate and inspect
 
+Generated files start with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete them. If you create asset files by hand, `ontle sync .` adds them to `spec.assets`.
+
+
 ```bash
 ontle validate .
 ontle inspect .

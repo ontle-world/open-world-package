@@ -82,6 +82,21 @@ cases:
     valid: true
     satisfiedProfile: model-ready
     rule: "model-ready may be satisfied by outputSchemaRef."
+  compiler-output-schema-ref-missing-file:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "outputSchemaRef must name a JSON Schema file in the package; an unresolvable reference gives no EWS fields."
+  compiler-output-schema-ref-no-properties:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "The JSON Schema named by outputSchemaRef must have a non-empty top-level properties object."
+  compiler-output-schema-mismatch:
+    valid: false
+    errors: [compiler.output-schema-mismatch]
+    satisfiedProfile: model-ready
+    rule: "When a compiler declares both, outputSchema.fields and the properties of outputSchemaRef list the same fields."
   package-legacy-manifest:
     valid: false
     errors: [package.legacy-manifest]
@@ -881,6 +896,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
     rule: "select latest takes the value with the greatest observedAt."
+  schema-ref-fields:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "A compiler with only outputSchemaRef compiles the fields listed by the schema's top-level properties."
   latest-tie-same-value:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
@@ -1016,9 +1035,13 @@ ewsCheckCases:
   trace-not-required:
     valid: true
     rule: "Without traceRequired, provenance may be omitted."
-  schema-ref-only-compiler:
+  schema-ref-valid:
     valid: true
-    rule: "Alpha limitation: a compiler with only outputSchemaRef skips the field rules until outputSchemaRef resolution is specified (see ROADMAP)."
+    rule: "A compiler with only outputSchemaRef takes its EWS fields from the top-level properties of that JSON Schema."
+  schema-ref-field-unknown:
+    valid: false
+    errors: [ews.field-unknown]
+    rule: "Field rules apply to the fields of outputSchemaRef as to outputSchema.fields."
   wrong-kind:
     valid: false
     errors: [ews.kind]

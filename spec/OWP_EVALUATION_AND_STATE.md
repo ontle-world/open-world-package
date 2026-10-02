@@ -84,10 +84,17 @@ Values are compared in the JSON data model: types must match (a boolean never eq
 
 ### 12.1 Output contract (applies to every runtime)
 
+A State Compiler's EWS fields are `spec.outputSchema.fields`, or the field names listed by `spec.outputSchemaRef`:
+
+- `outputSchemaRef` is a package-relative path in the form of a local asset path (section 5): relative POSIX, without a leading `./`, inside the package. The file need not be listed in `spec.assets`.
+- The file is a JSON document holding a JSON Schema whose top-level `properties` is a non-empty object. Its keys are the EWS fields. The subschemas are informative in this alpha; validators do not apply them to EWS values.
+- A reference that is malformed, missing, unreadable, not JSON, or lacks such `properties` is the error `compiler.output-schema-ref`, and it contributes no fields.
+- A compiler that declares both MUST list the same set of fields in each (`compiler.output-schema-mismatch`); `outputSchema.fields` is then used.
+
 An EWS document conforms to its State Compiler when:
 
 - `worldRef` is the World's identity, `stateCompiler` is `<worldRef>#<compiler path>`, and `worldView` is `<worldRef>#<the compiler's worldViewRef>`.
-- When the compiler declares `outputSchema.fields`, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears. A compiler with only `outputSchemaRef` skips these field rules in this alpha.
+- When the compiler has EWS fields, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears.
 - Each `unresolved` field retains at least two distinct alternatives.
 - Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a listed local asset.
 - `provenance` has entries only for fields in `state` or `unresolved`; when the compiler declares `traceRequired: true`, every such field has non-empty provenance.
@@ -107,7 +114,7 @@ spec:
     inspection.results: {from: QMS.inspection, value: result, select: all}
 ```
 
-Binding keys MUST be fields of `outputSchema.fields`; `from` and `value` are strings; `select` is `latest` (default) or `all`.
+Binding keys MUST be EWS fields of the compiler (section 12.1); `from` and `value` are strings; `select` is `latest` (default) or `all`.
 
 Input is an `ObservationSet`:
 

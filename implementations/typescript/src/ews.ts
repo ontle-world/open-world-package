@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
 import { API_VERSION } from "./vocab.js";
-import { bindingProblems } from "./rules/world.js";
+import { bindingProblems, outputSchemaFields } from "./rules/world.js";
 import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
 const UTC_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/;
@@ -35,7 +35,10 @@ interface WorldCompiler {
   identity: string;
   compilerPath: string;
   spec: Obj;
-  fields: string[];
+  /** EWS fields (spec 12.1); null when the compiler declares none. */
+  fields: string[] | null;
+  /** Problems resolving outputSchemaRef. */
+  fieldProblems: { rule: string; msg: string }[];
 }
 
 function loadWorld(worldDir: string): { identity?: string; manifest?: Obj; problems: string[] } {
@@ -58,9 +61,8 @@ function loadCompiler(worldDir: string, manifest: Obj, identity: string, compile
   if (!l.ok || !isObj(l.value)) return `cannot read State Compiler ${compilerPath}`;
   const spec = get(l.value, "spec");
   if (!isObj(spec)) return `State Compiler ${compilerPath} has no spec`;
-  const f = get(spec, "outputSchema", "fields");
-  const fields = Array.isArray(f) ? f.filter((x): x is string => typeof x === "string") : [];
-  return { identity, compilerPath, spec, fields };
+  const { fields, problems } = outputSchemaFields(worldDir, spec, compilerPath);
+  return { identity, compilerPath, spec, fields, fieldProblems: problems };
 }
 
 // ---------------------------------------------------------------- 12.1 check
@@ -128,20 +130,21 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   const wvr = comp.spec.worldViewRef;
   if (s.worldView !== `${prefix}${wvr}`) e("ews.world-view", `spec.worldView must be ${prefix}${String(wvr)} (the compiler's worldViewRef)`);
 
-  // Field partition (skipped when the compiler has no outputSchema.fields; spec 12.1 round 3).
-  const hasFields = Array.isArray(get(comp.spec, "outputSchema", "fields"));
-  const fieldSet = new Set(comp.fields);
+  comp.fieldProblems.forEach((p) => e(p.rule, p.msg));
+  // Field partition (skipped when the compiler has no EWS fields; spec 12.1).
+  const hasFields = comp.fields !== null;
+  const fieldSet = new Set(comp.fields ?? []);
   const places = new Map<string, string[]>();
   const note = (f: string, where: string) => places.set(f, [...(places.get(f) ?? []), where]);
   Object.keys(state).forEach((f) => note(f, "state"));
   Object.keys(unresolved).forEach((f) => note(f, "unresolved"));
   (missing as string[]).forEach((f) => note(f, "missing"));
-  for (const f of hasFields ? comp.fields : []) {
+  for (const f of comp.fields ?? []) {
     const p = places.get(f) ?? [];
     if (p.length === 0) e("ews.field-placement", `schema field ${f} appears in none of state/unresolved/missing`);
     else if (p.length > 1) e("ews.field-placement", `schema field ${f} appears in more than one place (${p.join(", ")})`);
   }
-  if (hasFields) for (const f of places.keys()) if (!fieldSet.has(f)) e("ews.field-unknown", `field ${f} is not in the compiler's outputSchema.fields`);
+  if (hasFields) for (const f of places.keys()) if (!fieldSet.has(f)) e("ews.field-unknown", `field ${f} is not an EWS field of the compiler`);
 
   // Unresolved alternatives.
   for (const [f, alts] of Object.entries(unresolved)) {
@@ -212,8 +215,8 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   if (comp.spec.bindings === undefined) {
     return { ok: false, errors: [refusal("ews.opaque-compiler", `State Compiler ${compilerPath} declares no bindings; it is opaque and cannot be compiled declaratively`)] };
   }
-  const bp = bindingProblems(comp.spec);
-  if (bp.length) return { ok: false, errors: bp.map((m) => refusal("compiler.binding", m)) };
+  const bp = [...comp.fieldProblems.map((p) => refusal(p.rule, p.msg)), ...bindingProblems(comp.spec, comp.fields).map((m) => refusal("compiler.binding", m))];
+  if (bp.length) return { ok: false, errors: bp };
   // Spec 12: an unknown field makes the ObservationSet invalid input, so compilation is refused.
   const { observations, errors } = parseObservationSet(observationDoc);
   if (errors.length) return { ok: false, errors };
@@ -224,7 +227,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   const missing: string[] = [];
   const provenance: Record<string, string[]> = {};
 
-  for (const field of comp.fields) {
+  for (const field of comp.fields ?? []) {
     const b = bindings[field];
     if (!b) {
       missing.push(field);

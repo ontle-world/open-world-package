@@ -37,9 +37,11 @@ rules:
   profile.stateful.default-compiler-view: {severity: error, section: "6.1", summary: "default compiler does not compile defaultView"}
   profile.stateful.compiler-view: {severity: error, section: "6.1", summary: "a compiler's worldViewRef is not a local View"}
   profile.stateful.output-contract: {severity: error, section: "6.1", summary: "a compiler's outputContract is not EffectiveWorldState"}
-  profile.model-ready.output-schema: {severity: error, section: "6.1", summary: "a compiler lacks outputSchema.fields and outputSchemaRef"}
+  profile.model-ready.output-schema: {severity: error, section: "6.1", summary: "a compiler has no EWS fields: neither outputSchema.fields nor a resolvable outputSchemaRef"}
   profile.action-ready: {severity: error, section: "6.1", summary: "missing action, commit, or effect-verification asset"}
-  compiler.binding: {severity: error, section: "12.2", summary: "malformed declarative binding, or binding outside outputSchema"}
+  compiler.binding: {severity: error, section: "12.2", summary: "malformed declarative binding, or binding a field that is not an EWS field of the compiler"}
+  compiler.output-schema-ref: {severity: error, section: "12.1", summary: "outputSchemaRef is not a package-relative path to a JSON Schema with a non-empty top-level properties object"}
+  compiler.output-schema-mismatch: {severity: error, section: "12.1", summary: "outputSchema.fields and the properties of outputSchemaRef list different fields"}
   worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
   worldmodel.roles: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
   worldmodel.world-ref: {severity: error, section: "3", summary: "missing semanticGrounding.worldRef, or not <namespace>/<name>@<semver>"}
@@ -103,13 +105,13 @@ rules:
   ews.world-view: {severity: error, section: "12.1", summary: "references do not match the World, compiler, and compiled View"}
   ews.as-of: {severity: error, section: "12.1", summary: "context.asOf not a UTC timestamp"}
   ews.field-placement: {severity: error, section: "12.1", summary: "schema field not in exactly one of state/unresolved/missing"}
-  ews.field-unknown: {severity: error, section: "12.1", summary: "field outside outputSchema"}
+  ews.field-unknown: {severity: error, section: "12.1", summary: "field that is not an EWS field of the compiler"}
   ews.unresolved-alternatives: {severity: error, section: "12.1", summary: "unresolved field with fewer than two alternatives"}
   ews.provenance-orphan: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
   ews.provenance-required: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
   binding.asset: {severity: error, section: "14", summary: "spec.world.semanticBinding is not a local SemanticBinding asset"}
   binding.curie: {severity: error, section: "14", summary: "binding value or section is not a CURIE or a mapping as required"}
-  binding.field-unknown: {severity: error, section: "14", summary: "bound field is not in any local State Compiler outputSchema.fields"}
+  binding.field-unknown: {severity: error, section: "14", summary: "bound field is not an EWS field of any local State Compiler"}
   grounding.prefix-unknown: {severity: error, section: "14", summary: "binding CURIE uses a prefix no dependency OntologyPackage declares"}
   grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}
   grounding.ontology-term: {severity: error, section: "14", summary: "expanded binding IRI is not a term of a dependency OntologyPackage"}

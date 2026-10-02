@@ -223,10 +223,10 @@ spec:
 | `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset whose `spec.worldRef` is `self` or this package's identity |
 | `stateful` | at least one `StateCompilerProfile`; `spec.world.defaultStateCompiler` is the path of a local `StateCompilerProfile` whose `spec.worldViewRef` equals `spec.world.defaultView`; every local `StateCompilerProfile` has a `spec.worldViewRef` naming a local `WorldViewProfile` path and `spec.outputContract: EffectiveWorldState` |
 | `stateful` (bindings) | a State Compiler's `spec.bindings`, when present, is well formed (section 12.2); a malformed binding fails `stateful` for both the declared and the satisfied profile |
-| `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or `spec.outputSchemaRef` |
+| `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or a `spec.outputSchemaRef` that resolves to EWS fields (section 12.1) |
 | `action-ready` | `ActionBindingProfile`, `CommitContract`, and `EffectVerificationProfile` assets |
 
-Requirements of a profile are checked only when that profile or a higher one is declared. "At least one X asset" and the `action-ready` assets may be local (`path`) or external (`ref`); assets named by `defaultView`, `defaultStateCompiler`, or `worldViewRef`, and State Compilers checked for content, are local. `outputSchemaRef` is any non-empty string; this alpha does not resolve it. A validator MUST reject a package that does not satisfy its declared profile, and SHOULD report the highest profile the package satisfies independent of the declaration.
+Requirements of a profile are checked only when that profile or a higher one is declared. "At least one X asset" and the `action-ready` assets may be local (`path`) or external (`ref`); assets named by `defaultView`, `defaultStateCompiler`, or `worldViewRef`, and State Compilers checked for content, are local. A validator MUST reject a package that does not satisfy its declared profile, and SHOULD report the highest profile the package satisfies independent of the declaration.
 
 Every WorldModelPackage requires compatible View and State Compiler references regardless of the World's profile; in practice the referenced World is `stateful` or higher.
 
@@ -423,9 +423,11 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.stateful.default-compiler-view` | 6.1 | default compiler does not compile `defaultView` |
 | `profile.stateful.compiler-view` | 6.1 | a compiler's `worldViewRef` is not a local View |
 | `profile.stateful.output-contract` | 6.1 | a compiler's `outputContract` is not `EffectiveWorldState` |
-| `profile.model-ready.output-schema` | 6.1 | a compiler lacks `outputSchema.fields` and `outputSchemaRef` |
+| `profile.model-ready.output-schema` | 6.1 | a compiler has no EWS fields: neither `outputSchema.fields` nor a resolvable `outputSchemaRef` |
 | `profile.action-ready` | 6.1 | missing action, commit, or effect-verification asset |
-| `compiler.binding` | 12.2 | malformed declarative binding, or binding outside `outputSchema` |
+| `compiler.binding` | 12.2 | malformed declarative binding, or binding a field that is not an EWS field of the compiler |
+| `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
+| `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
 | `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |
 | `worldmodel.world-ref` | 3 | missing `semanticGrounding.worldRef`, or not `<namespace>/<name>@<semver>` |
 | `worldmodel.compatible-views` | 3 | missing `compatibleWorldViews` |
@@ -476,12 +478,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.world-ref`, `ews.world-view` | 12.1 | references do not match the World, compiler, and compiled View |
 | `ews.as-of` | 12.1 | `context.asOf` not a UTC timestamp |
 | `ews.field-placement` | 12.1 | schema field not in exactly one of state/unresolved/missing |
-| `ews.field-unknown` | 12.1 | field outside `outputSchema` |
+| `ews.field-unknown` | 12.1 | field that is not an EWS field of the compiler |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
 | `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
 | `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
-| `binding.field-unknown` | 14 | bound field is not in any local State Compiler `outputSchema.fields` |
+| `binding.field-unknown` | 14 | bound field is not an EWS field of any local State Compiler |
 | `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |
 | `grounding.ontology-term` | 14 | expanded binding IRI is not a term of a dependency OntologyPackage |

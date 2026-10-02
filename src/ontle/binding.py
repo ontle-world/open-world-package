@@ -36,7 +36,7 @@ def binding_curies(doc: dict[str, Any]) -> list[tuple[str, str]]:
 
 
 def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict[str, dict[str, Any]],
-                   view_includes: set[str], declared: set[str]) -> tuple[list[str], list[str]]:
+                   ews_fields: dict[str, list[str] | None], view_includes: set[str], declared: set[str]) -> tuple[list[str], list[str]]:
     """Single-package checks for every local SemanticBinding and spec.world.semanticBinding."""
     errors: list[str] = []
     warnings: list[str] = []
@@ -44,12 +44,7 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
     named = world.get("semanticBinding")
     if named is not None and local_kinds.get(named) != "SemanticBinding":
         errors.append(f"binding.asset: spec.world.semanticBinding {named!r} must be a listed local SemanticBinding asset")
-    schema_fields: set[str] = set()
-    for rel, kind in local_kinds.items():
-        if kind == "StateCompilerProfile":
-            schema = ((docs.get(rel) or {}).get("spec") or {}).get("outputSchema")
-            fields = schema.get("fields") if isinstance(schema, dict) else None
-            schema_fields |= {f for f in fields or [] if isinstance(f, str)}
+    schema_fields = {f for fields in ews_fields.values() for f in fields or []}
     boundary = world.get("boundary") if isinstance(world.get("boundary"), dict) else {}
     scope = {x for x in boundary.get("included") or [] if isinstance(x, str)} | view_includes
     for rel, kind in sorted(local_kinds.items()):
@@ -69,7 +64,7 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
             if "path" in value and not isinstance(value["path"], list):
                 errors.append(f"binding.curie: {rel}: spec.fields.{field}.path must be a list of CURIEs")
             if field not in schema_fields:
-                errors.append(f"binding.field-unknown: {rel}: spec.fields.{field} is not in any local State Compiler outputSchema.fields")
+                errors.append(f"binding.field-unknown: {rel}: spec.fields.{field} is not an EWS field of any local State Compiler")
         for where, value in binding_curies(doc):
             if not _is_curie(value):
                 errors.append(f"binding.curie: {rel}: {where} {value!r} must be a CURIE <prefix>:<local name>")

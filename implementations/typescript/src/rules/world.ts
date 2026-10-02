@@ -1,5 +1,8 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { Context, error, hasAssetOfKind, LocalAsset, localAssetsOfKind, Profile, PROFILES, warn } from "../context.js";
-import { get, isNonEmptyString, isObj } from "../util.js";
+import { Problem } from "../structure.js";
+import { get, isNonEmptyString, isObj, normalizeRelPath, Obj, staysInside } from "../util.js";
 
 /**
  * Spec section 6.1: WorldPackage conformance profiles.
@@ -85,20 +88,18 @@ const stateful: ProfileCheck = (ctx, w) => {
       out.push({ rule: "profile.stateful.output-contract", msg: `StateCompilerProfile ${c.rawPath} must declare spec.outputContract: EffectiveWorldState` });
     }
     // Spec 6.1 (round 3): malformed bindings fail stateful for declared and satisfied profile.
-    for (const m of bindingProblems(s)) out.push({ rule: "compiler.binding", msg: `StateCompilerProfile ${c.rawPath}: ${m}` });
+    for (const m of bindingProblems(s, outputSchemaFields(ctx.root, s, c.rawPath).fields)) out.push({ rule: "compiler.binding", msg: `StateCompilerProfile ${c.rawPath}: ${m}` });
   }
   return out;
 };
 
-const modelReady: ProfileCheck = (_ctx, w) => {
+const modelReady: ProfileCheck = (ctx, w) => {
   const out: Failure[] = [];
   for (const c of w.compilers) {
     if (!c.exists || !isObj(c.doc)) continue; // reported at stateful
-    const s = assetSpec(c);
-    const fields = get(s, "outputSchema", "fields");
-    const hasFields = Array.isArray(fields) && fields.length > 0;
-    if (!hasFields && !isNonEmptyString(s?.outputSchemaRef)) {
-      out.push({ rule: "profile.model-ready.output-schema", msg: `StateCompilerProfile ${c.rawPath} must declare a non-empty spec.outputSchema.fields or spec.outputSchemaRef` });
+    const fields = outputSchemaFields(ctx.root, assetSpec(c), c.rawPath).fields;
+    if (!fields || fields.length === 0) {
+      out.push({ rule: "profile.model-ready.output-schema", msg: `StateCompilerProfile ${c.rawPath} must declare a non-empty spec.outputSchema.fields or a resolvable spec.outputSchemaRef` });
     }
   }
   return out;
@@ -163,16 +164,54 @@ export function checkWorldPackage(ctx: Context): void {
   }
 }
 
-/** Spec 12.2: binding keys are outputSchema fields; from/value strings; select latest|all. */
-export function bindingProblems(spec: Record<string, unknown> | undefined): string[] {
+/**
+ * Spec 12.1: a State Compiler's EWS fields are spec.outputSchema.fields, or the top-level
+ * `properties` keys of the package-relative JSON Schema named by spec.outputSchemaRef.
+ * `fields` is null when the compiler declares no field list.
+ */
+export function outputSchemaFields(root: string, spec: Obj | undefined, file: string): { fields: string[] | null; problems: Problem[] } {
+  const declared = get(spec, "outputSchema", "fields");
+  const fields = Array.isArray(declared) ? declared.filter((f): f is string => typeof f === "string") : null;
+  const ref = spec?.outputSchemaRef;
+  if (ref === undefined) return { fields, problems: [] };
+  const bad = (msg: string) => ({ fields, problems: [{ rule: "compiler.output-schema-ref", msg: `StateCompilerProfile ${file} spec.outputSchemaRef ${msg}` }] });
+  if (typeof ref !== "string" || ref.startsWith("./")) return bad("must be a relative POSIX path without a leading './'");
+  const rel = normalizeRelPath(ref);
+  const abs = rel === null ? null : path.join(root, rel);
+  if (abs === null || !fs.existsSync(abs) || !staysInside(root, abs)) return bad(`${JSON.stringify(ref)} must name a file inside the package`);
+  let doc: unknown;
+  try {
+    doc = JSON.parse(fs.readFileSync(abs, "utf8"));
+  } catch (e) {
+    return bad(`${JSON.stringify(ref)} is not a readable JSON document: ${(e as Error).message}`);
+  }
+  const props = get(doc, "properties");
+  if (!isObj(props) || Object.keys(props).length === 0) return bad(`${JSON.stringify(ref)} must be a JSON Schema with a non-empty top-level properties object`);
+  const listed = Object.keys(props);
+  if (fields !== null && (new Set(fields).size !== listed.length || !listed.every((f) => fields.includes(f)))) {
+    return { fields, problems: [{ rule: "compiler.output-schema-mismatch", msg: `StateCompilerProfile ${file} spec.outputSchema.fields and the properties of ${JSON.stringify(ref)} list different fields` }] };
+  }
+  return { fields: listed, problems: [] };
+}
+
+/** Spec 12.1: every local State Compiler's outputSchemaRef resolves, whatever the package kind or profile. */
+export function checkCompilerSchemas(ctx: Context): void {
+  for (const c of localAssetsOfKind(ctx, "StateCompilerProfile")) {
+    if (!isObj(c.doc)) continue;
+    const spec = isObj(c.doc.spec) ? c.doc.spec : undefined;
+    for (const p of outputSchemaFields(ctx.root, spec, c.rawPath).problems) error(ctx, p.rule, p.msg, c.rawPath);
+  }
+}
+
+/** Spec 12.2: binding keys are EWS fields of the compiler; from/value strings; select latest|all. */
+export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFields: string[] | null): string[] {
   const out: string[] = [];
   if (!spec || spec.bindings === undefined) return out;
   const b = spec.bindings;
   if (!isObj(b)) return ["spec.bindings must be a mapping"];
-  const fieldsRaw = get(spec, "outputSchema", "fields");
-  const fields = new Set(Array.isArray(fieldsRaw) ? fieldsRaw.filter((f) => typeof f === "string") : []);
+  const fields = new Set(ewsFields ?? []);
   for (const [key, v] of Object.entries(b)) {
-    if (!fields.has(key)) out.push(`binding "${key}" is not a field of spec.outputSchema.fields`);
+    if (!fields.has(key)) out.push(`binding "${key}" is not an EWS field of the compiler`);
     if (!isObj(v)) {
       out.push(`binding "${key}" must be a mapping {from, value, select}`);
       continue;

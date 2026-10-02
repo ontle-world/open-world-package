@@ -42,7 +42,7 @@ Order matters: each item can change verdicts, so both implementations and the su
 
 1. ~~Define the `standardBindings` shape in the spec and validate that bound references are pinned.~~ Done: spec section 5.3 (`standard`, `ref`, `license`, `terms`); a bound reference must be pinned and licensed. The examples use this shape.
 2. ~~Choose public artifacts with compatible licenses.~~ Done: chosen for pinnability, license, fit to the World, size, and anonymous download.
-3. ~~Bind them in the examples.~~ Done. Open: the LeRobot dataset is a personal repository (pinning keeps it reproducible, not available), and the OPC UA binding does not pin the DI and IA models Machinery requires.
+3. ~~Bind them in the examples.~~ Done. Open: the LeRobot dataset is a personal repository (pinning keeps it reproducible, not available), and the OPC UA bindings pin Machinery with its DI and IA models but not the core OPC UA model.
 
 ## 4. End-to-end demos
 

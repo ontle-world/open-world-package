@@ -1,6 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: ActorProfile
-metadata: {name: executive}
-spec:
-  actorType: human
-  roleRefs: [roles/executive.yaml]

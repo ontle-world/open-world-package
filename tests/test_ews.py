@@ -11,7 +11,6 @@ SUITE = REPO / "conformance"
 EXAMPLES = [
     (REPO / "examples" / "business" / "manufacturing-quality-world", "state/quality-incident-compiler.yaml", "2026-09-05T00:00:00Z"),
     (REPO / "examples" / "physical-ai" / "mobile-manipulation-world", "state/pick-place-compiler.yaml", "2026-09-01T12:00:03Z"),
-    (REPO / "examples" / "business" / "management-report-world", "state/executive-summary-compiler.yaml", "2026-10-02T09:00:00Z"),
 ]
 
 

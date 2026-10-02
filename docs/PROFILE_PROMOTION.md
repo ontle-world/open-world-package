@@ -23,16 +23,16 @@ Promoted to the standard (spec section 15): EvaluationProfile `assessmentKind`, 
 
 | Profile | Semantic | Portability | Example domains | Machine contract | Interoperability |
 |---|---|---|---|---|---|
-| ActorProfile, RoleProfile, DelegationProfile (C.3) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
-| WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
-| WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
-| ArtifactContract (C) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
-| EvaluationProfile `evaluatorRef` (C.4) | reviewed | yes | manufacturing, research, robotics, management | schema, cases | 2 implementations, round trips |
+| ActorProfile, RoleProfile, DelegationProfile (C.3) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| ArtifactContract (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| EvaluationProfile `evaluatorRef` (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
 | CapabilityContract `outcomeRefs` (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
-| KnowledgeAsset (C) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
+| TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| KnowledgeAsset (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 | KnowledgeExtractionProfile (C.1) | reviewed | yes | manufacturing, sales, research | schema, cases, extraction suite | 2 implementations, round trips |
-| ConsumerRepresentationProfile (C) | reviewed | yes | manufacturing, sales, research, management | schema, cases | 2 implementations, round trips |
+| ConsumerRepresentationProfile (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 
 Round trips: every example and valid conformance case keeps its verdict, error ids, and warning ids after `ontle pack` and unpacking (`tests/test_roundtrip.py`) and after every YAML file is re-serialized in a different layout (Python `tests/test_roundtrip.py`, TypeScript `scripts/check-roundtrip.mjs`).
 

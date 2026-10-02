@@ -1,6 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: ActorProfile
-metadata: {name: report-agent}
-spec:
-  actorType: ai_agent
-  capabilityRefs: [capabilities/bi-read.yaml]

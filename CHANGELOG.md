@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The TypeScript implementation builds with TypeScript 7 and requires Node.js 24 or later; CI runs it on Node.js 24 and 26. GitHub Actions are on their current majors.
 - The spec is split: `spec/OWP_SPEC.md` keeps the core (sections 1–8, 10, 11, 13, Appendices A, B); `OWP_SEMANTICS.md` (3.1, 14), `OWP_EVALUATION_AND_STATE.md` (9, 12, 15), and `OWP_EXPERIMENTAL.md` (Appendix C) hold the profiles. Section numbers are unchanged. `docs/REFERENCES.md` lists the six reference forms and where each is used.
 - Asset files may omit `apiVersion` (inherited from `owp.yaml`); a different value is `asset.api-version`. Generated assets omit it.
 - `ontle validate` prints errors that are likely consequences of a misspelt field under that field's error.

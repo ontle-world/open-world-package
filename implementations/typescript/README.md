@@ -8,7 +8,7 @@ Status: public alpha, not published to npm (`"private": true`).
 
 ## Use
 
-Requires Node.js 20 or later.
+Requires Node.js 24 or later. CI runs on Node.js 24 and 26.
 
 ```bash
 npm ci

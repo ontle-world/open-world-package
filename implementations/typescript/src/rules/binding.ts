@@ -8,6 +8,7 @@ import { FIELD_BINDING, Problem, SEMANTIC_BINDING, structureProblems } from "../
 import { get, isObj, Obj } from "../util.js";
 import { localViewIncludes } from "./experimental.js";
 import { expandCurie } from "./ontology.js";
+import { compilerFields } from "./world.js";
 
 const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
 const isCurie = (v: unknown): v is string => typeof v === "string" && CURIE_RE.test(v);
@@ -46,8 +47,7 @@ export function checkSemanticBindings(ctx: Context): void {
   const schemaFields = new Set<string>();
   for (const a of ctx.localAssets) {
     if (a.kind !== "StateCompilerProfile") continue;
-    const f = get(a.doc, "spec", "outputSchema", "fields");
-    for (const x of Array.isArray(f) ? f : []) if (typeof x === "string") schemaFields.add(x);
+    for (const x of compilerFields(ctx, a).fields ?? []) schemaFields.add(x);
   }
   const boundary = get(w, "boundary", "included");
   const scope = new Set([...(Array.isArray(boundary) ? boundary.filter((x): x is string => typeof x === "string") : []), ...localViewIncludes(ctx)]);
@@ -70,7 +70,7 @@ export function checkSemanticBindings(ctx: Context): void {
         }
         structureProblems(v, FIELD_BINDING, ctx.extensionNames).forEach((p) => report({ rule: p.rule, msg: `${at}: ${p.msg}` }));
         if ("path" in v && !Array.isArray(v.path)) report({ rule: "binding.curie", msg: `${at}.path must be a list of CURIEs` });
-        if (!schemaFields.has(field)) report({ rule: "binding.field-unknown", msg: `${at} is not in any local State Compiler outputSchema.fields` });
+        if (!schemaFields.has(field)) report({ rule: "binding.field-unknown", msg: `${at} is not an EWS field of any local State Compiler` });
       }
     }
     for (const [where, value] of bindingCuries(doc)) {

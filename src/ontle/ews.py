@@ -11,28 +11,20 @@ from pathlib import Path
 import re
 from typing import Any
 
-import yaml
-
-from .core import EWS, OWPError, load_manifest
+from .core import EWS, OWPError, load_manifest, output_schema_fields
 from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
+from .yamlio import YAMLError, load_yaml
 
 SELECTORS = {"latest", "all"}
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
-class _TextTimestampLoader(yaml.SafeLoader):
-    """SafeLoader that keeps unquoted timestamps as their source text (spec 12: timestamps are compared as text)."""
-
-
-_TextTimestampLoader.yaml_implicit_resolvers = {
-    ch: [(tag, rx) for tag, rx in resolvers if tag != "tag:yaml.org,2002:timestamp"]
-    for ch, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
-}
-
-
 def load_document(path: str | Path) -> Any:
-    """Load an ObservationSet or EWS document without converting timestamps."""
-    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_TextTimestampLoader)
+    """Load an ObservationSet or EWS document (YAML 1.2 core schema: timestamps stay text)."""
+    try:
+        return load_yaml(Path(path).read_text(encoding="utf-8"))
+    except YAMLError as exc:
+        raise OWPError(f"cannot parse {path}: {exc}") from exc
 
 
 def _valid_timestamp(value: Any) -> bool:
@@ -80,7 +72,7 @@ def _asset_kind(manifest: dict[str, Any], rel: str) -> str | None:
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data = load_yaml(path.read_text(encoding="utf-8"))
     except Exception as exc:
         raise OWPError(f"cannot parse {path}: {exc}") from exc
     if not isinstance(data, dict):
@@ -97,24 +89,17 @@ def load_compiler(world_root: Path, manifest: dict[str, Any], compiler_path: str
     return spec
 
 
-def schema_fields(compiler: dict[str, Any]) -> list[str]:
-    schema = compiler.get("outputSchema")
-    fields = schema.get("fields") if isinstance(schema, dict) else None
-    return [f for f in fields if isinstance(f, str)] if isinstance(fields, list) else []
-
-
-def binding_errors(compiler: dict[str, Any], rel: str) -> list[str]:
-    """Static checks for spec.bindings, used by the package validator."""
+def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None) -> list[str]:
+    """Static checks for spec.bindings against the compiler's EWS fields (`output_schema_fields`)."""
     bindings = compiler.get("bindings")
     if bindings is None:
         return []
     if not isinstance(bindings, dict):
         return [f"compiler.binding: StateCompilerProfile {rel} spec.bindings must be a mapping of EWS field to binding"]
     errors: list[str] = []
-    fields = set(schema_fields(compiler))
     for field, b in bindings.items():
-        if field not in fields:
-            errors.append(f"compiler.binding: StateCompilerProfile {rel} binds {field!r}, which is not in spec.outputSchema.fields")
+        if field not in (fields or []):
+            errors.append(f"compiler.binding: StateCompilerProfile {rel} binds {field!r}, which is not one of its EWS fields")
         if not isinstance(b, dict) or not isinstance(b.get("from"), str) or not isinstance(b.get("value"), str):
             errors.append(f"compiler.binding: StateCompilerProfile {rel} binding {field!r} must declare string from and value")
         elif b.get("select", "latest") not in SELECTORS:
@@ -154,7 +139,8 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
     bindings = compiler.get("bindings")
     if not isinstance(bindings, dict):
         raise OWPError(f"ews.opaque-compiler: {compiler_path} declares no spec.bindings; opaque compilers cannot be run by the reference compiler")
-    errors = binding_errors(compiler, compiler_path)
+    fields, errors = output_schema_fields(world_root, compiler, compiler_path)
+    errors += binding_errors(compiler, compiler_path, fields)
     if errors:
         raise OWPError("; ".join(errors))
     obs = _observations(observations)
@@ -163,7 +149,7 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
     unresolved: dict[str, list[Any]] = {}
     missing: list[str] = []
     provenance: dict[str, list[str]] = {}
-    for field in schema_fields(compiler):
+    for field in fields or []:
         b = bindings.get(field)
         if b is None:
             missing.append(field)
@@ -229,20 +215,21 @@ def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
     if not _valid_timestamp(as_of):
         errors.append("ews.as-of: spec.context.asOf must be UTC YYYY-MM-DDTHH:MM:SSZ")
 
-    fields = schema_fields(compiler)
+    fields, field_errors = output_schema_fields(world_root, compiler, compiler_ref.partition("#")[2])
+    errors += field_errors
     state = spec.get("state") if isinstance(spec.get("state"), dict) else None
     unresolved = spec.get("unresolved", {}) if isinstance(spec.get("unresolved", {}), dict) else None
     missing = spec.get("missing", []) if isinstance(spec.get("missing", []), list) else None
     provenance = spec.get("provenance", {}) if isinstance(spec.get("provenance", {}), dict) else None
     if state is None or unresolved is None or missing is None or provenance is None:
         return errors + ["ews.shape: spec.state must be a mapping; unresolved/provenance mappings and missing list when present"]
-    for field in fields if (compiler.get("outputSchema") or {}).get("fields") is not None else []:
+    for field in fields or []:
         placements = (field in state) + (field in unresolved) + (field in missing)
         if placements != 1:
             errors.append(f"ews.field-placement: field {field!r} must appear in exactly one of state, unresolved, missing (found {placements})")
-    for field in list(state) + list(unresolved) + list(missing) if (compiler.get("outputSchema") or {}).get("fields") is not None else []:
+    for field in list(state) + list(unresolved) + list(missing) if fields is not None else []:
         if field not in fields:
-            errors.append(f"ews.field-unknown: field {field!r} is not in the State Compiler outputSchema")
+            errors.append(f"ews.field-unknown: field {field!r} is not an EWS field of the State Compiler")
     for field, alternatives in unresolved.items():
         if not isinstance(alternatives, list) or len(_distinct(alternatives)) < 2:
             errors.append(f"ews.unresolved-alternatives: unresolved field {field!r} must retain at least two distinct alternatives")

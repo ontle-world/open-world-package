@@ -9,7 +9,7 @@ OWP has six reference forms. Each one is used in fixed places, so you never have
 | Asset in another package | `acme/quality-world@1.2.0#views/manager.yaml` | one asset of a dependency | `compatibleWorldViews`, `compatibleStateCompilers`, `subject.ref` across packages |
 | CURIE | `qual:Defect` | an ontology term | SemanticBinding, ontology term index; the prefix comes from a dependency OntologyPackage (section 14) |
 | Extension name | `acme-quality:LineBalancingProfile` | a publisher-defined kind or value | asset `kind`, value-set fields, ExternalRef `provider`; the prefix is the `as` name of a declared extension (section 13) |
-| ExternalRef | `{provider: oci, uri: ..., digest: sha256:...}` | an artifact outside any package | `spec.assets[].ref`, `artifactRef`, `standardBindings[].ref`, knowledge `content` (section 5.1) |
+| ExternalRef | `{provider: oci, uri: ..., digest: sha256:...}` | an artifact outside any package | `spec.assets[].ref`, `artifactRef`, `standardBindings.<name>.ref`, knowledge `content` (section 5.1) |
 
 How to tell them apart at a glance:
 

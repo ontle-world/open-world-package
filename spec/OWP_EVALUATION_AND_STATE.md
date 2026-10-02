@@ -76,7 +76,7 @@ spec:
   provenance: {a.latest: [o2], b.pose: [o5, o6]}
 ```
 
-Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents are loaded with YAML 1.2 core schema rules into the JSON data model (YAML 1.1 loaders that produce date objects must be configured not to), including values inside `values`.
+Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents, including values inside `values`, are read under the YAML rules of section 5.2, so unquoted timestamps stay strings.
 
 ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. An ObservationSet MAY carry `spec.provenance` (`extraction`, `parameters`, `snapshot`) recording where its observations came from; compilation ignores it. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
 
@@ -84,10 +84,17 @@ Values are compared in the JSON data model: types must match (a boolean never eq
 
 ### 12.1 Output contract (applies to every runtime)
 
+A State Compiler's EWS fields are `spec.outputSchema.fields`, or the field names listed by `spec.outputSchemaRef`:
+
+- `outputSchemaRef` is a package-relative path in the form of a local asset path (section 5): relative POSIX, without a leading `./`, naming a file inside the package. The file need not be listed in `spec.assets`. `outputSchemaRef: null` counts as absent.
+- The file is a UTF-8 JSON document (RFC 8259; `NaN` and `Infinity` are not JSON) holding a JSON Schema whose top-level `properties` is a non-empty object. Its keys are the EWS fields. The subschemas are informative in this alpha; validators do not apply them to EWS values.
+- A reference that is malformed, missing, unreadable, not JSON, or lacks such `properties` is the error `compiler.output-schema-ref`, and it contributes no fields.
+- A compiler that declares both MUST list the same set of fields in each (`compiler.output-schema-mismatch`); `outputSchema.fields`, in its order, is then used.
+
 An EWS document conforms to its State Compiler when:
 
 - `worldRef` is the World's identity, `stateCompiler` is `<worldRef>#<compiler path>`, and `worldView` is `<worldRef>#<the compiler's worldViewRef>`.
-- When the compiler declares `outputSchema.fields`, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears. A compiler with only `outputSchemaRef` skips these field rules in this alpha.
+- When the compiler has EWS fields, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears.
 - Each `unresolved` field retains at least two distinct alternatives.
 - Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a listed local asset.
 - `provenance` has entries only for fields in `state` or `unresolved`; when the compiler declares `traceRequired: true`, every such field has non-empty provenance.
@@ -107,7 +114,7 @@ spec:
     inspection.results: {from: QMS.inspection, value: result, select: all}
 ```
 
-Binding keys MUST be fields of `outputSchema.fields`; `from` and `value` are strings; `select` is `latest` (default) or `all`.
+Binding keys MUST be EWS fields of the compiler (section 12.1); `from` and `value` are strings; `select` is `latest` (default) or `all`.
 
 Input is an `ObservationSet`:
 

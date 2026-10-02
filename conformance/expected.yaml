@@ -82,6 +82,35 @@ cases:
     valid: true
     satisfiedProfile: model-ready
     rule: "model-ready may be satisfied by outputSchemaRef."
+  compiler-output-schema-ref-missing-file:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "outputSchemaRef must name a JSON Schema file in the package; an unresolvable reference gives no EWS fields."
+  compiler-output-schema-ref-no-properties:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "The JSON Schema named by outputSchemaRef must have a non-empty top-level properties object."
+  compiler-output-schema-mismatch:
+    valid: false
+    errors: [compiler.output-schema-mismatch]
+    satisfiedProfile: model-ready
+    rule: "When a compiler declares both, outputSchema.fields and the properties of outputSchemaRef list the same fields."
+  compiler-output-schema-ref-null:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "outputSchemaRef: null (an empty value) counts as absent, like other optional fields."
+  compiler-output-schema-ref-not-json:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "NaN is not JSON, so the schema named by outputSchemaRef does not resolve (spec section 12.1)."
+  compiler-output-schema-ref-not-utf8:
+    valid: false
+    errors: [compiler.output-schema-ref, profile.model-ready.output-schema]
+    satisfiedProfile: stateful
+    rule: "The schema named by outputSchemaRef is UTF-8; invalid bytes do not resolve (spec section 12.1)."
   package-legacy-manifest:
     valid: false
     errors: [package.legacy-manifest]
@@ -251,6 +280,14 @@ cases:
     errors: [manifest.api-version]
     satisfiedProfile: descriptive
     rule: "apiVersion must be openworld/v1alpha1."
+  manifest-duplicate-key:
+    valid: false
+    errors: [manifest.load]
+    rule: "A mapping with two equal keys does not parse (spec section 5.2)."
+  manifest-yaml-core-scalars:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Plain scalars follow the YAML 1.2 core schema (spec section 5.2): `on` and `1:20` are strings, not true and 80."
   manifest-unknown-kind:
     valid: false
     errors: [manifest.kind]
@@ -270,6 +307,16 @@ cases:
     errors: [asset.yaml]
     satisfiedProfile: descriptive
     rule: "Local YAML assets other than PackageExample must parse."
+  asset-duplicate-key:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "A mapping with two equal keys does not parse (spec section 5.2)."
+  asset-non-string-key:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "Mapping keys are strings (spec section 5.2); the plain key 1 reads as a number."
   world-default-compiler-other-view:
     valid: false
     errors: [profile.stateful.default-compiler-view]
@@ -378,6 +425,10 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "A Hugging Face or git reference is pinned by a commit-hash revision."
+  ref-status-null:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "status: null counts as absent, so the reference is bound (spec section 5.1)."
   ref-oci-digest:
     valid: true
     satisfiedProfile: descriptive
@@ -394,6 +445,30 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "An unpinned bound reference is a warning (ref.unpinned), not an error."
+  standard-binding-valid:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "spec.standardBindings maps names to {standard, ref, license, terms}; a binding may map names to terms, leave its ref unbound, or bind a pinned, licensed artifact (spec section 5.3)."
+  standard-binding-unpinned:
+    valid: false
+    errors: [standard.unpinned]
+    satisfiedProfile: descriptive
+    rule: "A bound reference in a standard binding must be pinned; a branch name is not a commit hash."
+  standard-binding-unlicensed:
+    valid: false
+    errors: [standard.license]
+    satisfiedProfile: descriptive
+    rule: "A standard binding that binds an artifact declares its license."
+  standard-binding-license-null:
+    valid: false
+    errors: [standard.license]
+    satisfiedProfile: descriptive
+    rule: "license: null counts as absent, so a bound artifact without a license value is standard.license."
+  standard-binding-shape:
+    valid: false
+    errors: [standard.binding, schema.unknown-field]
+    satisfiedProfile: descriptive
+    rule: "A standard binding names its standard; keys outside standard, ref, license, terms, and extensions are errors."
   ref-missing-uri:
     valid: false
     errors: [ref.shape]
@@ -761,6 +836,8 @@ cases:
 resolutionCases:
   grounded:
     valid: true
+    resolved:
+      conformance/world@0.1.0: null
     rule: "Grounding paths exist in the referenced World with the right kinds, and the compiler compiles a compatible View."
   unresolvable-world:
     valid: false
@@ -800,9 +877,14 @@ resolutionCases:
     rule: "A resolved dependency must itself be valid."
   descriptive-dependency:
     valid: true
+    resolved:
+      conformance/world@0.1.0: null
+      conformance/taxonomy@1.0.0: null
     rule: "A descriptive World (no View/State Compiler) is a valid dependency."
   archive-source:
     valid: true
+    resolved:
+      conformance/world@0.1.0: sha256:b32748eba0d6b9aadb09ba4a00c641ab85a133515e708b636195b292773156dd
     rule: "A .owp.zip in a directory source is resolved after its lock verifies."
   archive-tampered:
     valid: false
@@ -814,9 +896,14 @@ resolutionCases:
     rule: "An archive containing a file not listed in owp.lock.json is rejected."
   dependency-mapping-source:
     valid: true
+    resolved:
+      conformance/world@0.1.0: null
     rule: "A {ref, source} dependency uses its source, resolved against the declaring package directory."
   diamond:
     valid: true
+    resolved:
+      conformance/world@0.1.0: null
+      conformance/taxonomy@1.0.0: null
     rule: "The same exact version reached twice is not a conflict."
   world-ref-not-world:
     valid: false
@@ -828,6 +915,8 @@ resolutionCases:
     rule: "Cross-package grounding rules apply to every WorldModelPackage in the closure, not only the root."
   git-bundle-source:
     valid: true
+    resolved:
+      conformance/world@0.1.0: git:36e992e5f32a922a5b75ff0f2dae8c3916dffdd2
     rule: "A git source (here a git bundle, resolved relative to the declaring package) is fetched at the tag; the package is found under #subdir."
   git-missing-rev:
     valid: false
@@ -843,6 +932,8 @@ resolutionCases:
 # error: true means a conforming compiler must refuse the input.
   extension-defined:
     valid: true
+    resolved:
+      acme/safety-extension@1.0.0: null
     rule: "A dependency declared with 'as' resolves to a package that declares spec.extensionDefinition."
   extension-without-definition:
     valid: false
@@ -850,6 +941,8 @@ resolutionCases:
     rule: "A dependency declared with 'as' must resolve to a package that declares spec.extensionDefinition."
   binding-grounded:
     valid: true
+    resolved:
+      conformance/onto@0.1.0: null
     rule: "Binding CURIEs expand with the dependency ontology's prefixes to terms it defines."
   binding-prefix-unknown:
     valid: false
@@ -868,6 +961,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
     rule: "select latest takes the value with the greatest observedAt."
+  schema-ref-fields:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    rule: "A compiler with only outputSchemaRef compiles the fields listed by the schema's top-level properties."
   latest-tie-same-value:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
@@ -1003,9 +1100,13 @@ ewsCheckCases:
   trace-not-required:
     valid: true
     rule: "Without traceRequired, provenance may be omitted."
-  schema-ref-only-compiler:
+  schema-ref-valid:
     valid: true
-    rule: "Alpha limitation: a compiler with only outputSchemaRef skips the field rules until outputSchemaRef resolution is specified (see ROADMAP)."
+    rule: "A compiler with only outputSchemaRef takes its EWS fields from the top-level properties of that JSON Schema."
+  schema-ref-field-unknown:
+    valid: false
+    errors: [ews.field-unknown]
+    rule: "Field rules apply to the fields of outputSchemaRef as to outputSchema.fields."
   wrong-kind:
     valid: false
     errors: [ews.kind]

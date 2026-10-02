@@ -9,11 +9,10 @@ import re
 import zipfile
 from typing import Any
 
-import yaml
-
 from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
+from .yamlio import dump_yaml, load_yaml
 
 MANIFEST = "owp.yaml"
 KINDS = {"WorldPackage", "WorldModelPackage", "OntologyPackage"}
@@ -26,7 +25,7 @@ def _load_vocabulary() -> dict[str, str]:
         text = resources.files("ontle.vocab").joinpath("asset-kinds.yaml").read_text(encoding="utf-8")
     except (ModuleNotFoundError, FileNotFoundError):  # editable install: read the repository copy
         text = (Path(__file__).resolve().parents[2] / "vocab" / "asset-kinds.yaml").read_text(encoding="utf-8")
-    groups = yaml.safe_load(text)["groups"]
+    groups = load_yaml(text)["groups"]
     return {kind: entry["stability"] for group in groups.values() for kind, entry in group.items()}
 
 
@@ -67,7 +66,7 @@ def write_manifest(path: Path, data: dict[str, Any]) -> None:
     if path.exists():
         lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
         head = "".join(line for line in lines[:next((i for i, line in enumerate(lines) if not line.startswith("#")), len(lines))])
-    path.write_text(head + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(head + dump_yaml(data), encoding="utf-8")
 
 
 def package_root(path: str | Path) -> Path:
@@ -83,7 +82,7 @@ def load_manifest(path: str | Path) -> tuple[Path, dict[str, Any]]:
     if not manifest_path.exists():
         raise OWPError(f"missing {MANIFEST} in {root}")
     try:
-        data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        data = load_yaml(manifest_path.read_text(encoding="utf-8"))
     except Exception as exc:
         raise OWPError(f"cannot parse {MANIFEST}: {exc}") from exc
     if not isinstance(data, dict):
@@ -106,9 +105,54 @@ def _spec_of(doc: Any) -> dict[str, Any]:
     return spec if isinstance(spec, dict) else {}
 
 
+def _reject_constant(name: str) -> Any:
+    raise ValueError(f"{name} is not JSON")
+
+
+def output_schema_fields(root: Path, cspec: dict[str, Any], rel: str) -> tuple[list[str] | None, list[str]]:
+    """EWS fields of a State Compiler (spec section 12.1) and the errors resolving them.
+
+    The fields are `outputSchema.fields`, or the top-level `properties` keys of the JSON Schema named by
+    `outputSchemaRef`; both must agree when both are present. None means the compiler declares no field list.
+    """
+    schema = cspec.get("outputSchema")
+    declared = schema.get("fields") if isinstance(schema, dict) else None
+    fields = [f for f in declared if isinstance(f, str)] if isinstance(declared, list) else None
+    ref = cspec.get("outputSchemaRef")
+    if ref is None:
+        return fields, []
+    bad = f"compiler.output-schema-ref: StateCompilerProfile {rel} spec.outputSchemaRef"
+    if not ontology_module.inside_package(root, ref):
+        return fields, [f"{bad} {ref!r} must name a file inside the package by a relative POSIX path without a leading './'"]
+    try:
+        doc = json.loads((root / ref).read_text(encoding="utf-8"), parse_constant=_reject_constant)
+    except (OSError, ValueError) as exc:
+        return fields, [f"{bad} {ref!r} is not a readable JSON document: {exc}"]
+    properties = doc.get("properties") if isinstance(doc, dict) else None
+    if not isinstance(properties, dict) or not properties:
+        return fields, [f"{bad} {ref!r} must be a JSON Schema with a non-empty top-level properties object"]
+    if fields is not None:  # both declared: they must agree, and outputSchema.fields (with its order) is used
+        if set(fields) != set(properties):
+            return fields, [f"compiler.output-schema-mismatch: StateCompilerProfile {rel} spec.outputSchema.fields and the properties of {ref!r} list different fields"]
+        return fields, []
+    return list(properties), []
+
+
+def compiler_fields(root: Path, local_asset_kinds: dict[str, str],
+                    local_asset_docs: dict[str, dict[str, Any]]) -> tuple[dict[str, list[str] | None], list[str]]:
+    """EWS fields of every local State Compiler, keyed by asset path, and the errors resolving them."""
+    fields: dict[str, list[str] | None] = {}
+    errors: list[str] = []
+    for rel, kind in sorted(local_asset_kinds.items()):
+        if kind == "StateCompilerProfile":
+            fields[rel], field_errors = output_schema_fields(root, _spec_of(local_asset_docs.get(rel)), rel)
+            errors.extend(field_errors)
+    return fields, errors
+
+
 def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[str],
                           local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
-                          identity: str | None = None) -> list[str]:
+                          ews_fields: dict[str, list[str] | None], identity: str | None = None) -> list[str]:
     """Errors preventing a WorldPackage from satisfying one conformance profile (cumulative)."""
     level = WORLD_PROFILES.index(profile)
     errors: list[str] = []
@@ -148,12 +192,9 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
         if cspec.get("outputContract") != EWS:
             errors.append(f"profile.stateful.output-contract: StateCompilerProfile {rel} must declare spec.outputContract = {EWS}")
         from .ews import binding_errors  # local import: ews depends on core
-        errors.extend(binding_errors(cspec, rel))
-        if level >= 3:
-            schema = cspec.get("outputSchema")
-            fields = schema.get("fields") if isinstance(schema, dict) else None
-            if not (isinstance(fields, list) and fields) and not cspec.get("outputSchemaRef"):
-                errors.append(f"profile.model-ready.output-schema: StateCompilerProfile {rel} must declare spec.outputSchema.fields or spec.outputSchemaRef")
+        errors.extend(binding_errors(cspec, rel, ews_fields.get(rel)))
+        if level >= 3 and not ews_fields.get(rel):
+            errors.append(f"profile.model-ready.output-schema: StateCompilerProfile {rel} must declare spec.outputSchema.fields or a resolvable spec.outputSchemaRef")
     if level < 4:
         return errors
 
@@ -165,11 +206,11 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
 
 def satisfied_world_profile(spec: dict[str, Any], asset_kinds: set[str],
                             local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
-                            identity: str | None = None) -> str | None:
+                            ews_fields: dict[str, list[str] | None], identity: str | None = None) -> str | None:
     """Highest WorldPackage conformance profile the package satisfies, independent of the declared one."""
     satisfied = None
     for profile in WORLD_PROFILES:
-        if _world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, identity):
+        if _world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, ews_fields, identity):
             break
         satisfied = profile
     return satisfied
@@ -309,7 +350,7 @@ def validate_package(path: str | Path) -> ValidationResult:
     errors.extend(structure.extension_definition_errors(spec))
     definition = spec.get("extensionDefinition")
     for rel in (definition.get("schemas") or []) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
-        if isinstance(rel, str) and rel and not ontology_module._inside(root, rel):
+        if isinstance(rel, str) and rel and not ontology_module.inside_package(root, rel):
             errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} must be an existing file inside the package")
 
     card = {
@@ -421,7 +462,7 @@ def validate_package(path: str | Path) -> ValidationResult:
                 continue
             if target.suffix.lower() in {".yaml", ".yml"}:
                 try:
-                    adata = yaml.safe_load(target.read_text(encoding="utf-8"))
+                    adata = load_yaml(target.read_text(encoding="utf-8"))
                 except Exception as exc:
                     errors.append(f"asset.yaml: cannot parse asset YAML {rel}: {exc}")
                     continue
@@ -433,6 +474,11 @@ def validate_package(path: str | Path) -> ValidationResult:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")
                 if isinstance(adata, dict):
                     local_asset_docs[rel] = adata
+                    aspec = adata.get("spec")
+                    if asset_kind != "PackageExample" and isinstance(aspec, dict) and "standardBindings" in aspec:
+                        sb_errors, sb_warnings = structure.standard_binding_issues(aspec["standardBindings"], f"{rel}: spec.standardBindings", extension_names)
+                        errors.extend(sb_errors)
+                        warnings.extend(sb_warnings)
                     if asset_kind == "SemanticBinding":
                         pass  # checked by binding_issues after the asset loop
                     elif asset_kind in experimental.TABLES:
@@ -458,7 +504,9 @@ def validate_package(path: str | Path) -> ValidationResult:
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
                      for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
                      if isinstance(x, str)}
-    bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, view_includes, extension_names)
+    ews_fields, field_errors = compiler_fields(root, local_asset_kinds, local_asset_docs)
+    errors.extend(field_errors)
+    bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, ews_fields, view_includes, extension_names)
     errors.extend(bind_errors)
     warnings.extend(bind_warnings)
 
@@ -491,7 +539,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         if profile not in WORLD_PROFILES:
             errors.append(f"profile.unknown: spec.conformance.profile must be one of {WORLD_PROFILES}")
         else:
-            errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, identity))
+            errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, ews_fields, identity))
     elif kind == "OntologyPackage" and spec.get("conformance") is not None:
         conformance = spec.get("conformance")
         profile = conformance.get("profile") if isinstance(conformance, dict) else None
@@ -515,20 +563,18 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
     summary: dict[str, Any] = {}
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict):
         kinds, docs = _local_assets(root, spec)
+        ews_fields, _ = compiler_fields(root, kinds, docs)
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
         summary["conformance"] = {
             "declared": conformance.get("profile", DEFAULT_WORLD_PROFILE),
             "satisfied": satisfied_world_profile(spec, {k for k in kinds.values()} | _ref_asset_kinds(spec), kinds, docs,
+                                                 ews_fields,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict) and isinstance((spec.get("world") or {}).get("semanticBinding"), str):
-        kinds, docs = _local_assets(root, spec)
         bdoc = docs.get(spec["world"]["semanticBinding"]) or {}
         bound = set(((bdoc.get("spec") or {}).get("fields") or {}))
-        fields = set()
-        for rel, k in kinds.items():
-            if k == "StateCompilerProfile":
-                fields |= set((((docs.get(rel) or {}).get("spec") or {}).get("outputSchema") or {}).get("fields") or [])
+        fields = {f for compiler in ews_fields.values() for f in compiler or []}
         summary["semanticCoverage"] = {"boundFields": len(bound & fields), "fields": len(fields)}
     if data.get("kind") == "OntologyPackage" and isinstance(spec, dict):
         conformance = spec.get("conformance") if isinstance(spec.get("conformance"), dict) else {}
@@ -571,7 +617,7 @@ def _local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dic
         target = (root / item["path"]).resolve()
         try:
             target.relative_to(root)
-            doc = yaml.safe_load(target.read_text(encoding="utf-8"))
+            doc = load_yaml(target.read_text(encoding="utf-8"))
         except Exception:
             continue
         if isinstance(doc, dict):
@@ -584,7 +630,8 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 
 
 def package_files(root: Path) -> list[Path]:
-    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "dist", "build"}
+    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "dist", "build",
+                     ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
     files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():
@@ -625,7 +672,7 @@ def build_lock(root: Path, files: list[Path], extra: dict[str, bytes] | None = N
         "manifest": MANIFEST,
         "manifest_sha256": sha256_bytes(manifest_bytes),
         "files": entries,
-        "externals": lock_externals(yaml.safe_load(manifest_bytes) or {}, vendored),
+        "externals": lock_externals(load_yaml(manifest_bytes) or {}, vendored),
     }
 
 
@@ -719,7 +766,11 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
         else:
             from .distribution import lock_externals
             recorded = [{k: v for k, v in e.items() if k != "vendoredPath"} for e in lock.get("externals") or []]
-            if recorded != lock_externals(yaml.safe_load(zf.read(MANIFEST)) or {}):
+            try:
+                manifest = load_yaml(zf.read(MANIFEST)) or {}
+            except Exception as exc:
+                return False, errors + [f"cannot parse {MANIFEST}: {exc}"]
+            if recorded != lock_externals(manifest):
                 errors.append("lock externals do not match the manifest's external references")
             for entry in lock.get("externals") or []:
                 if entry.get("vendoredPath") and entry["vendoredPath"] not in locked:

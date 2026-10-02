@@ -10,6 +10,8 @@ spec:
     - language_task
   standardBindings:
     ros2:
-      rgb_front: sensor_msgs/msg/Image
-      rgb_wrist: sensor_msgs/msg/Image
-      proprioception: sensor_msgs/msg/JointState
+      standard: ros2
+      terms:
+        rgb_front: sensor_msgs/msg/Image
+        rgb_wrist: sensor_msgs/msg/Image
+        proprioception: sensor_msgs/msg/JointState

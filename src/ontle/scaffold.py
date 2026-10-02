@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from importlib import resources
 import shutil
-import yaml
 
 from .core import MANIFEST_SCHEMA_LINE, OWPError, PACKAGE_REF_RE, write_manifest
 from .structure import EXTENSION_NAME_RE, RESERVED_EXTENSION_NAMES
+from .yamlio import dump_yaml, load_yaml
 
 SCHEMA_BASE = "https://raw.githubusercontent.com/ontle-world/open-world-package/main/schemas/"
 SCHEMAS = {
@@ -82,19 +82,19 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
             shutil.copy2(item, target)
 
     manifest = dest / "owp.yaml"
-    data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+    data = load_yaml(manifest.read_text(encoding="utf-8"))
     data["metadata"]["namespace"] = namespace
     data["metadata"]["name"] = name
-    manifest.write_text(MANIFEST_SCHEMA_LINE + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    manifest.write_text(MANIFEST_SCHEMA_LINE + dump_yaml(data), encoding="utf-8")
 
     state = dest / ".ontle" / "project.yaml"
     state.parent.mkdir(parents=True, exist_ok=True)
-    state.write_text(yaml.safe_dump({
+    state.write_text(dump_yaml({
         "generator": "ontle",
         "template": template,
         "manifest": "owp.yaml",
         "authoring": [p for p in ["WORLD.md", "WORLDMODEL.md", "ONTOLOGY.md"] if (dest / p).exists()],
-    }, sort_keys=False), encoding="utf-8")
+    }), encoding="utf-8")
     return dest
 
 
@@ -181,7 +181,7 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         raise OWPError(f"asset already exists: {target}")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
     metadata = {"name": name}
     if kind in {"EvaluationProfile", "VerifierPackage"}:
         metadata["version"] = "0.1.0"
@@ -202,11 +202,11 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
         return "" if value is None else value
 
     skeleton = blank(skeleton)
-    target.write_text(_header(kind) + yaml.safe_dump({  # apiVersion is inherited from owp.yaml (spec section 5)
+    target.write_text(_header(kind) + dump_yaml({  # apiVersion is inherited from owp.yaml (spec section 5)
         "kind": kind,
         "metadata": metadata,
         "spec": skeleton,
-    }, sort_keys=False), encoding="utf-8")
+    }), encoding="utf-8")
 
     spec = manifest.setdefault("spec", {})
     assets = spec.setdefault("assets", [])
@@ -230,7 +230,7 @@ def add_extension(project: str | Path, ref: str, name: str | None = None, must_u
         name = package_name[: -len("-extension")] if package_name.endswith("-extension") else package_name
     if not EXTENSION_NAME_RE.match(name) or name in RESERVED_EXTENSION_NAMES:
         raise OWPError(f"extension name {name!r} must match [a-z][a-z0-9-]* and must not be owp or openworld")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
     deps = manifest.setdefault("spec", {}).setdefault("dependencies", [])
     for dep in deps:
         existing_ref = dep.get("ref") if isinstance(dep, dict) else dep
@@ -254,7 +254,7 @@ def sync_assets(project: str | Path) -> tuple[list[str], list[str]]:
     manifest_path = root / "owp.yaml"
     if not manifest_path.exists():
         raise OWPError(f"missing owp.yaml in {root}")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
     assets = manifest.setdefault("spec", {}).setdefault("assets", [])
     listed = {a.get("path") for a in assets if isinstance(a, dict)}
     added: list[str] = []
@@ -263,7 +263,7 @@ def sync_assets(project: str | Path) -> tuple[list[str], list[str]]:
         if rel == "owp.yaml" or rel in listed or path.suffix not in {".yaml", ".yml"} or any(p.startswith(".") for p in Path(rel).parts):
             continue
         try:
-            doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+            doc = load_yaml(path.read_text(encoding="utf-8"))
         except Exception:
             continue
         kind = doc.get("kind") if isinstance(doc, dict) else None

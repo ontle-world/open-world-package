@@ -8,8 +8,42 @@ spec:
     QMS: [inspection, nonconformance, claim, capa, verification]
   standardBindings:
     isa95:
-      production_lot: MaterialLot
-      equipment: Equipment
-      operation_execution: OperationsPerformance
+      standard: isa95
+      terms:
+        production_lot: MaterialLot
+        equipment: Equipment
+        operation_execution: OperationsPerformance
     opcua:
-      equipment: companion_specification_unbound
+      # OPC 40001-1 Machinery Basic Building Blocks 1.04.1, namespace http://opcfoundation.org/UA/Machinery/,
+      # NodeSet at UA-Nodeset tag Machinery-1.04.1-2026-01-01. Its required models DI 1.04.0 and IA 1.01.2
+      # are bound below; the core OPC UA model (http://opcfoundation.org/UA/) is not.
+      standard: opcua
+      license: MIT
+      terms:
+        equipment: MachineIdentificationType
+      ref:
+        provider: https
+        uri: https://raw.githubusercontent.com/OPCFoundation/UA-Nodeset/eef8e28490fe7672b5417a2fbdcee7dbd77a6906/Machinery/Opc.Ua.Machinery.NodeSet2.xml
+        digest: sha256:1bc4ba9f70d07c51d3310123f2ae2186703eb6cf4f2d26aea4a2853423b61b41
+        mediaType: application/xml
+        size: 125570
+    opcua-di:
+      # OPC 10000-100 Devices (DI) 1.04.0, http://opcfoundation.org/UA/DI/, tag DI-1.04.0-2022-11-03
+      standard: opcua
+      license: MIT
+      ref:
+        provider: https
+        uri: https://raw.githubusercontent.com/OPCFoundation/UA-Nodeset/08d08a88647c8f874be7dfaf931bde856723ef7f/DI/Opc.Ua.Di.NodeSet2.xml
+        digest: sha256:ec376a3992f38740fd9263ec06e7560af2d56adb8ffdbd5f7ebc813ae0273fe5
+        mediaType: application/xml
+        size: 280102
+    opcua-ia:
+      # OPC 10000-200 Industrial Automation (IA) 1.01.2, http://opcfoundation.org/UA/IA/, tag IA-1.01.2-2024-02-28
+      standard: opcua
+      license: MIT
+      ref:
+        provider: https
+        uri: https://raw.githubusercontent.com/OPCFoundation/UA-Nodeset/2a625ffcd8f04f3890af4d7d7df4a136155a1bec/IA/Opc.Ua.IA.NodeSet2.xml
+        digest: sha256:2a198ed96604eaf473d1ebfb4b29d745a7af8eed74c0f96ab1ac5f1fb71e4de9
+        mediaType: application/xml
+        size: 101403

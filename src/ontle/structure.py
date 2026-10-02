@@ -285,7 +285,7 @@ def external_ref_issues(ref: Any, where: str, declared: set[str]) -> tuple[list[
         return [f"ref.shape: {where} must be a mapping"], []
     errors: list[str] = []
     warnings: list[str] = []
-    status = ref.get("status", "bound")
+    status = "bound" if ref.get("status") is None else ref["status"]  # null counts as absent
     if status not in {"bound", "unbound"}:
         errors.append(f"ref.shape: {where}.status must be bound or unbound")
         return errors, warnings
@@ -324,4 +324,46 @@ def external_ref_issues(ref: Any, where: str, declared: set[str]) -> tuple[list[
     if not pinned:
         how = "a commit-hash revision or a digest" if provider in {"git", "huggingface"} else "a digest"
         warnings.append(f"ref.unpinned: {where} ({provider}) is not pinned; declare {how}")
+    return errors, warnings
+
+
+# Standard binding (spec section 5.3): one entry of an asset's spec.standardBindings.
+STANDARD_BINDING = closed({"standard": VALUE, "ref": EXTERNAL_REF, "license": VALUE, "terms": OPEN})
+
+
+def standard_binding_issues(bindings: Any, where: str, declared: set[str]) -> tuple[list[str], list[str]]:
+    """Errors and warnings for spec.standardBindings. A bound reference must be pinned and licensed."""
+    if not isinstance(bindings, dict):
+        return [f"standard.binding: {where} must be a mapping of binding name to binding"], []
+    errors: list[str] = []
+    warnings: list[str] = []
+    for name, entry in bindings.items():
+        at = f"{where}.{name}"
+        if not isinstance(entry, dict):
+            errors.append(f"standard.binding: {at} must be a mapping")
+            continue
+        errors.extend(structure_errors(entry, STANDARD_BINDING, at, declared))
+        if not isinstance(entry.get("standard"), str) or not entry["standard"]:
+            errors.append(f"standard.binding: {at}.standard must be a non-empty string")
+        terms = entry.get("terms")
+        if terms is not None and not (isinstance(terms, dict) and all(isinstance(v, str) for v in terms.values())):
+            errors.append(f"standard.binding: {at}.terms must map names to strings")
+        if "ref" not in entry and terms is None:
+            errors.append(f"standard.binding: {at} must declare ref, terms, or both")
+        license_ = entry.get("license")
+        if license_ is not None and not (isinstance(license_, str) and license_):
+            errors.append(f"standard.binding: {at}.license must be a non-empty SPDX license expression")
+        if "ref" not in entry:
+            continue
+        ref_errors, ref_warnings = external_ref_issues(entry["ref"], f"{at}.ref", declared)
+        errors.extend(ref_errors)
+        for warning in ref_warnings:
+            rule, _, message = warning.partition(":")
+            if rule == "ref.unpinned":
+                errors.append(f"standard.unpinned: {message.strip()}")
+            else:
+                warnings.append(warning)
+        bound = isinstance(entry["ref"], dict) and entry["ref"].get("status") in (None, "bound")
+        if bound and not ref_errors and license_ is None:
+            errors.append(f"standard.license: {at} binds an artifact and must declare license")
     return errors, warnings

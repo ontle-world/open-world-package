@@ -1,0 +1,23 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: openworld-examples/manufacturing-quality-world@0.1.0
+  worldView: openworld-examples/manufacturing-quality-world@0.1.0#views/quality-incident-task.yaml
+  stateCompiler: openworld-examples/manufacturing-quality-world@0.1.0#state/quality-incident-compiler.yaml
+  context: {asOf: '2026-09-10T18:00:00Z'}
+  state:
+    quality_incident.status: closed
+    claim.status: closed
+    lot.genealogy: [RM-778, RM-779]
+    equipment.condition_events: [vibration_warning, vibration_cleared]
+    inspection.results: [seal_leak_detected, seal_ok]
+    capa.status: verified
+  unresolved: {}
+  missing: [evidence.open_hypotheses, lot.equipment, equipment.parts]
+  provenance:
+    quality_incident.status: [qms-nonconformance-2]
+    claim.status: [qms-claim-2]
+    lot.genealogy: [mes-production-lot-1]
+    equipment.condition_events: [mes-equipment-1, mes-equipment-2]
+    inspection.results: [qms-inspection-1, qms-inspection-2]
+    capa.status: [qms-capa-4]

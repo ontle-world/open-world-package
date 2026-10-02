@@ -38,9 +38,12 @@ class ResolveTests(unittest.TestCase):
         for case_id, exp in expected.items():
             with self.subTest(case=case_id):
                 case = SUITE / "resolution" / case_id
-                result, _ = validate_resolved(case / "root", [str(case / "packages")])
+                result, resolution = validate_resolved(case / "root", [str(case / "packages")])
                 self.assertEqual(result.valid, exp["valid"], result.errors)
                 self.assertLessEqual(set(exp.get("errors", [])), rule_ids(result.errors), result.errors)
+                if "resolved" in exp:
+                    recorded = {i: p.revision for i, p in resolution.packages.items() if i != resolution.root.identity}
+                    self.assertEqual(recorded, exp["resolved"])
 
     def test_examples_resolve_across_packages(self):
         # The business World depends on the quality ontology, so its model's closure has three packages.

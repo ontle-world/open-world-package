@@ -15,8 +15,9 @@
     "conformance": "node dist/conformance.js",
     "examples": "node dist/cli.js ../../examples/business/manufacturing-quality-world ../../examples/business/sales-prioritization-world ../../examples/physical-ai/mobile-manipulation-world ../../examples/ontology/quality-ontology ../../examples/research/assay-optimization-world && node dist/cli.js --resolve --source ../../examples ../../examples/business/quality-transition-world-model ../../examples/physical-ai/multimodal-action-world-model && node scripts/check-examples-ews.mjs",
     "probes": "node scripts/make-probes.mjs && node dist/conformance.js --suite probes",
-    "test": "npm run build && npm run vocab && npm run conformance && npm run examples && npm run roundtrip",
+    "test": "npm run build && npm run vocab && npm run conformance && npm run examples && npm run demos && npm run probes && npm run roundtrip",
     "vocab": "node scripts/check-vocab.mjs",
+    "demos": "node scripts/check-demos.mjs",
     "roundtrip": "node scripts/check-roundtrip.mjs"
   },
   "dependencies": {

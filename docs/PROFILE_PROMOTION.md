@@ -36,4 +36,4 @@ Promoted to the standard (spec section 15): EvaluationProfile `assessmentKind`, 
 
 Round trips: every example and valid conformance case keeps its verdict, error ids, and warning ids after `ontle pack` and unpacking (`tests/test_roundtrip.py`) and after every YAML file is re-serialized in a different layout (Python `tests/test_roundtrip.py`, TypeScript `scripts/check-roundtrip.mjs`).
 
-Still open for every profile: independent review of the semantic gate, an implementation maintained outside this repository (see `ROADMAP.md` section 6), and the maintainers' publication decision.
+Still open for every profile: independent review of the semantic gate and the maintainers' publication decision.

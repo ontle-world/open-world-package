@@ -59,6 +59,8 @@ export interface Context {
   satisfiedProfile?: string | null;
   /** Declared (or, for a WorldPackage, defaulted) conformance profile. */
   declaredProfile?: string;
+  /** EWS fields of local State Compilers by asset path (spec 12.1), resolved once per validation. */
+  ewsFields?: Map<string, { fields: string[] | null; problems: { rule: string; msg: string }[] }>;
 }
 
 export function error(ctx: Pick<Context, "errors">, code: string, message: string, file?: string): void {

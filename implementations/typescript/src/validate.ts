@@ -3,7 +3,7 @@ import * as path from "node:path";
 import { Context, error, Issue, warn } from "./context.js";
 import { checkManifest } from "./rules/manifest.js";
 import { checkSemanticAssetShape, collectAssets } from "./rules/assets.js";
-import { checkWorldPackage } from "./rules/world.js";
+import { checkCompilerSchemas, checkWorldPackage } from "./rules/world.js";
 import { checkWorldModelPackage, Grounding } from "./rules/worldmodel.js";
 import { checkEvaluation } from "./rules/evaluation.js";
 import { checkOntologyPackage } from "./rules/ontology.js";
@@ -86,6 +86,7 @@ export function validatePackage(dir: string): ValidationResult {
   collectAssets(ctx);
   checkAssetStructure(ctx);
   checkSemanticAssetShape(ctx);
+  checkCompilerSchemas(ctx);
 
   let grounding: Grounding | undefined;
   switch (ctx.packageKind) {

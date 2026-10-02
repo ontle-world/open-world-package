@@ -141,8 +141,9 @@ probe("p-second-compiler-unknown-view", { "owp.yaml": worldManifest({}, {}, [
   ...worldFiles(), "state/other.yaml": compiler("views/missing.yaml") },
   { valid: false, satisfiedProfile: "viewable", rule: "EVERY local StateCompilerProfile names a local WorldViewProfile" });
 probe("p-model-ready-outputschemaref", { "owp.yaml": worldManifest({ conformance: { profile: "model-ready" } }), ...worldFiles(),
-  "state/task.yaml": { apiVersion: AV, kind: "StateCompilerProfile", metadata: { name: "c" }, spec: { worldViewRef: "views/task.yaml", outputContract: "EffectiveWorldState", outputSchemaRef: "schemas/ews.json" } } },
-  { valid: true, satisfiedProfile: "model-ready", rule: "outputSchemaRef alternative; its target is not resolved (unspecified)" });
+  "state/task.yaml": { apiVersion: AV, kind: "StateCompilerProfile", metadata: { name: "c" }, spec: { worldViewRef: "views/task.yaml", outputContract: "EffectiveWorldState", outputSchemaRef: "schemas/ews.json" } },
+  "schemas/ews.json": JSON.stringify({ type: "object", properties: { "entity.state": {} } }) },
+  { valid: true, satisfiedProfile: "model-ready", rule: "outputSchemaRef names a JSON Schema whose top-level properties are the EWS fields (spec 12.1)" });
 probe("p-action-ready-via-refs", { "owp.yaml": worldManifest({ conformance: { profile: "action-ready" } }, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" },
   { kind: "ActionBindingProfile", ref: xref("a") }, { kind: "CommitContract", ref: xref("c") }, { kind: "EffectVerificationProfile", ref: xref("e") }]), ...worldFiles() },
@@ -340,8 +341,9 @@ cprobe("c-unresolved-duplicates", ewsWorld(), ewsDoc({ state: { "b.all": ["b"] }
 cprobe("c-provenance-for-missing", ewsWorld(), ewsDoc({ provenance: { "a.latest": ["o1"], "b.all": ["o2"], "c.unbound": ["o3"] } }), { valid: false, rule: "provenance only for state/unresolved fields" });
 cprobe("c-no-trace-required", ewsWorld({ traceRequired: false }), ewsDoc({ provenance: {} }), { valid: true, rule: "provenance optional without traceRequired" });
 cprobe("c-worldref-self", ewsWorld(), ewsDoc({ worldRef: "self" }), { valid: false, rule: "EWS worldRef must be the identity, not self" });
-cprobe("c-schema-ref-only-compiler", ewsWorld({ outputSchema: undefined, outputSchemaRef: "schemas/ews.json", bindings: undefined }), ewsDoc({}),
-  { valid: true, rule: "outputSchemaRef-only compilers skip the field rules (spec 12.1, round 3)" });
+cprobe("c-schema-ref-only-compiler", { ...ewsWorld({ outputSchema: undefined, outputSchemaRef: "schemas/ews.json", bindings: undefined }),
+  "schemas/ews.json": JSON.stringify({ type: "object", properties: { "a.latest": {}, "b.all": {}, "c.unbound": {} } }) }, ewsDoc({}),
+  { valid: true, rule: "outputSchemaRef-only compilers take their EWS fields from the schema's properties (spec 12.1)" });
 cprobe("c-missing-omitted", ewsWorld(), (() => { const d = ewsDoc({ state: { "a.latest": 1, "b.all": ["b"] } }); delete d.spec.missing; delete d.spec.unresolved; d.spec.state["c.unbound"] = null; d.spec.provenance["c.unbound"] = ["o3"]; return d; })(),
   { valid: true, rule: "a field with null value in state counts as present (unspecified)" });
 cprobe("c-bad-asof", ewsWorld(), ewsDoc({ context: { asOf: "2026-01-01 00:00:10" } }), { valid: false, rule: "asOf must be UTC form" });

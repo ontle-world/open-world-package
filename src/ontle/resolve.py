@@ -21,9 +21,8 @@ import tempfile
 import zipfile
 from typing import Any
 
-import yaml
-
 from .core import MANIFEST, SEMVER_PATTERN, OWPError, ValidationResult, load_manifest, validate_package, verify_archive
+from .yamlio import load_yaml
 
 PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@\s]+)/(?P<name>[^/@\s]+)@(?P<version>{SEMVER_PATTERN})$")
 GIT_SOURCE_RE = re.compile(r"^git\+(?P<url>.+?)@(?P<rev>[^@#]+)(?:#subdir=(?P<subdir>.+))?$")
@@ -303,7 +302,7 @@ def _local_asset_kind(pkg: ResolvedPackage, rel: str) -> str | None:
 
 def _load_asset(pkg: ResolvedPackage, rel: str) -> dict[str, Any]:
     try:
-        doc = yaml.safe_load((pkg.root / rel).read_text(encoding="utf-8"))
+        doc = load_yaml((pkg.root / rel).read_text(encoding="utf-8"))
     except Exception:
         return {}
     return doc if isinstance(doc, dict) else {}

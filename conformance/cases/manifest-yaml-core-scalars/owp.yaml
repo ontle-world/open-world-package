@@ -1,0 +1,13 @@
+# YAML 1.2 core schema (spec section 5.2): these plain scalars are strings.
+# A YAML 1.1 reader would read `on` as true and `1:20` as 80.
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: on
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: 1:20
+  assets: []

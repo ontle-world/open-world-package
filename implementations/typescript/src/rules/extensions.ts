@@ -1,7 +1,8 @@
 import * as path from "node:path";
-import { Context, error } from "../context.js";
+import { Context, error, warn } from "../context.js";
 import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, RESERVED_EXTENSION_NAMES, structureProblems } from "../structure.js";
 import { checkSemanticBindings } from "./binding.js";
+import { standardBindingProblems } from "./externalref.js";
 import { checkStandardFields } from "./standard-fields.js";
 import { checkExperimentalAsset, checkMultiLatest, checkStandardKindFields, checkViewSpecialization, STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
@@ -70,6 +71,12 @@ export function checkExtensionDefinition(ctx: Context): void {
 export function checkAssetStructure(ctx: Context): void {
   for (const a of ctx.localAssets) {
     const doc = a.doc;
+    // Spec 5.3: standard bindings in any local asset other than a PackageExample.
+    if (isObj(doc) && a.kind !== "PackageExample" && isObj(doc.spec) && doc.spec.standardBindings !== undefined) {
+      const r = standardBindingProblems(doc.spec.standardBindings, `${a.rawPath}: spec.standardBindings`, ctx.extensionNames);
+      r.errors.forEach((p) => error(ctx, p.rule, p.msg, a.rawPath));
+      r.warnings.forEach((p) => warn(ctx, p.rule, p.msg, a.rawPath));
+    }
     // Spec 8 / 13.3: PackageExample files may hold any document, so they are not checked.
     // SemanticBinding documents are checked by checkSemanticBindings (spec 14).
     if (!isObj(doc) || a.kind === "PackageExample" || a.kind === "SemanticBinding") continue;

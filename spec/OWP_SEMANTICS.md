@@ -69,7 +69,7 @@ Single-package rules:
 
 - `spec.world.semanticBinding`, when present, is a listed local SemanticBinding asset.
 - Every value in `terms`, `observationTypes`, and `actions`, and every `class` and `path` entry in `fields`, is a CURIE `<prefix>:<local name>`.
-- Every key of `fields` is a field of some local State Compiler's `outputSchema.fields`.
+- Every key of `fields` is an EWS field (section 12.1) of some local State Compiler.
 - A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.
 - SemanticBinding documents contain only the fields of `schemas/semantic-binding.schema.json` and `extensions` blocks.
 

@@ -12,7 +12,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 165 validation, 27 resolution, 20 EWS compile, 16 EWS check, 12 extraction cases.
+- Conformance suite: 183 validation, 27 resolution, 21 EWS compile, 17 EWS check, 12 extraction cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3
@@ -24,27 +24,25 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 
 Order matters: each item can change verdicts, so both implementations and the suite move together.
 
-1. **YAML profile for all OWP documents.** Specify the YAML 1.2 core schema for `owp.yaml` and assets, not only for ObservationSet and EWS documents. Today the Python reference reads manifests as YAML 1.1 (`yes` → true, `0755` → 493, `1:20` → 80), while YAML 1.2 loaders do not. Switch the reference loader and add cases.
-2. **`outputSchemaRef` resolution.** Define it as a package-relative JSON Schema that lists EWS fields, apply the §12.1 field rules to it, and retire the `schema-ref-only-compiler` alpha-limitation case.
+1. ~~**YAML profile for all OWP documents.**~~ Done: spec section 5.2; both implementations read every OWP YAML document with the YAML 1.2 core schema and reject duplicate keys.
+2. ~~**`outputSchemaRef` resolution.**~~ Done: spec section 12.1; the EWS fields are the top-level `properties` of a package-relative JSON Schema, and the field rules apply to them.
 3. ~~**Warnings in the suite.**~~ Done: cases may list `warnings`; warning ids are in spec Appendix A.
-4. **Recorded revisions.** Add the expected `git:<commit>` / `sha256:<digest>` revisions to resolution cases so recorded revisions are compared across implementations.
+4. ~~**Recorded revisions.**~~ Done: valid resolution cases list `resolved` (identity and recorded revision); both implementations match them.
 5. ~~**Machine-readable rule ids.**~~ Done: `spec/rule-ids.yaml`, checked by `tests/test_rule_ids.py`.
 
 ## 3. Bind the examples to real external artifacts
 
-The examples currently declare which standard each part uses but leave the artifact unbound (`ref: null`, `status: unbound`):
-
 | Example | Binding | Status |
 |---|---|---|
-| mobile-manipulation-world | ROS 2 message and action types | bound by type name |
-| mobile-manipulation-world | OpenUSD scene | unbound |
-| mobile-manipulation-world | LeRobot episodes (Hugging Face) | unbound |
-| manufacturing-quality-world | ISA-95 object models | bound by name |
-| manufacturing-quality-world | OPC UA companion specification | unbound |
+| mobile-manipulation-world | ROS 2 message and action types | `terms` (type names) |
+| mobile-manipulation-world | OpenUSD scene | bound: `nvidia/PhysicalAI-SimReady-Warehouse-01` @ `c7fe115c`, CC-BY-4.0 |
+| mobile-manipulation-world | LeRobot episodes (Hugging Face) | bound: `k-chan-l/lekiwi_pick_and_place2` @ `de33a7ae`, Apache-2.0 |
+| manufacturing-quality-world | ISA-95 object models | `terms` (object model names) |
+| manufacturing-quality-world | OPC UA companion specification | bound: OPC 40001-1 Machinery 1.04.1 NodeSet, digest-pinned, MIT |
 
-1. Define the `standardBindings` shape in the spec (standard, ref, immutable revision or digest, license, status) and validate that bound references are pinned.
-2. Choose public artifacts with compatible licenses: a LeRobot dataset revision, an OpenUSD scene, and an OPC UA companion specification identifier.
-3. Bind them in the examples. Do not invent repositories or revisions; leave a binding unbound until a real artifact is chosen.
+1. ~~Define the `standardBindings` shape in the spec and validate that bound references are pinned.~~ Done: spec section 5.3 (`standard`, `ref`, `license`, `terms`); a bound reference must be pinned and licensed. The examples use this shape.
+2. ~~Choose public artifacts with compatible licenses.~~ Done: chosen for pinnability, license, fit to the World, size, and anonymous download.
+3. ~~Bind them in the examples.~~ Done. Open: the LeRobot dataset is a personal repository (pinning keeps it reproducible, not available), and the OPC UA bindings pin Machinery with its DI and IA models but not the core OPC UA model.
 
 ## 4. End-to-end demos
 
@@ -56,18 +54,14 @@ World -> View -> State Compiler -> EWS (from real sample data) -> Representation
 
 The Physical AI demo uses the bound LeRobot episodes and scene; the Business AI demo uses sample MES/QMS records mapped through the ISA-95 bindings.
 
+Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detached evidence) and `demos/business-ai/` (sample MES/QMS records through the ISA-95 binding, a rule stub, detached evidence). Both implementations check the EWS and the evidence binding.
+
 ## 5. Distribution without a hosted registry (done in the reference CLI; see spec sections 7, 7.1, 9.1, 11.1)
 
 1. OCI source type: push and pull `.owp.zip` with ORAS to existing registries (GHCR, Docker Hub); record the OCI digest as the revision.
 2. Static package index: a git repository of JSON index files served as static pages, listing identities, versions, and digests.
 
-## 6. Independence and governance
-
-1. Move `implementations/typescript/` to its own repository and publish to npm once it has maintainers of its own; keep running it against this suite in CI.
-2. Invite a third-party implementation; a clean-room implementation by the same authors is weaker evidence than one by an independent party.
-3. Define the promotion criteria for `openworld/v1beta1`: at least two independently maintained implementations, no open High-severity spec ambiguities, and a spec change process (proposal, suite update, both implementations updated).
-
-## 7. Hosted ONTLE Registry (separate platform)
+## 6. Hosted ONTLE Registry (separate platform)
 
 Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here.
 

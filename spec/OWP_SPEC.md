@@ -153,7 +153,7 @@ ref:
   digest: "sha256:<64 lowercase hex>"
   mediaType: application/vnd.openworld.filelist+json
   size: 1234567890                        # informative
-  status: bound                           # bound (default) | unbound
+  status: bound                           # bound (default; also when null) | unbound
 ```
 
 - A bound reference declares `provider` and `uri`. An `unbound` reference records that no artifact has been chosen yet; its other fields are optional. Examples MUST NOT invent artifacts; they use `status: unbound` instead.
@@ -169,7 +169,45 @@ ref:
 | extension providers | defined by the extension |
 
 - Several files are pinned together through a file list: an artifact with `mediaType: application/vnd.openworld.filelist+json` whose content uses the `files` format of `owp.lock.json` (section 7), with `digest` taken over the list. A consumer verifies the list's digest and then each listed file.
-- This alpha validates ExternalRefs in the manifest. ExternalRefs inside asset documents are validated once their asset kind has a JSON Schema.
+- This alpha validates ExternalRefs in the manifest and in standard bindings (section 5.3). Other ExternalRefs inside asset documents are validated once their asset kind has a JSON Schema.
+
+### 5.2 YAML documents
+
+Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS documents) is read with the YAML 1.2 core schema into the JSON data model. YAML 1.1 loaders MUST be configured to follow these rules:
+
+- A plain (unquoted) scalar is null for `~`, `null`, `Null`, `NULL`, or nothing; a boolean for `true`, `True`, `TRUE`, `false`, `False`, `FALSE`; an integer for `[-+]?[0-9]+` (decimal, also with leading zeros), `0o[0-7]+`, or `0x[0-9a-fA-F]+`; a number for `[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?`, `[-+]?.inf` (any of `inf`, `Inf`, `INF`), or `.nan` (`nan`, `NaN`, `NAN`). Every other plain scalar is a string.
+- So `yes`, `no`, `on`, `off`, `1:20`, `1_000`, and `2026-01-01` are strings; `0755` is the integer 755.
+- `<<` is an ordinary key; there are no merge keys.
+- Mapping keys are strings, as in the JSON data model: a key that reads as null, a boolean, or a number (`1:`, `true:`), or a key that is a sequence or mapping, does not parse. Quote such keys (`"1":`).
+- A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
+
+Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.
+
+### 5.3 Standard bindings
+
+An asset ties its parts to external standards (message types, scene formats, dataset formats, information models) under `spec.standardBindings`, a mapping of binding name to binding. This applies to every local YAML asset other than a `PackageExample`.
+
+```yaml
+spec:
+  standardBindings:
+    actions:
+      standard: ros2
+      terms: {grasp: control_msgs/action/GripperCommand}
+    scene:
+      standard: openusd
+      ref: {status: unbound}
+    episodes:
+      standard: lerobot
+      license: Apache-2.0
+      ref: {provider: huggingface, uri: "hf://datasets/<org>/<name>", revision: <commit hash>}
+```
+
+- `standard` (required) names the standard in lowercase, for example `ros2`, `openusd`, `lerobot`, `isa95`, `opcua`.
+- `terms` maps names used in the asset to the standard's type or term names (strings).
+- `ref` is an ExternalRef (section 5.1) to the artifact that realizes the binding, such as a scene, a dataset revision, or a specification document.
+- A binding declares `ref`, `terms`, or both. Other keys are errors (`schema.unknown-field`), apart from an `extensions` block.
+- A bound `ref` MUST be pinned as in section 5.1 (`standard.unpinned`; extension providers define their own pinning) and MUST come with `license`, an SPDX license expression for the artifact (`standard.license`). An `unbound` ref needs neither; examples leave a binding unbound until a real artifact is chosen.
+- A `license` or `terms` that is null counts as absent.
 
 ## 6. World/View/EWS/Model rule
 
@@ -212,10 +250,10 @@ spec:
 | `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset whose `spec.worldRef` is `self` or this package's identity |
 | `stateful` | at least one `StateCompilerProfile`; `spec.world.defaultStateCompiler` is the path of a local `StateCompilerProfile` whose `spec.worldViewRef` equals `spec.world.defaultView`; every local `StateCompilerProfile` has a `spec.worldViewRef` naming a local `WorldViewProfile` path and `spec.outputContract: EffectiveWorldState` |
 | `stateful` (bindings) | a State Compiler's `spec.bindings`, when present, is well formed (section 12.2); a malformed binding fails `stateful` for both the declared and the satisfied profile |
-| `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or `spec.outputSchemaRef` |
+| `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or a `spec.outputSchemaRef` that resolves to EWS fields (section 12.1) |
 | `action-ready` | `ActionBindingProfile`, `CommitContract`, and `EffectVerificationProfile` assets |
 
-Requirements of a profile are checked only when that profile or a higher one is declared. "At least one X asset" and the `action-ready` assets may be local (`path`) or external (`ref`); assets named by `defaultView`, `defaultStateCompiler`, or `worldViewRef`, and State Compilers checked for content, are local. `outputSchemaRef` is any non-empty string; this alpha does not resolve it. A validator MUST reject a package that does not satisfy its declared profile, and SHOULD report the highest profile the package satisfies independent of the declaration.
+Requirements of a profile are checked only when that profile or a higher one is declared. "At least one X asset" and the `action-ready` assets may be local (`path`) or external (`ref`); assets named by `defaultView`, `defaultStateCompiler`, or `worldViewRef`, and State Compilers checked for content, are local. A validator MUST reject a package that does not satisfy its declared profile, and SHOULD report the highest profile the package satisfies independent of the declaration.
 
 Every WorldModelPackage requires compatible View and State Compiler references regardless of the World's profile; in practice the referenced World is `stateful` or higher.
 
@@ -286,6 +324,8 @@ A resolver finds each reference in an ordered list of package sources. This alph
 | directory | a path containing `owp.yaml`, or packages up to two directory levels below it, or `*.owp.zip` files in it | none |
 | archive | a path ending in `.owp.zip`; its `owp.lock.json` hashes MUST verify before use | `sha256:<archive digest>` |
 | git | `git+<url>@<rev>[#subdir=<path>]`; `<url>` may be a remote URL, a local repository path, or a `git bundle` file; a relative local path is resolved like a directory source; `<rev>` SHOULD be an immutable tag or commit; `<subdir>` is scanned like a directory source | `git:<commit>` |
+
+A resolver records, for every package in the closure other than the root, the revision in the table: none for a directory source, `sha256:<archive digest>` for an archive (also one found in a directory source), `git:<commit>` with the full commit hash `<rev>` resolved to. The revision depends only on the bytes fetched, so two resolvers given the same sources record the same revisions.
 
 Resolution rules:
 
@@ -381,7 +421,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 
 | Rule id | Section | Violation |
 |---|---|---|
-| `manifest.load` | 8 | `owp.yaml` missing, unparseable, or not a mapping |
+| `manifest.load` | 5.2, 8 | `owp.yaml` missing, unparseable (including duplicate keys), or not a mapping |
 | `manifest.api-version` | 2 | `apiVersion` is not `openworld/v1alpha1` |
 | `manifest.kind` | 3 | unknown package `kind` |
 | `manifest.metadata` | 2 | `metadata` is not a mapping |
@@ -400,7 +440,10 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.duplicate-path` | 8 | same local path listed twice |
 | `asset.path-escape` | 8 | local path resolves outside the package root |
 | `asset.missing-file` | 8 | local path does not exist |
-| `asset.yaml` | 8 | local YAML asset (including a `PackageExample`) does not parse |
+| `standard.binding` | 5.3 | malformed `spec.standardBindings`: not a mapping, an entry without `standard`, `terms` not a mapping of strings, an empty `license`, or neither `ref` nor `terms` |
+| `standard.unpinned` | 5.3 | a bound `ref` in a standard binding is not pinned |
+| `standard.license` | 5.3 | a standard binding binds an artifact without `license` |
+| `asset.yaml` | 5.2, 8 | local YAML asset (including a `PackageExample`) does not parse, including duplicate keys |
 | `asset.kind-mismatch` | 8 | file `kind` differs from manifest `kind` |
 | `asset.api-version` | 5 | asset file `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
@@ -412,9 +455,11 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.stateful.default-compiler-view` | 6.1 | default compiler does not compile `defaultView` |
 | `profile.stateful.compiler-view` | 6.1 | a compiler's `worldViewRef` is not a local View |
 | `profile.stateful.output-contract` | 6.1 | a compiler's `outputContract` is not `EffectiveWorldState` |
-| `profile.model-ready.output-schema` | 6.1 | a compiler lacks `outputSchema.fields` and `outputSchemaRef` |
+| `profile.model-ready.output-schema` | 6.1 | a compiler has no EWS fields: neither `outputSchema.fields` nor a resolvable `outputSchemaRef` |
 | `profile.action-ready` | 6.1 | missing action, commit, or effect-verification asset |
-| `compiler.binding` | 12.2 | malformed declarative binding, or binding outside `outputSchema` |
+| `compiler.binding` | 12.2 | malformed declarative binding, or binding a field that is not an EWS field of the compiler |
+| `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
+| `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
 | `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |
 | `worldmodel.world-ref` | 3 | missing `semanticGrounding.worldRef`, or not `<namespace>/<name>@<semver>` |
 | `worldmodel.compatible-views` | 3 | missing `compatibleWorldViews` |
@@ -465,12 +510,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.world-ref`, `ews.world-view` | 12.1 | references do not match the World, compiler, and compiled View |
 | `ews.as-of` | 12.1 | `context.asOf` not a UTC timestamp |
 | `ews.field-placement` | 12.1 | schema field not in exactly one of state/unresolved/missing |
-| `ews.field-unknown` | 12.1 | field outside `outputSchema` |
+| `ews.field-unknown` | 12.1 | field that is not an EWS field of the compiler |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
 | `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
 | `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
-| `binding.field-unknown` | 14 | bound field is not in any local State Compiler `outputSchema.fields` |
+| `binding.field-unknown` | 14 | bound field is not an EWS field of any local State Compiler |
 | `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |
 | `grounding.ontology-term` | 14 | expanded binding IRI is not a term of a dependency OntologyPackage |

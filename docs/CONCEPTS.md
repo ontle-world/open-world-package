@@ -25,7 +25,7 @@ A task-, actor-, objective-, authority-, scale-, resolution-, and time-condition
 
 ## State Compiler
 
-A packaged `StateCompilerProfile` defines how a compatible World View is reconciled, authority/freshness checked, and materialized into runtime state. A WorldPackage at the `stateful` profile or above carries at least one; at `model-ready` each compiler also declares a concrete EWS schema (`outputSchema`).
+A packaged `StateCompilerProfile` defines how a compatible World View is reconciled, authority/freshness checked, and materialized into runtime state. A WorldPackage at the `stateful` profile or above carries at least one; at `model-ready` each compiler also declares a concrete EWS schema (`outputSchema.fields`, or a JSON Schema named by `outputSchemaRef`).
 
 ## Effective World State (EWS)
 

@@ -11,6 +11,7 @@ build/
 dist/
 *.owp.zip
 !conformance/**/*.owp.zip
+!demos/**/*.owp.zip
 node_modules/
 .ontle/cache/
 .ontle/build/

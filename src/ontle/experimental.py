@@ -10,10 +10,9 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from . import structure
 from .structure import EXTERNAL_REF, OPEN, VALUE, array, closed
+from .yamlio import load_yaml
 
 ASSET_METADATA = structure.ASSET_METADATA
 
@@ -149,7 +148,7 @@ def _load_value_sets() -> dict[str, set[str]]:
         text = resources.files("ontle.vocab").joinpath("value-sets.yaml").read_text(encoding="utf-8")
     except (ModuleNotFoundError, FileNotFoundError):  # editable install: read the repository copy
         text = (Path(__file__).resolve().parents[2] / "vocab" / "value-sets.yaml").read_text(encoding="utf-8")
-    return {name: set(entry["values"]) for name, entry in yaml.safe_load(text)["valueSets"].items()}
+    return {name: set(entry["values"]) for name, entry in load_yaml(text)["valueSets"].items()}
 
 
 VALUE_SETS = _load_value_sets()
@@ -201,8 +200,8 @@ def _check_local_ref(ref: Any, kinds: tuple[str, ...] | None, where: str, rel: s
 
 
 def _file_in_package(root: Path, rel: Any) -> bool:
-    from .ontology import _inside
-    return _inside(root, rel)
+    from .ontology import inside_package
+    return inside_package(root, rel)
 
 
 def _valid_timestamp(value: Any) -> bool:

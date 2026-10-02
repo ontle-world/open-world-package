@@ -10,6 +10,14 @@ spec:
   standardBindings:
     scene:
       standard: openusd
+      license: CC-BY-4.0
       ref:
-        status: unbound
-  note: Environment is an interaction surface for a World, not the World itself.
+        provider: huggingface
+        uri: hf://datasets/nvidia/PhysicalAI-SimReady-Warehouse-01
+        revision: c7fe115cb79c7ddbd0532630d7768b5736b0ecc4
+  note: >-
+    Environment is an interaction surface for a World, not the World itself. The scene is NVIDIA's
+    Physical AI SimReady Warehouse 01 (CC-BY-4.0, by NVIDIA Corporation), a warehouse with graspable
+    objects for pick and place. Its entry layer is physical_ai_simready_warehouse_01.usd
+    (sha256:4e01e55f055689ff0cd669f33c6c305f73add8903547eaf3ef070d515cb2ec8a); the full layer closure
+    is about 10 GB, so it is referenced, not fetched in CI.

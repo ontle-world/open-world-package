@@ -4,9 +4,8 @@
  * (src/structure.ts); the remaining experimental fields of these kinds are Appendix C.4 warnings
  * (src/rules/experimental.ts).
  */
-import * as path from "node:path";
 import { Context, error, LocalAsset } from "../context.js";
-import { fileExists, isObj, normalizeRelPath, Obj, PINNED_RE, staysInside } from "../util.js";
+import { isObj, Obj, packageFile as packageFileAt, PINNED_RE } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 
 const present = (v: unknown): boolean => v !== undefined && v !== null;
@@ -14,11 +13,7 @@ const sub = (o: Obj, k: string): Obj => (isObj(o[k]) ? (o[k] as Obj) : {});
 
 /** An existing file inside the package, given as a package-relative path (not ./ or backslashes). */
 function packageFile(ctx: Context, p: unknown): boolean {
-  if (typeof p !== "string" || p.length === 0 || p.startsWith("./") || p.includes("\\")) return false;
-  const norm = normalizeRelPath(p);
-  if (norm === null) return false;
-  const abs = path.join(ctx.root, norm);
-  return fileExists(abs) && staysInside(ctx.root, abs);
+  return packageFileAt(ctx.root, p) !== null;
 }
 
 export function checkStandardFields(ctx: Context, a: LocalAsset): void {

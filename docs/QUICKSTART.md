@@ -29,9 +29,6 @@ Start with `WORLD.md` and `owp.yaml`. The generated project declares `conformanc
 
 ## 3. Validate and inspect
 
-Every asset file starts with `apiVersion` and `kind`; that is how the package finds it, so `owp.yaml` does not list local assets. Generated files also start with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete them. YAML files without an OWP `apiVersion` (CI configuration, for example) are ordinary files. Sample data that is not an asset (an `ObservationSet`, an expected EWS) is listed in `spec.assets` as a `PackageExample`.
-
-
 ```bash
 ontle validate .
 ontle inspect .
@@ -39,13 +36,26 @@ ontle inspect .
 
 ## 4. Add only what you need
 
-Create the file, by hand or with `ontle new <Kind> <path>`, which writes a skeleton with `apiVersion`, `kind`, and `metadata.name`:
+An asset is a YAML file that says what it is with `apiVersion` and `kind`. Add one by creating the file; `owp.yaml` does not change:
+
+```yaml
+# views/sales-manager.yaml
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: sales-manager
+spec:
+  worldRef: self
+  purpose: {task: qualify_opportunities, objective: focus_on_likely_wins}
+  projection: {include: [account, opportunity, activity]}
+```
+
+`ontle validate .` picks it up. YAML files without an OWP `apiVersion` (CI configuration, for example) are ordinary files and are not checked as assets. Sample data that is not an asset (an `ObservationSet`, an expected EWS) is listed in `spec.assets` as a `PackageExample`.
+
+`ontle new <Kind> <path>` writes the same kind of file as a skeleton. It starts with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete it:
 
 ```bash
-ontle new WorldViewProfile views/sales-manager.yaml
 ontle new StateCompilerProfile state/sales-manager.yaml
-ontle new SourceSystemSchemaProfile interfaces/crm.yaml
-ontle new ScenarioProfile scenarios/qualification.yaml
 ```
 
 ## 5. Build a deterministic package archive
@@ -94,15 +104,9 @@ ontle inspect .            # semanticCoverage shows how many EWS fields are boun
 
 ## 9. Describe who does the work (experimental)
 
+Add these as asset files like any other: `ActorProfile`, `RoleProfile`, `DelegationProfile`, `CapabilityContract`, `TaskSetProfile`, `WorkPatternProfile`, `ArtifactContract`, and `ConsumerRepresentationProfile`. Then see how they connect:
+
 ```bash
-ontle new ActorProfile actors/quality-manager.yaml
-ontle new RoleProfile roles/quality-manager.yaml
-ontle new DelegationProfile delegations/manager-to-agent.yaml
-ontle new CapabilityContract capabilities/rca-analysis.yaml
-ontle new TaskSetProfile tasks/claim-rca.yaml
-ontle new WorkPatternProfile patterns/diagnose.yaml
-ontle new ArtifactContract artifacts/rca-report.yaml
-ontle new ConsumerRepresentationProfile consumers/quality-manager.yaml
 ontle inspect . --graph    # who does what, with which View, producing which artifact
 ```
 

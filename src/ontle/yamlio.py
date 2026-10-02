@@ -86,4 +86,5 @@ def load_yaml(text: str | bytes) -> Any:
 def dump_yaml(data: Any, **kwargs: Any) -> str:
     kwargs.setdefault("sort_keys", False)
     kwargs.setdefault("allow_unicode", True)
+    kwargs.setdefault("width", 4096)  # do not fold long strings across lines
     return yaml.dump(data, Dumper=CoreDumper, **kwargs)

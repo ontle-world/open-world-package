@@ -54,6 +54,8 @@ World -> View -> State Compiler -> EWS (from real sample data) -> Representation
 
 The Physical AI demo uses the bound LeRobot episodes and scene; the Business AI demo uses sample MES/QMS records mapped through the ISA-95 bindings.
 
+Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detached evidence) and `demos/business-ai/` (sample MES/QMS records through the ISA-95 binding, a rule stub, detached evidence). Both implementations check the EWS and the evidence binding.
+
 ## 5. Distribution without a hosted registry (done in the reference CLI; see spec sections 7, 7.1, 9.1, 11.1)
 
 1. OCI source type: push and pull `.owp.zip` with ORAS to existing registries (GHCR, Docker Hub); record the OCI digest as the revision.

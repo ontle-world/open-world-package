@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: openworld-examples/mobile-manipulation-world@0.1.0
+  worldView: openworld-examples/mobile-manipulation-world@0.1.0#views/pick-place-task.yaml
+  stateCompiler: openworld-examples/mobile-manipulation-world@0.1.0#state/pick-place-compiler.yaml
+  context: {asOf: '2026-01-01T00:00:59Z'}
+  state:
+    robot.joint_state: [2.0659, -98.1099, 96.967, 67.1209, 3.9121]
+    robot.gripper_state: 0.5391
+    task.instruction: Pick up the cube, drive to the basket and place it in
+  unresolved: {}
+  missing: [target_object.pose, target_zone.region, safety_constraints.active]
+  provenance:
+    robot.joint_state: [ep000-f01770-state]
+    robot.gripper_state: [ep000-f01770-state]
+    task.instruction: [ep000-task]

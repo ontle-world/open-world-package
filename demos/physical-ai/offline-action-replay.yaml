@@ -1,0 +1,15 @@
+# The evaluation that demos/physical-ai/evidence.yaml cites. It is published with the demo, not inside the
+# World Model package, so the evidence references it as an external pinned evaluation (spec section 9).
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata: {name: offline-action-replay, version: 0.1.0}
+spec:
+  assessmentKind: evaluation
+  subject: {kind: model, ref: openworld-examples/multimodal-action-world-model@0.1.0}
+  objective: predicted_commands_match_recorded_teleoperation
+  criteria:
+  - {metric: arm_position_mae, rubric: mean absolute difference between predicted and recorded arm joint commands, in the dataset's position units}
+  - {metric: gripper_position_mae, rubric: mean absolute difference between predicted and recorded gripper commands}
+  - {metric: base_velocity_mae, rubric: mean absolute difference between predicted and recorded base velocity commands (x, y, theta)}
+  metrics: [arm_position_mae, gripper_position_mae, base_velocity_mae]
+  tasks: [pick_place]

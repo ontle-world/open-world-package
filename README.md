@@ -124,6 +124,8 @@ ontle export --format turtle
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package
 
+End-to-end demos on sample data, from observations to evidence: `demos/` (see `demos/README.md`).
+
 Conformance suite for independent implementations: `conformance/` (see `conformance/README.md`). An independent TypeScript implementation written from the spec alone lives in `implementations/typescript/` and passes the same suite.
 
 Resolve dependencies and check World Model grounding across packages, without a hosted registry:

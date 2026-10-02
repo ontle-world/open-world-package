@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The spec is split: `spec/OWP_SPEC.md` keeps the core (sections 1–8, 10, 11, 13, Appendices A, B); `OWP_SEMANTICS.md` (3.1, 14), `OWP_EVALUATION_AND_STATE.md` (9, 12, 15), and `OWP_EXPERIMENTAL.md` (Appendix C) hold the profiles. Section numbers are unchanged. `docs/REFERENCES.md` lists the six reference forms and where each is used.
+- Asset files may omit `apiVersion` (inherited from `owp.yaml`); a different value is `asset.api-version`. Generated assets omit it.
+- `ontle validate` prints errors that are likely consequences of a misspelt field under that field's error.
 - Promote experimental fields used in three domains that do not depend on experimental kinds (spec section 15): EvaluationProfile `assessmentKind`, `subject`, `objective`, `criteria`, `verifierRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; all ScenarioProfile fields; CapabilityContract `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`; WorldViewProfile `constraints`, `evidenceRefs`. Their checks are errors (`evaluation.*`, `scenario.*`); the value sets `assessmentKinds`, `evaluationSubjects`, `scenarioEngines` are standard.
 - `asset.kind-experimental` is reported once per kind with a count.
 - Generated files carry a `yaml-language-server` schema line and a one-line hint; placeholders are empty strings, so editors validate and complete them. `owp.yaml` keeps its leading comments when the CLI rewrites it.

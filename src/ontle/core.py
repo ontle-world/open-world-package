@@ -425,6 +425,9 @@ def validate_package(path: str | Path) -> ValidationResult:
                 except Exception as exc:
                     errors.append(f"asset.yaml: cannot parse asset YAML {rel}: {exc}")
                     continue
+                # A typed asset may omit apiVersion (it inherits the manifest's); when present it must match.
+                if asset_kind != "PackageExample" and isinstance(adata, dict) and "apiVersion" in adata and adata["apiVersion"] != data.get("apiVersion"):
+                    errors.append(f"asset.api-version: {rel} declares apiVersion {adata['apiVersion']!r}; it must be omitted or equal the manifest's {data.get('apiVersion')!r}")
                 # Examples may be any document (for example an ObservationSet), so their kind is not checked.
                 if asset_kind != "PackageExample" and isinstance(adata, dict) and adata.get("kind") and adata.get("kind") != asset_kind:
                     errors.append(f"asset.kind-mismatch: asset kind mismatch for {rel}: manifest={asset_kind}, file={adata.get('kind')}")

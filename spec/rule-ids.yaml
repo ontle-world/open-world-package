@@ -27,6 +27,7 @@ rules:
   asset.missing-file: {severity: error, section: "8", summary: "local path does not exist"}
   asset.yaml: {severity: error, section: "8", summary: "local YAML asset (including a PackageExample) does not parse"}
   asset.kind-mismatch: {severity: error, section: "8", summary: "file kind differs from manifest kind"}
+  asset.api-version: {severity: error, section: "5", summary: "asset file apiVersion differs from the manifest's"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
   profile.descriptive: {severity: error, section: "6.1", summary: "no definition and no WorldDefinition asset"}

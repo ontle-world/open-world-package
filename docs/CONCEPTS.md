@@ -47,11 +47,11 @@ See `spec/OWP_SPEC.md` section 6.1.
 
 ## Ontologies and semantic binding
 
-An OntologyPackage publishes classes and properties with a namespace IRI, prefixes, and typed entrypoints (schema, shapes, mappings). A World binds its own names and EWS fields to those terms with a SemanticBinding, so two Worlds that both bind `claim.status` to the same property mean the same thing. See `spec/OWP_SPEC.md` sections 3.1 and 14.
+An OntologyPackage publishes classes and properties with a namespace IRI, prefixes, and typed entrypoints (schema, shapes, mappings). A World binds its own names and EWS fields to those terms with a SemanticBinding, so two Worlds that both bind `claim.status` to the same property mean the same thing. See `spec/OWP_SEMANTICS.md` (sections 3.1 and 14).
 
 ## Work, artifacts, and consumers (experimental)
 
-A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. Each actor has its own World View, often specializing a shared base View. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_SPEC.md` Appendix C.
+A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. Each actor has its own World View, often specializing a shared base View. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_EXPERIMENTAL.md`.
 
 ## Extensions
 
@@ -59,4 +59,4 @@ Publishers add their own asset kinds and fields without changing the standard. A
 
 ## Evaluation lineage
 
-A score only means something together with the exact EvaluationProfile, Verifier, View, State Compiler, and environment that produced it. OWP records that binding (`CompatibilityEvidence`); running and evolving evaluations is a runtime/registry concern. See `spec/OWP_SPEC.md` section 9.
+A score only means something together with the exact EvaluationProfile, Verifier, View, State Compiler, and environment that produced it. OWP records that binding (`CompatibilityEvidence`); running and evolving evaluations is a runtime/registry concern. See `spec/OWP_EVALUATION_AND_STATE.md` (section 9).

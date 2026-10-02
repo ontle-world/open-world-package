@@ -42,7 +42,7 @@ Capability is also distinct from competency (an individual's skill), resource (s
 | Storage | Where it is kept (object store, drive, local). | `ArtifactContract.spec.storage` |
 | Delivery | Where it is sent. | `ArtifactContract.spec.delivery` |
 
-## Assessment (experimental fields of EvaluationProfile)
+## Assessment (EvaluationProfile, spec section 15.1)
 
 | Term | Meaning |
 |---|---|
@@ -54,7 +54,7 @@ Capability is also distinct from competency (an individual's skill), resource (s
 
 The assessed subject can be a model, agent, workflow, artifact, decision, process, capability, or environment (`EvaluationProfile.spec.subject.kind`).
 
-## Scenarios (experimental fields of ScenarioProfile)
+## Scenarios (ScenarioProfile, spec section 15.2)
 
 | Term | Meaning |
 |---|---|

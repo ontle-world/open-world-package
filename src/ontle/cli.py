@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -28,9 +29,30 @@ def cmd_validate(args):
     if result.valid:
         print("VALID")
         return 0
-    for e in result.errors:
-        print(f"ERROR: {e}", file=sys.stderr)
+    for line in fold_errors(result.errors):
+        print(line, file=sys.stderr)
     return 1
+
+
+def fold_errors(errors: list[str]) -> list[str]:
+    """Print order for errors: an unknown field with a suggestion first, then the errors that mention the
+    suggested field, indented as likely consequences. Only the presentation changes; every error is printed."""
+    roots: list[tuple[str, str]] = []
+    for e in errors:
+        m = re.search(r"did you mean '([^']+)'", e) if e.startswith("schema.unknown-field:") else None
+        if m:
+            roots.append((e, m.group(1)))
+    lines: list[str] = []
+    shown: set[int] = set()
+    for root, suggestion in roots:
+        lines.append(f"ERROR: {root}")
+        shown.add(errors.index(root))
+        for i, e in enumerate(errors):
+            if i not in shown and not e.startswith("schema.unknown-field:") and re.search(rf"\b{re.escape(suggestion)}\b", e):
+                lines.append(f"  likely caused by the error above: {e}")
+                shown.add(i)
+    lines += [f"ERROR: {e}" for i, e in enumerate(errors) if i not in shown]
+    return lines
 
 
 def cmd_resolve(args):

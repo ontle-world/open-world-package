@@ -74,7 +74,7 @@ def main() -> None:
         schema = convert(table)
         schema["properties"]["apiVersion"] = {"const": "openworld/v1alpha1"}
         schema["properties"]["kind"] = {"const": kind}
-        schema["required"] = ["apiVersion", "kind", "metadata", "spec"]
+        schema["required"] = ["spec"]  # apiVersion and kind are inherited from owp.yaml and the asset entry (spec section 5)
         doc = {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": f"urn:owp:schema:experimental:{kind}:v1alpha1",
@@ -89,7 +89,7 @@ def main() -> None:
         schema = convert(getattr(structure, table_name))
         schema["properties"]["apiVersion"] = {"const": "openworld/v1alpha1"}
         schema["properties"]["kind"] = {"const": kind}
-        schema["required"] = ["apiVersion", "kind", "spec"]
+        schema["required"] = ["spec"]
         if spec_required:
             schema["properties"]["spec"]["required"] = spec_required
         doc = {

@@ -1,0 +1,5 @@
+apiVersion: openworld/v2
+kind: ScenarioProfile
+metadata: {name: s}
+spec:
+  objective: x

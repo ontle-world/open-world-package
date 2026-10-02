@@ -3,7 +3,7 @@ import { Context, error, LocalAsset, warn } from "../context.js";
 import { fileExists, isNonEmptyString, isObj, isYamlPath, loadYamlFile, normalizeRelPath, staysInside } from "../util.js";
 import { EXTENSION_KIND_RE } from "../structure.js";
 import { externalRefProblems } from "./externalref.js";
-import { API_VERSION, ASSET_KIND_STABILITY } from "../vocab.js";
+import { ASSET_KIND_STABILITY } from "../vocab.js";
 
 /**
  * Spec section 5 + 8: `spec.assets` entries, local references, duplicate paths,
@@ -114,14 +114,15 @@ export function collectAssets(ctx: Context): void {
     }
     asset.doc = loaded.value;
     const doc = loaded.value;
-    // Typed asset check: when the asset file declares its own kind/apiVersion they must agree.
-    // A PackageExample may hold any document (for example an ObservationSet), so its kind is not compared.
+    // Spec 5: a local YAML asset MAY omit apiVersion and kind; it inherits the manifest's apiVersion and its
+    // entry's kind. When present they must agree. A PackageExample may hold any document (for example an
+    // ObservationSet), so neither is compared.
     if (isObj(doc) && kind !== "PackageExample") {
-      if (doc.kind !== undefined && doc.kind !== kind) {
+      if (doc.kind !== undefined && doc.kind !== null && doc.kind !== "" && doc.kind !== kind) {
         error(ctx, "asset.kind-mismatch", `asset ${raw} declares kind ${JSON.stringify(doc.kind)} but owp.yaml declares ${kind}`, raw);
       }
-      if (doc.apiVersion !== undefined && doc.apiVersion !== API_VERSION) {
-        warn(ctx, "owp-ts:asset-api-version", `asset ${raw} declares apiVersion ${JSON.stringify(doc.apiVersion)}; expected ${API_VERSION}`, raw);
+      if (Object.prototype.hasOwnProperty.call(doc, "apiVersion") && doc.apiVersion !== ctx.manifest.apiVersion) {
+        error(ctx, "asset.api-version", `asset ${raw} declares apiVersion ${JSON.stringify(doc.apiVersion)}; it must be omitted or equal the manifest's ${JSON.stringify(ctx.manifest.apiVersion)}`, raw);
       }
     }
   });

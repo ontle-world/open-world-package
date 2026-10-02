@@ -137,8 +137,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "apiVersion",
-    "kind",
     "spec"
   ],
   "$defs": {

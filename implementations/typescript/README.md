@@ -33,6 +33,8 @@ The conformance runner checks that the reported ids include every id a case list
 
 ## Layout
 
+Section numbers refer to the specification, which is split across files with unchanged numbering: `spec/OWP_SPEC.md` (sections 1–8, 10, 11, 13, Appendices A and B), `spec/OWP_SEMANTICS.md` (3.1, 14), `spec/OWP_EVALUATION_AND_STATE.md` (9, 12, 15), and `spec/OWP_EXPERIMENTAL.md` (Appendix C).
+
 | File | Spec |
 |---|---|
 | `src/rules/manifest.ts`, `src/rules/assets.ts`, `src/rules/dependencies.ts` | 2, 3, 5, 8 |
@@ -57,7 +59,6 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 
 | Warning id | Condition |
 |---|---|
-| `owp-ts:asset-api-version` | a typed local YAML asset declares an `apiVersion` other than `openworld/v1alpha1` |
 | `owp-ts:eval-name` | EvaluationProfile or VerifierPackage without `metadata.name` |
 | `owp-ts:eval-supersedes-name` | `supersedes` names a different asset than `metadata.name` |
 | `owp-ts:eval-supersedes-order` | `metadata.version` is not greater than the superseded version |
@@ -82,7 +83,8 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 | standard-kind fields | + defined fields for WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract; their experimental fields (C.4); TaskSetProfile composition; 13 validation cases | 236/236 after the update (maintainer update, not clean-room) |
 | round trip | + `scripts/check-roundtrip.mjs` (docs/PROFILE_PROMOTION.md, Interoperability): every example and every valid case keeps its verdict, error ids, and warning ids after YAML re-serialization | 72/72 packages |
 | promotion | + section 15 (EvaluationProfile, ScenarioProfile fields promoted from Appendix C.4 warnings to errors); `asset.kind-experimental` reported once per kind with a count; 4 new invalid cases, 3 cases now invalid | 240/240 after the update; round trip 69/69 (maintainer update, not clean-room) |
+| asset headers | + section 5: asset files may omit `apiVersion` and `kind`; a declared `apiVersion` that differs from the manifest's is the error `asset.api-version` (was the warning `owp-ts:asset-api-version`); 2 validation cases | see the run below |
 
-Each round's spec ambiguities were fed back into `spec/OWP_SPEC.md`.
+Each round's spec ambiguities were fed back into the specification (now `spec/OWP_SPEC.md` and the companion files listed under Layout).
 
 After round 3 the code is maintained in this repository together with the spec. Follow-up spec changes were applied here by the maintainers rather than clean-room: `PackageExample` YAML must parse (its kind is not compared); an unreadable package source is an error rather than a warning; and the extensions round (closed documents with `extensions` blocks, `<extension>:<Kind>` asset kinds declared through `spec.dependencies[].as`, `spec.extensionDefinition`, vocabulary `stability`, and registered warning ids); ExternalRef validation of `spec.assets[].ref` (section 5.1); experimental kinds (Appendix C); the ontology contract (section 3.1); semantic binding (section 14); knowledge extraction (Appendix C.1); work pattern graphs, actors, roles, and delegation, and experimental fields of standard kinds (Appendix C.2–C.4); and distribution (sections 7, 9.1, 11.1). OCI sources and http(s) package indexes are not implemented. The probes `p2-namespaced-asset-kind`, `p2-package-example-unparseable`, and `p-action-ready-via-refs` were updated to these rules.

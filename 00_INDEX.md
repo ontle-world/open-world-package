@@ -5,7 +5,7 @@ Start here:
 1. `README.md`
 2. `ROADMAP.md`
 3. `docs/QUICKSTART.md`
-4. `spec/OWP_SPEC.md`
+4. `spec/OWP_SPEC.md` (core; profiles in `spec/OWP_SEMANTICS.md`, `spec/OWP_EVALUATION_AND_STATE.md`, `spec/OWP_EXPERIMENTAL.md`; reference forms in `docs/REFERENCES.md`)
 5. `docs/CONCEPTS.md`
    - `docs/GLOSSARY.md` — terms OWP keeps apart (actor, role, capability, permission, authority, ...)
    - `docs/PROFILE_PROMOTION.md` — gates for promoting experimental profiles

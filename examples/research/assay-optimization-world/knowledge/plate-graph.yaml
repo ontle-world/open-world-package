@@ -1,4 +1,3 @@
-apiVersion: openworld/v1alpha1
 kind: KnowledgeAsset
 metadata:
   name: plate-graph

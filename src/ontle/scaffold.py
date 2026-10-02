@@ -202,8 +202,7 @@ def add_asset(project: str | Path, asset_kind: str, name: str, specializes: str 
         return "" if value is None else value
 
     skeleton = blank(skeleton)
-    target.write_text(_header(kind) + yaml.safe_dump({
-        "apiVersion": "openworld/v1alpha1",
+    target.write_text(_header(kind) + yaml.safe_dump({  # apiVersion is inherited from owp.yaml (spec section 5)
         "kind": kind,
         "metadata": metadata,
         "spec": skeleton,
@@ -268,7 +267,7 @@ def sync_assets(project: str | Path) -> tuple[list[str], list[str]]:
         except Exception:
             continue
         kind = doc.get("kind") if isinstance(doc, dict) else None
-        if isinstance(doc, dict) and doc.get("apiVersion") == "openworld/v1alpha1" and isinstance(kind, str) \
+        if isinstance(doc, dict) and doc.get("apiVersion", manifest.get("apiVersion")) == manifest.get("apiVersion") and isinstance(kind, str) \
                 and (kind in KNOWN_ASSET_KINDS or EXTENSION_KIND_RE.match(kind)) and kind != "PackageExample":
             assets.append({"kind": kind, "path": rel})
             added.append(rel)

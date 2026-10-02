@@ -18,6 +18,13 @@ class OntleTests(unittest.TestCase):
             self.assertIn("world-view-profile.schema.json", view.read_text().splitlines()[0])
             self.assertNotIn("null", view.read_text())
 
+    def test_validate_folds_consequences_of_a_misspelt_field(self):
+        from ontle.cli import fold_errors
+        result = validate_package(Path(__file__).resolve().parent.parent / "conformance" / "cases" / "manifest-unknown-field")
+        lines = fold_errors(result.errors)
+        self.assertEqual(len(lines), len(result.errors))
+        self.assertTrue(lines[0].startswith("ERROR: schema.unknown-field:"))
+
     def test_sync_adds_unlisted_assets(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")

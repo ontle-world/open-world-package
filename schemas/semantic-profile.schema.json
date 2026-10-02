@@ -5,8 +5,6 @@
   "description": "Ontology schema in the OWP YAML format (spec section 3.1). Identifiers are CURIEs or absolute IRIs.",
   "type": "object",
   "required": [
-    "apiVersion",
-    "kind",
     "spec"
   ],
   "properties": {

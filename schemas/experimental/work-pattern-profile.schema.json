@@ -270,9 +270,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "apiVersion",
-    "kind",
-    "metadata",
     "spec"
   ],
   "$defs": {

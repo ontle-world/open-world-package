@@ -749,6 +749,15 @@ cases:
     errors: [scenario.baseline-ref]
     satisfiedProfile: viewable
     rule: "baselineStateRef is a file in the package or a URI (spec section 15.2)."
+  asset-header-omitted:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "A local asset may omit apiVersion and kind; it inherits the manifest's apiVersion and its entry's kind."
+  asset-api-version-mismatch:
+    valid: false
+    errors: [asset.api-version]
+    satisfiedProfile: descriptive
+    rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
   grounded:
     valid: true

@@ -5,8 +5,6 @@
   "description": "Binds a result to the exact evaluation, verifier, World, View, and State Compiler that produced it.",
   "type": "object",
   "required": [
-    "apiVersion",
-    "kind",
     "metadata",
     "spec"
   ],

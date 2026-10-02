@@ -5,8 +5,6 @@
   "description": "Binds World names, EWS fields, observation types, and actions to ontology terms (spec section 14).",
   "type": "object",
   "required": [
-    "apiVersion",
-    "kind",
     "spec"
   ],
   "properties": {

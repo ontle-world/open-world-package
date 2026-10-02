@@ -55,4 +55,4 @@ Interoperability is demonstrated by independent implementations, not by one tool
 
 1. an independent parser/validator passing `conformance/`;
 2. two runtimes that compile the same View into the same EWS contract and bind the same World Model;
-3. end-to-end Physical AI and Business AI demos with bound (not placeholder) external references.
+3. end-to-end Physical AI and Business AI demos over the bound external references (the example bindings are now pinned to real artifacts).

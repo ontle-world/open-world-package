@@ -14,6 +14,15 @@ spec:
         equipment: Equipment
         operation_execution: OperationsPerformance
     opcua:
+      # OPC 40001-1 Machinery Basic Building Blocks 1.04.1, namespace http://opcfoundation.org/UA/Machinery/,
+      # NodeSet at UA-Nodeset tag Machinery-1.04.1-2026-01-01. It requires the DI 1.04.0 and IA 1.01.2 models.
       standard: opcua
+      license: MIT
+      terms:
+        equipment: MachineIdentificationType
       ref:
-        status: unbound
+        provider: https
+        uri: https://raw.githubusercontent.com/OPCFoundation/UA-Nodeset/eef8e28490fe7672b5417a2fbdcee7dbd77a6906/Machinery/Opc.Ua.Machinery.NodeSet2.xml
+        digest: sha256:1bc4ba9f70d07c51d3310123f2ae2186703eb6cf4f2d26aea4a2853423b61b41
+        mediaType: application/xml
+        size: 125570

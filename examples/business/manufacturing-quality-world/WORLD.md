@@ -22,4 +22,4 @@ Declared profile: `action-ready` — a World View, a State Compiler with a concr
 
 ## Adjacent standards
 
-ISA-95 (enterprise-control object models) and OPC UA (equipment information models) are referenced from `interfaces/sources.yaml`. OWP does not redefine them; it binds them to this World and View.
+ISA-95 (enterprise-control object models) and OPC UA (equipment information models) are referenced from `interfaces/sources.yaml`. OWP does not redefine them; it binds them to this World and View. The OPC UA binding points at the OPC 40001-1 Machinery 1.04.1 NodeSet in the OPC Foundation UA-Nodeset repository, pinned by digest (the NodeSet files are under the OPC Foundation MIT License 1.00; the specification documents are not redistributable and are only linked).

@@ -32,19 +32,17 @@ Order matters: each item can change verdicts, so both implementations and the su
 
 ## 3. Bind the examples to real external artifacts
 
-The examples currently declare which standard each part uses but leave the artifact unbound (`ref: null`, `status: unbound`):
-
 | Example | Binding | Status |
 |---|---|---|
-| mobile-manipulation-world | ROS 2 message and action types | bound by type name |
-| mobile-manipulation-world | OpenUSD scene | unbound |
-| mobile-manipulation-world | LeRobot episodes (Hugging Face) | unbound |
-| manufacturing-quality-world | ISA-95 object models | bound by name |
-| manufacturing-quality-world | OPC UA companion specification | unbound |
+| mobile-manipulation-world | ROS 2 message and action types | `terms` (type names) |
+| mobile-manipulation-world | OpenUSD scene | bound: `nvidia/PhysicalAI-SimReady-Warehouse-01` @ `c7fe115c`, CC-BY-4.0 |
+| mobile-manipulation-world | LeRobot episodes (Hugging Face) | bound: `k-chan-l/lekiwi_pick_and_place2` @ `de33a7ae`, Apache-2.0 |
+| manufacturing-quality-world | ISA-95 object models | `terms` (object model names) |
+| manufacturing-quality-world | OPC UA companion specification | bound: OPC 40001-1 Machinery 1.04.1 NodeSet, digest-pinned, MIT |
 
 1. ~~Define the `standardBindings` shape in the spec and validate that bound references are pinned.~~ Done: spec section 5.3 (`standard`, `ref`, `license`, `terms`); a bound reference must be pinned and licensed. The examples use this shape.
-2. Choose public artifacts with compatible licenses: a LeRobot dataset revision, an OpenUSD scene, and an OPC UA companion specification identifier.
-3. Bind them in the examples. Do not invent repositories or revisions; leave a binding unbound until a real artifact is chosen.
+2. ~~Choose public artifacts with compatible licenses.~~ Done: chosen for pinnability, license, fit to the World, size, and anonymous download.
+3. ~~Bind them in the examples.~~ Done. Open: the LeRobot dataset is a personal repository (pinning keeps it reproducible, not available), and the OPC UA binding does not pin the DI and IA models Machinery requires.
 
 ## 4. End-to-end demos
 

@@ -8,6 +8,13 @@ spec:
   standardBindings:
     episodes:
       standard: lerobot
+      license: Apache-2.0
       ref:
-        status: unbound
-  note: Bind an immutable LeRobot/Hugging Face dataset revision when publishing concrete episodes.
+        provider: huggingface
+        uri: hf://datasets/k-chan-l/lekiwi_pick_and_place2
+        revision: de33a7ae7c1769d042e1303894df3b7ea804de21
+  note: >-
+    LeRobot v3.0 episodes of a LeKiwi mobile manipulator (50 episodes, 30 fps): front and wrist cameras,
+    five arm joints and a gripper in observation.state, base velocities in action, and the instruction
+    "Pick up the cube, drive to the basket and place it in". The State Compiler needs only meta/ and data/
+    (parquet); the AV1 videos are not read.

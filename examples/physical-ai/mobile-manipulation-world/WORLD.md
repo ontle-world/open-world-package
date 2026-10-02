@@ -12,6 +12,6 @@ Declared profile: `action-ready` — a World View, a State Compiler with a concr
 
 OWP does not replace these standards; it records how they relate inside this World and View.
 
-- Scene: OpenUSD (`environment/reference-environment.yaml`, unbound in this example)
+- Scene: OpenUSD (`environment/reference-environment.yaml`): NVIDIA Physical AI SimReady Warehouse 01 on Hugging Face, pinned by commit; CC-BY-4.0, by NVIDIA Corporation
 - Observation/action interfaces: ROS 2 message and action types (`interfaces/`)
-- Episodes: LeRobot dataset format (`datasets/manipulation-episodes.yaml`, unbound in this example)
+- Episodes: LeRobot dataset format (`datasets/manipulation-episodes.yaml`): `k-chan-l/lekiwi_pick_and_place2` on Hugging Face, pinned by commit; Apache-2.0. It is a personal repository; `lerobot/droid_100` (MIT) is an official-organization alternative without a mobile base

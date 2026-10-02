@@ -11,6 +11,7 @@ ontle validate examples/business/quality-transition-world-model
 ontle validate examples/physical-ai/mobile-manipulation-world
 ontle validate examples/physical-ai/multimodal-action-world-model
 ontle validate examples/business/sales-prioritization-world
+ontle validate examples/business/management-report-world
 ontle validate examples/ontology/quality-ontology
 ontle validate examples/research/assay-optimization-world
 ontle export examples/ontology/quality-ontology --format turtle >/dev/null

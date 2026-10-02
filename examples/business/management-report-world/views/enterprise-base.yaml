@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: enterprise-base-view
+spec:
+  worldRef: self
+  purpose:
+    task: management_reporting
+    objective: give_leadership_an_accurate_picture_of_the_period
+  projection:
+    include: [business_unit, kpi, financial_result, risk, initiative, reporting_period, board_confidential]
+    principle: minimal_sufficient_representation
+  conditioning:
+    authorityScope: read_only
+    timeScope: reporting_period
+    resolution: business_unit

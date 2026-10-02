@@ -1,0 +1,28 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: create-report
+spec:
+  pattern: {kind: create, family: create_modify}
+  objective: produce_an_approved_management_report
+  inputs: {semanticRoles: [summary, variance_explanation, policy]}
+  outputs: {semanticRoles: [artifact]}
+  outputContracts: [artifacts/management-report.yaml]
+  optionalCapabilities: [template, llm]
+  worldViewRef: views/executive.yaml
+  graph:
+    nodes:
+    - {id: draft, family: create_modify, patternKind: create}
+    - {id: review, family: evaluate_recover, patternKind: review}
+    - {id: approve, family: decide_plan, patternKind: approve}
+    - {id: publish, family: execute_operate, patternKind: publish}
+    transitions:
+    - {from: draft, to: review}
+    - {from: review, to: draft, guard: controller_requests_changes}
+    - {from: review, to: approve, guard: controller_signs_off}
+    - {from: approve, to: draft, guard: executive_rejects}
+    - {from: approve, to: publish, guard: executive_approves}
+    - {from: publish, to: draft, event: period_close}
+    guards: [{id: controller_requests_changes}, {id: controller_signs_off}, {id: executive_rejects}, {id: executive_approves}]
+    events: [{id: period_close, triggers: [draft]}]
+    loops: [{nodes: [draft, review], maxIterations: 3, until: controller_signs_off}]

@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata: {name: executive}
+spec:
+  permissions:
+  - {actions: [read_reports, read_forecasts], scope: enterprise}
+  authorities:
+  - {decisions: [approve_report, publish_report], scope: enterprise}
+  responsibilities: [communicate_period_results]
+  accountabilities: [management_report]

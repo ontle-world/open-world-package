@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: DelegationProfile
+metadata: {name: report-drafting}
+spec:
+  delegator: actors/finance-controller.yaml
+  delegatee: actors/report-agent.yaml
+  scope: monthly_management_report
+  permittedActions: [read_financial_results, draft_report]
+  authorityCeiling: {decisions: []}
+  validFrom: "2026-10-01T00:00:00Z"
+  expiresAt: "2027-03-31T00:00:00Z"
+  revocation: {by: [actors/finance-controller.yaml, actors/executive.yaml]}
+  escalation: {to: [actors/finance-controller.yaml], when: [figures_disagree_with_ledger, board_confidential_item]}

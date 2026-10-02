@@ -121,6 +121,7 @@ ontle export --format turtle
 - `examples/ontology/quality-ontology` — ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World
 - `examples/research/assay-optimization-world` — laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario (experimental kinds)
 - `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers (experimental kinds)
+- `examples/business/management-report-world` — monthly management report: Synthesize and Create work patterns, an executive View, a report artifact with an approval, and a drafting agent (experimental kinds)
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package
 

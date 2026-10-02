@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: CapabilityContract
+metadata:
+  name: bi-read
+spec:
+  description: Read published KPIs, financial results, risks, and initiative status for the reporting period.
+  effect: none
+  context: {systems: [bi, grc, pmo]}
+  requiredInputs: [reporting_period]
+  maturity: production

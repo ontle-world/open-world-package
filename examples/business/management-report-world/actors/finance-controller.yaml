@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ActorProfile
+metadata: {name: finance-controller}
+spec:
+  actorType: human
+  roleRefs: [roles/finance-controller.yaml]

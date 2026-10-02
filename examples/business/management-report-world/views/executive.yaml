@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: executive-view
+spec:
+  worldRef: self
+  specializes: views/enterprise-base.yaml
+  purpose:
+    actorScope: executive
+    actorRef: actors/executive.yaml
+    roleRef: roles/executive.yaml
+    taskRef: tasks/monthly-management-report.yaml
+  projection:
+    include: [target, forecast]
+  conditioning:
+    authorityScope: approve_and_publish

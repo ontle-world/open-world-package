@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata: {name: report-approval, version: 0.1.0}
+spec:
+  assessmentKind: approval
+  subject: {kind: artifact, ref: artifacts/management-report.yaml}
+  objective: report_is_accurate_and_fit_to_publish
+  criteria:
+  - {metric: figures_reconciled, rubric: every reported figure matches the ledger close, threshold: 1.0}
+  - {metric: variance_coverage, rubric: share of material variances with an explanation, threshold: 1.0}
+  evaluatorRef: actors/executive.yaml
+  metrics: [figures_reconciled, variance_coverage]

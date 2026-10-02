@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata:
+  name: monthly-management-report
+spec:
+  task:
+    workPatterns: [summarize, create]
+  requires:
+    worldViews: [views/executive.yaml]
+    knowledge: [knowledge/kpi-definitions.yaml, knowledge/reporting-policy.yaml]
+    actors: [actors/executive.yaml, actors/finance-controller.yaml, actors/report-agent.yaml]
+  workPatternRefs: [patterns/synthesize.yaml, patterns/create-report.yaml]
+  produces:
+    artifacts: [artifacts/management-report.yaml]

@@ -12,3 +12,7 @@ updates:
     directory: /implementations/typescript
     schedule:
       interval: weekly
+    ignore:
+      # Types follow the oldest Node.js major in CI (package.json engines), not the newest release.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]

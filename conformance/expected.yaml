@@ -251,6 +251,14 @@ cases:
     errors: [manifest.api-version]
     satisfiedProfile: descriptive
     rule: "apiVersion must be openworld/v1alpha1."
+  manifest-duplicate-key:
+    valid: false
+    errors: [manifest.load]
+    rule: "A mapping with two equal keys does not parse (spec section 5.2)."
+  manifest-yaml-core-scalars:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Plain scalars follow the YAML 1.2 core schema (spec section 5.2): `on` and `1:20` are strings, not true and 80."
   manifest-unknown-kind:
     valid: false
     errors: [manifest.kind]
@@ -270,6 +278,11 @@ cases:
     errors: [asset.yaml]
     satisfiedProfile: descriptive
     rule: "Local YAML assets other than PackageExample must parse."
+  asset-duplicate-key:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "A mapping with two equal keys does not parse (spec section 5.2)."
   world-default-compiler-other-view:
     valid: false
     errors: [profile.stateful.default-compiler-view]

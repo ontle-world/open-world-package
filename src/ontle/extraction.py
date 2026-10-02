@@ -11,9 +11,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from .core import OWPError, load_manifest
+from .yamlio import load_yaml
 
 PARAMETER_TYPES = {"string": str, "number": (int, float), "boolean": bool}
 
@@ -116,12 +115,12 @@ def run_extraction(package: str | Path, profile_path: str, parameters: dict[str,
     kinds = {a.get("path"): a.get("kind") for a in (manifest.get("spec") or {}).get("assets", []) or [] if isinstance(a, dict)}
     if kinds.get(profile_path) != "KnowledgeExtractionProfile":
         raise OWPError(f"{profile_path} is not a KnowledgeExtractionProfile asset of the package")
-    profile = yaml.safe_load((root / profile_path).read_text(encoding="utf-8"))
+    profile = load_yaml((root / profile_path).read_text(encoding="utf-8"))
     spec = profile.get("spec") or {}
     source = spec.get("source")
     if kinds.get(source) != "KnowledgeAsset":
         raise OWPError(f"spec.source {source!r} is not a KnowledgeAsset asset of the package")
-    asset = (yaml.safe_load((root / source).read_text(encoding="utf-8")) or {}).get("spec") or {}
+    asset = (load_yaml((root / source).read_text(encoding="utf-8")) or {}).get("spec") or {}
     snapshot = (asset.get("snapshot") or {}).get("asOf")
     if results is None:
         results = _run_sparql(root, asset, spec, parameters)

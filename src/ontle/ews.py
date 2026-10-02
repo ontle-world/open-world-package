@@ -11,28 +11,17 @@ from pathlib import Path
 import re
 from typing import Any
 
-import yaml
-
 from .core import EWS, OWPError, load_manifest
 from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
+from .yamlio import load_yaml
 
 SELECTORS = {"latest", "all"}
 TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
-class _TextTimestampLoader(yaml.SafeLoader):
-    """SafeLoader that keeps unquoted timestamps as their source text (spec 12: timestamps are compared as text)."""
-
-
-_TextTimestampLoader.yaml_implicit_resolvers = {
-    ch: [(tag, rx) for tag, rx in resolvers if tag != "tag:yaml.org,2002:timestamp"]
-    for ch, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
-}
-
-
 def load_document(path: str | Path) -> Any:
-    """Load an ObservationSet or EWS document without converting timestamps."""
-    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_TextTimestampLoader)
+    """Load an ObservationSet or EWS document (YAML 1.2 core schema: timestamps stay text)."""
+    return load_yaml(Path(path).read_text(encoding="utf-8"))
 
 
 def _valid_timestamp(value: Any) -> bool:
@@ -80,7 +69,7 @@ def _asset_kind(manifest: dict[str, Any], rel: str) -> str | None:
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data = load_yaml(path.read_text(encoding="utf-8"))
     except Exception as exc:
         raise OWPError(f"cannot parse {path}: {exc}") from exc
     if not isinstance(data, dict):

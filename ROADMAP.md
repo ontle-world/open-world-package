@@ -12,7 +12,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 165 validation, 27 resolution, 20 EWS compile, 16 EWS check, 12 extraction cases.
+- Conformance suite: 170 validation, 27 resolution, 20 EWS compile, 16 EWS check, 12 extraction cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3
@@ -24,7 +24,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 
 Order matters: each item can change verdicts, so both implementations and the suite move together.
 
-1. **YAML profile for all OWP documents.** Specify the YAML 1.2 core schema for `owp.yaml` and assets, not only for ObservationSet and EWS documents. Today the Python reference reads manifests as YAML 1.1 (`yes` → true, `0755` → 493, `1:20` → 80), while YAML 1.2 loaders do not. Switch the reference loader and add cases.
+1. ~~**YAML profile for all OWP documents.**~~ Done: spec section 5.2; both implementations read every OWP YAML document with the YAML 1.2 core schema and reject duplicate keys.
 2. **`outputSchemaRef` resolution.** Define it as a package-relative JSON Schema that lists EWS fields, apply the §12.1 field rules to it, and retire the `schema-ref-only-compiler` alpha-limitation case.
 3. ~~**Warnings in the suite.**~~ Done: cases may list `warnings`; warning ids are in spec Appendix A.
 4. **Recorded revisions.** Add the expected `git:<commit>` / `sha256:<digest>` revisions to resolution cases so recorded revisions are compared across implementations.

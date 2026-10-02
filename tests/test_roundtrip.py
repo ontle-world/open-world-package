@@ -14,7 +14,7 @@ from pathlib import Path
 import yaml
 
 from ontle.core import deterministic_pack, validate_package
-from ontle.ews import _TextTimestampLoader
+from ontle.yamlio import dump_yaml, load_yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 EXPECTED = yaml.safe_load((ROOT / "conformance" / "expected.yaml").read_text(encoding="utf-8"))["cases"]
@@ -33,10 +33,6 @@ def outcome(path: Path):
     return result.valid, Counter(e.split(":", 1)[0] for e in result.errors), Counter(w.split(":", 1)[0] for w in result.warnings)
 
 
-class _FlowDumper(yaml.SafeDumper):
-    """Dumps in flow style with sorted keys, so the layout differs from the source files."""
-
-
 class RoundTripTests(unittest.TestCase):
     def test_pack_unpack_keeps_verdict(self):
         for pkg in packages():
@@ -53,10 +49,8 @@ class RoundTripTests(unittest.TestCase):
                 copy = Path(td) / "pkg"
                 shutil.copytree(pkg, copy)
                 for f in list(copy.rglob("*.yaml")) + list(copy.rglob("*.yml")):
-                    # Timestamps stay text (spec section 12); everything else follows YAML 1.2 core types.
-                    doc = yaml.load(f.read_text(encoding="utf-8"), Loader=_TextTimestampLoader)
-                    f.write_text(yaml.dump(doc, Dumper=_FlowDumper, default_flow_style=True, sort_keys=True,
-                                           allow_unicode=True, width=1000), encoding="utf-8")
+                    doc = load_yaml(f.read_text(encoding="utf-8"))  # YAML 1.2 core schema (spec section 5.2)
+                    f.write_text(dump_yaml(doc, default_flow_style=True, sort_keys=True, width=1000), encoding="utf-8")
                 self.assertEqual(outcome(copy), outcome(pkg))
 
 

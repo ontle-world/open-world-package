@@ -4,7 +4,7 @@
 apiVersion: openworld/v1alpha1
 kind: RuleIdRegistry
 rules:
-  manifest.load: {severity: error, section: "8", summary: "owp.yaml missing, unparseable, or not a mapping"}
+  manifest.load: {severity: error, section: "5.2, 8", summary: "owp.yaml missing, unparseable (including duplicate keys), or not a mapping"}
   manifest.api-version: {severity: error, section: "2", summary: "apiVersion is not openworld/v1alpha1"}
   manifest.kind: {severity: error, section: "3", summary: "unknown package kind"}
   manifest.metadata: {severity: error, section: "2", summary: "metadata is not a mapping"}
@@ -25,7 +25,7 @@ rules:
   asset.duplicate-path: {severity: error, section: "8", summary: "same local path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "local path resolves outside the package root"}
   asset.missing-file: {severity: error, section: "8", summary: "local path does not exist"}
-  asset.yaml: {severity: error, section: "8", summary: "local YAML asset (including a PackageExample) does not parse"}
+  asset.yaml: {severity: error, section: "5.2, 8", summary: "local YAML asset (including a PackageExample) does not parse, including duplicate keys"}
   asset.kind-mismatch: {severity: error, section: "8", summary: "file kind differs from manifest kind"}
   asset.api-version: {severity: error, section: "5", summary: "asset file apiVersion differs from the manifest's"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}

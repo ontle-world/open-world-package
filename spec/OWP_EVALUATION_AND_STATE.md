@@ -76,7 +76,7 @@ spec:
   provenance: {a.latest: [o2], b.pose: [o5, o6]}
 ```
 
-Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents are loaded with YAML 1.2 core schema rules into the JSON data model (YAML 1.1 loaders that produce date objects must be configured not to), including values inside `values`.
+Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents, including values inside `values`, are read under the YAML rules of section 5.2, so unquoted timestamps stay strings.
 
 ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. An ObservationSet MAY carry `spec.provenance` (`extraction`, `parameters`, `snapshot`) recording where its observations came from; compilation ignores it. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
 

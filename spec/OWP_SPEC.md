@@ -171,6 +171,17 @@ ref:
 - Several files are pinned together through a file list: an artifact with `mediaType: application/vnd.openworld.filelist+json` whose content uses the `files` format of `owp.lock.json` (section 7), with `digest` taken over the list. A consumer verifies the list's digest and then each listed file.
 - This alpha validates ExternalRefs in the manifest. ExternalRefs inside asset documents are validated once their asset kind has a JSON Schema.
 
+### 5.2 YAML documents
+
+Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS documents) is read with the YAML 1.2 core schema into the JSON data model. YAML 1.1 loaders MUST be configured to follow these rules:
+
+- A plain (unquoted) scalar is null for `~`, `null`, `Null`, `NULL`, or nothing; a boolean for `true`, `True`, `TRUE`, `false`, `False`, `FALSE`; an integer for `[-+]?[0-9]+` (decimal, also with leading zeros), `0o[0-7]+`, or `0x[0-9a-fA-F]+`; a number for `[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?`, `[-+]?.inf` (any of `inf`, `Inf`, `INF`), or `.nan` (`nan`, `NaN`, `NAN`). Every other plain scalar is a string.
+- So `yes`, `no`, `on`, `off`, `1:20`, `1_000`, and `2026-01-01` are strings; `0755` is the integer 755.
+- `<<` is an ordinary key; there are no merge keys.
+- A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
+
+Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.
+
 ## 6. World/View/EWS/Model rule
 
 ```text
@@ -381,7 +392,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 
 | Rule id | Section | Violation |
 |---|---|---|
-| `manifest.load` | 8 | `owp.yaml` missing, unparseable, or not a mapping |
+| `manifest.load` | 5.2, 8 | `owp.yaml` missing, unparseable (including duplicate keys), or not a mapping |
 | `manifest.api-version` | 2 | `apiVersion` is not `openworld/v1alpha1` |
 | `manifest.kind` | 3 | unknown package `kind` |
 | `manifest.metadata` | 2 | `metadata` is not a mapping |
@@ -400,7 +411,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.duplicate-path` | 8 | same local path listed twice |
 | `asset.path-escape` | 8 | local path resolves outside the package root |
 | `asset.missing-file` | 8 | local path does not exist |
-| `asset.yaml` | 8 | local YAML asset (including a `PackageExample`) does not parse |
+| `asset.yaml` | 5.2, 8 | local YAML asset (including a `PackageExample`) does not parse, including duplicate keys |
 | `asset.kind-mismatch` | 8 | file `kind` differs from manifest `kind` |
 | `asset.api-version` | 5 | asset file `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |

@@ -6,14 +6,13 @@ import re
 import sys
 from pathlib import Path
 
-import yaml
-
 from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, load_manifest, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
 from .resolve import ews_jsonld, resolve_package, validate_resolved
 from .scaffold import add_asset, add_extension, init_project, sync_assets
+from .yamlio import dump_yaml, load_yaml
 
 
 def cmd_init(args):
@@ -77,7 +76,7 @@ def cmd_ews_compile(args):
     if args.jsonld:
         print(json.dumps(ews_jsonld(args.world, ews, args.source), indent=2, ensure_ascii=False))
         return 0
-    print(yaml.safe_dump(ews, sort_keys=False, allow_unicode=True), end="")
+    print(dump_yaml(ews), end="")
     return 0
 
 
@@ -113,9 +112,9 @@ def cmd_kg_extract(args):
         name, sep, value = item.partition("=")
         if not sep:
             raise OWPError(f"--param must be name=value: {item}")
-        parameters[name] = yaml.safe_load(value) if value[:1] in "[{" or value in {"true", "false"} or value.replace(".", "", 1).isdigit() else value
+        parameters[name] = load_yaml(value) if value[:1] in "[{" or value in {"true", "false"} or value.replace(".", "", 1).isdigit() else value
     results = json.loads(Path(args.results).read_text(encoding="utf-8")) if args.results else None
-    print(yaml.safe_dump(run_extraction(args.package, args.profile, parameters, results), sort_keys=False, allow_unicode=True), end="")
+    print(dump_yaml(run_extraction(args.package, args.profile, parameters, results)), end="")
     return 0
 
 

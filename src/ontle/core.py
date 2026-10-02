@@ -9,11 +9,10 @@ import re
 import zipfile
 from typing import Any
 
-import yaml
-
 from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
+from .yamlio import dump_yaml, load_yaml
 
 MANIFEST = "owp.yaml"
 KINDS = {"WorldPackage", "WorldModelPackage", "OntologyPackage"}
@@ -26,7 +25,7 @@ def _load_vocabulary() -> dict[str, str]:
         text = resources.files("ontle.vocab").joinpath("asset-kinds.yaml").read_text(encoding="utf-8")
     except (ModuleNotFoundError, FileNotFoundError):  # editable install: read the repository copy
         text = (Path(__file__).resolve().parents[2] / "vocab" / "asset-kinds.yaml").read_text(encoding="utf-8")
-    groups = yaml.safe_load(text)["groups"]
+    groups = load_yaml(text)["groups"]
     return {kind: entry["stability"] for group in groups.values() for kind, entry in group.items()}
 
 
@@ -67,7 +66,7 @@ def write_manifest(path: Path, data: dict[str, Any]) -> None:
     if path.exists():
         lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
         head = "".join(line for line in lines[:next((i for i, line in enumerate(lines) if not line.startswith("#")), len(lines))])
-    path.write_text(head + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    path.write_text(head + dump_yaml(data), encoding="utf-8")
 
 
 def package_root(path: str | Path) -> Path:
@@ -83,7 +82,7 @@ def load_manifest(path: str | Path) -> tuple[Path, dict[str, Any]]:
     if not manifest_path.exists():
         raise OWPError(f"missing {MANIFEST} in {root}")
     try:
-        data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+        data = load_yaml(manifest_path.read_text(encoding="utf-8"))
     except Exception as exc:
         raise OWPError(f"cannot parse {MANIFEST}: {exc}") from exc
     if not isinstance(data, dict):
@@ -421,7 +420,7 @@ def validate_package(path: str | Path) -> ValidationResult:
                 continue
             if target.suffix.lower() in {".yaml", ".yml"}:
                 try:
-                    adata = yaml.safe_load(target.read_text(encoding="utf-8"))
+                    adata = load_yaml(target.read_text(encoding="utf-8"))
                 except Exception as exc:
                     errors.append(f"asset.yaml: cannot parse asset YAML {rel}: {exc}")
                     continue
@@ -571,7 +570,7 @@ def _local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dic
         target = (root / item["path"]).resolve()
         try:
             target.relative_to(root)
-            doc = yaml.safe_load(target.read_text(encoding="utf-8"))
+            doc = load_yaml(target.read_text(encoding="utf-8"))
         except Exception:
             continue
         if isinstance(doc, dict):
@@ -625,7 +624,7 @@ def build_lock(root: Path, files: list[Path], extra: dict[str, bytes] | None = N
         "manifest": MANIFEST,
         "manifest_sha256": sha256_bytes(manifest_bytes),
         "files": entries,
-        "externals": lock_externals(yaml.safe_load(manifest_bytes) or {}, vendored),
+        "externals": lock_externals(load_yaml(manifest_bytes) or {}, vendored),
     }
 
 
@@ -719,7 +718,7 @@ def verify_archive(path: str | Path) -> tuple[bool, list[str]]:
         else:
             from .distribution import lock_externals
             recorded = [{k: v for k, v in e.items() if k != "vendoredPath"} for e in lock.get("externals") or []]
-            if recorded != lock_externals(yaml.safe_load(zf.read(MANIFEST)) or {}):
+            if recorded != lock_externals(load_yaml(zf.read(MANIFEST)) or {}):
                 errors.append("lock externals do not match the manifest's external references")
             for entry in lock.get("externals") or []:
                 if entry.get("vendoredPath") and entry["vendoredPath"] not in locked:

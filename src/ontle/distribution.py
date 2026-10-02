@@ -19,9 +19,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from .core import MANIFEST, OWPError, load_manifest, sha256_bytes, write_manifest
+from .yamlio import dump_yaml, load_yaml
 
 FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
 OCI_ARTIFACT_TYPE = "application/vnd.openworld.package.v1alpha1"
@@ -178,7 +177,7 @@ def oci_push(archive: str | Path, reference: str) -> str:
     if not ok:
         raise OWPError("archive does not verify: " + "; ".join(errors))
     with zipfile.ZipFile(archive) as zf:
-        manifest = yaml.safe_load(zf.read(MANIFEST))
+        manifest = load_yaml(zf.read(MANIFEST))
     with tempfile.TemporaryDirectory() as td:
         config = Path(td) / "config.json"
         config.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
@@ -228,7 +227,7 @@ def build_index(archives: list[Path], base: Path | None = None, base_url: str | 
         if not ok:
             raise OWPError(f"{archive} does not verify: " + "; ".join(errors))
         with zipfile.ZipFile(archive) as zf:
-            manifest = yaml.safe_load(zf.read(MANIFEST))
+            manifest = load_yaml(zf.read(MANIFEST))
         md = manifest.get("metadata") or {}
         location = archive.name if base is None else archive.resolve().relative_to(base.resolve()).as_posix()
         if base_url:
@@ -309,7 +308,7 @@ def check_detached_evidence(evidence: dict[str, Any], archive: str | Path) -> li
     if not ok:
         return errors + [f"evidence.detached-subject: archive does not verify: {'; '.join(problems)}"]
     with zipfile.ZipFile(archive) as zf:
-        manifest = yaml.safe_load(zf.read(MANIFEST))
+        manifest = load_yaml(zf.read(MANIFEST))
     md = manifest.get("metadata") or {}
     identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
     spec = evidence.get("spec") or {}
@@ -334,7 +333,7 @@ def catalog(package: str | Path, fmt: str) -> str:
     refs = external_refs(manifest)
     for item in spec.get("assets") or []:  # content refs of local KnowledgeAsset and Dataset descriptions
         if isinstance(item, dict) and item.get("kind") in {"KnowledgeAsset", "Dataset"} and isinstance(item.get("path"), str):
-            doc = yaml.safe_load((root / item["path"]).read_text(encoding="utf-8")) or {}
+            doc = load_yaml((root / item["path"]).read_text(encoding="utf-8")) or {}
             ref = ((doc.get("spec") or {}).get("content") or {}).get("ref")
             if isinstance(ref, dict) and ref.get("status", "bound") == "bound":
                 refs.append({"pointer": item["path"], "ref": ref})
@@ -365,5 +364,5 @@ def catalog(package: str | Path, fmt: str) -> str:
             body += [f"- View: `{v}`" for v in grounding.get("compatibleWorldViews") or []]
             body += [f"- State Compiler: `{c}`" for c in grounding.get("compatibleStateCompilers") or []]
             body += [""]
-        return "---\n" + yaml.safe_dump(front, sort_keys=False) + "---\n\n" + "\n".join(body)
+        return "---\n" + dump_yaml(front) + "---\n\n" + "\n".join(body)
     raise OWPError(f"unknown catalog format {fmt!r}")

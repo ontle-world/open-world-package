@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- OWP YAML documents follow the YAML 1.2 core schema (spec section 5.2), not only ObservationSet and EWS documents: the reference implementation no longer reads `yes`, `on`, `1:20`, or dates in `owp.yaml` and assets as YAML 1.1 types, and duplicate mapping keys are `manifest.load` or `asset.yaml` errors. Generated YAML quotes strings that YAML 1.1 or 1.2 would read as another type. New cases `manifest-yaml-core-scalars`, `manifest-duplicate-key`, `asset-duplicate-key`.
 - The spec is split: `spec/OWP_SPEC.md` keeps the core (sections 1–8, 10, 11, 13, Appendices A, B); `OWP_SEMANTICS.md` (3.1, 14), `OWP_EVALUATION_AND_STATE.md` (9, 12, 15), and `OWP_EXPERIMENTAL.md` (Appendix C) hold the profiles. Section numbers are unchanged. `docs/REFERENCES.md` lists the six reference forms and where each is used.
 - Asset files may omit `apiVersion` (inherited from `owp.yaml`); a different value is `asset.api-version`. Generated assets omit it.
 - `ontle validate` prints errors that are likely consequences of a misspelt field under that field's error.
@@ -68,7 +69,7 @@
 - Extend `conformance/` with resolution, EWS compile, and EWS check cases.
 - Add stable rule ids (spec Appendix A) to every validation, resolution, and EWS error; the conformance suite lists the rule ids each invalid case must report.
 - Second review round: define the exact `owp.lock.json` format and archive layout (archives with unlocked files are rejected); timestamps are read and compared as text and must be valid calendar instants (the reference loader no longer converts unquoted YAML timestamps); JSON-data-model value equality in EWS compilation; code-point id ordering; opaque compilers are refused; dependency entries, `worldRef`, identity characters, `./` paths, and duplicate evaluation asset names are validated; hidden directories are skipped by directory sources.
-- Conformance suite: 165 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
+- Conformance suite: 170 validation, 27 resolution (including packed `.owp.zip` and `git bundle` fixtures), 20 EWS compile, 16 EWS check, 12 extraction cases; every invalid case lists its expected rule ids.
 - `PackageExample` YAML must parse (its kind is not compared); an unreadable or unverifiable package source is an error, not a fallback; git sources accept local repository and `git bundle` paths.
 - Add `ROADMAP.md`.
 - Require Python 3.11+ (3.10 reaches end of life in October 2026); CI tests 3.11–3.14, and release builds use 3.14.

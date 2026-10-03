@@ -8,8 +8,9 @@ Terms that OWP keeps apart. Each entry says which asset or field carries the con
 |---|---|---|
 | World (in real) | The actual or conceptual target. Not a package artifact. | — |
 | World | An explicit, intentionally incomplete representation of a target. | `WorldPackage`, `spec.world` |
-| World View | A projection of a World for one task, actor, objective, authority, scale, resolution, and time. | `WorldViewProfile` |
+| World View | A projection of a World for a purpose, at a scale, resolution, and time scope. Actor, role, task, objective, and authority are optional conditioning. | `WorldViewProfile` |
 | Effective World State (EWS) | The state a State Compiler materializes for one View and moment. Runtime-derived. | spec section 12 |
+| Operational context | EWS combined at run time with the acting actor's context, the task, available resources, and the dynamics and constraints that apply. Runtime-derived, not packaged. | — |
 | World Model | A model grounded in a World through named Views and State Compilers. | `WorldModelPackage` |
 
 ## Actors and authority (experimental)
@@ -33,7 +34,8 @@ Capability is also distinct from competency (an individual's skill), resource (s
 
 | Term | Meaning | Where |
 |---|---|---|
-| Task Set | Domain-specific work: which Views, actors, knowledge, patterns, and tools it needs and which artifacts it produces. | `TaskSetProfile` |
+| Task Set | A domain task definition: which Views, actors, knowledge, patterns, and tools it needs and which artifacts it produces. | `TaskSetProfile` |
+| Task instance | An actual work item in the World (quality issue 37). World state that arrives as observations; may be unassigned. Not an asset. | ObservationSet, EWS |
 | Work Pattern | A domain-independent shape of work, as a graph of nodes, transitions, guards, events, and loops. | `WorkPatternProfile` |
 | Runtime graph | An implementation of a work pattern in a workflow engine. Bound through an extension. | spec section 13 |
 | Artifact Type | What an output is (a proposal, a report). | `ArtifactContract.spec.artifact.type` |

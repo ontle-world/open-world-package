@@ -21,7 +21,7 @@ API/Tool Success != Business Commit != Realized World Change
 
 ## World View
 
-A task-, actor-, objective-, authority-, scale-, resolution-, and time-conditioned projection of a World representation. OWP packages this as a reusable `WorldViewProfile`. A WorldPackage at the `viewable` profile or above carries at least one.
+A projection of a World representation, chosen for a purpose and set at a scale, resolution, and time scope. It may also be conditioned on an actor, role, task, objective, or authority, but none of these is required: a plant-state View has no actor or task. One View can serve several tasks. OWP packages this as a reusable `WorldViewProfile`. A WorldPackage at the `viewable` profile or above carries at least one.
 
 ## State Compiler
 
@@ -51,7 +51,7 @@ An OntologyPackage publishes classes and properties with a namespace IRI, prefix
 
 ## Work, artifacts, and consumers (experimental)
 
-A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. Each actor has its own World View, often specializing a shared base View. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_EXPERIMENTAL.md`.
+A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. An actor or task may have its own World View, often specializing a shared base View; Views without an actor or task are just as valid. A Task Set is a task definition: actual work items (task instances) are World state that arrives as observations, not assets. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_EXPERIMENTAL.md`.
 
 ## Extensions
 

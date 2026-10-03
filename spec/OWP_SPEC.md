@@ -55,7 +55,7 @@ WorldModelPackage
 
 Human card: `WORLD.md`.
 
-A World package describes an explicit, intentionally incomplete representation. It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
+A World is the target reality itself (a plant, a supply chain, a physical system). A World package is a persistent representation of it: explicit and intentionally incomplete. Its boundary, profiles, and bindings are the contract for representing that World, not claims about what the World is. A World need not contain actors or tasks; an enterprise World usually does, as content it represents (spec Appendix C). It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
 
 A World is useful without a World Model. Reference and taxonomy Worlds (organizations, material taxonomies, regulatory concepts) need not compile state. A WorldPackage therefore declares a conformance profile (section 6.1) that states how far along the World -> View -> EWS chain it goes. Starter templates generate a default View and State Compiler and declare `stateful`.
 
@@ -234,6 +234,10 @@ World(schema)
 -> Representation Adapter
 -> World Model
 ```
+
+A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `purpose.taskRef`, `actorRef`, or `roleRef` (Appendix C.4) records the task or actor it is conditioned on.
+
+An EWS is the runtime materialization of a View (section 12). A runtime that acts combines it with other runtime context (the acting actor's current roles, assignments, and resources, the task, and the dynamics and constraints that apply). Those combinations are runtime objects, like EWS, and are not packaged assets.
 
 Each step narrows the one before it. A View selects names from the World: when `spec.world.boundary.included` is declared, every name in a View's resolved `projection.include` SHOULD be in it (warning `view.outside-world`). A State Compiler's fields describe what its View selects: a field `<entity>.<property>` SHOULD name an entity in its View's resolved `projection.include` when that list is not empty (warning `compiler.field-outside-view`). Fields without a `.` are not checked.
 

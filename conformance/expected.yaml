@@ -939,6 +939,15 @@ cases:
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
+  ontology-dependency-term:
+    valid: true
+    resolved:
+      conformance/upper@1.0.0: null
+    rule: "A domain ontology aligns to terms of an upper ontology it depends on; an RDF/XML entrypoint has format rdf-xml."
+  ontology-dependency-term-unknown:
+    valid: false
+    errors: [ontology.dependency-term]
+    rule: "An identifier a schema uses from a dependency ontology's namespace must be a term that ontology defines (spec section 3.1)."
   view-external-world:
     valid: true
     warnings: [view.outside-world]

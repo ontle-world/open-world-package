@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata: {namespace: conformance, name: upper, version: 1.0.0}
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://example.org/upper#
+    prefixes: {up: "https://example.org/upper#"}
+    entrypoints:
+    - {path: ontology/upper.rdf, format: rdf-xml, role: schema}
+    termIndex: semantics/terms.yaml

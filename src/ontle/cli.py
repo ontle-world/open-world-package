@@ -163,7 +163,7 @@ def cmd_kg_check(args):
         print(("WARN: " if f.code == "kg.untyped" else "ERROR: ") + f.line(), file=sys.stderr if f.code != "kg.untyped" else sys.stdout)
     for rel in report.skipped:
         print(f"SKIP: {rel}: not a local RDF graph with spec.conformsTo.ontology")
-    if not report.checked:
+    if not report.checked and not report.findings:
         print("no knowledge graph to check")
     elif report.ok:
         print("OK: " + ", ".join(report.checked))

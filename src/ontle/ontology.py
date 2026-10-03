@@ -14,7 +14,7 @@ from .structure import SEMANTIC_PROFILE, TERM_INDEX, external_ref_issues, struct
 from .yamlio import dump_yaml, load_yaml
 
 ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"]
-FORMATS = {"owp-yaml", "turtle", "jsonld", "owl-xml", "ntriples", "linkml", "sssom-tsv"}
+FORMATS = {"owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"}
 ROLES = {"schema", "shapes", "mappings", "labels"}
 TERM_TYPES = {"class", "property", "individual", "datatype", "concept"}
 PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
@@ -199,7 +199,7 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
 
 # --- tooling (T): index generation and export -------------------------------
 
-RDF_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "owl-xml": "xml", "ntriples": "nt"}
+RDF_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "rdf-xml": "xml", "ntriples": "nt"}  # OWL/XML (owl-xml) needs an OWL API tool
 
 
 def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
@@ -218,7 +218,10 @@ def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str
                 if term_type and isinstance(value, str) and expand(value, prefixes):
                     found.setdefault(expand(value, prefixes), term_type)  # type: ignore[arg-type]
         elif fmt in RDF_FORMATS:
-            found.update({iri: t for iri, t in _rdf_terms(path, RDF_FORMATS[fmt]).items() if iri not in found})
+            # Only the terms this ontology defines: those in its own namespace (an RDF file also declares terms
+            # it borrows, such as rdfs:label or Dublin Core annotations).
+            namespace = ontology.get("iri") if isinstance(ontology.get("iri"), str) else ""
+            found.update({iri: t for iri, t in _rdf_terms(path, RDF_FORMATS[fmt]).items() if iri not in found and iri.startswith(namespace)})
         else:
             from .core import OWPError
             raise OWPError(f"cannot build a term index from format {fmt!r}; write spec.ontology.termIndex by hand")
@@ -235,7 +238,7 @@ def _rdf_terms(path: Path, rdf_format: str) -> dict[str, str]:
     graph = rdflib.Graph()
     graph.parse(path, format=rdf_format)
     types = {OWL.Class: "class", RDFS.Class: "class", OWL.ObjectProperty: "property", OWL.DatatypeProperty: "property",
-             RDF.Property: "property", OWL.AnnotationProperty: "property", OWL.NamedIndividual: "individual",
+             RDF.Property: "property", OWL.NamedIndividual: "individual",
              RDFS.Datatype: "datatype", SKOS.Concept: "concept"}
     out: dict[str, str] = {}
     for subject, rdf_type in graph.subject_objects(RDF.type):
@@ -282,7 +285,8 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
             if not cls:
                 continue
             triples.append((cls, "rdf:type", "owl:Class", False))
-            for parent in t.get("subClassOf") or [] if isinstance(t.get("subClassOf"), list) else []:
+            parents = t.get("subClassOf")
+            for parent in parents if isinstance(parents, list) else [parents] if parents else []:
                 if iri(parent):
                     triples.append((cls, "rdfs:subClassOf", iri(parent), False))  # type: ignore[arg-type]
             for lang, text in (t.get("label") or {}).items() if isinstance(t.get("label"), dict) else []:

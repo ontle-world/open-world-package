@@ -155,5 +155,73 @@ class KnowledgeGraphCheckTests(unittest.TestCase):
         self.assertEqual(report.findings, [])
 
 
+
+
+def _standard_vocabulary(target: Path, iri: str, prefix: str, rdf: str) -> None:
+    """An OntologyPackage that publishes a vocabulary given as RDF/XML (like SKOS or BFO)."""
+    (target / "ontology").mkdir(parents=True)
+    (target / "ONTOLOGY.md").write_text("# Vocabulary\n", encoding="utf-8")
+    (target / "ontology" / "vocab.rdf").write_text(rdf, encoding="utf-8")
+    (target / "owp.yaml").write_text(
+        "apiVersion: openworld/v1alpha1\nkind: OntologyPackage\n"
+        f"metadata: {{namespace: standards, name: {target.name}, version: 1.0.0}}\n"
+        f"spec:\n  ontology:\n    description: ONTOLOGY.md\n    iri: \"{iri}\"\n    prefixes: {{{prefix}: \"{iri}\"}}\n"
+        "    entrypoints:\n    - {path: ontology/vocab.rdf, format: rdf-xml, role: schema}\n", encoding="utf-8")
+
+
+class StandardVocabularyTests(unittest.TestCase):
+    """Published vocabularies wrapped as OntologyPackages (SKOS, BFO, PROV are tested this way by hand)."""
+
+    VOCAB = ('<?xml version="1.0"?>\n<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" '
+             'xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:owl="http://www.w3.org/2002/07/owl#">\n'
+             '  <owl:Class rdf:about="http://www.w3.org/2004/02/skos/core#Concept"/>\n'
+             '  <owl:ObjectProperty rdf:about="http://www.w3.org/2004/02/skos/core#broader">\n'
+             '    <rdfs:domain rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/></owl:ObjectProperty>\n'
+             '  <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#label"/>\n'
+             '  <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#prefLabel"/>\n</rdf:RDF>\n')
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_term_index_keeps_only_the_vocabularys_own_terms(self):
+        from ontle.ontology import build_term_index
+        with tempfile.TemporaryDirectory() as td:
+            pkg = Path(td) / "skos"
+            _standard_vocabulary(pkg, "http://www.w3.org/2004/02/skos/core#", "skos", self.VOCAB)
+            terms = build_term_index(pkg, yaml.safe_load((pkg / "owp.yaml").read_text(encoding="utf-8")))
+        # rdfs:label is borrowed and annotation properties are not domain terms
+        self.assertEqual(terms, [{"iri": "http://www.w3.org/2004/02/skos/core#Concept", "type": "class"},
+                                 {"iri": "http://www.w3.org/2004/02/skos/core#broader", "type": "property"}])
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_single_superclass_is_exported(self):
+        root = ROOT / "conformance" / "resolution" / "ontology-dependency-term" / "root"
+        turtle = export_rdf(root, yaml.safe_load((root / "owp.yaml").read_text(encoding="utf-8")), "turtle")
+        self.assertIn("<https://example.org/domain#Machine> rdfs:subClassOf <https://example.org/upper#MaterialEntity>", turtle)  # a string
+        self.assertIn("<https://example.org/domain#Repair> rdfs:subClassOf <https://example.org/upper#Process>", turtle)  # a list
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_kg_check_covers_a_published_vocabulary_and_reports_unreadable_graphs(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            _standard_vocabulary(d / "skos", "http://www.w3.org/2004/02/skos/core#", "skos", self.VOCAB)
+            write_term_index(d / "skos", d / "skos" / "owp.yaml")
+            world = init_project("w", "test", "minimal", d / "w")
+            (world / "kg").mkdir()
+            (world / "knowledge.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: KnowledgeAsset\nmetadata: {name: kg}\n"
+                "spec: {roles: [graph], representation: graph, format: turtle, conformsTo: {ontology: standards/skos@1.0.0}, content: {path: kg/g.ttl}}\n",
+                encoding="utf-8")
+            manifest = world / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("spec:\n", "spec:\n  dependencies: [standards/skos@1.0.0]\n", 1), encoding="utf-8")
+            kg = world / "kg" / "g.ttl"
+            kg.write_text("@prefix skos: <http://www.w3.org/2004/02/skos/core#> .\n@prefix ex: <https://example.org/> .\n"
+                          "ex:a a skos:Concept ; skos:broaderr ex:b .\nex:c skos:broader ex:a .\n", encoding="utf-8")
+            report = check_knowledge_graphs(world, [str(d)])
+            self.assertEqual(sorted(f.code for f in report.findings), ["kg.unknown-property", "kg.untyped"])
+            kg.write_text("ex:a a skos:Concept .\n", encoding="utf-8")  # prefixes not declared
+            report = check_knowledge_graphs(world, [str(d)])
+            self.assertEqual([f.code for f in report.findings], ["kg.parse"])
+            self.assertFalse(report.ok)
+
 if __name__ == "__main__":
     unittest.main()

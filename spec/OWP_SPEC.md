@@ -532,6 +532,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ontology.format` | 3.1 | unknown entrypoint `format` |
 | `ontology.parse` | 3.1 | `owp-yaml` entrypoint is not a SemanticProfile document |
 | `ontology.prefix-undeclared` | 3.1 | SemanticProfile identifier uses an undeclared prefix |
+| `ontology.dependency-term` | 3.1 | under resolution, an identifier an `owp-yaml` schema uses from a dependency OntologyPackage's namespace that the dependency does not define |
 | `ontology.term-index` | 3.1 | `termIndex` missing, not an OntologyTermIndex, or a malformed term |
 | `ontology.external-import` | 3.1 | `externalImports` entry without an absolute `iri` or a `ref` |
 | `profile.ontology.vocabulary`, `profile.ontology.schema`, `profile.ontology.constrained`, `profile.ontology.mapped` | 3.1 | declared ontology profile not satisfied |

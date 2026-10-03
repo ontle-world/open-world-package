@@ -1302,6 +1302,16 @@
    ],
    "warnings": []
   },
+  "ontology-dependency-term": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-dependency-term-unknown": {
+   "errors": [
+    "ontology.dependency-term"
+   ],
+   "warnings": []
+  },
   "unresolvable-world": {
    "errors": [
     "resolve.unresolved"

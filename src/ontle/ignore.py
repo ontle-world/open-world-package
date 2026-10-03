@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from .values import WHITESPACE
+
 IGNORE_FILE = ".owpignore"
 
 
@@ -73,7 +75,7 @@ def _glob_regex(glob: str) -> str:
 def parse_ignore(text: str) -> list[_Rule]:
     rules: list[_Rule] = []
     for line in re.split(r"\r\n|\r|\n", text):
-        line = line.rstrip()
+        line = re.sub(rf"[{WHITESPACE}]+\Z", "", line)  # String.prototype.trimEnd
         if not line or line.startswith("#"):
             continue
         negate = line.startswith("!")

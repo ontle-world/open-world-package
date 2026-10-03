@@ -156,8 +156,8 @@ export function bindingGroundingProblems(
   ontologies: Array<{ ref: string; prefixes: Record<string, string>; terms: Set<string> }>,
 ): Problem[] {
   const out: Problem[] = [];
-  const prefixes: Record<string, string> = {};
-  const owner: Record<string, string> = {};
+  const prefixes: Record<string, string> = Object.create(null); // no prototype: a prefix named "constructor" is a prefix
+  const owner: Record<string, string> = Object.create(null);
   for (const o of ontologies) {
     for (const [name, iri] of Object.entries(o.prefixes)) {
       if (name in prefixes && prefixes[name] !== iri) {

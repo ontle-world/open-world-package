@@ -7,6 +7,7 @@ from typing import Any
 
 from .ontology import CURIE_RE, expand
 from .structure import OPEN, VALUE, closed, structure_errors
+from .values import WHITESPACE
 
 FIELD_BINDING = closed({"class": VALUE, "path": VALUE, "unit": VALUE, "values": closed({"scheme": VALUE, "base": VALUE, "map": OPEN})})
 
@@ -55,7 +56,9 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
         errors.append(f"binding.asset: spec.world.semanticBinding {named!r} must be a listed local SemanticBinding asset")
     schema_fields = {f for fields in ews_fields.values() for f in fields or []}
     boundary = world.get("boundary") if isinstance(world.get("boundary"), dict) else {}
-    scope = {x for x in boundary.get("included") or [] if isinstance(x, str)} | view_includes
+    included = boundary.get("included")
+    scope = {x for x in included if isinstance(x, str)} if isinstance(included, list) else set()
+    scope |= view_includes
     for rel, kind in sorted(local_kinds.items()):
         if kind != "SemanticBinding" or rel not in docs:
             continue
@@ -88,7 +91,7 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
 
 
 IRI_SAFE_CODE = re.compile(r"^[A-Za-z0-9._~-]+\Z")  # a code that can be appended to `base` as is
-IRDI_RE = re.compile(r"^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}\Z")  # ISO 29002-5, e.g. 0173-1#02-AAO677#002
+IRDI_RE = re.compile(rf"^[0-9]{{4}}[-/][^#{WHITESPACE}]+#(?:[0-9A-Z]{{2}}-)?[0-9A-Z]{{3,}}#[0-9]{{1,3}}\Z")  # ISO 29002-5, e.g. 0173-1#02-AAO677#002
 
 
 def _absolute_iri(value: Any) -> bool:
@@ -226,7 +229,9 @@ def grounding_issues(package_identity: str, binding_docs: dict[str, dict[str, An
 def jsonld_context(binding_doc: dict[str, Any], prefixes: dict[str, str]) -> dict[str, Any]:
     """JSON-LD context mapping each bound EWS field to the IRI of its last path step (or its class)."""
     context: dict[str, Any] = dict(prefixes)
-    for field, value in ((binding_doc.get("spec") or {}).get("fields") or {}).items():
+    spec = binding_doc.get("spec") if isinstance(binding_doc, dict) else None
+    fields = spec.get("fields") if isinstance(spec, dict) else None
+    for field, value in fields.items() if isinstance(fields, dict) else []:
         if isinstance(value, dict):
             path = value.get("path") if isinstance(value.get("path"), list) else []
             target = path[-1] if path else value.get("class")

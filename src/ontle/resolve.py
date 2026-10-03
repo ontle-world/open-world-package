@@ -36,6 +36,13 @@ class ResolvedPackage:
     source: str
     manifest: dict[str, Any]
     revision: str | None = None
+    _assets: tuple[dict[str, str], dict[str, dict[str, Any]]] | None = field(default=None, repr=False, compare=False)
+
+    def local_assets(self) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
+        """Kinds and documents of the package's local assets, read once per resolution."""
+        if self._assets is None:
+            self._assets = local_assets(self.root, self.manifest.get("spec") or {})
+        return self._assets
 
 
 @dataclass
@@ -294,7 +301,7 @@ def resolve_package(path: str | Path, sources: list[str] | None = None) -> Resol
 
 
 def _local_asset_kind(pkg: ResolvedPackage, rel: str) -> str | None:
-    return local_assets(pkg.root, pkg.manifest.get("spec") or {})[0].get(rel)
+    return pkg.local_assets()[0].get(rel)
 
 
 def _load_asset(pkg: ResolvedPackage, rel: str) -> dict[str, Any]:
@@ -309,7 +316,7 @@ def _binding_grounding_errors(pkg: ResolvedPackage, resolution: Resolution) -> l
     """SemanticBinding CURIEs resolve against the OntologyPackages this package depends on (spec section 14)."""
     from .binding import grounding_issues
     from .ontology import terms as ontology_terms
-    kinds, docs = local_assets(pkg.root, pkg.manifest.get("spec") or {})
+    kinds, docs = pkg.local_assets()
     binding_docs = {rel: docs.get(rel) or {} for rel, kind in kinds.items() if kind == "SemanticBinding"}
     if not binding_docs:
         return []

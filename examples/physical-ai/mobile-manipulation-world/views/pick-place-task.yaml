@@ -14,6 +14,7 @@ spec:
     - robot
     - target_object
     - target_zone
+    - task
     - workspace
     - observations
     - safety_constraints

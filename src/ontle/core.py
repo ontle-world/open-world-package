@@ -157,8 +157,8 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
     level = WORLD_PROFILES.index(profile)
     errors: list[str] = []
     world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
-    if not world.get("definition") and "WorldDefinition" not in asset_kinds:
-        errors.append("profile.descriptive: requires spec.world.definition or a WorldDefinition asset")
+    if not world.get("definition"):
+        errors.append("profile.descriptive: requires spec.world.definition")
     if level < 1:
         return errors
 
@@ -296,6 +296,33 @@ def _asset_structure_errors(doc: dict[str, Any], asset_kind: Any, rel: str, exte
     return errors
 
 
+def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
+                          ews_fields: dict[str, list[str] | None]) -> list[str]:
+    """Section 6: a View selects from the World's boundary, and a State Compiler's fields belong to its View's names."""
+    warnings: list[str] = []
+    world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
+    boundary = world.get("boundary") if isinstance(world.get("boundary"), dict) else {}
+    included = {x for x in boundary.get("included") or [] if isinstance(x, str)} if isinstance(boundary.get("included"), list) else set()
+    includes: dict[str, set[str]] = {}
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "WorldViewProfile":
+            continue
+        names = (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include")
+        includes[rel] = {x for x in names if isinstance(x, str)} if isinstance(names, list) else set()
+        for name in sorted(includes[rel] - included) if included else []:
+            warnings.append(f"view.outside-world: {rel}: projection.include {name!r} is not in spec.world.boundary.included")
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "StateCompilerProfile":
+            continue
+        view = _spec_of(local_asset_docs.get(rel)).get("worldViewRef")
+        names = includes.get(view) if isinstance(view, str) else None
+        for field in ews_fields.get(rel) or [] if names else []:
+            entity = field.split(".", 1)[0]
+            if "." in field and entity not in names:
+                warnings.append(f"compiler.field-outside-view: {rel}: field {field!r} names {entity!r}, which {view}'s projection.include does not list")
+    return warnings
+
+
 def validate_package(path: str | Path) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
@@ -408,6 +435,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         assets = []
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
     experimental_kind_counts: dict[str, int] = {}
+    reserved_kind_counts: dict[str, int] = {}
     standard_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
@@ -427,8 +455,9 @@ def validate_package(path: str | Path) -> ValidationResult:
                 errors.append(f"asset.kind: {where} {asset_kind!r} is not an asset kind of the vocabulary or an extension kind")
                 return False
             warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
-        elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
-            experimental_kind_counts[asset_kind] = experimental_kind_counts.get(asset_kind, 0) + 1
+        elif ASSET_KIND_STABILITY[asset_kind] in ("experimental", "reserved"):
+            counts = experimental_kind_counts if ASSET_KIND_STABILITY[asset_kind] == "experimental" else reserved_kind_counts
+            counts[asset_kind] = counts.get(asset_kind, 0) + 1
         return True
 
     # The manifest lists external assets (ref) and PackageExample files; other local assets are discovered.
@@ -519,6 +548,8 @@ def validate_package(path: str | Path) -> ValidationResult:
 
     for asset_kind, count in experimental_kind_counts.items():
         warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change ({count} asset{'s' if count > 1 else ''})")
+    for asset_kind, count in reserved_kind_counts.items():
+        warnings.append(f"asset.kind-reserved: asset kind {asset_kind} is reserved: it has no schema or rules yet ({count} asset{'s' if count > 1 else ''})")
     for rel, asset_kind, adata in experimental_docs:
         exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names, local_asset_docs)
         errors.extend(exp_errors)
@@ -538,6 +569,8 @@ def validate_package(path: str | Path) -> ValidationResult:
     bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, ews_fields, view_includes, extension_names)
     errors.extend(bind_errors)
     warnings.extend(bind_warnings)
+    if kind == "WorldPackage":
+        warnings.extend(_containment_warnings(spec, local_asset_kinds, local_asset_docs, ews_fields))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:

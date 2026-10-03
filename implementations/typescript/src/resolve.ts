@@ -355,6 +355,13 @@ class Source {
 
 // ---------------------------------------------------------------- resolution
 
+/** Spec 11: package kinds each kind may depend on (dependencies declared with `as` are extensions and exempt). */
+const DEPENDENCY_DIRECTIONS: Record<string, string[]> = {
+  OntologyPackage: ["OntologyPackage"],
+  WorldPackage: ["OntologyPackage", "WorldPackage"],
+  WorldModelPackage: ["OntologyPackage", "WorldPackage", "WorldModelPackage"],
+};
+
 interface Node {
   identity: string;
   kind: string;
@@ -460,6 +467,17 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
       const target = d.as !== undefined ? nodes.get(d.ref) : undefined;
       if (target && !isObj(get(target.manifest, "spec", "extensionDefinition"))) {
         err("extension.definition", `${n.identity}: extension "${d.as}" resolves to ${d.ref}, which declares no spec.extensionDefinition`);
+      }
+    }
+  }
+
+  // Spec 11: dependencies point down the hierarchy Ontology <- World <- World Model (warning).
+  for (const n of nodes.values()) {
+    const allowed = DEPENDENCY_DIRECTIONS[n.kind];
+    for (const d of n.deps) {
+      const target = d.as === undefined ? nodes.get(d.ref) : undefined;
+      if (allowed && target && !allowed.includes(target.kind)) {
+        warnings.push({ code: "resolve.dependency-direction", message: `${n.identity} (${n.kind}) depends on ${d.ref} (${target.kind}); allowed for ${n.kind}: ${allowed.join(", ")}` });
       }
     }
   }

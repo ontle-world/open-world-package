@@ -10,11 +10,9 @@ spec:
     objective: task_defined
   projection:
     include:
-    - task_relevant_entities
-    - relations
-    - state
-    - observations
-    - constraints
+    - organization
+    - work
+    - decisions
     - actions
     - outcomes
     principle: minimal_sufficient_representation

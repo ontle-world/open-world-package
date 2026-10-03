@@ -18,13 +18,14 @@ spec:
     boundary:
       included:
       - robot
-      - object
       - workspace
-      - target
-      - observation
-      - action
-      - constraint
-      - outcome
+      - target_object
+      - target_zone
+      - task
+      - observations
+      - action_space
+      - safety_constraints
+      - task_outcome
       excluded:
       - specific_robot_firmware
       - specific_simulator_runtime

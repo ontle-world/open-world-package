@@ -12,7 +12,7 @@ cases:
     valid: false
     errors: [profile.descriptive]
     satisfiedProfile: null
-    rule: "descriptive requires spec.world.definition or a WorldDefinition asset."
+    rule: "descriptive requires spec.world.definition."
   world-viewable:
     valid: true
     satisfiedProfile: viewable
@@ -74,10 +74,6 @@ cases:
     errors: [profile.viewable.world-ref]
     satisfiedProfile: descriptive
     rule: "The default View's worldRef must be 'self' or this package's identity."
-  world-descriptive-via-world-definition:
-    valid: true
-    satisfiedProfile: descriptive
-    rule: "descriptive may be satisfied by a WorldDefinition asset instead of spec.world.definition."
   world-model-ready-via-schema-ref:
     valid: true
     satisfiedProfile: model-ready
@@ -860,12 +856,33 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "Discovery does not enter a subdirectory with its own owp.yaml; that package's assets are not this package's."
+  asset-kind-reserved:
+    valid: true
+    warnings: [asset.kind-reserved]
+    satisfiedProfile: descriptive
+    rule: "A reserved vocabulary kind has no schema or rules yet; using it is a warning."
+  view-outside-world:
+    valid: true
+    warnings: [view.outside-world]
+    satisfiedProfile: model-ready
+    rule: "When spec.world.boundary.included is declared, a View's projection.include selects from it."
+  compiler-field-outside-view:
+    valid: true
+    warnings: [compiler.field-outside-view]
+    satisfiedProfile: model-ready
+    rule: "A State Compiler field <entity>.<property> names an entity its View's projection.include lists."
   asset-api-version-mismatch:
     valid: false
     errors: [asset.api-version]
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
+  dependency-direction:
+    valid: true
+    warnings: [resolve.dependency-direction]
+    resolved:
+      conformance/taxonomy@1.0.0: null
+    rule: "Dependencies point down the hierarchy Ontology <- World <- World Model; an OntologyPackage that depends on a WorldPackage is a warning."
   grounded:
     valid: true
     resolved:

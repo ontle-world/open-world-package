@@ -2,14 +2,15 @@
 
 The authoring surface is intentionally small, but a Registry may index a richer typed graph.
 
-Representative asset kinds:
+Representative asset kinds (`vocab/asset-kinds.yaml` lists them all with their stability):
 
-- WorldDefinition / SemanticProfile / WorldViewProfile
-- SourceSystemSchemaProfile / MappingSpec / ActionBindingProfile
-- ReferenceEnterpriseProfile / ScenarioProfile
-- WorldModelContract / ModelArtifact / RepresentationAdapter
-- Skill / Tool / Workflow / OperationalAsset
-- Dataset / Fixture / Benchmark / Validator / EvaluationProfile / Attestation
+- World: the manifest's `spec.world`, SemanticBinding, WorldViewProfile, StateCompilerProfile
+- Ontology (T-box): SemanticProfile, OntologyTermIndex
+- Integration: SourceSystemSchemaProfile, ObservationAcquisitionProfile, ActionBindingProfile, CommitContract, EffectVerificationProfile
+- Scenarios and environments: ScenarioProfile, EnvironmentProfile
+- Models: the manifest's `spec.worldModel`, ModelArtifact, RepresentationAdapterProfile
+- Evaluation: Dataset, EvaluationProfile, VerifierPackage, CompatibilityEvidence
+- Reserved names without a definition yet: SkillProfile, ToolProfile, WorkflowProfile, OperationalAsset, fixtures, benchmark and acceptance cases, Attestation, and others
 
 Important distinction:
 
@@ -26,7 +27,7 @@ The Registry can expose multiple catalog views over one asset identity/lineage g
 ## WorldPackage minimum semantic execution chain
 
 ```text
-WorldDefinition / World contract
+World (spec.world)
 -> WorldViewProfile         packaged
 -> StateCompilerProfile     packaged
 -> EffectiveWorldState      runtime-derived

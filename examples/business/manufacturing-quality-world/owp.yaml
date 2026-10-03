@@ -23,6 +23,8 @@ spec:
       - equipment
       - inspection
       - claim
+      - evidence
+      - constraint
       - decision
       - capa
       - outcome

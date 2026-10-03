@@ -19,8 +19,10 @@ spec:
       - opportunity
       - activity
       - territory
+      - territory_assignment
       - quota
       - priority
+      - global_pipeline
       excluded:
       - complete_crm_implementation
       - pricing_engine

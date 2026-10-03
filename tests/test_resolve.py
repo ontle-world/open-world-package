@@ -41,6 +41,7 @@ class ResolveTests(unittest.TestCase):
                 result, resolution = validate_resolved(case / "root", [str(case / "packages")])
                 self.assertEqual(result.valid, exp["valid"], result.errors)
                 self.assertLessEqual(set(exp.get("errors", [])), rule_ids(result.errors), result.errors)
+                self.assertLessEqual(set(exp.get("warnings", [])), rule_ids(result.warnings), result.warnings)
                 if "resolved" in exp:
                     recorded = {i: p.revision for i, p in resolution.packages.items() if i != resolution.root.identity}
                     self.assertEqual(recorded, exp["resolved"])

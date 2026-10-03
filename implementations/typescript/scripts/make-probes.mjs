@@ -141,14 +141,6 @@ probe("p-untyped-view-file", { "owp.yaml": worldManifest(), ...worldFiles(), "vi
   { valid: false, satisfiedProfile: "descriptive", rule: "a file without an OWP apiVersion is not an asset, so defaultView names no View (spec 5)" });
 
 // --- Section 6.1: profiles ---
-probe("p-descriptive-worlddefinition-asset", { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: "probe", name: "w", version: "0.1.0" },
-  spec: { world: { description: "WORLD.md" }, assets: [{ kind: "WorldDefinition", path: "semantics/def.yaml" }] } }, "WORLD.md": "# W\n",
-  "semantics/def.yaml": { apiVersion: AV, kind: "WorldDefinition", metadata: { name: "d" }, spec: {} } },
-  { valid: true, satisfiedProfile: "descriptive", rule: "descriptive via WorldDefinition asset" });
-probe("p-descriptive-no-world-key", { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: "probe", name: "w", version: "0.1.0" },
-  spec: { assets: [{ kind: "WorldDefinition", path: "semantics/def.yaml" }] } }, "WORLD.md": "# W\n",
-  "semantics/def.yaml": { apiVersion: AV, kind: "WorldDefinition", metadata: { name: "d" }, spec: {} } },
-  { valid: false, satisfiedProfile: "descriptive", rule: "spec.world required by schema even when WorldDefinition asset satisfies descriptive (conflict)" });
 probe("p-conformance-without-profile", { "owp.yaml": worldManifest({ conformance: {} }), ...worldFiles() }, { valid: true, satisfiedProfile: "model-ready", rule: "conformance: {} treated as descriptive (unspecified)" });
 probe("p-descriptive-with-broken-default-view", { "owp.yaml": worldManifest({ conformance: { profile: "descriptive" } }, { defaultView: "views/missing.yaml" }), ...worldFiles() },
   { valid: true, satisfiedProfile: "descriptive", rule: "requirements of higher profiles are not checked when not declared" });

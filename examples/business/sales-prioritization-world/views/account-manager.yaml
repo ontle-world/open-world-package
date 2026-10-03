@@ -11,7 +11,7 @@ spec:
     roleRef: roles/regional-sales-manager.yaml
     taskRef: tasks/account-priority.yaml
   projection:
-    include: [territory_assignment]
+    include: [territory, territory_assignment]
     exclude: [global_pipeline]
   conditioning:
     authorityScope: assign_within_region

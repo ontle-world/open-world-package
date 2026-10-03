@@ -127,13 +127,21 @@ metadata:
 spec: {}
 ```
 
-Discovery reads every `.yaml`/`.yml` file of the package except `owp.yaml` and the listed `PackageExample` files. It skips path components that start with `.` or are named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, files that resolve outside the package root, and subdirectories that contain their own `owp.yaml` (a nested package). For each file read:
+Discovery reads every `.yaml`/`.yml` file of the package except `owp.yaml` and the listed `PackageExample` files. It skips path components that start with `.` or are named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, files that resolve outside the package root, subdirectories that contain their own `owp.yaml` (a nested package), and paths that `.owpignore` excludes. For each file read:
 
 - Every file MUST parse (`asset.yaml`, section 5.2).
 - A file whose top-level `apiVersion` is not a string starting with `openworld/` is an ordinary package file, not an asset. Configuration of other tools (for example a Kubernetes manifest) can sit in a package.
 - A file with an OWP `apiVersion` is an OWP document. Its `apiVersion` MUST equal the manifest's (`asset.api-version`), and it MUST declare `kind` (`asset.kind`).
 - `ObservationSet` and `EffectiveWorldState` documents are package files, not assets.
 - Any other `kind` MUST be a vocabulary kind or an extension kind `<extension>:<Kind>` (section 13); otherwise `asset.kind`. The file is then a local asset of that kind at its package-relative path.
+
+An optional `.owpignore` file at the package root excludes paths from the package. A path it excludes is not a package file: discovery does not read it, an archive does not contain it (section 7), and a listed `PackageExample` there is missing (`asset.missing-file`). `owp.yaml` cannot be excluded. The syntax is a subset of gitignore:
+
+- One pattern per line. Blank lines and lines starting with `#` are skipped; `\#` and `\!` start a pattern with a literal `#` or `!`.
+- A pattern starting with `!` re-includes a path that an earlier pattern excluded. A path inside an excluded directory cannot be re-included.
+- A trailing `/` matches directories only. A pattern that contains another `/` is anchored at the package root (a leading `/` only anchors); any other pattern matches a file or directory name at any depth.
+- `*` matches any characters except `/`, `?` one character except `/`, and `[...]` one character of a class (`[!...]` negates). `**/` at the start or `/**/` inside matches zero or more directories; a trailing `/**` matches everything inside.
+- For each directory on a file's path and then the file itself, the last matching pattern decides whether it is excluded.
 
 `spec.assets` lists what discovery cannot find: external artifacts (`ref`) and `PackageExample` files (`path`), whose content may be any document. An entry has `kind`, exactly one of `path` and `ref`, and optionally an `extensions` block. A `path` entry of any other kind is an error (`asset.path-or-ref`).
 
@@ -274,7 +282,7 @@ Every WorldModelPackage requires compatible View and State Compiler references r
 
 ## 7. Integrity
 
-`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files and one `owp.lock.json`:
+`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files (without the paths `.owpignore` excludes, section 5) and one `owp.lock.json`:
 
 ```json
 {
@@ -454,7 +462,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierPackage assets share `metadata.name` |
 | `asset.duplicate-path` | 8 | same `PackageExample` path listed twice |
 | `asset.path-escape` | 8 | listed `PackageExample` path resolves outside the package root |
-| `asset.missing-file` | 8 | listed `PackageExample` path does not exist |
+| `asset.missing-file` | 8 | listed `PackageExample` path does not exist or is excluded by `.owpignore` |
 | `standard.binding` | 5.3 | malformed `spec.standardBindings`: not a mapping, an entry without `standard`, `terms` not a mapping of strings, an empty `license`, or neither `ref` nor `terms` |
 | `standard.unpinned` | 5.3 | a bound `ref` in a standard binding is not pinned |
 | `standard.license` | 5.3 | a standard binding binds an artifact without `license` |

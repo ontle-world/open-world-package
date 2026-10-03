@@ -298,6 +298,39 @@ class OntleTests(unittest.TestCase):
             with zipfile.ZipFile(archive, "r") as zf:
                 self.assertFalse(any(name.startswith(".ontle/") for name in zf.namelist()))
 
+    def test_owpignore_patterns(self):
+        from ontle.ignore import is_ignored, parse_ignore
+        rules = parse_ignore("# comment\n\ndrafts/\n/notes.yaml\n*.wip.yaml\n!keep.wip.yaml\ncache/**\nscratch-[0-9].yaml\nlogs/**/*.yaml\n")
+        cases = {
+            "drafts/v.yaml": True, "views/drafts/v.yaml": True, "drafts": False,  # a directory pattern skips a file named drafts
+            "notes.yaml": True, "views/notes.yaml": False,
+            "views/a.wip.yaml": True, "views/keep.wip.yaml": False,
+            "cache/a/b.yaml": True, "scratch-1.yaml": True, "scratch-x.yaml": False,
+            "logs/a.yaml": True, "logs/x/y/a.yaml": True, "logs/a.json": False, "views/v.yaml": False,
+        }
+        for rel, expected in cases.items():
+            self.assertEqual(is_ignored(rules, rel), expected, rel)
+        self.assertTrue(is_ignored(parse_ignore("drafts/\n!drafts/keep.yaml\n"), "drafts/keep.yaml"))  # no re-include under an excluded directory
+
+    def test_pack_leaves_out_owpignore_paths(self):
+        import zipfile
+        from ontle.core import OWPError
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("demo", "test", "minimal", Path(td) / "demo")
+            (p / "drafts").mkdir()
+            (p / "drafts" / "v.yaml").write_text("apiVersion: openworld/v1alpha1\nkind: NotAKind\n")
+            (p / ".owpignore").write_text("drafts/\nowp.yaml\n")  # owp.yaml cannot be excluded
+            self.assertTrue(validate_package(p).valid)
+            archive = deterministic_pack(p, Path(td) / "demo.owp.zip")
+            with zipfile.ZipFile(archive, "r") as zf:
+                names = zf.namelist()
+            self.assertIn("owp.yaml", names)
+            self.assertIn(".owpignore", names)
+            self.assertFalse(any(n.startswith("drafts/") for n in names))
+            (p / ".owpignore").write_text("drafts/\nWORLD.md\n")  # the manifest's world description is then missing
+            with self.assertRaisesRegex(OWPError, "without the files .owpignore excludes"):
+                deterministic_pack(p, Path(td) / "broken.owp.zip")
+
 
 if __name__ == "__main__":
     unittest.main()

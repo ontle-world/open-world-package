@@ -3,7 +3,6 @@ kind: WorldViewProfile
 metadata:
   name: quality-incident-task-view
 spec:
-  worldRef: openworld-examples/manufacturing-quality-world@0.1.0
   purpose:
     task: quality_incident_rca_capa
     actorScope: quality_manager_or_authorized_actor

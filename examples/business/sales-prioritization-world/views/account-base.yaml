@@ -3,7 +3,6 @@ kind: WorldViewProfile
 metadata:
   name: account-base-view
 spec:
-  worldRef: self
   purpose:
     task: account_prioritization
     objective: focus_effort_on_accounts_most_likely_to_close

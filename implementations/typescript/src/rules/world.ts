@@ -47,11 +47,6 @@ const viewable: ProfileCheck = (ctx, w) => {
     out.push({ rule: r, msg: `spec.world.defaultView ${JSON.stringify(w.defaultView)} is not the path of a local WorldViewProfile asset` });
   } else if (!v.exists || !isObj(v.doc)) {
     out.push({ rule: r, msg: `default WorldViewProfile ${v.rawPath} is missing or unreadable` });
-  } else {
-    const ref = assetSpec(v)?.worldRef;
-    if (ref !== "self" && ref !== ctx.rawIdentity) {
-      out.push({ rule: "profile.viewable.world-ref", msg: `default WorldViewProfile ${v.rawPath} spec.worldRef ${JSON.stringify(ref)} must be "self" or ${ctx.rawIdentity ?? "the package identity"}` });
-    }
   }
   return out;
 };
@@ -284,10 +279,6 @@ export function checkViewOwnership(ctx: Context): void {
     if (ctx.packageKind !== "WorldPackage") {
       error(ctx, "view.world-ref", `${v.rawPath}: a WorldViewProfile belongs to a WorldPackage, not a ${ctx.packageKind}`, v.rawPath);
       continue;
-    }
-    const ref = get(v.doc, "spec", "worldRef");
-    if (ref !== undefined && ref !== null && ref !== "self" && ref !== ctx.rawIdentity) {
-      error(ctx, "view.world-ref", `${v.rawPath}: spec.worldRef ${JSON.stringify(ref)} must be "self" or this package's identity ${ctx.rawIdentity ?? ""}; list another World in spec.externalWorldRefs`, v.rawPath);
     }
     // Other Worlds the View reads are named in spec.externalWorldRefs and listed in spec.dependencies.
     const refs = get(v.doc, "spec", "externalWorldRefs");

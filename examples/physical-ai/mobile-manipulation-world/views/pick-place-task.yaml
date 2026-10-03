@@ -4,7 +4,6 @@ metadata:
   description: "Raw image/video frames remain observation artifacts; the view selects task-relevant semantic and observation state."
   name: pick-place-task-view
 spec:
-  worldRef: openworld-examples/mobile-manipulation-world@0.1.0
   purpose:
     task: pick_place
     actorScope: robot_or_authorized_controller

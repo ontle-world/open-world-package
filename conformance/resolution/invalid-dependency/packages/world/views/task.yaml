@@ -3,6 +3,5 @@ kind: WorldViewProfile
 metadata:
   name: task
 spec:
-  worldRef: conformance/world@0.1.0
   purpose:
     task: fixture_task

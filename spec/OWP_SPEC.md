@@ -235,11 +235,10 @@ World(schema)
 -> World Model
 ```
 
-A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. A View belongs to the World package that contains it: a WorldViewProfile is an asset of a WorldPackage, and its `spec.worldRef` MUST be `self` or that package's identity (`view.world-ref`). A View that also reads other Worlds names them explicitly:
+A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. A View belongs to the World package that contains it, so it does not name that World: a WorldViewProfile is an asset of a WorldPackage (`view.world-ref`). A View that also reads other Worlds names them explicitly:
 
 ```yaml
 spec:
-  worldRef: self
   externalWorldRefs: [acme/supplier-world@1.2.0]     # other Worlds this View reads
   projection:
     include:
@@ -280,7 +279,7 @@ spec:
 | Profile | Adds |
 |---|---|
 | `descriptive` | `spec.world` (always required for a WorldPackage) with `spec.world.definition` |
-| `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset whose `spec.worldRef` is `self` or this package's identity |
+| `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset |
 | `stateful` | at least one `StateCompilerProfile`; `spec.world.defaultStateCompiler` is the path of a local `StateCompilerProfile` whose `spec.worldViewRef` equals `spec.world.defaultView`; every local `StateCompilerProfile` has a `spec.worldViewRef` naming a local `WorldViewProfile` path and `spec.outputContract: EffectiveWorldState` |
 | `stateful` (bindings) | a State Compiler's `spec.bindings`, when present, is well formed (section 12.2); a malformed binding fails `stateful` for both the declared and the satisfied profile |
 | `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or a `spec.outputSchemaRef` that resolves to EWS fields (section 12.1) |
@@ -484,8 +483,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
 | `profile.descriptive` | 6.1 | no `spec.world.definition` |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
-| `profile.viewable.world-ref` | 6.1 | default View `worldRef` is not `self` or the package identity |
-| `view.world-ref` | 6 | a WorldViewProfile outside a WorldPackage, or a View whose `worldRef` is not `self` or the package identity |
+| `view.world-ref` | 6 | a WorldViewProfile in a package that is not a WorldPackage |
 | `view.external-world` | 6 | `externalWorldRefs` not a list, an entry not in `spec.dependencies`, a `<world ref>#<name>` include whose World it does not list, or (under resolution) an external World that is not a WorldPackage |
 | `profile.stateful` | 6.1 | no State Compiler, no `defaultStateCompiler`, or it is not a local compiler |
 | `profile.stateful.default-compiler-view` | 6.1 | default compiler does not compile `defaultView` |

@@ -2,5 +2,4 @@ apiVersion: openworld/v1alpha1
 kind: WorldViewProfile
 metadata: {name: a}
 spec:
-  worldRef: self
   specializes: views/task.yaml

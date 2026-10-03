@@ -133,7 +133,6 @@ def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
 # Standard kinds with defined fields (spec sections 8 and 15). Fields marked "experimental" are
 # listed in spec Appendix C.4: accepted, and the checks on them produce warnings only.
 WORLD_VIEW_PROFILE = _standard({
-    "worldRef": VALUE,
     "externalWorldRefs": VALUE,
     "specializes": VALUE,                                  # experimental
     "purpose": closed({"task": VALUE, "actorScope": VALUE, "objective": VALUE,

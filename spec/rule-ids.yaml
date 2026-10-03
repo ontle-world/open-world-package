@@ -34,8 +34,7 @@ rules:
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
   profile.descriptive: {severity: error, section: "6.1", summary: "no spec.world.definition"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
-  profile.viewable.world-ref: {severity: error, section: "6.1", summary: "default View worldRef is not self or the package identity"}
-  view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile outside a WorldPackage, or a View whose worldRef is not self or the package identity"}
+  view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile in a package that is not a WorldPackage"}
   view.external-world: {severity: error, section: "6", summary: "externalWorldRefs not a list, an entry not in spec.dependencies, a <world ref>#<name> include whose World it does not list, or (under resolution) an external World that is not a WorldPackage"}
   profile.stateful: {severity: error, section: "6.1", summary: "no State Compiler, no defaultStateCompiler, or it is not a local compiler"}
   profile.stateful.default-compiler-view: {severity: error, section: "6.1", summary: "default compiler does not compile defaultView"}

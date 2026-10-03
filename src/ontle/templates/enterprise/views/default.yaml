@@ -3,7 +3,6 @@ kind: WorldViewProfile
 metadata:
   name: default-view
 spec:
-  worldRef: self
   purpose:
     task: enterprise_task
     actorScope: any

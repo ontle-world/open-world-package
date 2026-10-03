@@ -107,6 +107,10 @@ class PackageSource:
                 self._index.setdefault(pkg.identity, pkg)
         return self._index.get(identity)
 
+    def versions_of(self, name: str) -> list[str]:
+        """Identities in this source with the same <namespace>/<name> (after a find)."""
+        return sorted(i for i in (self._index or {}) if i.rsplit("@", 1)[0] == name)
+
     def _scan(self) -> list[ResolvedPackage]:
         raise NotImplementedError
 
@@ -290,7 +294,9 @@ def resolve_package(path: str | Path, sources: list[str] | None = None) -> Resol
                 if found:
                     break
             if not found:
-                resolution.errors.append(f"resolve.unresolved: {pkg.identity}: cannot resolve {ref}")
+                nearby = sorted({i for src in candidates for i in src.versions_of(ref.rsplit("@", 1)[0])})
+                hint = f" (found {', '.join(nearby)}: the version differs)" if nearby else ""
+                resolution.errors.append(f"resolve.unresolved: {pkg.identity}: cannot resolve {ref}{hint}")
                 continue
             resolution.packages[ref] = found
             by_name[unversioned] = ref
@@ -361,7 +367,9 @@ def cross_package_errors(resolution: Resolution) -> list[str]:
             rel = ref.partition("#")[2]
             view_paths.add(rel)
             if _local_asset_kind(world, rel) != "WorldViewProfile":
-                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {ref} is not a WorldViewProfile asset of {world_ref}")
+                views = sorted(p for p, k in world.local_assets()[0].items() if k == "WorldViewProfile")
+                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {ref} is not a WorldViewProfile asset of {world_ref}"
+                              f" (its Views: {', '.join(views) or 'none'})")
         for ref in grounding.get("compatibleStateCompilers") or []:
             rel = ref.partition("#")[2]
             if _local_asset_kind(world, rel) != "StateCompilerProfile":

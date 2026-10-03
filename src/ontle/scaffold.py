@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from importlib import resources
 import shutil
@@ -19,10 +20,21 @@ SCHEMAS = {
     "SemanticProfile": "semantic-profile.schema.json",
     "OntologyTermIndex": "ontology-term-index.schema.json",
     "SemanticBinding": "semantic-binding.schema.json",
+    "ModelArtifact": "model-artifact.schema.json",
+    "Dataset": "dataset.schema.json",
+    "AgentProfile": "agent-profile.schema.json",
+    "EnvironmentProfile": "environment-profile.schema.json",
+    "SourceSystemSchemaProfile": "source-system-schema-profile.schema.json",
+    "ObservationAcquisitionProfile": "observation-acquisition-profile.schema.json",
+    "ActionBindingProfile": "action-binding-profile.schema.json",
+    "CommitContract": "commit-contract.schema.json",
+    "EffectVerificationProfile": "effect-verification-profile.schema.json",
+    "VerifierProfile": "verifier-profile.schema.json",
 }
 HINTS = {
     "WorldViewProfile": "Fill purpose (task, objective), projection.include, and conditioning (spec section 6).",
-    "StateCompilerProfile": "List the EWS fields in outputSchema.fields; add bindings to make the compiler declarative (spec section 12).",
+    "StateCompilerProfile": "List the EWS fields in outputSchema.fields; add bindings to make the compiler declarative (docs/STATE_COMPILATION.md, spec section 12).",
+    "ModelArtifact": "Set implementationStatus; name bundled code with entrypoint (<path>[#<function>]) or external weights with artifactRef (spec section 8).",
     "EvaluationProfile": "Set assessmentKind, subject, and criteria; bump metadata.version when they change (spec sections 9, 15.1).",
     "ScenarioProfile": "Describe baseline, assumptions, intervention, and engine (spec section 15.2).",
     "CapabilityContract": "Describe the outcomes this capability achieves and under which context (spec section 15.3).",
@@ -68,29 +80,53 @@ def _template_dir(template: str):
 
 
 WORLD_MODEL_TEMPLATES = {"worldmodel", "worldmodel-multimodal"}
+STARTER_OBSERVATIONS = "examples/observations.yaml"
+STARTER_AS_OF = "2026-01-02T00:00:00Z"
 CARDS = ["WORLD.md", "WORLDMODEL.md", "ONTOLOGY.md"]
 
 
-def _grounding_target(world: str) -> tuple[str, str, str]:
-    """(identity, default View path, default State Compiler path) of a World given as a directory or a reference."""
+def _grounding_target(world: str, view: str | None = None) -> tuple[str, str, str]:
+    """(identity, View path, State Compiler path) of a World given as a directory or a reference.
+
+    Without `view`, the World's defaults. With it, the State Compiler whose worldViewRef names that View.
+    """
     path = Path(world).expanduser()
     if (path / "owp.yaml").is_file():
         manifest = load_yaml((path / "owp.yaml").read_text(encoding="utf-8")) or {}
         md, spec = manifest.get("metadata") or {}, manifest.get("spec") or {}
         w = spec.get("world") or {}
-        if manifest.get("kind") != "WorldPackage" or not (w.get("defaultView") and w.get("defaultStateCompiler")):
-            raise OWPError(f"{world} must be a WorldPackage that declares spec.world.defaultView and defaultStateCompiler")
-        return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}", w["defaultView"], w["defaultStateCompiler"]
+        identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
+        if manifest.get("kind") != "WorldPackage":
+            raise OWPError(f"{world} must be a WorldPackage")
+        if view is not None:
+            compilers = []
+            for f in sorted(path.rglob("*.y*ml")):
+                try:
+                    doc = load_yaml(f.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+                if isinstance(doc, dict) and doc.get("kind") == "StateCompilerProfile" and (doc.get("spec") or {}).get("worldViewRef") == view:
+                    compilers.append(f.relative_to(path).as_posix())
+            if len(compilers) != 1:
+                raise OWPError(f"{world}: {'no' if not compilers else 'more than one'} State Compiler has worldViewRef {view!r}")
+            return identity, view, compilers[0]
+        if not (w.get("defaultView") and w.get("defaultStateCompiler")):
+            raise OWPError(f"{world} declares no spec.world.defaultView and defaultStateCompiler; pass --view")
+        return identity, w["defaultView"], w["defaultStateCompiler"]
+    if view is not None:
+        raise OWPError("--view needs --world to be a World package directory")
     if PACKAGE_REF_RE.match(world):
         return world, "views/default.yaml", "state/default-compiler.yaml"  # the World starter's paths
     raise OWPError(f"--world must be a World package directory or a <namespace>/<name>@<version> reference, not {world!r}")
 
 
 def init_project(name: str, namespace: str, template: str = "minimal", destination: str | Path | None = None,
-                 world: str | None = None) -> Path:
+                 world: str | None = None, view: str | None = None) -> Path:
     if world is not None and template not in WORLD_MODEL_TEMPLATES:
         raise OWPError("--world applies to the worldmodel and worldmodel-multimodal templates")
-    grounding = _grounding_target(world) if world is not None else None
+    if view is not None and world is None:
+        raise OWPError("--view applies with --world")
+    grounding = _grounding_target(world, view) if world is not None else None
     dest = Path(destination or name).expanduser().resolve()
     if dest.exists() and any(dest.iterdir()):
         raise OWPError(f"destination is not empty: {dest}")
@@ -128,14 +164,24 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
             if lines[0].startswith("# "):
                 path.write_text(f"# {title}\n" + (lines[1] if len(lines) > 1 else ""), encoding="utf-8")
 
+    if (dest / STARTER_OBSERVATIONS).is_file():  # World starters ship the EWS their sample observations compile to
+        from .ews import compile_ews  # local import: ews depends on core, as scaffold does
+        observations = load_yaml((dest / STARTER_OBSERVATIONS).read_text(encoding="utf-8"))
+        ews = compile_ews(dest, data["spec"]["world"]["defaultStateCompiler"], observations, STARTER_AS_OF)
+        (dest / "examples" / "expected-ews.yaml").write_text(dump_yaml(ews), encoding="utf-8")
+
     state = dest / ".ontle" / "project.yaml"
     state.parent.mkdir(parents=True, exist_ok=True)
-    state.write_text(dump_yaml({
+    project = {
         "generator": "ontle",
         "template": template,
         "manifest": "owp.yaml",
         "authoring": [p for p in CARDS if (dest / p).exists()],
-    }), encoding="utf-8")
+    }
+    world_dir = Path(world).expanduser().resolve() if world is not None else None
+    if world_dir is not None and (world_dir / "owp.yaml").is_file():  # where `ontle validate` finds the World and its siblings
+        project["sources"] = [os.path.relpath(world_dir.parent, dest)]
+    state.write_text(dump_yaml(project), encoding="utf-8")
     return dest
 
 
@@ -174,6 +220,8 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
     if kind == "DelegationProfile":
         return {"delegator": None, "delegatee": None, "scope": None, "permittedActions": [],
                 "authorityCeiling": {"decisions": []}, "validFrom": None, "expiresAt": None}
+    if kind == "ModelArtifact":
+        return {"description": None, "implementationStatus": "unbound", "bundled": False, "artifactRef": {"status": "unbound"}}
     if kind == "CapabilityContract":
         return {"description": None, "outcomeRefs": [], "requiredInputs": []}
     if kind == "KnowledgeAsset":
@@ -189,6 +237,9 @@ def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None 
     manifest_path = root / "owp.yaml"
     if not manifest_path.exists():
         raise OWPError(f"missing owp.yaml in {root}")
+    if kind in {"ObservationSet", "EffectiveWorldState"}:
+        raise OWPError(f"{kind} is a runtime document, not an asset: the World starter's examples/ shows one, and "
+                       "docs/STATE_COMPILATION.md describes it. To ship one with the package, list it as a PackageExample in spec.assets")
     if kind not in KNOWN_ASSET_KINDS and not EXTENSION_KIND_RE.match(kind):
         raise OWPError(f"{kind!r} is not an asset kind of the vocabulary or an <extension>:<Kind>")
     if kind == "PackageExample":

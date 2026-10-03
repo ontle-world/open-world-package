@@ -5,9 +5,9 @@ metadata:
   version: 0.1.0
 spec:
   assessmentKind: evaluation
-  objective: Compare World Models on the quality-hold scenario against the outcome recorded after the horizon.
+  objective: Compare World Models on the quality-hold scenario against the outcome recorded at the end of its horizon (models/run.py --evaluate).
   checks:
-  - range_contains_observed_outcome
-  - expected_outcome_error
-  - uncertainty_declared
-  - beats_persistence
+  - range_contains_observed_outcome   # the model's outer interval (best..worst, p10..p90, low..high) contains the observed value
+  - expected_outcome_error            # absolute error of expected_outcome
+  - beats_base_case                   # smaller error than the scenario's base case (the mode of its range)
+  - probability_of_observed_state     # probability the model gave, at the horizon, to the status observed

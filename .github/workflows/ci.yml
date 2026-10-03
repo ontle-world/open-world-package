@@ -17,7 +17,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e .
+      # The newest Python also installs the rdf extra, so RDF export, kg check, and SPARQL extraction are tested.
+      - run: python -m pip install -e ${{ matrix.python-version == '3.14' && '.[rdf]' || '.' }}
       - run: ./scripts/golden_smoke.sh
 
   typescript-conformance:

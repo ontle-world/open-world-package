@@ -5,6 +5,26 @@ metadata:
 spec:
   worldViewRef: views/default.yaml
   outputContract: EffectiveWorldState
+  # Three kinds of field, one value per item (perSubject):
+  #   item.status     observed: the newest reported status
+  #   item.events_24h latent, aggregate: events in the 24 hours up to asOf
+  #   item.attention  latent, classification of item.events_24h by a named, versioned criterion
+  outputSchema:
+    fields: [item.status, item.events_24h, item.attention]
+    perSubject: [item.status, item.events_24h, item.attention]
+    latent: [item.events_24h, item.attention]
+  bindings:
+    item.status: {from: source.item_status, value: status, select: latest}
+    item.events_24h: {aggregate: {from: source.item_event, value: code, function: count, window: PT24H}}
+    item.attention:
+      classify:
+        input: item.events_24h
+        criterion:
+          id: attention-threshold
+          version: 0.1.0
+          rules:
+          - {when: {gte: 2}, label: needs_attention}
+          otherwise: normal
   compilation:
     reconciliation: retain_alternatives_when_unresolved
     authority: preserve_declared_authority

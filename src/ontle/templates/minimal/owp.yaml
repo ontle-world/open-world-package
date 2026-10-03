@@ -12,7 +12,7 @@ spec:
     description: WORLD.md
     definition: A minimal explicit representation for a target world.
     boundary:
-      included: []
+      included: [item]
       excluded: []
     defaultView: views/default.yaml
     defaultStateCompiler: state/default-compiler.yaml
@@ -24,4 +24,6 @@ spec:
     limitations: []
   assets:
   - kind: PackageExample
-    path: examples/basic.yaml
+    path: examples/observations.yaml
+  - kind: PackageExample
+    path: examples/expected-ews.yaml

@@ -22,11 +22,6 @@ cases:
     errors: [profile.viewable]
     satisfiedProfile: descriptive
     rule: "viewable requires spec.world.defaultView."
-  world-viewable-view-without-worldref:
-    valid: false
-    errors: [profile.viewable.world-ref]
-    satisfiedProfile: descriptive
-    rule: "The default WorldViewProfile must declare spec.worldRef."
   world-stateful-satisfies-higher:
     valid: true
     satisfiedProfile: model-ready
@@ -65,15 +60,6 @@ cases:
     errors: [profile.unknown]
     satisfiedProfile: descriptive
     rule: "spec.conformance.profile must be a defined profile."
-  world-view-worldref-self:
-    valid: true
-    satisfiedProfile: viewable
-    rule: "A View's worldRef may be 'self'."
-  world-view-worldref-foreign:
-    valid: false
-    errors: [profile.viewable.world-ref]
-    satisfiedProfile: descriptive
-    rule: "The default View's worldRef must be 'self' or this package's identity."
   world-model-ready-via-schema-ref:
     valid: true
     satisfiedProfile: model-ready
@@ -861,11 +847,6 @@ cases:
     warnings: [asset.kind-reserved]
     satisfiedProfile: descriptive
     rule: "A reserved vocabulary kind has no schema or rules yet; using it is a warning."
-  view-world-ref-foreign:
-    valid: false
-    errors: [view.world-ref]
-    satisfiedProfile: model-ready
-    rule: "Every View belongs to the World package that contains it, not only the default View; another World's content reaches it through dependencies and the boundary."
   view-external-world-undeclared:
     valid: false
     errors: [view.external-world]
@@ -876,6 +857,10 @@ cases:
     errors: [view.external-world]
     satisfiedProfile: model-ready
     rule: "Each spec.externalWorldRefs entry is also listed in spec.dependencies."
+  view-in-world-model-package:
+    valid: false
+    errors: [view.world-ref]
+    rule: "A World View belongs to a World; a WorldViewProfile in a WorldModelPackage is an error."
   view-outside-world:
     valid: true
     warnings: [view.outside-world]
@@ -968,7 +953,7 @@ resolutionCases:
   archive-source:
     valid: true
     resolved:
-      conformance/world@0.1.0: sha256:fcaf730ed9aebdd3fcb2ec02885d30cbffaccef44e4366de074e564eeadbe0c6
+      conformance/world@0.1.0: sha256:9288f55a701880fba1b58269a990935460b639fc534ad7136e0a261e41f1656b
     rule: "A .owp.zip in a directory source is resolved after its lock verifies."
   archive-tampered:
     valid: false
@@ -1000,7 +985,7 @@ resolutionCases:
   git-bundle-source:
     valid: true
     resolved:
-      conformance/world@0.1.0: git:d07ed2af956c01a6e2f59f4e591114ff80d14e81
+      conformance/world@0.1.0: git:53f8511cc0fc8e391a064b1eb6d85bf635412a14
     rule: "A git source (here a git bundle, resolved relative to the declaring package) is fetched at the tag; the package is found under #subdir."
   git-missing-rev:
     valid: false

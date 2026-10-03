@@ -2,5 +2,4 @@ apiVersion: openworld/v1alpha1
 kind: WorldViewProfile
 metadata: {name: task}
 spec:
-  worldRef: self
   projection: {include: [lot, claim]}

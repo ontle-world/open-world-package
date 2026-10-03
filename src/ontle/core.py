@@ -171,8 +171,6 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
         errors.append("profile.viewable: requires spec.world.defaultView")
     elif local_asset_kinds.get(default_view) != "WorldViewProfile":
         errors.append("profile.viewable: spec.world.defaultView must point to a local WorldViewProfile asset")
-    elif _spec_of(local_asset_docs.get(default_view)).get("worldRef") not in {"self", identity}:
-        errors.append(f"profile.viewable.world-ref: default WorldViewProfile spec.worldRef must be 'self' or this package's identity {identity}")
     if level < 2:
         return errors
 
@@ -608,12 +606,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         if kind != "WorldPackage":
             errors.append(f"view.world-ref: {rel}: a WorldViewProfile belongs to a WorldPackage, not a {kind}")
             continue
-        vspec = _spec_of(local_asset_docs.get(rel))
-        view_world = vspec.get("worldRef")
-        if view_world is not None and view_world not in {"self", identity}:
-            errors.append(f"view.world-ref: {rel}: spec.worldRef {view_world!r} must be 'self' or this package's identity {identity}; "
-                          "list another World in spec.externalWorldRefs")
-        errors.extend(_external_world_errors(rel, vspec, spec))
+        errors.extend(_external_world_errors(rel, _spec_of(local_asset_docs.get(rel)), spec))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:

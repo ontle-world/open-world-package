@@ -1,6 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: WorldViewProfile
-metadata:
-  name: other-view
-spec:
-  worldRef: acme/other-world@1.0.0

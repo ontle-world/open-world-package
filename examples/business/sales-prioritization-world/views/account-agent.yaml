@@ -3,7 +3,6 @@ kind: WorldViewProfile
 metadata:
   name: account-agent-view
 spec:
-  worldRef: self
   specializes: views/account-base.yaml
   purpose:
     actorScope: sales_agent

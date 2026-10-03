@@ -3,7 +3,6 @@ kind: WorldViewProfile
 metadata:
   name: account-manager-view
 spec:
-  worldRef: self
   specializes: views/account-base.yaml
   purpose:
     actorScope: regional_sales_manager

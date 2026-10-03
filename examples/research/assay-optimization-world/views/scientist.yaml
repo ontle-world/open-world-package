@@ -2,7 +2,6 @@ apiVersion: openworld/v1alpha1
 kind: WorldViewProfile
 metadata: {name: scientist}
 spec:
-  worldRef: self
   specializes: views/assay-base.yaml
   purpose:
     actorScope: principal_investigator

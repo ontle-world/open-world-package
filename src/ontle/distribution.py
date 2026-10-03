@@ -218,8 +218,9 @@ def oci_attach_evidence(subject_reference: str, evidence: str | Path) -> str:
 
 # --- static package index ---------------------------------------------------------
 
-def build_index(archives: list[Path], base: Path | None = None, base_url: str | None = None) -> dict[str, Any]:
-    """A static package index (spec section 11.1) listing archives by identity and digest."""
+def build_index(archives: list[Path], base: Path | None = None, base_url: str | None = None, terms: bool = False) -> dict[str, Any]:
+    """A static package index (spec section 11.1) listing archives by identity and digest; with `terms`, also which
+    packages define and use each ontology term, and the mapping sets they ship."""
     from .core import verify_archive
     packages = []
     for archive in sorted(archives):
@@ -240,7 +241,69 @@ def build_index(archives: list[Path], base: Path | None = None, base_url: str | 
     identities = [p["identity"] for p in packages]
     if len(set(identities)) != len(identities):
         raise OWPError("an index lists each package identity once")
-    return {"apiVersion": "openworld/v1alpha1", "kind": INDEX_KIND, "packages": packages}
+    index: dict[str, Any] = {"apiVersion": "openworld/v1alpha1", "kind": INDEX_KIND, "packages": packages}
+    if terms:
+        index.update(_term_index(sorted(archives)))
+    return index
+
+
+def _term_index(archives: list[Path]) -> dict[str, Any]:
+    """Section 11.1: term IRI -> {definedBy, usedBy} package identities, and the mapping-set entrypoints of the indexed packages.
+    A World uses the terms its SemanticBindings name, with prefixes from indexed OntologyPackages it depends on; an
+    OntologyPackage defines its terms and uses the identifiers its owp-yaml schema takes from elsewhere."""
+    import tempfile
+    from .binding import binding_curies
+    from .core import load_manifest, local_assets
+    from .ontology import _load, _profile_curies, expand, terms as ontology_terms
+    defined: dict[str, set[str]] = {}
+    used: dict[str, set[str]] = {}
+    mappings: list[dict[str, str]] = []
+    with tempfile.TemporaryDirectory() as td:
+        unpacked: dict[str, tuple[Path, dict[str, Any]]] = {}
+        for i, archive in enumerate(archives):
+            root = Path(td) / str(i)
+            with zipfile.ZipFile(archive) as zf:
+                zf.extractall(root)
+            _, manifest = load_manifest(root)
+            md = manifest.get("metadata") or {}
+            unpacked[f"{md['namespace']}/{md['name']}@{md['version']}"] = (root, manifest)
+        prefixes_of: dict[str, dict[str, str]] = {}
+        for identity, (root, manifest) in unpacked.items():
+            if manifest.get("kind") != "OntologyPackage":
+                continue
+            prefixes, own = ontology_terms(root, manifest)
+            prefixes_of[identity] = prefixes
+            for iri in own:
+                defined.setdefault(iri, set()).add(identity)
+            ontology = (manifest.get("spec") or {}).get("ontology") or {}
+            for entry in ontology.get("entrypoints") or []:
+                if isinstance(entry, dict) and entry.get("role") == "mappings" and isinstance(entry.get("path"), str):
+                    mappings.append({"package": identity, "path": entry["path"], "format": str(entry.get("format"))})
+                if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
+                    doc = _load(root / entry["path"])
+                    for _, value, term_type in _profile_curies(doc) if isinstance(doc, dict) else []:
+                        iri = expand(value, prefixes) if isinstance(value, str) and not term_type else None
+                        if iri and iri not in own:
+                            used.setdefault(iri, set()).add(identity)
+        for identity, (root, manifest) in unpacked.items():
+            spec = manifest.get("spec") or {}
+            deps = [d if isinstance(d, str) else d.get("ref") for d in spec.get("dependencies") or [] if isinstance(d, (str, dict))]
+            prefixes = {}
+            for dep in deps:
+                prefixes.update(prefixes_of.get(dep, {}))
+            kinds, docs = local_assets(root, spec)
+            for rel, kind in kinds.items():
+                if kind != "SemanticBinding":
+                    continue
+                for _, curie in binding_curies(docs.get(rel) or {}):
+                    iri = expand(curie, prefixes) if isinstance(curie, str) else None
+                    if iri:
+                        used.setdefault(iri, set()).add(identity)
+    builtin = ("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "http://www.w3.org/2000/01/rdf-schema#",
+               "http://www.w3.org/2002/07/owl#", "http://www.w3.org/2001/XMLSchema#")
+    out = {iri: {"definedBy": sorted(defined.get(iri, ())), "usedBy": sorted(used.get(iri, ()))}
+           for iri in sorted(set(defined) | set(used)) if not iri.startswith(builtin)}
+    return {"terms": out, "mappings": sorted(mappings, key=lambda m: (m["package"], m["path"]))}
 
 
 def index_lookup(index_location: str, identity: str, cache: Path) -> tuple[Path, str] | None:

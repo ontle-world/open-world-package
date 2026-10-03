@@ -423,6 +423,8 @@ A package index is a static JSON document (`schemas/package-index.schema.json`) 
 
 Each identity appears once. `archive` is a URL or a path relative to the index. A resolver MUST reject an archive whose bytes do not match `digest`. The reference CLI writes indexes with `ontle index build`.
 
+An index MAY also carry a term index, for registries and search. `terms` maps an ontology term IRI to the identities of the indexed packages that define it (`definedBy`: an OntologyPackage's schema terms and term index) and that use it (`usedBy`: terms named by a World's SemanticBindings, and identifiers an ontology's schema takes from other namespaces). `mappings` lists the mapping-set entrypoints (`role: mappings`) of the indexed packages. Resolution ignores both. `ontle index build --terms` writes them.
+
 ## 13. Extensions
 
 Publishers can add their own asset kinds, fields, and vocabulary values without changing this specification. Tools that do not know an extension can ignore it safely.

@@ -11,7 +11,7 @@ from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, load_manifest, package_files, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
-from .resolve import ews_jsonld, ews_rdf, resolve_package, validate_resolved
+from .resolve import ews_jsonld, ews_ngsi, ews_rdf, resolve_package, validate_resolved
 from .scaffold import add_extension, init_project, new_asset
 from .yamlio import dump_yaml, load_yaml
 
@@ -117,6 +117,9 @@ def cmd_ews_compile(args):
     if args.rdf:
         print(ews_rdf(args.world, ews, observations, args.source), end="")
         return 0
+    if args.ngsi_ld:
+        print(json.dumps(ews_ngsi(args.world, ews, observations, args.source), indent=2, ensure_ascii=False))
+        return 0
     print(dump_yaml(ews), end="")
     return 0
 
@@ -173,6 +176,12 @@ def cmd_kg_check(args):
     return 0 if report.ok else 1
 
 
+def cmd_interop_mcp(args):
+    from .interop import mcp_description
+    print(json.dumps(mcp_description(args.world), indent=2, ensure_ascii=False))
+    return 0
+
+
 def cmd_fetch(args):
     from .distribution import fetch_package
     for path in fetch_package(args.path, args.into):
@@ -202,7 +211,7 @@ def cmd_sign(args):
 def cmd_index_build(args):
     from .distribution import build_index
     archives = [Path(a) for a in args.archives]
-    index = build_index(archives, Path(args.base) if args.base else None, args.base_url)
+    index = build_index(archives, Path(args.base) if args.base else None, args.base_url, terms=args.terms)
     text = json.dumps(index, indent=2, ensure_ascii=False) + "\n"
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
@@ -315,6 +324,7 @@ def build_parser():
     y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file, relative to the current directory (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
+    y.add_argument("--ngsi-ld", action="store_true", help="print NGSI-LD entities (normalized): per-subject fields as attributes, unresolved alternatives as datasetId instances")
     y.add_argument("--rdf", action="store_true", help="print Turtle 1.2 in the OWP vocabulary: each value a reified, unasserted triple with its provenance (PROV) and derivation")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.set_defaults(func=cmd_ews_compile)
@@ -348,6 +358,12 @@ def build_parser():
     y.add_argument("package", nargs="?", default=".", help="package directory")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.set_defaults(func=cmd_kg_check)
+
+    x = sp.add_parser("interop", help="mappings to neighbouring standards (docs/interop/)")
+    isp = x.add_subparsers(dest="interop_command", required=True)
+    y = isp.add_parser("mcp", help="print what a Model Context Protocol server for this World exposes: resources, resource templates, tools")
+    y.add_argument("world", help="World package directory")
+    y.set_defaults(func=cmd_interop_mcp)
 
     x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
     x.add_argument("path", nargs="?", default=".")
@@ -394,6 +410,7 @@ def build_parser():
     y.add_argument("archives", nargs="+")
     y.add_argument("--base", help="directory archive paths are written relative to")
     y.add_argument("--base-url", help="URL prefix for archive locations")
+    y.add_argument("--terms", action="store_true", help="add a term index: which packages define and use each ontology term, and their mapping sets")
     y.add_argument("--output")
     y.set_defaults(func=cmd_index_build)
 

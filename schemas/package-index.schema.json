@@ -50,6 +50,55 @@
         "additionalProperties": false
       }
     },
+    "terms": {
+      "type": "object",
+      "description": "Optional term index (spec section 11.1): term IRI -> packages that define and use it.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "definedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "usedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "definedBy",
+          "usedBy"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "mappings": {
+      "type": "array",
+      "description": "Mapping-set entrypoints of the indexed OntologyPackages (spec section 11.1).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "package": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "package",
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
     "extensions": {
       "$ref": "#/$defs/extensions"
     }

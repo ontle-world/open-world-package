@@ -223,5 +223,39 @@ class StandardVocabularyTests(unittest.TestCase):
             self.assertEqual([f.code for f in report.findings], ["kg.parse"])
             self.assertFalse(report.ok)
 
+
+class OwlExportTests(unittest.TestCase):
+    """spec 3.1, RDF meaning of owp-yaml: the export is OWL 2 DL."""
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_export_types_properties_by_their_range_and_unions_shared_domains(self):
+        import rdflib
+        import rdflib.collection
+        from rdflib.namespace import OWL, RDF, RDFS
+        with tempfile.TemporaryDirectory() as td:
+            p = init_project("o", "test", "ontology", Path(td) / "o")
+            (p / "semantics" / "core.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: SemanticProfile\nmetadata: {name: core}\nspec:\n  types:\n"
+                "  - {id: ex:Machine, subClassOf: up:Entity, properties: [{id: ex:status, range: ex:Status}, {id: ex:serial, range: xsd:string}]}\n"
+                "  - {id: ex:Line, properties: [{id: ex:serial, range: xsd:string}]}\n"
+                "  - {id: ex:Status, enum: [running, down]}\n", encoding="utf-8")
+            manifest = p / "owp.yaml"
+            data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
+            data["spec"]["ontology"]["prefixes"].update({"up": "https://example.org/upper#", "xsd": "http://www.w3.org/2001/XMLSchema#"})
+            ex = next(v for k, v in data["spec"]["ontology"]["prefixes"].items() if k == "ex") if "ex" in data["spec"]["ontology"]["prefixes"] else None
+            if ex is None:
+                data["spec"]["ontology"]["prefixes"]["ex"] = "https://example.org/ex#"
+            manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+            g = rdflib.Graph()
+            g.parse(data=export_rdf(p, data, "turtle"), format="turtle")
+        E = rdflib.Namespace(data["spec"]["ontology"]["prefixes"]["ex"])
+        self.assertIn((E.status, RDF.type, OWL.DatatypeProperty), g)   # enum range: literal values
+        self.assertIn((E.serial, RDF.type, OWL.DatatypeProperty), g)   # xsd range
+        self.assertIn((E.Status, RDF.type, RDFS.Datatype), g)
+        self.assertIn((rdflib.URIRef("https://example.org/upper#Entity"), RDF.type, OWL.Class), g)  # declared
+        (domain,) = g.objects(E.serial, RDFS.domain)
+        union = rdflib.collection.Collection(g, g.value(domain, OWL.unionOf))
+        self.assertEqual(sorted(union), sorted([E.Line, E.Machine]))  # a union, not two domains (intersection)
+
 if __name__ == "__main__":
     unittest.main()

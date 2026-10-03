@@ -32,6 +32,17 @@ spec:
 
 **T-box and A-box.** An OntologyPackage holds the T-box: classes, properties, relations, and the constraints on them. Facts about individual things (this lot, that machine) are an A-box and belong in a World package, as a graph KnowledgeAsset that names its OntologyPackage in `spec.conformsTo.ontology` (section 19.1), or as observations. A term index MAY list `individual` terms only for fixed members of the vocabulary itself, such as enumeration values.
 
+**RDF meaning of owp-yaml (informative).** Tooling that exports an `owp-yaml` schema as RDF (`ontle export`) produces OWL 2 DL:
+
+| owp-yaml | OWL 2 / RDFS |
+|---|---|
+| type | `owl:Class`; `subClassOf` (one identifier or a list) gives `rdfs:subClassOf` |
+| type with `enum` | `rdfs:Datatype` equivalent to `owl:oneOf` over the literal values (the values stay strings, as in EWS) |
+| property with a datatype range (`xsd:`, `rdf:langString`, `rdfs:Literal`, an enum type) or no range | `owl:DatatypeProperty` |
+| property with a class range, and every relation | `owl:ObjectProperty` |
+| a property declared under several types | `rdfs:domain` is their `owl:unionOf` (two plain `rdfs:domain` triples would mean the intersection) |
+| a class used from another ontology | declared `owl:Class` |
+
 The terms an ontology defines are the expanded identifiers of its `owp-yaml` schema entrypoints (types, their properties, and relations) together with the terms in its `termIndex`.
 
 **Ontology conformance profiles.** An OntologyPackage MAY declare `spec.conformance`; when present, its `profile` MUST be one of the profiles below. Profiles are cumulative; when `spec.conformance` is absent, no profile is required, and a validator SHOULD still report the highest satisfied profile.

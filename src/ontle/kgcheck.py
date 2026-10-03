@@ -57,6 +57,8 @@ def tbox_graph(root: Path, manifest: dict[str, Any]):
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
     for entry in ontology.get("entrypoints") or []:
         if isinstance(entry, dict) and entry.get("role") == "schema" and entry.get("format") in RDF_FORMATS:
+            if not (root / entry["path"]).is_file():
+                raise OWPError(f"{root.name}: schema entrypoint {entry['path']} does not exist; run ontle validate on the package")
             graph.parse(root / entry["path"], format=RDF_FORMATS[entry["format"]])
     index = ontology.get("termIndex")
     doc = _load(root / index) if isinstance(index, str) else None
@@ -101,6 +103,7 @@ def _namespaces(manifest: dict[str, Any]) -> set[str]:
 def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None) -> KgReport:
     from .resolve import resolve_package
     rdflib = _rdflib()
+    import rdflib.collection
     from rdflib.namespace import OWL, RDF, RDFS
 
     root, manifest = load_manifest(package)
@@ -151,6 +154,11 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
                         todo2.append(p)
             return out
 
+        def members(node) -> list[Any]:
+            """A class, or the members of an owl:unionOf class (the domain of a property several types declare)."""
+            union = tbox.value(node, OWL.unionOf)
+            return list(rdflib.collection.Collection(tbox, union)) if union is not None else [node]
+
         def ours(term) -> bool:
             return isinstance(term, rdflib.URIRef) and any(str(term).startswith(ns) for ns in namespaces)
 
@@ -177,13 +185,13 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
                 found[("kg.unknown-property", f"property {name} is not defined by the ontology")] += 1
                 continue
             # A property declared under several types has several domains; any one of them is enough.
-            domains = sorted(tbox.objects(p, RDFS.domain))
+            domains = sorted(m for d in tbox.objects(p, RDFS.domain) for m in members(d))
             label = " or ".join(graph.namespace_manager.normalizeUri(d) for d in domains)
             if domains and s not in types:
                 found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {label} cannot be checked")] += 1
             elif domains and not any(d in types[s] for d in domains):
                 found[("kg.domain", f"subject of {name} is not a {label}")] += 1
-            ranges = sorted(r for r in tbox.objects(p, RDFS.range) if r in classes and r not in enums)  # datatypes and enumerations are not checked
+            ranges = sorted(r for d in tbox.objects(p, RDFS.range) for r in members(d) if r in classes and r not in enums)  # datatypes and enumerations are not checked
             label = " or ".join(graph.namespace_manager.normalizeUri(r) for r in ranges)
             if not ranges:
                 continue

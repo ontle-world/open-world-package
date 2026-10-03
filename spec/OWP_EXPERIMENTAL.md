@@ -105,7 +105,7 @@ These fields of standard kinds are experimental; their checks produce warnings o
 
 | Kind | Experimental fields | Checks (warnings) |
 |---|---|---|
-| `WorldViewProfile` | `specializes`, `projection.exclude` (View specialization, Appendix C); `purpose.actorRef`, `purpose.roleRef`, `purpose.taskRef` | the refs name a local ActorProfile, RoleProfile, TaskSetProfile |
+| `WorldViewProfile` | `specializes`, `projection.exclude` (View specialization, Appendix C); `conditioning.actorRef`, `conditioning.roleRefs`, `conditioning.taskRef` | the refs name a local ActorProfile, RoleProfile, TaskSetProfile |
 | `EvaluationProfile` | `evaluatorRef` | names a local ActorProfile |
 | `CapabilityContract` | `outcomeRefs` | none |
 

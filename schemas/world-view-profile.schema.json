@@ -57,15 +57,6 @@
             "objective": {
               "type": "string"
             },
-            "actorRef": {
-              "type": "string"
-            },
-            "roleRef": {
-              "type": "string"
-            },
-            "taskRef": {
-              "type": "string"
-            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
@@ -90,6 +81,15 @@
             "principle": {
               "type": "string"
             },
+            "scale": {
+              "type": "string"
+            },
+            "resolution": {
+              "type": "string"
+            },
+            "timeScope": {
+              "type": "string"
+            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
@@ -102,13 +102,16 @@
             "authorityScope": {
               "type": "string"
             },
-            "timeScope": {
+            "actorRef": {
               "type": "string"
             },
-            "scale": {
-              "type": "string"
+            "roleRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
-            "resolution": {
+            "taskRef": {
               "type": "string"
             },
             "extensions": {

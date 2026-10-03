@@ -794,7 +794,7 @@ cases:
     valid: false
     errors: [evaluation.verifier-ref]
     satisfiedProfile: viewable
-    rule: "verifierRef is a local VerifierPackage or a pinned <name>@<version> (spec section 15.1)."
+    rule: "verifierRef is a local VerifierProfile or a pinned <name>@<version> (spec section 15.1)."
   evaluation-subject-missing:
     valid: false
     errors: [evaluation.subject]

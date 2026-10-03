@@ -32,7 +32,7 @@ $N SourceSystemSchemaProfile interfaces/mes.yaml
 $N ScenarioProfile scenarios/smoke.yaml
 $N WorldViewProfile views/smoke-view.yaml
 $N StateCompilerProfile state/smoke-state.yaml
-ontle new VerifierPackage eval/smoke-verifier.yaml --package "$TMP/demo-model"
+ontle new VerifierProfile eval/smoke-verifier.yaml --package "$TMP/demo-model"
 ontle add extension acme/quality-extension@1.2.0 --path "$TMP/demo-world"
 $N WorldViewProfile views/regional-view.yaml --specializes views/default.yaml
 $N KnowledgeAsset knowledge/playbook.yaml

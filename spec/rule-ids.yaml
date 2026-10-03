@@ -21,7 +21,7 @@ rules:
   ref.provider: {severity: error, section: "5.1", summary: "provider is neither a listed provider nor <extension>:<provider>"}
   asset.path-form: {severity: error, section: "3", summary: "local path is not a relative POSIX path, or starts with ./"}
   manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies entry is not an exact package reference"}
-  eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierPackage assets share metadata.name"}
+  eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierProfile assets share metadata.name"}
   asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
   asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist or is excluded by .owpignore"}
@@ -68,7 +68,7 @@ rules:
   profile.ontology.schema: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
   profile.ontology.constrained: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
   profile.ontology.mapped: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
-  eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierPackage metadata.version not SemVer"}
+  eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierProfile metadata.version not SemVer"}
   eval.supersedes: {severity: error, section: "9", summary: "supersedes not pinned"}
   evidence.subject: {severity: error, section: "9", summary: "subject missing or not the package identity"}
   evidence.required: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
@@ -93,7 +93,7 @@ rules:
   grounding.compiler-view: {severity: error, section: "11", summary: "a compatible compiler compiles a View outside compatibleWorldViews"}
   evaluation.assessment-kind: {severity: error, section: "15.1", summary: "assessmentKind outside its value set"}
   evaluation.subject: {severity: error, section: "15.1", summary: "subject.kind outside its value set, or subject.ref names nothing"}
-  evaluation.verifier-ref: {severity: error, section: "15.1", summary: "verifierRef is neither a local VerifierPackage nor a pinned reference"}
+  evaluation.verifier-ref: {severity: error, section: "15.1", summary: "verifierRef is neither a local VerifierProfile nor a pinned reference"}
   evaluation.result-schema: {severity: error, section: "15.1", summary: "resultSchemaRef is not a file in the package"}
   scenario.engine-kind: {severity: error, section: "15.2", summary: "engine.kind outside its value set"}
   scenario.baseline-ref: {severity: error, section: "15.2", summary: "baselineStateRef is neither a file in the package nor a URI"}
@@ -128,7 +128,7 @@ rules:
   world.undescribed: {severity: warning, section: "8", summary: "spec.world without definition or description"}
   worldmodel.model-artifact-missing: {severity: warning, section: "8", summary: "WorldModelPackage without a ModelArtifact asset"}
   worldmodel.evaluation-profile-missing: {severity: warning, section: "8", summary: "WorldModelPackage without an EvaluationProfile asset"}
-  eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierPackage without metadata.version"}
+  eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierProfile without metadata.version"}
   asset.kind-unknown: {severity: warning, section: "8", summary: "external spec.assets entry kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   asset.kind-reserved: {severity: warning, section: "8", summary: "vocabulary kind marked reserved"}

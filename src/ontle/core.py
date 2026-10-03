@@ -219,7 +219,7 @@ def satisfied_world_profile(spec: dict[str, Any], asset_kinds: set[str],
 def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str, local_asset_kinds: dict[str, str],
                                  local_asset_docs: dict[str, dict[str, Any]], errors: list[str], warnings: list[str]) -> None:
     """Evaluation lineage and evidence binding. OWP records which exact evaluation produced a result; it does not run or evolve evaluations."""
-    local_versions: dict[str, dict[str, str | None]] = {"EvaluationProfile": {}, "VerifierPackage": {}}
+    local_versions: dict[str, dict[str, str | None]] = {"EvaluationProfile": {}, "VerifierProfile": {}}
     for rel, asset_kind in sorted(local_asset_kinds.items()):
         if asset_kind not in local_versions or rel not in local_asset_docs:
             continue
@@ -251,7 +251,7 @@ def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str,
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} must declare spec.subject")
         elif kind == "WorldModelPackage" and espec["subject"] != identity:
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} spec.subject must be this package's identity {identity}")
-        for field, bound_kind, required in (("evaluationProfile", "EvaluationProfile", True), ("verifier", "VerifierPackage", False)):
+        for field, bound_kind, required in (("evaluationProfile", "EvaluationProfile", True), ("verifier", "VerifierProfile", False)):
             ref = espec.get(field)
             if ref is None:
                 if required:

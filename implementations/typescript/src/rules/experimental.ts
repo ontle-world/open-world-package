@@ -405,10 +405,11 @@ export function checkStandardKindFields(ctx: Context, a: LocalAsset): void {
   const c = new Checker(ctx, a.rawPath, localKinds(ctx), localDocs(ctx));
   const s = isObj(a.doc.spec) ? a.doc.spec : {};
   if (a.kind === "WorldViewProfile") {
-    for (const [f, kind] of [["actorRef", "ActorProfile"], ["roleRef", "RoleProfile"], ["taskRef", "TaskSetProfile"]]) {
-      const v = sub(s, "purpose")[f];
-      if (present(v)) c.localRef(v, [kind], `spec.purpose.${f}`);
+    for (const [f, kind] of [["actorRef", "ActorProfile"], ["taskRef", "TaskSetProfile"]]) {
+      const v = sub(s, "conditioning")[f];
+      if (present(v)) c.localRef(v, [kind], `spec.conditioning.${f}`);
     }
+    for (const r of values(sub(s, "conditioning").roleRefs)) c.localRef(r, ["RoleProfile"], "spec.conditioning.roleRefs");
   } else if (a.kind === "EvaluationProfile") {
     if (present(s.evaluatorRef)) c.localRef(s.evaluatorRef, ["ActorProfile"], "spec.evaluatorRef");
   }

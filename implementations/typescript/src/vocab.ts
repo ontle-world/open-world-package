@@ -47,7 +47,7 @@ export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
     BenchmarkCase: R,
     AcceptanceCase: R,
     EvaluationProfile: S,
-    VerifierPackage: S,
+    VerifierProfile: S,
     CompatibilityEvidence: S,
   },
   governancePublication: { Attestation: R },

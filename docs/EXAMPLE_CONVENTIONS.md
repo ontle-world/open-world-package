@@ -33,7 +33,7 @@ models/
   adapter.yaml
 eval/
   <profile>.yaml       EvaluationProfile with metadata.version
-  verifier.yaml        optional VerifierPackage
+  verifier.yaml        optional VerifierProfile
   evidence-*.yaml      optional CompatibilityEvidence
 ```
 

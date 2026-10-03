@@ -2,5 +2,5 @@ apiVersion: openworld/v1alpha1
 kind: WorldViewProfile
 metadata: {name: base}
 spec:
-  projection: {include: [lot, claim, global_pipeline]}
-  conditioning: {authorityScope: read_only, timeScope: last_quarter}
+  projection: {include: [lot, claim, global_pipeline], timeScope: last_quarter}
+  conditioning: {authorityScope: read_only}

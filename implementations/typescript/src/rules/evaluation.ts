@@ -40,7 +40,7 @@ function splitPinned(v: string): { name: string; version: string } {
   return { name: v.slice(0, at), version: v.slice(at + 1) };
 }
 
-/** Section 9: EvaluationProfile / VerifierPackage versioning and lineage. */
+/** Section 9: EvaluationProfile / VerifierProfile versioning and lineage. */
 function checkVersionedEvalAsset(ctx: Context, a: LocalAsset): void {
   if (!isObj(a.doc) || a.path === null) return;
   const file = a.path;
@@ -109,7 +109,7 @@ export function checkEvidence(ctx: Context, a: LocalAsset, g: Grounding | undefi
   // Local version binding.
   for (const [key, kind] of [
     ["evaluationProfile", "EvaluationProfile"],
-    ["verifier", "VerifierPackage"],
+    ["verifier", "VerifierProfile"],
   ] as const) {
     const v = spec[key];
     if (typeof v !== "string" || !PINNED_RE.test(v)) continue;
@@ -155,7 +155,7 @@ export function checkEvidence(ctx: Context, a: LocalAsset, g: Grounding | undefi
 /** Spec section 9. `g` is provided for WorldModelPackages. */
 export function checkEvaluation(ctx: Context, g: Grounding | undefined): void {
   // Spec 8 (round 3): two local assets of the same kind MUST NOT share metadata.name.
-  for (const kind of ["EvaluationProfile", "VerifierPackage"]) {
+  for (const kind of ["EvaluationProfile", "VerifierProfile"]) {
     const seen = new Map<string, string>();
     for (const a of localAssetsOfKind(ctx, kind)) {
       const n = get(a.doc, "metadata", "name");
@@ -165,7 +165,7 @@ export function checkEvaluation(ctx: Context, g: Grounding | undefined): void {
     }
   }
   for (const a of ctx.localAssets) {
-    if (a.kind === "EvaluationProfile" || a.kind === "VerifierPackage") checkVersionedEvalAsset(ctx, a);
+    if (a.kind === "EvaluationProfile" || a.kind === "VerifierProfile") checkVersionedEvalAsset(ctx, a);
     else if (a.kind === "CompatibilityEvidence") checkEvidence(ctx, a, g);
   }
 }

@@ -456,9 +456,11 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
         return value if isinstance(value, dict) else {}
 
     if kind == "WorldViewProfile":
-        for field, kinds in (("actorRef", ("ActorProfile",)), ("roleRef", ("RoleProfile",)), ("taskRef", ("TaskSetProfile",))):
-            if sub("purpose").get(field) is not None:
-                _check_local_ref(sub("purpose")[field], kinds, f"spec.purpose.{field}", rel, local_kinds, warnings)
+        for field, kinds in (("actorRef", ("ActorProfile",)), ("taskRef", ("TaskSetProfile",))):
+            if sub("conditioning").get(field) is not None:
+                _check_local_ref(sub("conditioning")[field], kinds, f"spec.conditioning.{field}", rel, local_kinds, warnings)
+        for ref in _values(sub("conditioning").get("roleRefs")):
+            _check_local_ref(ref, ("RoleProfile",), "spec.conditioning.roleRefs", rel, local_kinds, warnings)
     elif kind == "EvaluationProfile":
         # Standard fields (spec section 15.1): errors.
         if "assessmentKind" in spec:
@@ -471,8 +473,8 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
         verifier = spec.get("verifierRef")
         if verifier is not None:
             from .core import PINNED_REF_RE  # local import: core imports this module
-            if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierPackage")):
-                errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>")
+            if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierProfile")):
+                errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierProfile or a pinned <name>@<version>")
         if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
             errors.append(f"evaluation.result-schema: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
         # Experimental field (Appendix C.4): warning.
@@ -571,10 +573,11 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "compiles_view", s.get("worldViewRef"))
         elif kind == "WorldViewProfile":
             edge(rel, "specializes", s.get("specializes"))
-            purpose = s.get("purpose") or {}
-            edge(rel, "for_actor", purpose.get("actorRef"))
-            edge(rel, "for_role", purpose.get("roleRef"))
-            edge(rel, "for_task", purpose.get("taskRef"))
+            conditioning = s.get("conditioning") or {}
+            edge(rel, "for_actor", conditioning.get("actorRef"))
+            for v in _values(conditioning.get("roleRefs")):
+                edge(rel, "for_role", v)
+            edge(rel, "for_task", conditioning.get("taskRef"))
         elif kind == "ActorProfile":
             for v in _values(s.get("roleRefs")):
                 edge(rel, "occupies_role", v)
@@ -642,7 +645,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
 
 
 EXPERIMENTAL_FIELDS = {  # spec Appendix C.4
-    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("purpose", "actorRef"), ("purpose", "roleRef"), ("purpose", "taskRef")],
+    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("conditioning", "actorRef"), ("conditioning", "roleRefs"), ("conditioning", "taskRef")],
     "EvaluationProfile": [("evaluatorRef",)],
     "CapabilityContract": [("outcomeRefs",)],
 }

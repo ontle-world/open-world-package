@@ -6,8 +6,8 @@ spec:
   specializes: views/account-base.yaml
   purpose:
     actorScope: sales_agent
-    actorRef: actors/sales-agent.yaml
   projection:
     exclude: [global_pipeline, quota]
   conditioning:
     authorityScope: propose_only
+    actorRef: actors/sales-agent.yaml

@@ -100,7 +100,7 @@ export const SEMANTIC_BINDING: Shape = closed(
   { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN, subjects: OPEN }) },
   false,
 );
-export const FIELD_BINDING: Shape = closed(leaves("class", "path"));
+export const FIELD_BINDING: Shape = closed(leaves("class", "path", "unit"));
 
 /** schemas/compatibility-evidence.schema.json */
 export const COMPATIBILITY_EVIDENCE: Shape = closed(
@@ -121,7 +121,7 @@ export const OBSERVATION_SET: Shape = closed(
   {
     ...leaves("apiVersion", "kind"),
     spec: closed({
-      observations: list(closed({ ...leaves("id", "type", "observedAt", "subject", "estimatedBy"), values: OPEN, uncertainty: OPEN })),
+      observations: list(closed({ ...leaves("id", "type", "observedAt", "subject", "estimatedBy"), values: OPEN, uncertainty: OPEN, units: OPEN })),
       // Spec 12 / Appendix C.1: where the observations came from; compilation ignores it.
       provenance: closed({ ...leaves("extraction", "snapshot"), parameters: OPEN }),
     }),

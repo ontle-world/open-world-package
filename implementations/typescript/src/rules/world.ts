@@ -84,6 +84,7 @@ const stateful: ProfileCheck = (ctx, w) => {
     // Spec 6.1 (round 3): malformed bindings fail stateful for declared and satisfied profile.
     for (const p of outputListProblems(s, compilerFields(ctx, c).fields)) out.push({ rule: p.rule, msg: `StateCompilerProfile ${c.rawPath}: ${p.msg}` });
     for (const m of bindingProblems(s, compilerFields(ctx, c).fields)) out.push({ rule: "compiler.binding", msg: `StateCompilerProfile ${c.rawPath}: ${m}` });
+    for (const p of unitProblems(s, compilerFields(ctx, c).fields)) out.push({ rule: p.rule, msg: `StateCompilerProfile ${c.rawPath}: ${p.msg}` });
   }
   return out;
 };
@@ -256,6 +257,51 @@ export function outputListProblems(spec: Record<string, unknown> | undefined, ew
       continue;
     }
     if (!unknown) for (const n of v) if (!(ewsFields ?? []).includes(n)) out.push({ rule, msg: `spec.outputSchema.${key} names "${n}", which is not one of its EWS fields` });
+  }
+  return out;
+}
+
+const UCUM_CODE_RE = /^[!-~]+$/; // a UCUM code: printable ASCII without spaces (compared as text, never converted)
+
+/** spec.outputSchema.units (spec 12.5): EWS field -> UCUM code; {} when absent, null when malformed. */
+export function outputUnits(spec: Record<string, unknown> | undefined): Record<string, string> | null {
+  const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
+  const u = schema.units ?? {};
+  if (!isObj(u) || !Object.values(u).every((v) => typeof v === "string" && UCUM_CODE_RE.test(v))) return null;
+  return u as Record<string, string>;
+}
+
+/** UCUM unity: `1`, or an annotation only, such as `{alarm}`. */
+export const dimensionless = (unit: string): boolean => unit === "1" || /^\{[^{}]*\}$/.test(unit);
+
+/** Spec 12.5: declared units name EWS fields; counts are dimensionless; labels have none; a criterion's unit is its input's. */
+export function unitProblems(spec: Record<string, unknown> | undefined, ewsFields: string[] | null): Problem[] {
+  const out: Problem[] = [];
+  const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
+  const unknown = ewsFields === null && spec?.outputSchemaRef !== undefined && spec?.outputSchemaRef !== null;
+  const declared = outputUnits(spec);
+  if ("units" in schema && declared === null) {
+    out.push({ rule: "compiler.unit", msg: "spec.outputSchema.units must map EWS fields to UCUM codes (printable ASCII, no spaces)" });
+  }
+  const units = declared ?? {};
+  if (!unknown) for (const k of Object.keys(units)) if (!(ewsFields ?? []).includes(k)) out.push({ rule: "compiler.unit", msg: `spec.outputSchema.units names "${k}", which is not one of its EWS fields` });
+  const bindings = isObj(spec?.bindings) ? (spec!.bindings as Obj) : {};
+  for (const [field, b] of Object.entries(bindings)) {
+    const form = bindingForm(b);
+    if (form === "aggregate") {
+      const fn = isObj((b as Obj).aggregate) ? ((b as Obj).aggregate as Obj).function : undefined;
+      if ((fn === "count" || fn === "distinct_count") && field in units && !dimensionless(units[field])) {
+        out.push({ rule: "compiler.unit", msg: `field "${field}" is a ${fn}, so its unit must be dimensionless (1 or an annotation such as {alarm}), not "${units[field]}"` });
+      }
+    } else if (form === "classify") {
+      const c = isObj((b as Obj).classify) ? ((b as Obj).classify as Obj) : {};
+      const crit = isObj(c.criterion) ? c.criterion : {};
+      if (field in units) out.push({ rule: "compiler.unit", msg: `field "${field}" is a classification; a label has no unit` });
+      const inputUnit = typeof c.input === "string" ? units[c.input] : undefined;
+      if ("unit" in crit && crit.unit !== inputUnit) {
+        out.push({ rule: "compiler.unit", msg: `binding "${field}" criterion.unit ${JSON.stringify(crit.unit)} must equal the unit of its input ${JSON.stringify(c.input)} (${JSON.stringify(inputUnit ?? null)})` });
+      }
+    }
   }
   return out;
 }

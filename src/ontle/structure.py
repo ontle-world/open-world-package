@@ -113,7 +113,7 @@ OBSERVATION_SET = closed({
     "spec": closed({
         "provenance": closed({"extraction": VALUE, "parameters": OPEN, "snapshot": VALUE}),
         "observations": array(closed({"id": VALUE, "type": VALUE, "observedAt": VALUE, "subject": VALUE, "values": OPEN,
-                                       "estimatedBy": VALUE, "uncertainty": OPEN})),
+                                       "estimatedBy": VALUE, "uncertainty": OPEN, "units": OPEN})),
     }),
 }, extensions=False)
 

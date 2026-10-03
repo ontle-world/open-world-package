@@ -286,6 +286,28 @@
    ],
    "warnings": []
   },
+  "compiler-unit-count-dimension": {
+   "errors": [
+    "compiler.unit"
+   ],
+   "warnings": []
+  },
+  "compiler-unit-criterion-mismatch": {
+   "errors": [
+    "compiler.unit"
+   ],
+   "warnings": []
+  },
+  "compiler-unit-unknown-field": {
+   "errors": [
+    "compiler.unit"
+   ],
+   "warnings": []
+  },
+  "compiler-units": {
+   "errors": [],
+   "warnings": []
+  },
   "consumer-actor-block-mismatch": {
    "errors": [
     "artifact.field"

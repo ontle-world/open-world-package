@@ -68,6 +68,11 @@
               },
               "extensions": {
                 "$ref": "#/$defs/extensions"
+              },
+              "unit": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*:[^\\s/][^\\s]*$",
+                "description": "Unit of the field's values as a term of a dependency ontology, such as a QUDT unit (spec section 14). The State Compiler declares the UCUM code (section 12.5)."
               }
             },
             "additionalProperties": false

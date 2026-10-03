@@ -1,0 +1,39 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    t.latest:
+      press-7: 64
+    t.mean:
+      press-7: 62.5
+    t.alarms:
+      press-7: 1
+  unresolved: {}
+  missing: []
+  provenance:
+    t.latest:
+      press-7:
+      - t2
+    t.mean:
+      press-7:
+      - t1
+      - t2
+    t.alarms:
+      press-7:
+      - a1
+  derivation:
+    t.mean:
+      kind: aggregate
+      from: ot.temp
+      value: c
+      function: mean
+    t.alarms:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count

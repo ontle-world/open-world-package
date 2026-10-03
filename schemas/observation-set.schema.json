@@ -61,6 +61,14 @@
               },
               "extensions": {
                 "$ref": "#/$defs/extensions"
+              },
+              "units": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "pattern": "^[!-~]+$"
+                },
+                "description": "UCUM code per values key (spec section 12.5). Must equal the unit the State Compiler declares for the field that reads it."
               }
             },
             "additionalProperties": false

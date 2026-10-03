@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.temp]
+    units: {m.temperature: Cel}
+  bindings:
+    m.temp: {from: ot.temp, value: c}

@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [t.latest, t.mean, t.alarms]
+    perSubject: [t.latest, t.mean, t.alarms]
+    latent: [t.mean, t.alarms]
+    units: {t.latest: Cel, t.mean: Cel, t.alarms: "{alarm}"}
+  bindings:
+    t.latest: {from: ot.temp, value: c, select: latest}
+    t.mean: {aggregate: {from: ot.temp, value: c, function: mean}}
+    t.alarms: {aggregate: {from: ot.alarm, value: code, function: count}}

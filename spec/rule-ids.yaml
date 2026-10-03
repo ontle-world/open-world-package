@@ -46,6 +46,7 @@ rules:
   compiler.binding: {severity: error, section: "12.2, 12.4", summary: "malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match latent, or a classification cycle"}
   compiler.per-subject-field: {severity: error, section: "12.3", summary: "outputSchema.perSubject is not a list of EWS fields of the compiler"}
   compiler.latent-field: {severity: error, section: "12.4", summary: "outputSchema.latent is not a list of EWS fields of the compiler"}
+  compiler.unit: {severity: error, section: "12.5", summary: "outputSchema.units that is not a mapping of EWS fields to UCUM codes, a dimensioned unit on a count, a unit on a classification, or a criterion unit unlike its input's"}
   compiler.output-schema-ref: {severity: error, section: "12.1", summary: "outputSchemaRef is not a package-relative path to a JSON Schema with a non-empty top-level properties object"}
   compiler.output-schema-mismatch: {severity: error, section: "12.1", summary: "outputSchema.fields and the properties of outputSchemaRef list different fields"}
   worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}

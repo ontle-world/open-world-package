@@ -14,6 +14,25 @@ cases:
     errors: [compiler.binding]
     satisfiedProfile: viewable
     rule: A latent field has an estimate, aggregate, or classify binding, and only latent fields do.
+  compiler-units:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "outputSchema.units declares a UCUM code per EWS field; a count is dimensionless; a criterion's unit is its input's (spec section 12.5)."
+  compiler-unit-unknown-field:
+    valid: false
+    errors: [compiler.unit]
+    satisfiedProfile: viewable
+    rule: "outputSchema.units names EWS fields of the compiler."
+  compiler-unit-count-dimension:
+    valid: false
+    errors: [compiler.unit]
+    satisfiedProfile: viewable
+    rule: "A count or distinct_count field is dimensionless: 1 or an annotation such as {alarm}."
+  compiler-unit-criterion-mismatch:
+    valid: false
+    errors: [compiler.unit]
+    satisfiedProfile: viewable
+    rule: "A classification criterion's unit equals the unit of its input field."
   compiler-classify-cycle:
     valid: false
     errors: [compiler.binding]
@@ -1104,6 +1123,20 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"
     rule: sum, mean, min, and max over numbers per subject; without candidates sum is 0 and mean is missing.
+  unit-declared:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: An observation may report a value's unit; when it equals the field's declared unit (or is absent) the value compiles unchanged.
+  unit-mismatch:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    error: true
+    rule: A reported unit different from the field's declared unit is invalid input; values are never converted.
+  aggregate-mixed-units:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    error: true
+    rule: sum, mean, min, and max refuse candidates reported in different units, even when the field declares none.
   aggregate-non-numeric:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"

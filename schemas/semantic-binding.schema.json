@@ -73,6 +73,41 @@
                 "type": "string",
                 "pattern": "^[A-Za-z][A-Za-z0-9_-]*:[^\\s/][^\\s]*$",
                 "description": "Unit of the field's values as a term of a dependency ontology, such as a QUDT unit (spec section 14). The State Compiler declares the UCUM code (section 12.5)."
+              },
+              "values": {
+                "type": "object",
+                "description": "Coded values tied to concepts (spec section 14): map wins over base.",
+                "properties": {
+                  "scheme": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*:[^\\s/][^\\s]*$"
+                  },
+                  "base": {
+                    "type": "string",
+                    "description": "Absolute IRI prefix; an IRI-safe code is appended."
+                  },
+                  "map": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*:[^\\s/][^\\s]*$"
+                    },
+                    "minProperties": 1
+                  }
+                },
+                "additionalProperties": false,
+                "anyOf": [
+                  {
+                    "required": [
+                      "base"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "map"
+                    ]
+                  }
+                ]
               }
             },
             "additionalProperties": false
@@ -108,6 +143,28 @@
               }
             },
             "additionalProperties": false
+          }
+        },
+        "semanticIds": {
+          "type": "object",
+          "description": "External dictionary identifiers (IRDIs or absolute IRIs) per bound name, by section (spec section 14).",
+          "propertyNames": {
+            "enum": [
+              "terms",
+              "fields",
+              "observationTypes",
+              "actions"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
           }
         },
         "extensions": {

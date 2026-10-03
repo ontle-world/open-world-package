@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from .core import OWPError
+
 OWP = "https://w3id.org/owp/ns#"
 PACKAGE_BASE = "https://w3id.org/owp/pkg/"
 SPEC_BASE = "https://w3id.org/owp/spec/"
@@ -60,7 +62,7 @@ def _iri(s: str) -> str:
 def ews_turtle(world_root: Path, world_manifest: dict[str, Any], ews: dict[str, Any], observations: dict[str, Any],
                binding: dict[str, Any] | None, prefixes: dict[str, str]) -> str:
     """The EWS as Turtle 1.2. `binding` and `prefixes` come from the World's SemanticBinding and its dependency ontologies."""
-    from .binding import subject_iri
+    from .binding import subject_iri, value_iri
     from .ews import binding_form, output_lists
     from .ontology import expand
     from .yamlio import load_yaml
@@ -162,10 +164,16 @@ def ews_turtle(world_root: Path, world_manifest: dict[str, Any], ews: dict[str, 
             prop = property_of(field)
             otype = source_type(field)
             rule = subject_rules.get(otype) if otype else None
+            fb = field_bindings.get(field)
+            coded = fb.get("values") if isinstance(fb, dict) and isinstance(fb.get("values"), dict) else None
+            concept = value_iri(coded, v, prefixes) if coded else None
+            if coded and concept is None:
+                raise OWPError(f"binding.values: {field}: value {v!r} has no map entry and cannot be appended to base as an IRI")
+            obj = _iri(concept) if concept else _literal(v)
             if prop and subject is not None and isinstance(rule, dict):
-                parts.append(f"rdf:reifies <<( {_iri(subject_iri(rule, subject))} {_iri(prop)} {_literal(v)} )>>")
+                parts.append(f"rdf:reifies <<( {_iri(subject_iri(rule, subject))} {_iri(prop)} {obj} )>>")
             else:
-                parts.append(f"rdf:value {_literal(v)}")
+                parts.append(f"rdf:value {obj}")
             if ids:
                 parts.append("prov:wasDerivedFrom " + " , ".join(obs_node(i) for i in ids))
             if field in derivation_nodes:

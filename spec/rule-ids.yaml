@@ -123,6 +123,8 @@ rules:
   binding.asset: {severity: error, section: "14", summary: "spec.world.semanticBinding is not a local SemanticBinding asset"}
   binding.curie: {severity: error, section: "14", summary: "binding value or section is not a CURIE or a mapping as required"}
   binding.subjects: {severity: error, section: "14", summary: "subjects entry for an unlisted observation type, or not {base} / {iri: true}"}
+  binding.values: {severity: error, section: "14", summary: "values without base or map, a base that is not an absolute IRI, or an empty map"}
+  binding.semantic-ids: {severity: error, section: "14", summary: "semanticIds entry for a name not bound in its section, or an identifier that is neither an IRDI nor an absolute IRI"}
   binding.field-unknown: {severity: error, section: "14", summary: "bound field is not an EWS field of any local State Compiler"}
   grounding.prefix-unknown: {severity: error, section: "14", summary: "binding CURIE uses a prefix no dependency OntologyPackage declares"}
   grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}

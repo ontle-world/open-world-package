@@ -97,10 +97,10 @@ export const TERM_INDEX: Shape = closed(
 
 /** schemas/semantic-binding.schema.json (spec 14): sections are maps; `fields` entries are checked with FIELD_BINDING. */
 export const SEMANTIC_BINDING: Shape = closed(
-  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN, subjects: OPEN }) },
+  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN, subjects: OPEN, semanticIds: OPEN }) },
   false,
 );
-export const FIELD_BINDING: Shape = closed(leaves("class", "path", "unit"));
+export const FIELD_BINDING: Shape = closed({ ...leaves("class", "path", "unit"), values: closed({ ...leaves("scheme", "base"), map: OPEN }) });
 
 /** schemas/compatibility-evidence.schema.json */
 export const COMPATIBILITY_EVIDENCE: Shape = closed(

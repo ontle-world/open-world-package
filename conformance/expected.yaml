@@ -663,6 +663,25 @@ cases:
     valid: true
     satisfiedProfile: model-ready
     rule: "A SemanticBinding binds World names, EWS fields, observation types, and actions to CURIEs."
+  binding-values:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "A field's coded values may be tied to a concept scheme (scheme, base, map), and bound names may carry external dictionary identifiers (semanticIds: IRDIs or IRIs) (spec section 14)."
+  binding-values-malformed:
+    valid: false
+    errors: [binding.values]
+    satisfiedProfile: model-ready
+    rule: "values has base, map, or both; base is an absolute IRI prefix."
+  binding-semantic-ids-unbound:
+    valid: false
+    errors: [binding.semantic-ids]
+    satisfiedProfile: model-ready
+    rule: "semanticIds attaches identifiers to names bound in the same section."
+  binding-semantic-ids-syntax:
+    valid: false
+    errors: [binding.semantic-ids]
+    satisfiedProfile: model-ready
+    rule: "semanticIds values are IRDIs in canonical # form (ISO 29002-5) or absolute IRIs."
   binding-subjects:
     valid: false
     errors: [binding.subjects]
@@ -958,6 +977,10 @@ cases:
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
+  binding-values-concept-unknown:
+    valid: false
+    errors: [grounding.ontology-term]
+    rule: "A concept in values.map is a term of a dependency ontology."
   ontology-dependency-term:
     valid: true
     resolved:

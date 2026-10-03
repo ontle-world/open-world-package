@@ -71,6 +71,13 @@ spec:
     claim.status: {class: q:Claim, path: [q:claimStatus]}
     lot.genealogy: {class: q:Lot, path: [q:derivedFrom]}
     line.temp: {class: q:Line, path: [q:temperature], unit: unit:DEG_C}   # unit: optional, e.g. a QUDT unit
+    claim.reason:                          # coded values tied to concepts (optional)
+      class: q:Claim
+      path: [q:claimReason]
+      values: {scheme: q:ClaimReasons, base: "https://w3id.org/acme/claim-reason/", map: {"on hold": q:OnHold}}
+  semanticIds:                             # external dictionary identifiers (optional)
+    fields:
+      line.temp: ["0173-1#02-AAO677#002"]
   observationTypes:                        # observation type -> class
     QMS.claim: q:Claim
   actions:                                 # action name -> term
@@ -87,6 +94,8 @@ Single-package rules:
 - Every value in `terms`, `observationTypes`, and `actions`, and every `class`, `path`, and `unit` entry in `fields`, is a CURIE `<prefix>:<local name>`. A field's `unit` names its unit as an ontology term (for example from QUDT, whose units carry their UCUM codes as `qudt:ucumCode`); the State Compiler's UCUM code (section 12.5) is what compilation checks.
 - Every key of `fields` is an EWS field (section 12.1) of some local State Compiler.
 - Every key of `subjects` is listed in `observationTypes`, and its value is `{base: <absolute IRI prefix>}` (the subject is appended) or `{iri: true}` (the subject already is an IRI) (`binding.subjects`). With it, a per-subject EWS field becomes statements about individuals: the reference CLI's `ontle ews compile --jsonld` adds an `@graph` with one node per subject, typed with the observation type's class, and `ontle kg check` can compare those individuals with a knowledge graph.
+- A field MAY tie its coded values to concepts with `values`: `scheme` (the concept scheme, a CURIE), `base` (an absolute IRI prefix; a code made only of `A-Z a-z 0-9 . _ ~ -` is appended to it), and `map` (code to concept CURIE, which wins over `base`). At least one of `base` and `map` is present (`binding.values`). The EWS keeps the codes; tooling that writes RDF or JSON-LD gives a value's concept IRI instead, and refuses a value it cannot map. The concept model is the ontology's choice (SKOS concepts, OWL individuals, classes); OWP only maps codes to IRIs.
+- `semanticIds` MAY attach external dictionary identifiers to bound names, for example the ECLASS or IEC CDD identifier an Asset Administration Shell uses as a semanticId. Its sections are `terms`, `fields`, `observationTypes`, and `actions`; each key MUST be bound in the same section, and each value is a non-empty list of identifiers, each an IRDI in canonical `#` form (ISO 29002-5, such as `0173-1#02-AAO677#002`) or an absolute IRI (`binding.semantic-ids`). They are references only: they are not expanded with prefixes, need not be terms of a dependency, and do not change the meaning the CURIE binding gives. Dictionaries such as ECLASS are licensed: a package may cite their identifiers but MUST NOT copy their names, definitions, or value lists unless its publisher's license allows it.
 - A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.
 - SemanticBinding documents contain only the fields of `schemas/semantic-binding.schema.json` and `extensions` blocks.
 

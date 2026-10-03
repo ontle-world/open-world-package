@@ -579,6 +579,8 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
 | `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
 | `binding.subjects` | 14 | `subjects` entry for an unlisted observation type, or not `{base}` / `{iri: true}` |
+| `binding.values` | 14 | `values` without `base` or `map`, a `base` that is not an absolute IRI, or an empty `map` |
+| `binding.semantic-ids` | 14 | `semanticIds` entry for a name not bound in its section, or an identifier that is neither an IRDI nor an absolute IRI |
 | `binding.field-unknown` | 14 | bound field is not an EWS field of any local State Compiler |
 | `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |

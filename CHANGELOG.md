@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Runtime standards (informative, `docs/interop/`):
+  - MCP: `ontle interop mcp <world>` prints what an MCP server for a World exposes. The World, Views, and State Compilers become resources, the EWS at a time becomes a resource template, and actions become tools. Each tool's `_meta` links the commit contract and effect verification, since a successful call is not a commit.
+  - NGSI-LD: `ontle ews compile --ngsi-ld` writes an EWS as NGSI-LD entities. Subjects become entities and fields become properties named by their bound IRIs. Coded values become VocabProperties, and each unresolved alternative becomes an attribute instance with its own `datasetId`.
+  - AAS: a mapping note covering submodels as observation sources, `semanticId` as `semanticIds`, value lists as `values`, and ECLASS licensing.
+- Package index term index (spec section 11.1): `ontle index build --terms` adds `terms` and `mappings`. `terms` maps each term IRI to the packages that define and use it, and `mappings` lists the indexed packages' mapping sets. Resolution ignores both.
 - Coded values and dictionary identifiers (spec section 14):
   - A SemanticBinding field may tie its coded values to concepts with `values: {scheme, base, map}`. `map` wins, and `base` is used only for IRI-safe codes. `ontle ews compile --rdf` and `--jsonld` then give concept IRIs, and refuse a value they cannot map. `binding.values` covers malformed entries, and the term check covers `scheme` and `map` concepts.
   - `semanticIds` attaches external dictionary identifiers (IRDIs in canonical `#` form, or absolute IRIs) to names bound in the same section, for example the ECLASS or IEC CDD identifiers of an Asset Administration Shell. Only their syntax is checked (`binding.semantic-ids`), and licensed dictionary content stays out of packages.

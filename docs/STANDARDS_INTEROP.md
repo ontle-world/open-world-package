@@ -88,6 +88,10 @@ The examples use this convention:
 
 Both implementations check `standardBindings` in every local asset: the binding shape, the ExternalRef, pinning (`standard.unpinned`), and the license of a bound artifact (`standard.license`). Domain validators may layer checks on top, for example that a `ros2` term names a real message type.
 
+## Runtime standards
+
+[docs/interop/](interop/README.md) has notes on MCP, NGSI-LD, and the Asset Administration Shell. `ontle interop mcp` prints what an MCP server for a World exposes, and `ontle ews compile --ngsi-ld` writes an EWS as NGSI-LD entities.
+
 ## Evidence of interoperability
 
 Interoperability is shown by implementations agreeing, not by one toolchain reading its own packages:

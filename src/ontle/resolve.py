@@ -477,25 +477,38 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
     return ValidationResult(not errors, errors, warnings, result.manifest), resolution
 
 
-def ews_rdf(world_path: str | Path, ews: dict[str, Any], observations: dict[str, Any], sources: list[str] | None = None) -> str:
-    """The EWS as Turtle 1.2 in the OWP vocabulary. Bound fields and subjects become triple terms when the World's
-    SemanticBinding and its dependency ontologies resolve; otherwise values are given as rdf:value."""
+def binding_and_prefixes(world_path: str | Path, sources: list[str] | None = None) -> tuple[Path, dict[str, Any], dict[str, Any] | None, dict[str, str]]:
+    """(World root, manifest, SemanticBinding or None, prefixes of its dependency ontologies), for RDF-based output."""
     from .ontology import terms as ontology_terms
-    from .rdfexport import ews_turtle
     root, manifest = load_manifest(world_path)
     binding_rel = ((manifest.get("spec") or {}).get("world") or {}).get("semanticBinding")
     binding, prefixes = None, {}
     if isinstance(binding_rel, str):
         resolution = resolve_package(world_path, sources)
         if resolution.errors:
-            raise OWPError("; ".join(resolution.errors) + " (the SemanticBinding's ontologies are needed for --rdf: pass --source)")
+            raise OWPError("; ".join(resolution.errors) + " (the SemanticBinding's ontologies are needed for --rdf and --ngsi-ld: pass --source)")
         world = resolution.root
         for ref, _ in _dependency_refs(world.manifest):
             dep = resolution.packages.get(ref)
             if dep is not None and dep.kind == "OntologyPackage":
                 prefixes.update(ontology_terms(dep.root, dep.manifest)[0])
         binding = _load_asset(world, binding_rel)
+    return root, manifest, binding, prefixes
+
+
+def ews_rdf(world_path: str | Path, ews: dict[str, Any], observations: dict[str, Any], sources: list[str] | None = None) -> str:
+    """The EWS as Turtle 1.2 in the OWP vocabulary. Bound fields and subjects become triple terms when the World's
+    SemanticBinding and its dependency ontologies resolve; otherwise values are given as rdf:value."""
+    from .rdfexport import ews_turtle
+    root, manifest, binding, prefixes = binding_and_prefixes(world_path, sources)
     return ews_turtle(root, manifest, ews, observations, binding, prefixes)
+
+
+def ews_ngsi(world_path: str | Path, ews: dict[str, Any], observations: dict[str, Any], sources: list[str] | None = None) -> list[dict[str, Any]]:
+    """The EWS as NGSI-LD entities (docs/interop/NGSI-LD.md)."""
+    from .interop import ews_ngsi_ld
+    root, manifest, binding, prefixes = binding_and_prefixes(world_path, sources)
+    return ews_ngsi_ld(root, manifest, ews, observations, binding, prefixes)
 
 
 def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] | None = None) -> dict[str, Any]:

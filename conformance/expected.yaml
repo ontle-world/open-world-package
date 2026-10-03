@@ -729,6 +729,47 @@ cases:
     errors: [knowledge.field]
     satisfiedProfile: model-ready
     rule: "knowledgeRepresentations is a closed value set: another value is knowledge.field (spec section 19)."
+  manifest-metadata-not-mapping:
+    valid: false
+    errors: [manifest.metadata]
+    satisfiedProfile: descriptive
+    rule: "metadata is a mapping."
+  manifest-version-not-semver:
+    valid: false
+    errors: [manifest.version]
+    satisfiedProfile: descriptive
+    rule: "metadata.version is SemVer."
+  manifest-spec-not-mapping:
+    valid: false
+    errors: [manifest.spec]
+    rule: "spec is a mapping."
+  world-spec-missing:
+    valid: false
+    errors: [world.spec]
+    rule: "A WorldPackage has spec.world."
+  worldmodel-spec-missing:
+    valid: false
+    errors: [worldmodel.spec]
+    rule: "A WorldModelPackage has spec.worldModel."
+  asset-list-not-list:
+    valid: false
+    errors: [asset.list]
+    satisfiedProfile: descriptive
+    rule: "spec.assets is a list when present."
+  asset-entry-not-mapping:
+    valid: false
+    errors: [asset.entry]
+    satisfiedProfile: descriptive
+    rule: "Each spec.assets entry is a mapping."
+  evidence-required-missing:
+    valid: false
+    errors: [evidence.required]
+    rule: "CompatibilityEvidence names its evaluationProfile (spec section 9)."
+  ontology-mapped-without-mappings:
+    valid: false
+    errors: [profile.ontology.mapped]
+    satisfiedProfile: constrained
+    rule: "An OntologyPackage that declares the mapped profile has an entrypoint with role mappings."
   binding-subjects:
     valid: false
     errors: [binding.subjects]
@@ -1024,6 +1065,10 @@ cases:
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
+  dependency-reference-malformed:
+    valid: false
+    errors: [resolve.reference]
+    rule: "A dependency of a resolved package that is not a package reference cannot be resolved."
   binding-values-concept-unknown:
     valid: false
     errors: [grounding.ontology-term]
@@ -1317,6 +1362,14 @@ ewsCases:
     errors: [schema.unknown-field]
     rule: "An observation key that is neither defined nor an extensions block makes the input invalid."
 ewsCheckCases:
+  state-not-mapping:
+    valid: false
+    errors: [ews.shape]
+    rule: "spec.state is a mapping."
+  state-compiler-not-asset:
+    valid: false
+    errors: [ews.state-compiler]
+    rule: "spec.stateCompiler names a StateCompilerProfile asset of the World."
   per-subject-latent-valid:
     valid: true
     rule: Per-subject values are mappings, a field may split its subjects between state and unresolved, and each latent field with a value has a derivation record.
@@ -1466,3 +1519,19 @@ extractionCases:
     error: true
     errors: ["extraction.input"]
     rule: "Without a snapshot, rows that need the snapshot default cannot get an observedAt."
+evidenceCases:
+  valid:
+    valid: true
+    rule: "Evidence published outside the package names the archive's identity and digest (spec section 9.1)."
+  subject-mismatch:
+    valid: false
+    errors: [evidence.detached-subject]
+    rule: "spec.subject is the archive's identity."
+  digest-mismatch:
+    valid: false
+    errors: [evidence.detached-subject]
+    rule: "spec.subjectDigest is the archive's digest."
+  not-evidence:
+    valid: false
+    errors: [evidence.detached-subject]
+    rule: "The document is a CompatibilityEvidence."

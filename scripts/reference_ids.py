@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from ontle.core import validate_package  # noqa: E402
+from ontle.distribution import check_detached_evidence  # noqa: E402
 from ontle.resolve import validate_resolved  # noqa: E402
 
 SUITE = ROOT / "conformance"
@@ -32,7 +33,7 @@ def _ids(messages: list[str]) -> list[str]:
 
 def compute() -> dict:
     expected = yaml.safe_load((SUITE / "expected.yaml").read_text(encoding="utf-8"))
-    out: dict = {"cases": {}, "resolutionCases": {}}
+    out: dict = {"cases": {}, "resolutionCases": {}, "evidenceCases": {}}
     for case_id in sorted(expected["cases"]):
         r = validate_package(SUITE / "cases" / case_id)
         out["cases"][case_id] = {"errors": _ids(r.errors), "warnings": _ids(r.warnings)}
@@ -40,6 +41,10 @@ def compute() -> dict:
         case = SUITE / "resolution" / case_id
         r, _ = validate_resolved(case / "root", [str(case / "packages")])
         out["resolutionCases"][case_id] = {"errors": _ids(r.errors), "warnings": _ids(r.warnings)}
+    for case_id in sorted(expected.get("evidenceCases") or {}):
+        case = SUITE / "evidence" / case_id
+        errors = check_detached_evidence(yaml.safe_load((case / "evidence.yaml").read_text(encoding="utf-8")), case / "package.owp.zip")
+        out["evidenceCases"][case_id] = {"errors": _ids(errors), "warnings": []}
     return out
 
 

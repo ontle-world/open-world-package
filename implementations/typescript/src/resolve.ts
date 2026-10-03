@@ -417,6 +417,10 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   const reported = new Set<string>();
 
   const visit = (node: Node, stack: string[]) => {
+    // Spec 11: a dependency that is not a package reference cannot be resolved (also reported as manifest.dependency).
+    for (const p of parseDependencies(node.manifest).problems) {
+      if (!/\.source must be/.test(p)) err("resolve.reference", `${node.identity}: ${p}`);
+    }
     for (const dep of node.deps) {
       if (stack.includes(dep.ref)) {
         err("resolve.cycle", `dependency cycle: ${[...stack, dep.ref].join(" -> ")}`);

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Every error id now has a conformance case. There are 13 new cases, and the known-gaps list in the coverage test is empty.
+  - New sections: a new `evidenceCases` section checks CompatibilityEvidence published outside a package against its archive (`evidence/<id>/evidence.yaml`, `package.owp.zip`; spec 9.1). Both implementations run it, and its ids are in `reference-ids.json`.
+  - The cases found these disagreements, now fixed:
+    - TypeScript did not report a malformed dependency of a resolved package as `resolve.reference`.
+    - Python reported a `stateCompiler` that names another World as `ews.state-compiler` instead of `ews.world-ref` (spec Appendix A).
+    - Python added `manifest.identity` errors under a malformed `metadata`, and World Model sub-errors under a missing `spec.worldModel`.
+  - Python also no longer crashes on a manifest whose `spec` is not a mapping, in `validate --resolve`, `validate`, or `inspect`.
 - Review fixes for the changes above:
   - Python and TypeScript now agree:
     - TypeScript no longer treats names such as `toString` or `constructor` as bound or as having units.

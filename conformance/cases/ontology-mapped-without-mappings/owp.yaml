@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: conformance
+  name: onto
+  version: 0.1.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://example.org/q#
+    prefixes: {q: https://example.org/q#}
+    entrypoints:
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+    - {path: semantics/shapes.ttl, format: turtle, role: shapes}
+  conformance:
+    profile: mapped
+  assets: []

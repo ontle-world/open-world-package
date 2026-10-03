@@ -72,6 +72,12 @@
    ],
    "warnings": []
   },
+  "asset-entry-not-mapping": {
+   "errors": [
+    "asset.entry"
+   ],
+   "warnings": []
+  },
   "asset-foreign-yaml": {
    "errors": [],
    "warnings": []
@@ -85,6 +91,12 @@
    "warnings": [
     "asset.kind-reserved"
    ]
+  },
+  "asset-list-not-list": {
+   "errors": [
+    "asset.list"
+   ],
+   "warnings": []
   },
   "asset-local-path-listed": {
    "errors": [
@@ -505,6 +517,13 @@
    "errors": [],
    "warnings": []
   },
+  "evidence-required-missing": {
+   "errors": [
+    "evidence.required",
+    "evidence.result"
+   ],
+   "warnings": []
+  },
   "evidence-scope-worldref-mismatch": {
    "errors": [
     "evidence.scope.world-ref"
@@ -698,8 +717,22 @@
    ],
    "warnings": []
   },
+  "manifest-metadata-not-mapping": {
+   "errors": [
+    "manifest.metadata"
+   ],
+   "warnings": []
+  },
   "manifest-open-containers": {
    "errors": [],
+   "warnings": []
+  },
+  "manifest-spec-not-mapping": {
+   "errors": [
+    "manifest.spec",
+    "profile.descriptive",
+    "world.spec"
+   ],
    "warnings": []
   },
   "manifest-unknown-field": {
@@ -717,6 +750,12 @@
   "manifest-unknown-metadata-field": {
    "errors": [
     "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "manifest-version-not-semver": {
+   "errors": [
+    "manifest.version"
    ],
    "warnings": []
   },
@@ -832,6 +871,12 @@
   },
   "ontology-mapped": {
    "errors": [],
+   "warnings": []
+  },
+  "ontology-mapped-without-mappings": {
+   "errors": [
+    "profile.ontology.mapped"
+   ],
    "warnings": []
   },
   "ontology-missing-iri": {
@@ -1236,6 +1281,13 @@
    "errors": [],
    "warnings": []
   },
+  "world-spec-missing": {
+   "errors": [
+    "profile.descriptive",
+    "world.spec"
+   ],
+   "warnings": []
+  },
   "world-stateful-missing-compiler": {
    "errors": [
     "profile.stateful"
@@ -1278,6 +1330,12 @@
    ],
    "warnings": []
   },
+  "worldmodel-spec-missing": {
+   "errors": [
+    "worldmodel.spec"
+   ],
+   "warnings": []
+  },
   "yaml-directive": {
    "errors": [],
    "warnings": []
@@ -1286,6 +1344,31 @@
    "errors": [
     "asset.yaml"
    ],
+   "warnings": []
+  }
+ },
+ "evidenceCases": {
+  "digest-mismatch": {
+   "errors": [
+    "evidence.detached-subject"
+   ],
+   "warnings": []
+  },
+  "not-evidence": {
+   "errors": [
+    "evidence.detached-subject"
+   ],
+   "warnings": []
+  },
+  "subject-mismatch": {
+   "errors": [
+    "evidence.detached-subject",
+    "evidence.subject"
+   ],
+   "warnings": []
+  },
+  "valid": {
+   "errors": [],
    "warnings": []
   }
  },
@@ -1372,6 +1455,13 @@
   },
   "dependency-mapping-source": {
    "errors": [],
+   "warnings": []
+  },
+  "dependency-reference-malformed": {
+   "errors": [
+    "resolve.dependency-invalid",
+    "resolve.reference"
+   ],
    "warnings": []
   },
   "descriptive-dependency": {

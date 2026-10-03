@@ -1,4 +1,4 @@
 apiVersion: openworld/v1alpha1
 kind: WorldViewProfle
 metadata: {name: draft}
-spec: {worldRef: self}
+spec: {}

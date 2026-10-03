@@ -389,7 +389,7 @@ def external_world_issues(resolution: Resolution) -> tuple[list[str], list[str]]
     for pkg in resolution.packages.values():
         if pkg.kind != "WorldPackage":
             continue
-        kinds, docs = local_assets(pkg.root, pkg.manifest.get("spec") or {})
+        kinds, docs = pkg.local_assets()
         for rel in sorted(r for r, k in kinds.items() if k == "WorldViewProfile"):
             vspec = (docs.get(rel) or {}).get("spec") or {}
             refs = vspec.get("externalWorldRefs") if isinstance(vspec.get("externalWorldRefs"), list) else []

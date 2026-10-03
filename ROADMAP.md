@@ -69,4 +69,5 @@ Namespace ownership, search, evidence aggregation, and certification scopes need
 
 - Evaluation execution, failure triage, evaluation generation, and promotion workflows (runtime and registry concerns; their outputs re-enter OWP as new versions and evidence).
 - Runtime execution, connectors, and transactional commit handling.
+- Runtime contexts built from EWS (an actor's current context, the operational or decision context) and the product surfaces that present them, such as a WorldView board.
 - Model weight or checkpoint formats.

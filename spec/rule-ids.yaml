@@ -8,22 +8,22 @@ rules:
   manifest.api-version: {severity: error, section: "2", summary: "apiVersion is not openworld/v1alpha1"}
   manifest.kind: {severity: error, section: "3", summary: "unknown package kind"}
   manifest.metadata: {severity: error, section: "2", summary: "metadata is not a mapping"}
-  manifest.identity: {severity: error, section: "2", summary: "missing namespace, name, or version, or namespace/name containing /, @, #, or whitespace"}
-  manifest.version: {severity: error, section: "2", summary: "metadata.version is not SemVer"}
+  manifest.identity: {severity: error, section: "2", summary: "namespace or name missing or not a non-empty string, version missing, null, or empty, or namespace/name containing /, @, #, or whitespace"}
+  manifest.version: {severity: error, section: "2", summary: "metadata.version is present but not a SemVer string (a number, a list, or blank text included)"}
   manifest.spec: {severity: error, section: "2", summary: "spec is not a mapping"}
   package.card: {severity: error, section: "3", summary: "required human card missing"}
   package.legacy-manifest: {severity: error, section: "8", summary: "package.yaml or world.yaml at the root"}
-  asset.list: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
-  asset.entry: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
-  asset.kind: {severity: error, section: "5", summary: "malformed spec.assets or entry, missing entry kind, a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.list: {severity: error, section: "5", summary: "spec.assets present but not a list (null included), an entry that is not a mapping, an entry kind that is missing or not a non-empty string (the entry is not checked further), a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.entry: {severity: error, section: "5", summary: "spec.assets present but not a list (null included), an entry that is not a mapping, an entry kind that is missing or not a non-empty string (the entry is not checked further), a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
+  asset.kind: {severity: error, section: "5", summary: "spec.assets present but not a list (null included), an entry that is not a mapping, an entry kind that is missing or not a non-empty string (the entry is not checked further), a kind containing : that is not <extension>:<Kind>, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind"}
   asset.path-or-ref: {severity: error, section: "5", summary: "entry has both or neither of path and ref, or a path entry is not a PackageExample"}
   ref.shape: {severity: error, section: "5.1", summary: "malformed ExternalRef: not a mapping, bad status, digest, size, or field type, or a bound reference without provider or uri"}
   ref.provider: {severity: error, section: "5.1", summary: "provider is neither a listed provider nor <extension>:<provider>"}
-  asset.path-form: {severity: error, section: "3", summary: "local path is not a relative POSIX path, or starts with ./"}
-  manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies entry is not an exact package reference"}
+  asset.path-form: {severity: error, section: "3", summary: "local path is not a non-empty string or not a relative POSIX path (absolute, a drive letter such as a:, \\, //, or a trailing /), or starts with ./"}
+  manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies is not a list, an entry is not an exact package reference, or an entry's source is not a non-empty string"}
   eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierProfile assets share metadata.name"}
   asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
-  asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
+  asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path is absolute (including a drive letter) or resolves outside the package root"}
   asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist or is excluded by .owpignore"}
   standard.binding: {severity: error, section: "5.3", summary: "malformed spec.standardBindings: not a mapping, an entry without standard, terms not a mapping of strings, an empty license, or neither ref nor terms"}
   standard.unpinned: {severity: error, section: "5.3", summary: "a bound ref in a standard binding is not pinned"}
@@ -32,7 +32,7 @@ rules:
   asset.api-version: {severity: error, section: "5", summary: "a discovered OWP document's apiVersion differs from the manifest's"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
-  profile.descriptive: {severity: error, section: "6.1", summary: "no spec.world.definition"}
+  profile.descriptive: {severity: error, section: "6.1", summary: "spec.world.definition is not a non-empty string"}
   model.entrypoint: {severity: error, section: "8", summary: "a ModelArtifact entrypoint that does not name a file in the package"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
   view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile in a package that is not a WorldPackage"}
@@ -49,12 +49,12 @@ rules:
   compiler.unit: {severity: error, section: "12.5", summary: "outputSchema.units that is not a mapping of EWS fields to UCUM codes, a dimensioned unit on a count, a unit on a classification, or a criterion unit unlike its input's"}
   compiler.output-schema-ref: {severity: error, section: "12.1", summary: "outputSchemaRef is not a package-relative path to a JSON Schema with a non-empty top-level properties object"}
   compiler.output-schema-mismatch: {severity: error, section: "12.1", summary: "outputSchema.fields and the properties of outputSchemaRef list different fields"}
-  worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
-  worldmodel.roles: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
+  worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel, or roles is not a non-empty list of non-empty strings"}
+  worldmodel.roles: {severity: error, section: "3", summary: "missing spec.worldModel, or roles is not a non-empty list of non-empty strings"}
   worldmodel.world-ref: {severity: error, section: "3", summary: "missing semanticGrounding.worldRef, or not <namespace>/<name>@<semver>"}
   worldmodel.compatible-views: {severity: error, section: "3", summary: "missing compatibleWorldViews"}
   worldmodel.compatible-compilers: {severity: error, section: "3", summary: "missing compatibleStateCompilers"}
-  worldmodel.grounding-ref: {severity: error, section: "3", summary: "grounding entry not <worldRef>#<asset path>"}
+  worldmodel.grounding-ref: {severity: error, section: "3", summary: "grounding entry (of any type) not <worldRef>#<asset path>; such an entry is left out of the grounding"}
   worldmodel.adapter: {severity: error, section: "6", summary: "Representation Adapter missing, not referenced locally, or not sourced from EWS"}
   worldmodel.adapter-ref: {severity: error, section: "6", summary: "Representation Adapter missing, not referenced locally, or not sourced from EWS"}
   worldmodel.adapter-source: {severity: error, section: "6", summary: "Representation Adapter missing, not referenced locally, or not sourced from EWS"}
@@ -76,16 +76,16 @@ rules:
   eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierProfile metadata.version not SemVer"}
   eval.supersedes: {severity: error, section: "9", summary: "supersedes not pinned"}
   evidence.subject: {severity: error, section: "9", summary: "subject missing or not the package identity"}
-  evidence.required: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
-  evidence.result: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
-  evidence.scope: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
+  evidence.required: {severity: error, section: "9", summary: "missing metadata.name, a spec that is not a mapping (nothing else is checked), missing evaluationProfile or result, missing scope.worldRef/scope.worldView, or a scope field that is not a non-empty string"}
+  evidence.result: {severity: error, section: "9", summary: "missing metadata.name, a spec that is not a mapping (nothing else is checked), missing evaluationProfile or result, missing scope.worldRef/scope.worldView, or a scope field that is not a non-empty string"}
+  evidence.scope: {severity: error, section: "9", summary: "missing metadata.name, a spec that is not a mapping (nothing else is checked), missing evaluationProfile or result, missing scope.worldRef/scope.worldView, or a scope field that is not a non-empty string"}
   evidence.unpinned: {severity: error, section: "9", summary: "reference not <name>@<exact-semver>"}
   evidence.version-mismatch: {severity: error, section: "9", summary: "bound local asset missing that exact version"}
   evidence.detached-subject: {severity: error, section: "9.1", summary: "detached evidence that is not a CompatibilityEvidence, whose archive does not verify, or whose subject or subjectDigest does not match the archive"}
   evidence.scope.world-ref: {severity: error, section: "9", summary: "scope outside the model's grounding"}
   evidence.scope.world-view: {severity: error, section: "9", summary: "scope outside the model's grounding"}
   evidence.scope.state-compiler: {severity: error, section: "9", summary: "scope outside the model's grounding"}
-  resolve.reference: {severity: error, section: "11", summary: "malformed dependency reference"}
+  resolve.reference: {severity: error, section: "11", summary: "malformed dependency reference (for the root package also a malformed source)"}
   resolve.source: {severity: error, section: "11", summary: "source unusable (for example an archive fails verification)"}
   resolve.unresolved: {severity: error, section: "11", summary: "dependency not found in any source"}
   resolve.version-conflict: {severity: error, section: "11", summary: "two versions of one package in a closure"}
@@ -104,13 +104,13 @@ rules:
   scenario.baseline-ref: {severity: error, section: "15.2", summary: "baselineStateRef is neither a file in the package nor a URI"}
   scenario.confidence: {severity: error, section: "15.2", summary: "confidence is not a number from 0 to 1"}
   extraction.input: {severity: error, section: "19.2", summary: "invalid extraction input; nothing is produced"}
-  ews.input: {severity: error, section: "12.2", summary: "invalid ObservationSet or asOf; compilation refused"}
-  ews.opaque-compiler: {severity: error, section: "12.2", summary: "compiler has no spec.bindings; compilation refused"}
-  ews.state-compiler: {severity: error, section: "12", summary: "named State Compiler is not a local asset, or has no spec"}
-  ews.kind: {severity: error, section: "12", summary: "not an EffectiveWorldState document, or malformed sections"}
-  ews.shape: {severity: error, section: "12", summary: "not an EffectiveWorldState document, or malformed sections"}
-  ews.world-ref: {severity: error, section: "12.1", summary: "references do not match the World, compiler, and compiled View"}
-  ews.world-view: {severity: error, section: "12.1", summary: "references do not match the World, compiler, and compiled View"}
+  ews.input: {severity: error, section: "12.2", summary: "invalid ObservationSet (not a mapping, an apiVersion other than openworld/v1alpha1, a missing or empty observation id or type, a value that is .inf, .nan, or an integer outside ±(2^53−1)) or asOf; compilation refused"}
+  ews.opaque-compiler: {severity: error, section: "12.2", summary: "compiler has no spec.bindings key; compilation refused (a bindings value that is not a mapping is compiler.binding)"}
+  ews.state-compiler: {severity: error, section: "12", summary: "when compiling: the World is not a readable WorldPackage manifest, or the named State Compiler is not a local asset or has no spec"}
+  ews.kind: {severity: error, section: "12", summary: "not a parseable EffectiveWorldState document (apiVersion, kind), or malformed sections; checking stops at ews.shape"}
+  ews.shape: {severity: error, section: "12", summary: "not a parseable EffectiveWorldState document (apiVersion, kind), or malformed sections; checking stops at ews.shape"}
+  ews.world-ref: {severity: error, section: "12.1", summary: "when checking: the World is not a readable WorldPackage manifest, or references do not match the World, compiler, and compiled View"}
+  ews.world-view: {severity: error, section: "12.1", summary: "when checking: the World is not a readable WorldPackage manifest, or references do not match the World, compiler, and compiled View"}
   ews.as-of: {severity: error, section: "12.1", summary: "context.asOf not a UTC timestamp"}
   ews.field-placement: {severity: error, section: "12.1", summary: "schema field not in exactly one of state/unresolved/missing"}
   ews.field-unknown: {severity: error, section: "12.1", summary: "field that is not an EWS field of the compiler"}
@@ -146,8 +146,8 @@ rules:
   extension.declaration: {severity: error, section: "13.1", summary: "mustUnderstand without as, or not a boolean"}
   extension.undeclared: {severity: error, section: "13.3", summary: "extension kind or extensions block uses an undeclared name"}
   extension.block: {severity: error, section: "13.3", summary: "extensions value is not a mapping of names to mappings"}
-  extension.definition: {severity: error, section: "13.1, 13.2", summary: "malformed spec.extensionDefinition, a missing schema file, or (under resolution) an as dependency without one"}
-  world.undescribed: {severity: warning, section: "8", summary: "spec.world without definition or description"}
+  extension.definition: {severity: error, section: "13.1, 13.2", summary: "malformed spec.extensionDefinition (not a mapping, a description that is not a string, malformed kinds or schemas), a missing schema file, or (under resolution) an as dependency without one"}
+  world.undescribed: {severity: warning, section: "8", summary: "spec.world without a non-empty definition or description string"}
   worldmodel.model-artifact-missing: {severity: warning, section: "8", summary: "WorldModelPackage without a ModelArtifact asset"}
   worldmodel.evaluation-profile-missing: {severity: warning, section: "8", summary: "WorldModelPackage without an EvaluationProfile asset"}
   eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierProfile without metadata.version"}

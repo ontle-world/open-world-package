@@ -66,8 +66,9 @@ def transform(profile: dict[str, Any], rows: list[dict[str, Any]], parameters: d
     for t_index, template in enumerate(templates):
         if not isinstance(template, dict) or not isinstance(template.get("type"), str) \
                 or not isinstance(template.get("id"), list) or not template["id"] \
-                or not isinstance(template.get("values"), dict) or not template["values"]:
-            raise OWPError(f"extraction.input: spec.observations[{t_index}] needs type, a non-empty id column list, and a values mapping")
+                or not isinstance(template.get("values"), dict) or not template["values"] \
+                or not all(isinstance(c, str) for c in template["id"] + list(template["values"].values())):
+            raise OWPError(f"extraction.input: spec.observations[{t_index}] needs type, a non-empty id column list, and a values mapping (column names are strings)")
         observed = template.get("observedAt") or {}
         if not isinstance(observed, dict):
             raise OWPError(f"extraction.input: spec.observations[{t_index}].observedAt must be a mapping")
@@ -123,38 +124,43 @@ def _load(path: Path) -> Any:
 def run_extraction(package: str | Path, profile_path: str, parameters: dict[str, Any], results: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Load a KnowledgeExtractionProfile from a package, run its SPARQL query over the source KnowledgeAsset (unless results are given), and transform."""
     root, manifest = load_manifest(package)
-    kinds = local_assets(root, manifest.get("spec") or {})[0]
+    kinds = local_assets(root, _spec(manifest))[0]
     if kinds.get(profile_path) != "KnowledgeExtractionProfile":
         raise OWPError(f"{profile_path} is not a KnowledgeExtractionProfile asset of the package")
     profile = _load(root / profile_path)
-    spec = profile.get("spec") or {}
+    spec = _spec(profile)
     source = spec.get("source")
     if kinds.get(source) != "KnowledgeAsset":
         raise OWPError(f"spec.source {source!r} is not a KnowledgeAsset asset of the package")
-    asset = (_load(root / source) or {}).get("spec") or {}
-    snapshot = (asset.get("snapshot") or {}).get("asOf")
+    asset = _spec(_load(root / source))
+    snapshot = asset["snapshot"].get("asOf") if isinstance(asset.get("snapshot"), dict) else None
     if results is None:
         results = _run_sparql(root, asset, spec, parameters)
     return transform(profile, results, parameters, snapshot)
 
 
 def _run_sparql(root: Path, asset: dict[str, Any], spec: dict[str, Any], parameters: dict[str, Any]) -> list[dict[str, Any]]:
-    query = spec.get("query") or {}
+    query = spec["query"] if isinstance(spec.get("query"), dict) else {}
     if query.get("language") != "sparql":
         raise OWPError("the reference CLI runs only SPARQL queries; pass --results for other languages")
-    content = (asset.get("content") or {}).get("path")
+    content = asset["content"].get("path") if isinstance(asset.get("content"), dict) else None
     if not isinstance(content, str):
         raise OWPError("the source KnowledgeAsset has no local content.path; fetch the content first or pass --results")
     try:
         import rdflib
     except ImportError as exc:
         raise OWPError("running SPARQL needs rdflib: pip install 'ontle-open-world[rdf]'") from exc
-    fmt = {"turtle": "turtle", "nquads": "nquads", "jsonld": "json-ld", "ntriples": "nt"}.get(asset.get("format", "turtle"), "turtle")
+    declared_format = asset.get("format", "turtle")
+    fmt = {"turtle": "turtle", "nquads": "nquads", "jsonld": "json-ld", "ntriples": "nt"}.get(declared_format if isinstance(declared_format, str) else "", "turtle")
     graph = rdflib.Dataset(default_union=True) if fmt == "nquads" else rdflib.Graph()  # query named graphs too
-    graph.parse(root / content, format=fmt)
     bindings = {name: rdflib.Literal(value) for name, value in parameters.items()}
     rows = []
-    for result in graph.query(query.get("text", ""), initBindings=bindings):
+    try:
+        graph.parse(root / content, format=fmt)
+        results = graph.query(query.get("text") if isinstance(query.get("text"), str) else "", initBindings=bindings)
+    except Exception as exc:  # rdflib raises parser-specific errors
+        raise OWPError(f"cannot run the SPARQL query over {content}: {' '.join(str(exc).split())[:200]}") from exc
+    for result in results:
         row = {}
         for var in result.labels:
             value = result[var]
@@ -163,20 +169,27 @@ def _run_sparql(root: Path, asset: dict[str, Any], spec: dict[str, Any], paramet
     return rows
 
 
+def _spec(doc: Any) -> dict[str, Any]:
+    spec = doc.get("spec") if isinstance(doc, dict) else None
+    return spec if isinstance(spec, dict) else {}
+
+
 def multi_latest_warnings(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]]) -> list[str]:
     """compiler.multi-latest: a State Compiler binding reads a multi-valued extracted type with select latest."""
     multi: dict[str, str] = {}
-    for rel, kind in local_kinds.items():
-        if kind == "KnowledgeExtractionProfile":
-            for template in ((docs.get(rel) or {}).get("spec") or {}).get("observations") or []:
-                if isinstance(template, dict) and template.get("multi") is True and isinstance(template.get("type"), str):
-                    multi[template["type"]] = rel
+    for rel, kind in sorted(local_kinds.items()):
+        templates = _spec(docs.get(rel)).get("observations") if kind == "KnowledgeExtractionProfile" else None
+        for template in templates if isinstance(templates, list) else []:
+            if isinstance(template, dict) and template.get("multi") is True and isinstance(template.get("type"), str):
+                multi[template["type"]] = rel
     warnings: list[str] = []
     for rel, kind in sorted(local_kinds.items()):
         if kind != "StateCompilerProfile":
             continue
-        bindings = ((docs.get(rel) or {}).get("spec") or {}).get("bindings") or {}
+        bindings = _spec(docs.get(rel)).get("bindings")
         for field, binding in bindings.items() if isinstance(bindings, dict) else []:
-            if isinstance(binding, dict) and binding.get("from") in multi and binding.get("select", "latest") == "latest":
-                warnings.append(f"compiler.multi-latest: {rel}: binding {field!r} reads {binding['from']}, which {multi[binding['from']]} marks multi-valued; use select: all")
+            source = binding.get("from") if isinstance(binding, dict) else None
+            select = binding.get("select") if isinstance(binding, dict) else None
+            if isinstance(source, str) and source in multi and (select is None or select == "latest"):
+                warnings.append(f"compiler.multi-latest: {rel}: binding {field!r} reads {source}, which {multi[source]} marks multi-valued; use select: all")
     return warnings

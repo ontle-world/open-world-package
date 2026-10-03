@@ -403,7 +403,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   for (const p of parseDependencies(rootManifest).problems) err("resolve.reference", p);
   const root: Node = {
     identity: rootId,
-    kind: String(rootManifest.kind),
+    kind: typeof rootManifest.kind === "string" ? rootManifest.kind : "",
     dir: rootDir,
     manifest: rootManifest,
     deps: parseDependencies(rootManifest).deps,
@@ -465,7 +465,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
       }
       const child: Node = {
         identity: dep.ref,
-        kind: String(cand.manifest.kind),
+        kind: typeof cand.manifest.kind === "string" ? cand.manifest.kind : "",
         dir: cand.dir,
         manifest: cand.manifest,
         deps: parseDependencies(cand.manifest).deps,

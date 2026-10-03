@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '0000-03-01T00:00:00Z'
+  state:
+    a.latest: 2
+  unresolved: {}
+  missing:
+  - b.all
+  - c.unbound
+  provenance:
+    a.latest:
+    - o2

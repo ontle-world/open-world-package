@@ -162,6 +162,11 @@ cases:
     errors: [manifest.dependency]
     satisfiedProfile: descriptive
     rule: "Dependencies are exact references; ranges are invalid even without resolution."
+  dependency-source-not-string:
+    valid: false
+    errors: [manifest.dependency]
+    satisfiedProfile: descriptive
+    rule: "A dependency's source, when present, is a non-empty string."
   identity-with-slash:
     valid: false
     errors: [manifest.identity]
@@ -296,6 +301,15 @@ cases:
     errors: [manifest.api-version]
     satisfiedProfile: descriptive
     rule: "apiVersion must be openworld/v1alpha1."
+  manifest-kind-list:
+    valid: false
+    errors: [manifest.kind]
+    rule: "kind is a string naming a package kind; a list is not a kind (implementations must not crash on it)."
+  manifest-version-non-ascii-digit:
+    valid: false
+    errors: [manifest.version]
+    satisfiedProfile: descriptive
+    rule: "SemVer digits are ASCII 0-9; 0.1.1 followed by ARABIC-INDIC DIGIT THREE is not SemVer (spec 5.2)."
   manifest-duplicate-key:
     valid: false
     errors: [manifest.load]
@@ -431,6 +445,10 @@ cases:
     valid: false
     errors: [worldmodel.roles]
     rule: "A World Model declares at least one role."
+  model-roles-string:
+    valid: false
+    errors: [worldmodel.roles]
+    rule: "spec.worldModel.roles is a non-empty list of non-empty strings; a single string is not a list."
   eval-bad-version:
     valid: false
     errors: [eval.version]
@@ -760,6 +778,11 @@ cases:
     errors: [asset.list]
     satisfiedProfile: descriptive
     rule: "spec.assets is a list when present."
+  asset-list-null:
+    valid: false
+    errors: [asset.list]
+    satisfiedProfile: descriptive
+    rule: "spec.assets: null is present and not a list; only an absent key means no assets."
   asset-entry-not-mapping:
     valid: false
     errors: [asset.entry]
@@ -1008,6 +1031,11 @@ cases:
     errors: [asset.yaml]
     satisfiedProfile: descriptive
     rule: "A tab that indents a flow-sequence item is not valid YAML (spec 5.2); implementations agree whatever parser they use."
+  yaml-local-tag:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "Values are JSON values: a YAML tag other than the core tags, such as a local !note, does not parse (spec 5.2)."
   yaml-directive:
     valid: true
     satisfiedProfile: descriptive
@@ -1269,6 +1297,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
     rule: "select latest takes the value with the greatest observedAt."
+  year-zero-timestamp:
+    compiler: state/task-compiler.yaml
+    asOf: "0000-03-01T00:00:00Z"
+    rule: "Timestamps cover the years 0000-9999 of the proleptic Gregorian calendar (0000 is a leap year)."
   schema-ref-fields:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
@@ -1329,6 +1361,12 @@ ewsCases:
     error: true
     errors: [ews.input]
     rule: "Each observation needs a values mapping."
+  error-unsafe-integer:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-01T00:00:10Z"
+    error: true
+    errors: [ews.input]
+    rule: "An integer value outside +-(2^53-1) is not read exactly by every JSON implementation; compilation is refused."
   error-invalid-calendar-as-of:
     compiler: state/task-compiler.yaml
     asOf: "2026-02-30T00:00:00Z"

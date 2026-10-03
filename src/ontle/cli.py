@@ -94,21 +94,22 @@ def cmd_resolve(args):
 
 
 def cmd_ews_compile(args):
-    observations = None
-    for path in args.observations:
-        doc = load_document(path)
-        if not isinstance(doc, dict):
-            raise OWPError(f"observations file {path} must contain a YAML mapping")
-        if observations is None:
-            observations = doc
-        else:  # merge several ObservationSets; ids must stay unique (checked by the compiler)
-            merged = list((observations.get("spec") or {}).get("observations") or []) + list((doc.get("spec") or {}).get("observations") or [])
-            observations = {**observations, "spec": {**(observations.get("spec") or {}), "observations": merged}}
-            observations["spec"].pop("provenance", None)
+    docs = [load_document(path) for path in args.observations]
+    if len(docs) == 1:
+        observations = docs[0]
+    else:  # several ObservationSets are merged into one; ids must stay unique (checked by the compiler)
+        merged: list = []
+        for doc in docs:
+            spec = doc.get("spec") if isinstance(doc, dict) else None
+            listed = spec.get("observations") if isinstance(spec, dict) else None
+            merged += listed if isinstance(listed, list) else []
+        observations = {"apiVersion": "openworld/v1alpha1", "kind": "ObservationSet", "spec": {"observations": merged}}
     compiler = args.compiler
     if compiler is None:
-        spec = (load_manifest(args.world)[1].get("spec") or {})
-        compiler = (spec.get("world") or {}).get("defaultStateCompiler")
+        manifest = load_manifest(args.world)[1]
+        spec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}
+        world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
+        compiler = world.get("defaultStateCompiler")
         if not isinstance(compiler, str):
             raise OWPError("the World declares no spec.world.defaultStateCompiler; pass --compiler")
     ews = compile_ews(args.world, compiler, observations, args.as_of)
@@ -126,8 +127,12 @@ def cmd_ews_compile(args):
 
 
 def cmd_ews_check(args):
-    ews = load_document(args.ews)
-    errors = check_ews(args.world, ews if isinstance(ews, dict) else {})
+    try:
+        ews = load_document(args.ews, rule="ews.kind")
+    except OWPError as exc:
+        errors = [str(exc)]
+    else:
+        errors = check_ews(args.world, ews)
     if not errors:
         print("VALID")
         return 0

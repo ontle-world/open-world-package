@@ -71,7 +71,7 @@ function loadDoc(abs: string): Obj | undefined {
 export function ontologyTerms(dir: string, manifest: Obj): { prefixes: Record<string, string>; terms: Set<string> } {
   const ontology = get(manifest, "spec", "ontology");
   const o = isObj(ontology) ? ontology : {};
-  const prefixes: Record<string, string> = {};
+  const prefixes: Record<string, string> = Object.create(null);
   if (isObj(o.prefixes)) for (const [k, v] of Object.entries(o.prefixes)) if (typeof v === "string") prefixes[k] = v;
   const terms = new Set<string>();
   const load = (p: unknown): Obj | undefined => {

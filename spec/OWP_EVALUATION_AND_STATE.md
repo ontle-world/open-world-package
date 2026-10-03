@@ -76,11 +76,11 @@ spec:
   provenance: {a.latest: [o2], b.pose: [o5, o6]}
 ```
 
-Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents, including values inside `values`, are read under the YAML rules of section 5.2, so unquoted timestamps stay strings.
+Timestamps are UTC strings `YYYY-MM-DDTHH:MM:SSZ` that denote a valid calendar instant (no leap seconds; any year from `0000` to `9999`, in the proleptic Gregorian calendar) and are compared as text. YAML authors SHOULD quote them. An implementation MUST read an unquoted timestamp as its source text and MUST NOT convert it to another representation. ObservationSet and EWS documents, including values inside `values`, are read under the YAML rules of section 5.2, so unquoted timestamps stay strings.
 
 ObservationSet and EWS documents contain only the fields of `schemas/observation-set.schema.json` and `schemas/effective-world-state.schema.json`. An ObservationSet MAY carry `spec.provenance` (`extraction`, `parameters`, `snapshot`) recording where its observations came from; compilation ignores it. They may carry `extensions` blocks in `spec`, in each observation, and in the EWS `spec.context`; these documents have no manifest, so extension names are not checked against declarations. Compilation and EWS equality ignore extension blocks.
 
-Values are compared in the JSON data model: types must match (a boolean never equals a number), numbers compare numerically (`1` equals `1.0`), arrays compare element by element in order, and mappings compare by key set and values.
+Observation values are JSON values that every JSON implementation reads exactly: `.inf`, `.nan`, and integers outside ±(2^53−1) (an integer-valued number such as `1e300` included) are invalid input (`ews.input`). Values are compared in the JSON data model: types must match (a boolean never equals a number), numbers compare numerically (`1` equals `1.0`), arrays compare element by element in order, and mappings compare by key set and values.
 
 ### 12.1 Output contract (applies to every runtime)
 
@@ -96,7 +96,7 @@ An EWS document conforms to its State Compiler when:
 - `worldRef` is the World's identity, `stateCompiler` is `<worldRef>#<compiler path>`, and `worldView` is `<worldRef>#<the compiler's worldViewRef>`.
 - When the compiler has EWS fields, each of those fields appears in exactly one of `state`, `unresolved`, `missing`, and no other field appears.
 - Each `unresolved` field retains at least two distinct alternatives.
-- Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a local asset.
+- Absent or null `unresolved`, `missing`, `provenance`, or `derivation` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a local asset.
 - `provenance` has entries only for fields in `state` or `unresolved`; when the compiler declares `traceRequired: true`, every such field has non-empty provenance.
 - Per-subject fields (section 12.3) have a mapping from subject to value in `state` and `unresolved`, and to observation ids in `provenance` (`ews.per-subject-shape`). Such a field MAY appear in both `state` and `unresolved`, but no subject appears in both (`ews.per-subject-overlap`); each subject in `unresolved` retains at least two distinct alternatives; with `traceRequired: true`, each subject has non-empty provenance. A per-subject field in `missing` appears nowhere else.
 - Latent fields (section 12.4) that have a value have a `derivation` entry, and no other field has one (`ews.derivation`).

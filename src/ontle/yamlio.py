@@ -59,8 +59,35 @@ class CoreLoader(_CoreMixin, yaml.SafeLoader):
 FastCoreLoader = type("FastCoreLoader", (_CoreMixin, yaml.CSafeLoader), {}) if yaml.__with_libyaml__ else CoreLoader
 
 
-def _construct_int(loader: CoreLoader, node: yaml.ScalarNode) -> int:
+_CORE = "tag:yaml.org,2002:"
+_PATTERNS = {tag[len(_CORE):]: rx for tag, rx, _ in _CORE_RESOLVERS}
+
+
+def _scalar(loader: CoreLoader, node: yaml.Node, kind: str) -> str:
+    """The text of a scalar tagged with a YAML core tag; an error when the text is not a value of that type."""
+    if not isinstance(node, yaml.ScalarNode):
+        raise yaml.constructor.ConstructorError(None, None, f"YAML tag {node.tag} is not allowed on a collection", node.start_mark)
     value = loader.construct_scalar(node)
+    if kind in _PATTERNS and not _PATTERNS[kind].match(value):
+        raise yaml.constructor.ConstructorError(None, None, f"{value!r} is not a YAML 1.2 core {kind}", node.start_mark)
+    return value
+
+
+def _construct_str(loader: CoreLoader, node: yaml.Node) -> str:
+    return _scalar(loader, node, "str")
+
+
+def _construct_null(loader: CoreLoader, node: yaml.Node) -> None:
+    _scalar(loader, node, "null")
+    return None
+
+
+def _construct_bool(loader: CoreLoader, node: yaml.Node) -> bool:
+    return _scalar(loader, node, "bool").lower() == "true"
+
+
+def _construct_int(loader: CoreLoader, node: yaml.Node) -> int:
+    value = _scalar(loader, node, "int")
     if value.startswith("0o"):
         return int(value[2:], 8)
     if value.startswith("0x"):
@@ -68,8 +95,8 @@ def _construct_int(loader: CoreLoader, node: yaml.ScalarNode) -> int:
     return int(value, 10)
 
 
-def _construct_float(loader: CoreLoader, node: yaml.ScalarNode) -> float:
-    value = loader.construct_scalar(node).lower()
+def _construct_float(loader: CoreLoader, node: yaml.Node) -> float:
+    value = _scalar(loader, node, "float").lower()
     if value.endswith(".inf"):
         return float("-inf") if value.startswith("-") else float("inf")
     if value == ".nan":
@@ -77,9 +104,32 @@ def _construct_float(loader: CoreLoader, node: yaml.ScalarNode) -> float:
     return float(value)
 
 
+def _collection(kind: type, construct: Any) -> Any:
+    def constructor(loader: CoreLoader, node: yaml.Node) -> Any:
+        if not isinstance(node, kind):
+            raise yaml.constructor.ConstructorError(None, None, f"YAML tag {node.tag} is not allowed here", node.start_mark)
+        return construct(loader, node)
+    return constructor
+
+
+def _reject_tag(loader: CoreLoader, node: yaml.Node) -> Any:
+    raise yaml.constructor.ConstructorError(None, None, f"YAML tag {node.tag} is not allowed: values are JSON values", node.start_mark)
+
+
+# Spec 5.2: values are JSON values. The core tags are applied (!!float 3 is the number 3); every other tag
+# (!!binary, !!set, !!timestamp, !!omap, !!pairs, a local tag such as !note) is a load error.
+_CONSTRUCTORS = {
+    _CORE + "str": _construct_str,
+    _CORE + "null": _construct_null,
+    _CORE + "bool": _construct_bool,
+    _CORE + "int": _construct_int,
+    _CORE + "float": _construct_float,
+    _CORE + "map": _collection(yaml.MappingNode, yaml.constructor.SafeConstructor.construct_yaml_map),
+    _CORE + "seq": _collection(yaml.SequenceNode, yaml.constructor.SafeConstructor.construct_yaml_seq),
+    None: _reject_tag,
+}
 for _loader in {CoreLoader, FastCoreLoader}:
-    _loader.add_constructor("tag:yaml.org,2002:int", _construct_int)
-    _loader.add_constructor("tag:yaml.org,2002:float", _construct_float)
+    _loader.yaml_constructors = dict(_CONSTRUCTORS)
 
 
 class CoreDumper(yaml.SafeDumper):

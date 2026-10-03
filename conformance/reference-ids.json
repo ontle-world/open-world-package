@@ -98,6 +98,12 @@
    ],
    "warnings": []
   },
+  "asset-list-null": {
+   "errors": [
+    "asset.list"
+   ],
+   "warnings": []
+  },
   "asset-local-path-listed": {
    "errors": [
     "asset.path-or-ref"
@@ -431,6 +437,12 @@
    ],
    "warnings": []
   },
+  "dependency-source-not-string": {
+   "errors": [
+    "manifest.dependency"
+   ],
+   "warnings": []
+  },
   "eval-bad-version": {
    "errors": [
     "eval.version"
@@ -723,6 +735,12 @@
    ],
    "warnings": []
   },
+  "manifest-kind-list": {
+   "errors": [
+    "manifest.kind"
+   ],
+   "warnings": []
+  },
   "manifest-metadata-not-mapping": {
    "errors": [
     "manifest.metadata"
@@ -756,6 +774,12 @@
   "manifest-unknown-metadata-field": {
    "errors": [
     "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "manifest-version-non-ascii-digit": {
+   "errors": [
+    "manifest.version"
    ],
    "warnings": []
   },
@@ -811,6 +835,12 @@
    "warnings": []
   },
   "model-no-roles": {
+   "errors": [
+    "worldmodel.roles"
+   ],
+   "warnings": []
+  },
+  "model-roles-string": {
    "errors": [
     "worldmodel.roles"
    ],
@@ -1344,6 +1374,12 @@
   },
   "yaml-directive": {
    "errors": [],
+   "warnings": []
+  },
+  "yaml-local-tag": {
+   "errors": [
+    "asset.yaml"
+   ],
    "warnings": []
   },
   "yaml-tab-in-flow": {

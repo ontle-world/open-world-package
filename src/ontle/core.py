@@ -368,10 +368,11 @@ def validate_package(path: str | Path) -> ValidationResult:
         errors.append(f"manifest.kind: kind must be one of {sorted(KINDS)}")
 
     metadata = data.get("metadata")
-    if not isinstance(metadata, dict):
+    malformed_metadata = not isinstance(metadata, dict)
+    if malformed_metadata:
         errors.append("manifest.metadata: metadata must be a mapping")
         metadata = {}
-    for key in ("namespace", "name", "version"):
+    for key in ("namespace", "name", "version") if not malformed_metadata else ():  # one error for a malformed metadata
         if not isinstance(metadata.get(key), str) or not metadata.get(key).strip():
             errors.append(f"manifest.identity: metadata.{key} is required")
         elif key != "version" and not IDENTITY_PART_RE.match(metadata[key]):
@@ -620,13 +621,15 @@ def validate_package(path: str | Path) -> ValidationResult:
             warnings.append("worldmodel.evaluation-profile-missing: WorldModelPackage should reference an EvaluationProfile")
         if "RepresentationAdapterProfile" not in asset_kinds:
             errors.append("worldmodel.adapter: WorldModelPackage requires a RepresentationAdapterProfile (an identity adapter is valid when no transform is needed)")
-        wm = spec.get("worldModel") or {}
-        inputs = wm.get("inputs") if isinstance(wm, dict) else None
-        if not isinstance(inputs, dict) or inputs.get("contract") != "EffectiveWorldState":
+        wm = spec.get("worldModel") if isinstance(spec.get("worldModel"), dict) else None  # missing: worldmodel.spec only
+        inputs = wm.get("inputs") if wm is not None else None
+        if wm is not None and (not isinstance(inputs, dict) or inputs.get("contract") != "EffectiveWorldState"):
             errors.append("worldmodel.input-contract: WorldModelPackage requires spec.worldModel.inputs.contract = EffectiveWorldState")
         representation = wm.get("representation") if isinstance(wm, dict) else None
         adapter_ref = representation.get("adapterRef") if isinstance(representation, dict) else None
-        if not isinstance(adapter_ref, str) or not adapter_ref.strip():
+        if wm is None:
+            pass
+        elif not isinstance(adapter_ref, str) or not adapter_ref.strip():
             errors.append("worldmodel.adapter-ref: WorldModelPackage requires spec.worldModel.representation.adapterRef")
         elif local_asset_kinds.get(adapter_ref) != "RepresentationAdapterProfile":
             errors.append("worldmodel.adapter-ref: spec.worldModel.representation.adapterRef must point to a local RepresentationAdapterProfile asset")
@@ -661,8 +664,8 @@ def validate_package(path: str | Path) -> ValidationResult:
 def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool = False) -> dict[str, Any]:
     root, data = load_manifest(path)
     result = validate_package(root)
-    md = data.get("metadata") or {}
-    spec = data.get("spec") or {}
+    md = data.get("metadata") if isinstance(data.get("metadata"), dict) else {}
+    spec = data.get("spec") if isinstance(data.get("spec"), dict) else {}
     summary: dict[str, Any] = {}
     if data.get("kind") == "WorldPackage" and isinstance(spec, dict):
         kinds, docs = local_assets(root, spec)

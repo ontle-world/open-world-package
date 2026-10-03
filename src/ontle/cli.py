@@ -28,7 +28,8 @@ def cmd_validate(args):
         result = validate_resolved(args.path, args.source + project_sources(args.path))[0]
     else:
         result = validate_package(args.path)
-        deps = ((result.manifest or {}).get("spec") or {}).get("dependencies") or []
+        spec = (result.manifest or {}).get("spec")
+        deps = (spec.get("dependencies") if isinstance(spec, dict) else None) or []
         if result.valid and deps:
             # Check the cross-package rules too when every dependency can be found; otherwise say what was skipped.
             full, resolution = validate_resolved(args.path, args.source + project_sources(args.path))

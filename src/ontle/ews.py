@@ -503,7 +503,7 @@ def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
     compiler_ref = spec.get("stateCompiler")
     view_ref = spec.get("worldView")
     if not isinstance(compiler_ref, str) or compiler_ref.partition("#")[0] != world_ref:
-        return errors + [f"ews.state-compiler: spec.stateCompiler must have the form {world_ref}#<asset path>"]
+        return errors + [f"ews.world-ref: spec.stateCompiler must have the form {world_ref}#<asset path>"]  # a reference to another World
     try:
         compiler = load_compiler(world_root, manifest, compiler_ref.partition("#")[2])
     except OWPError as exc:

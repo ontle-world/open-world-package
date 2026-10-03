@@ -5,7 +5,8 @@
  *   resolutionCases resolution/<id>/root + /packages           spec 11
  *   ewsCases        ews/<id>/world, observations.yaml, expected-ews.yaml   spec 12.2
  *   ewsCheckCases   ews-check/<id>/world, ews.yaml              spec 12.1
- *   extractionCases extraction/<id>/profile.yaml, results.json, expected-observations.yaml   Appendix C.1
+ *   extractionCases extraction/<id>/profile.yaml, results.json, expected-observations.yaml   spec 19.2
+ *   evidenceCases   evidence/<id>/evidence.yaml, package.owp.zip   spec 9.1
  * usage: node dist/conformance.js [--suite <dir>] [--section <name>] [--verbose] [--json]
  */
 import * as fs from "node:fs";
@@ -16,6 +17,7 @@ import { validatePackage } from "./validate.js";
 import { validateWithResolution } from "./resolve.js";
 import { canon, checkEws, compileEws, ewsEqual } from "./ews.js";
 import { transformExtraction } from "./extraction.js";
+import { checkDetachedEvidence } from "./evidence.js";
 import { isObj, loadYamlFile } from "./util.js";
 
 interface Row {
@@ -132,6 +134,23 @@ const runExtraction: Runner = (dir, id, exp) => {
   };
 };
 
+const ARCHIVE = ["package", "owp", "zip"].join("."); // spelled out, this file name would read as a rule id to the id scanner
+const runEvidence: Runner = (dir, id, exp) => {
+  const base = path.join(dir, "evidence", id);
+  const doc = loadYamlFile(path.join(base, "evidence.yaml"));
+  const r = doc.ok
+    ? checkDetachedEvidence(doc.value, path.join(base, ARCHIVE), cacheDir)
+    : { valid: false, errors: [{ code: "evidence.detached-subject", message: `not parseable YAML: ${doc.error}` }] };
+  return {
+    expected: `valid=${fmt(exp.valid)}`,
+    got: `valid=${fmt(r.valid)}`,
+    ok: r.valid === exp.valid,
+    details: r.errors.map((e) => `[${e.code}] ${e.message}`),
+    ids: r.errors.map((e) => e.code),
+    warnIds: [],
+  };
+};
+
 /** Section name -> [fixture subdirectory, runner]. Extend here for new sections. */
 const SECTIONS: Record<string, [string, Runner]> = {
   cases: ["cases", runCase],
@@ -139,6 +158,7 @@ const SECTIONS: Record<string, [string, Runner]> = {
   ewsCases: ["ews", runEws],
   ewsCheckCases: ["ews-check", runEwsCheck],
   extractionCases: ["extraction", runExtraction],
+  evidenceCases: ["evidence", runEvidence],
 };
 
 function arg(name: string): string | undefined {

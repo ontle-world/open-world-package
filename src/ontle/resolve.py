@@ -82,7 +82,8 @@ def cache_dir() -> Path:
 def _dependency_refs(manifest: dict[str, Any]) -> list[tuple[str, str | None]]:
     """(ref, per-dependency source) pairs from spec.dependencies (strings or {ref, source} mappings)."""
     out: list[tuple[str, str | None]] = []
-    for dep in (manifest.get("spec") or {}).get("dependencies", []) or []:
+    spec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}  # a malformed spec is manifest.spec
+    for dep in spec.get("dependencies", []) or []:
         if isinstance(dep, str):
             out.append((dep, None))
         elif isinstance(dep, dict) and isinstance(dep.get("ref"), str):
@@ -472,6 +473,9 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
     """Validate a package, its resolved dependency closure, and the cross-package grounding rules."""
     result = validate_package(path)
     errors, warnings = list(result.errors), list(result.warnings)
+    manifest = result.manifest or {}
+    if not (isinstance(manifest.get("metadata"), dict) and isinstance(manifest.get("spec"), dict)):
+        return result, None  # type: ignore[return-value]  # manifest.metadata / manifest.spec: nothing to resolve
     try:
         resolution = resolve_package(path, sources)
     except OWPError as exc:

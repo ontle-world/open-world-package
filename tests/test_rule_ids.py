@@ -57,7 +57,7 @@ class RuleIdRegistryTests(unittest.TestCase):
 
     def test_conformance_suite_uses_registered_error_ids(self):
         expected = yaml.safe_load((ROOT / "conformance" / "expected.yaml").read_text(encoding="utf-8"))
-        used = {rule for section in ("cases", "resolutionCases", "ewsCases", "ewsCheckCases", "extractionCases")
+        used = {rule for section in ("cases", "resolutionCases", "ewsCases", "ewsCheckCases", "extractionCases", "evidenceCases")
                 for case in expected[section].values() for rule in case.get("errors", [])}
         self.assertEqual(used - {r for r, e in REGISTRY.items() if e["severity"] == "error"}, set())
 
@@ -82,9 +82,7 @@ class ReferenceIdsTests(unittest.TestCase):
 
 
 # Error ids that no conformance case reaches yet. A new error id needs a case; remove an id here when it gets one.
-UNCOVERED_ERRORS = {"asset.entry", "asset.list", "evidence.detached-subject", "evidence.required", "ews.shape",
-                    "ews.state-compiler", "manifest.metadata", "manifest.spec", "manifest.version",
-                    "profile.ontology.mapped", "resolve.reference", "world.spec", "worldmodel.spec"}
+UNCOVERED_ERRORS: set[str] = set()
 
 
 class CoverageTests(unittest.TestCase):

@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: WorldModelPackage
+metadata:
+  namespace: conformance
+  name: model
+  version: 0.1.0
+spec:
+  dependencies:
+  - conformance/world@0.1.0

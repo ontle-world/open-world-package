@@ -211,5 +211,20 @@ class SignatureTests(unittest.TestCase):
                 verify_signature(archive, key=str(td / "cosign.pub"))
 
 
+
+class EvidenceConformanceTests(unittest.TestCase):
+    def test_evidence_conformance_cases(self):
+        """evidenceCases: CompatibilityEvidence published outside the package (spec 9.1)."""
+        import yaml
+        suite = Path(__file__).resolve().parent.parent / "conformance"
+        expected = yaml.safe_load((suite / "expected.yaml").read_text(encoding="utf-8"))["evidenceCases"]
+        self.assertEqual({p.name for p in (suite / "evidence").iterdir() if p.is_dir()}, set(expected))
+        for case_id, exp in expected.items():
+            with self.subTest(case=case_id):
+                case = suite / "evidence" / case_id
+                errors = check_detached_evidence(yaml.safe_load((case / "evidence.yaml").read_text(encoding="utf-8")), case / "package.owp.zip")
+                self.assertEqual(not errors, exp["valid"], errors)
+                self.assertLessEqual(set(exp.get("errors", [])), {e.split(":", 1)[0] for e in errors}, errors)
+
 if __name__ == "__main__":
     unittest.main()

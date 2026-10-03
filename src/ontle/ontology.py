@@ -265,7 +265,7 @@ def write_term_index(root: Path, manifest_path: Path) -> Path:
 
 
 def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
-    """Turtle or JSON-LD for the owp-yaml schema entrypoints (classes, properties, labels, domains, ranges)."""
+    """Turtle or JSON-LD for the owp-yaml schema entrypoints (classes, subclasses, properties, labels, domains, ranges)."""
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
     prefixes = dict(ontology.get("prefixes") or {})
     triples: list[tuple[str, str, str, bool]] = []  # subject, predicate, object, object-is-literal
@@ -282,6 +282,9 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
             if not cls:
                 continue
             triples.append((cls, "rdf:type", "owl:Class", False))
+            for parent in t.get("subClassOf") or [] if isinstance(t.get("subClassOf"), list) else []:
+                if iri(parent):
+                    triples.append((cls, "rdfs:subClassOf", iri(parent), False))  # type: ignore[arg-type]
             for lang, text in (t.get("label") or {}).items() if isinstance(t.get("label"), dict) else []:
                 triples.append((cls, "rdfs:label", f"{text}@{lang}", True))
             for p in t.get("properties") or []:

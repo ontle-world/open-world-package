@@ -10,3 +10,7 @@ ex:lot-L-2 a q:Lot ; q:producedOn ex:press-7 .
 ex:lot-L-9 a q:Lot ; q:producedOn ex:press-2 .
 ex:press-7 a q:Equipment ; q:hasPart ex:die-1 , ex:die-2 .
 ex:press-2 a q:Equipment ; q:hasPart ex:die-8 .
+# Dies are tooling equipment; q:hasPart links equipment to equipment.
+ex:die-1 a q:Equipment .
+ex:die-2 a q:Equipment .
+ex:die-8 a q:Equipment .

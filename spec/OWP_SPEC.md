@@ -545,7 +545,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `evaluationProfile`, `result`, or `scope.worldRef`/`scope.worldView` |
 | `evidence.unpinned` | 9 | reference not `<name>@<exact-semver>` |
 | `evidence.version-mismatch` | 9 | bound local asset missing that exact version |
-| `evidence.detached-subject` | 9.1 | detached evidence whose `subject` or `subjectDigest` does not match the archive |
+| `evidence.detached-subject` | 9.1 | detached evidence that is not a CompatibilityEvidence, whose archive does not verify, or whose `subject` or `subjectDigest` does not match the archive |
 | `evidence.scope.world-ref`, `evidence.scope.world-view`, `evidence.scope.state-compiler` | 9 | scope outside the model's grounding |
 | `resolve.reference` | 11 | malformed dependency reference |
 | `resolve.source` | 11 | source unusable (for example an archive fails verification) |

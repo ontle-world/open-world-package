@@ -93,6 +93,13 @@ class EwsTurtleTests(unittest.TestCase):
         ttl = ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
         self.assertIn("<<( <https://example.org/item/item-1> <https://example.org/ns#status> <https://example.org/status/active> )>>", ttl)
         self.assertIn("<<( <https://example.org/item/item-1> <https://example.org/ns#status> <https://example.org/ns#Three> )>>", ttl)  # 3 by its text
+        from ontle.binding import value_iri
+        self.assertEqual(value_iri({"map": {"3": "ex:Three"}}, 3.0, {"ex": "https://example.org/ns#"}), "https://example.org/ns#Three")  # 3.0 == 3
+        ews["spec"]["state"].pop("item.status")
+        ews["spec"]["unresolved"] = {"item.status": {"item-1": [[], ["blocked"]]}}  # an empty coded list as an alternative
+        ttl = ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+        self.assertIn('"[]"^^rdf:JSON', ttl)
+        self.assertNotIn("rdf:reifies  ;", ttl)
         self.assertEqual([_literal(float(x)) for x in ("nan", "inf", "-inf")],
                          ['"NaN"^^xsd:double', '"INF"^^xsd:double', '"-INF"^^xsd:double'])
 

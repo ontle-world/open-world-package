@@ -167,7 +167,8 @@ def ews_turtle(world_root: Path, world_manifest: dict[str, Any], ews: dict[str, 
             rule = subject_rules.get(otype) if otype else None
             fb = field_bindings.get(field)
             coded = fb.get("values") if isinstance(fb, dict) and isinstance(fb.get("values"), dict) else None
-            objs = [_iri(c) for c in concept_iris(field, coded, v, prefixes)] if coded else [_literal(v)]  # a coded list: one object per element
+            objs = [_iri(c) for c in concept_iris(field, coded, v, prefixes)] if coded else []  # a coded list: one object per element
+            objs = objs or [_literal(v)]  # not coded, or an empty list: the value itself
             if prop and subject is not None and isinstance(rule, dict):
                 s = _iri(subject_iri(rule, subject))
                 parts.append("rdf:reifies " + " , ".join(f"<<( {s} {_iri(prop)} {o} )>>" for o in objs))

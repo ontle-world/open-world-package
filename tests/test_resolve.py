@@ -100,5 +100,33 @@ class ResolveTests(unittest.TestCase):
             self.assertEqual(resolution.packages[WORLD_REF].revision, f"git:{commit}")
 
 
+    @unittest.skipUnless(shutil.which("git"), "git not installed")
+    def test_git_cache_follows_exact_refs_moves_and_works_offline(self):
+        from ontle.resolve import GitSource
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td) / "repo"
+            repo.mkdir()
+            env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
+                   "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
+            git = lambda *a: subprocess.run(["git", "-C", str(repo), *a], check=True, env=env, capture_output=True, text=True).stdout.strip()
+            git("init", "-q", "-b", "main")
+            (repo / "f").write_text("1")
+            git("add", "."); git("commit", "-q", "-m", "one")
+            git("tag", "-a", "v1", "-m", "v1")
+            one = git("rev-parse", "HEAD")
+            git("checkout", "-q", "-b", "feature/main")  # a branch whose name ends in "main"
+            (repo / "f").write_text("feature")
+            git("commit", "-q", "-am", "feature")
+            git("checkout", "-q", "main")
+            src = lambda rev: GitSource(f"git+{repo.as_uri()}@{rev}", repo.as_uri(), rev, None)
+            self.assertEqual(src("main")._checkout()[1], one)  # not feature/main
+            (repo / "f").write_text("2")
+            git("commit", "-q", "-am", "two")
+            two = git("rev-parse", "HEAD")
+            self.assertEqual(src("main")._checkout()[1], two)  # a moved branch is fetched again
+            self.assertEqual(src("v1")._checkout()[1], one)  # an annotated tag: its commit
+            shutil.move(str(repo), str(Path(td) / "gone"))
+            self.assertEqual(src("main")._checkout()[1], two)  # offline: the commit main resolved to last time
+
 if __name__ == "__main__":
     unittest.main()

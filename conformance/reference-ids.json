@@ -524,6 +524,12 @@
    ],
    "warnings": []
   },
+  "evidence-scope-missing": {
+   "errors": [
+    "evidence.scope"
+   ],
+   "warnings": []
+  },
   "evidence-scope-worldref-mismatch": {
    "errors": [
     "evidence.scope.world-ref"

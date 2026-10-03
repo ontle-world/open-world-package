@@ -298,8 +298,9 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
 
     specs = []
     for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
-            specs.append((_load(root / entry["path"]) or {}).get("spec") or {})
+        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and inside_package(root, entry.get("path")):
+            doc = _load(root / entry["path"])
+            specs.append(doc.get("spec") if isinstance(doc, dict) and isinstance(doc.get("spec"), dict) else {})
     enums: dict[str, list[Any]] = {}
     for spec in specs:
         for t in spec.get("types") or []:

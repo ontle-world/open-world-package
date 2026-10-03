@@ -141,6 +141,8 @@ def semantic_ids_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
 
 def value_iri(values: dict[str, Any], code: Any, prefixes: dict[str, str]) -> str | None:
     """The concept IRI of a coded value: its `map` entry, else `base` + code when the code is IRI-safe; None otherwise."""
+    if isinstance(code, float) and code.is_integer():
+        code = int(code)  # EWS equality treats 3 and 3.0 as one value, so they map alike
     if isinstance(code, int) and not isinstance(code, bool):
         code = str(code)  # a numeric code is looked up by its decimal text, so map: {"3": ...} covers the value 3
     if not isinstance(code, str):

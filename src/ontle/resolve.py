@@ -171,33 +171,48 @@ class GitSource(PackageSource):
         super().__init__(spec)
         self.url, self.rev, self.subdir = url, rev, subdir
 
-    def _commit_of_rev(self) -> str:
-        """The commit a tag or branch names now (it can move), so the cache is keyed by commit; a full commit is used as is."""
+    def _remote_commit(self) -> str | None:
+        """The commit `rev` names on the remote now (tags and branches move), matched by exact ref name; None offline."""
         if re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", self.rev):
             return self.rev
         try:
-            refs = [line.split("\t") for line in _git("ls-remote", self.url, self.rev, f"{self.rev}^{{}}").splitlines() if "\t" in line]
+            out = _git("ls-remote", self.url)
         except OWPError:
-            return self.rev  # an abbreviated commit, or a remote that does not list refs: keyed by rev as given
-        peeled = [c for c, ref in refs if ref.endswith("^{}")]  # an annotated tag: the commit it points to
-        return (peeled or [c for c, _ in refs] or [self.rev])[0]
+            return None
+        refs = dict(reversed(line.split("\t", 1)) for line in out.splitlines() if "\t" in line)
+        for name in (f"refs/tags/{self.rev}^{{}}", f"refs/tags/{self.rev}", f"refs/heads/{self.rev}", self.rev):
+            if name in refs:  # a peeled annotated tag first: the commit, not the tag object
+                return refs[name]
+        return None
 
     def _checkout(self) -> tuple[Path, str]:
-        key = hashlib.sha256(f"{self.url}@{self._commit_of_rev()}".encode()).hexdigest()[:32]
-        target = cache_dir() / "git" / key
-        if not (target / ".git").exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir=target.parent))
+        """A checkout keyed by the commit it holds; `refs/` remembers the commit each rev last resolved to, for offline use."""
+        root = cache_dir() / "git"
+        ref_file = root / "refs" / hashlib.sha256(f"{self.url}@{self.rev}".encode()).hexdigest()[:32]
+        commit = self._remote_commit()
+        if commit is None and ref_file.is_file():
+            commit = ref_file.read_text(encoding="utf-8").strip()  # offline: the commit this rev resolved to last time
+        keyed = lambda c: root / hashlib.sha256(f"{self.url}@{c}".encode()).hexdigest()[:32]
+        if commit is None or not (keyed(commit) / ".git").exists():
+            root.mkdir(parents=True, exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir=root))
             try:
                 _git("init", "-q", str(tmp))
                 _git("-C", str(tmp), "fetch", "-q", "--depth", "1", self.url, self.rev)
                 _git("-C", str(tmp), "checkout", "-q", "FETCH_HEAD")
-                tmp.rename(target)
+                commit = _git("-C", str(tmp), "rev-parse", "HEAD").strip()  # what was fetched, not what was expected
+                if (keyed(commit) / ".git").exists():
+                    shutil.rmtree(tmp, ignore_errors=True)
+                else:
+                    tmp.rename(keyed(commit))
             except Exception:
                 shutil.rmtree(tmp, ignore_errors=True)
                 raise
-        commit = _git("-C", str(target), "rev-parse", "HEAD").strip()
-        return target, commit
+        target = keyed(commit)
+        actual = _git("-C", str(target), "rev-parse", "HEAD").strip()
+        ref_file.parent.mkdir(parents=True, exist_ok=True)
+        ref_file.write_text(actual + "\n", encoding="utf-8")
+        return target, actual
 
     def _scan(self) -> list[ResolvedPackage]:
         checkout, commit = self._checkout()

@@ -253,7 +253,49 @@ class StandardVocabularyTests(unittest.TestCase):
         self.assertEqual([(f.code, f.count) for f in report.findings], [("kg.domain", 1)])
 
     @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_a_package_that_reuses_a_property_extends_its_domain(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            shutil.copytree(EXAMPLE, d / "quality-ontology")
+            ext = d / "ext"
+            (ext / "semantics").mkdir(parents=True)
+            (ext / "ONTOLOGY.md").write_text("# Extension\n", encoding="utf-8")
+            (ext / "owp.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: OntologyPackage\nmetadata: {namespace: test, name: ext, version: 0.1.0}\n"
+                "spec:\n  dependencies: [openworld-examples/quality-ontology@0.1.0]\n  ontology:\n    description: ONTOLOGY.md\n"
+                "    iri: https://example.org/x#\n    prefixes: {x: 'https://example.org/x#', q: 'https://w3id.org/openworld-examples/quality#'}\n"
+                "    entrypoints:\n    - {path: semantics/core.yaml, format: owp-yaml, role: schema}\n", encoding="utf-8")
+            (ext / "semantics" / "core.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: SemanticProfile\nmetadata: {name: x}\n"
+                "spec:\n  types:\n  - id: x:Batch\n    subClassOf: q:Lot\n    properties:\n    - {id: q:claimStatus}\n", encoding="utf-8")
+            world = init_project("w", "test", "minimal", d / "w")
+            (world / "kg").mkdir()
+            (world / "knowledge.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: KnowledgeAsset\nmetadata: {name: kg}\n"
+                "spec: {roles: [graph], representation: graph, format: turtle, conformsTo: {ontology: test/ext@0.1.0}, content: {path: kg/g.ttl}}\n",
+                encoding="utf-8")
+            manifest = world / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("spec:\n", "spec:\n  dependencies: [test/ext@0.1.0]\n", 1), encoding="utf-8")
+            (world / "kg" / "g.ttl").write_text(
+                "@prefix q: <https://w3id.org/openworld-examples/quality#> .\n@prefix x: <https://example.org/x#> .\n@prefix ex: <https://example.org/> .\n"
+                'ex:b a x:Batch ; q:claimStatus "open" .\nex:c a q:Claim ; q:claimStatus "open" .\nex:l a q:Equipment ; q:claimStatus "open" .\n',
+                encoding="utf-8")
+            report = check_knowledge_graphs(world, [str(d)])
+        # q:Claim (the quality ontology's domain) and x:Batch (the extension's) both hold; q:Equipment neither
+        self.assertEqual([(f.code, f.count) for f in report.findings], [("kg.domain", 1)])
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
     def test_vocabulary_index_includes_its_individuals_and_schemes(self):
+        """The committed term indexes are what `ontle ontology index` generates now (individuals and schemes included)."""
+        for pkg in [ROOT / "vocab" / "owp", *sorted((ROOT / "alignments").glob("owp-align-*"))]:
+            with tempfile.TemporaryDirectory() as td:
+                copy = Path(td) / pkg.name
+                shutil.copytree(pkg, copy)
+                write_term_index(copy, copy / "owp.yaml")
+                fresh = yaml.safe_load((copy / "semantics" / "terms.yaml").read_text(encoding="utf-8"))["spec"]["terms"]
+            committed = yaml.safe_load((pkg / "semantics" / "terms.yaml").read_text(encoding="utf-8"))["spec"]["terms"]
+            self.assertEqual(fresh, committed, f"{pkg.name}: run ontle ontology index")
         index = yaml.safe_load((ROOT / "vocab" / "owp" / "semantics" / "terms.yaml").read_text(encoding="utf-8"))
         types = {t["iri"]: t["type"] for t in index["spec"]["terms"]}
         self.assertEqual(types["https://w3id.org/owp/ns#resolved"], "individual")

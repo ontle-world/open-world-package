@@ -365,6 +365,10 @@ cases:
     valid: false
     errors: [worldmodel.grounding-ref]
     rule: "Grounding references must belong to semanticGrounding.worldRef."
+  evidence-scope-missing:
+    valid: false
+    errors: [evidence.scope]
+    rule: "CompatibilityEvidence declares spec.scope.worldRef and spec.scope.worldView (spec section 9)."
   evidence-pinned:
     valid: true
     rule: "Evidence binds an exact EvaluationProfile version and a scope inside the declared applicability."

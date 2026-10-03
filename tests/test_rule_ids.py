@@ -89,7 +89,7 @@ class CoverageTests(unittest.TestCase):
     def test_every_error_id_has_a_conformance_case(self):
         text = "".join(p.read_text(encoding="utf-8") for p in sorted((ROOT / "conformance").rglob("*.yaml")) if "expected" in p.name)
         text += (ROOT / "conformance" / "reference-ids.json").read_text(encoding="utf-8")
-        covered = {r for r in REGISTRY if re.search(rf"(?<![\w.-]){re.escape(r)}(?![\w-])", text)}
+        covered = {r for r in REGISTRY if re.search(rf"(?<![\w.-]){re.escape(r)}(?![\w.-])", text)}  # evidence.scope is not evidence.scope.world-ref
         errors = {r for r, v in REGISTRY.items() if v["severity"] == "error"}
         self.assertEqual(sorted(errors - covered - UNCOVERED_ERRORS), [], "error ids without a conformance case")
         self.assertEqual(sorted(UNCOVERED_ERRORS & covered), [], "covered now: remove from UNCOVERED_ERRORS")

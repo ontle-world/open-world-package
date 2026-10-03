@@ -11,7 +11,7 @@ from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, load_manifest, package_files, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
-from .resolve import ews_jsonld, resolve_package, validate_resolved
+from .resolve import ews_jsonld, ews_rdf, resolve_package, validate_resolved
 from .scaffold import add_extension, init_project, new_asset
 from .yamlio import dump_yaml, load_yaml
 
@@ -113,6 +113,9 @@ def cmd_ews_compile(args):
     ews = compile_ews(args.world, compiler, observations, args.as_of)
     if args.jsonld:
         print(json.dumps(ews_jsonld(args.world, ews, args.source), indent=2, ensure_ascii=False))
+        return 0
+    if args.rdf:
+        print(ews_rdf(args.world, ews, observations, args.source), end="")
         return 0
     print(dump_yaml(ews), end="")
     return 0
@@ -312,6 +315,7 @@ def build_parser():
     y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file, relative to the current directory (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
+    y.add_argument("--rdf", action="store_true", help="print Turtle 1.2 in the OWP vocabulary: each value a reified, unasserted triple with its provenance (PROV) and derivation")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.set_defaults(func=cmd_ews_compile)
     y = esp.add_parser("check", help="check an EWS document against its State Compiler output contract")

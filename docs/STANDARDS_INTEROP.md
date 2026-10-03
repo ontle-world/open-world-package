@@ -32,6 +32,24 @@ Cross-standard links that are not subclass axioms use SKOS match predicates, nev
 
 `scripts/check_alignments.sh` reasons over the vocabulary and each alignment with HermiT, through ROBOT. It uses the upstream ontologies pinned by digest in each package's `externalImports`. Each check is run with the sample data and against deliberately wrong inputs. CI runs it.
 
+## RDF output and identifiers
+
+`ontle ews compile ... --rdf` writes an EWS as Turtle 1.2 in the OWP vocabulary:
+
+- **The document.** The EWS is an `owp:EffectiveWorldState`. Its `dct:conformsTo` is `<https://w3id.org/owp/spec/v1alpha1>`, from `apiVersion`, written as an IRI rather than a string. It is `prov:wasGeneratedBy` an `owp:Compilation`, whose plan is the State Compiler.
+- **Values.** Every value, every alternative of an unresolved field, and every subject of a per-subject field becomes an `owp:StateValue`. It carries `owp:field`, `owp:resolution`, the observations it came from (`prov:wasDerivedFrom`), and its `owp:derivation`.
+- **Triple terms.** When the World's SemanticBinding gives the field a one-step path and its subjects IRIs, the StateValue reifies the triple (subject, property, value). The triple is stated without being asserted, so an unresolved alternative is never claimed true. Otherwise, the value is given as `rdf:value`.
+
+Packages and assets get IRIs from their identity. The mapping can be reversed, because namespace, name and version cannot contain `/`, `@` or `#`.
+
+| OWP reference | IRI |
+|---|---|
+| `acme/plant@0.1.0` | `https://w3id.org/owp/pkg/acme/plant/0.1.0` |
+| `acme/plant@0.1.0#views/task.yaml` | `https://w3id.org/owp/pkg/acme/plant/0.1.0#views/task.yaml` |
+| `apiVersion: openworld/v1alpha1` | `https://w3id.org/owp/spec/v1alpha1` |
+
+These IRIs identify packages. They do not say where to download them: the registry and `.owp.zip` archives give the locations, and a consumer verifies digests.
+
 ## Binding convention
 
 Asset YAML files tie their parts to standards under `spec.standardBindings` (spec section 5.3): each named binding has a `standard`, and `terms` (local names to the standard's type names), a `ref` to an artifact, or both. Each `ref` uses the ExternalRef shape of spec section 5.1. Unbound references say so explicitly instead of pointing at an invented artifact:

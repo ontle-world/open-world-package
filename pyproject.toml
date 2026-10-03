@@ -23,7 +23,7 @@ classifiers = [
 
 [project.optional-dependencies]
 # RDF tooling for `ontle ontology index` on RDF entrypoints. Validation never needs it.
-rdf = ["rdflib>=7.0"]
+rdf = ["rdflib>=7.0", "pyoxigraph>=0.5"]  # pyoxigraph reads RDF 1.2 (ews compile --rdf output)
 # Reading LeRobot parquet files in demos/physical-ai/extract.py.
 demo = ["pyarrow>=15"]
 # The LLM World Model in examples/business/quality-scenario-world-model.

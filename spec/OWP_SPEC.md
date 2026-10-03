@@ -243,6 +243,8 @@ World(schema)
 -> World Model
 ```
 
+Each step narrows the one before it. A View selects names from the World: when `spec.world.boundary.included` is declared, every name in a View's resolved `projection.include` SHOULD be in it (warning `view.outside-world`). A State Compiler's fields describe what its View selects: a field `<entity>.<property>` SHOULD name an entity in its View's resolved `projection.include` when that list is not empty (warning `compiler.field-outside-view`). Fields without a `.` are not checked.
+
 A World Model must not imply that it models every entity/state known to a World package. `worldRef` alone is insufficient: a valid WorldModelPackage MUST name the World View(s) and State Compiler(s) for which its input semantics are valid.
 
 The model runtime path is explicit:
@@ -269,7 +271,7 @@ spec:
 
 | Profile | Adds |
 |---|---|
-| `descriptive` | `spec.world` (always required for a WorldPackage) with `spec.world.definition`, or a `WorldDefinition` asset |
+| `descriptive` | `spec.world` (always required for a WorldPackage) with `spec.world.definition` |
 | `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset whose `spec.worldRef` is `self` or this package's identity |
 | `stateful` | at least one `StateCompilerProfile`; `spec.world.defaultStateCompiler` is the path of a local `StateCompilerProfile` whose `spec.worldViewRef` equals `spec.world.defaultView`; every local `StateCompilerProfile` has a `spec.worldViewRef` naming a local `WorldViewProfile` path and `spec.outputContract: EffectiveWorldState` |
 | `stateful` (bindings) | a State Compiler's `spec.bindings`, when present, is well formed (section 12.2); a malformed binding fails `stateful` for both the declared and the satisfied profile |
@@ -322,7 +324,7 @@ Precise meaning of the checks above:
 - **Dependencies:** every `spec.dependencies` entry is `<namespace>/<name>@<semver>` or a mapping whose `ref` is; otherwise the package is invalid.
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **YAML files:** every `.yaml`/`.yml` file that discovery reads, and every listed `PackageExample`, MUST parse. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not checked.
-- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
+- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed. A kind marked `stability: reserved` is a name kept for a future definition: it has no schema or rules yet, and using it is a warning; a kind containing `:` is an extension kind and follows section 13.
 - **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
@@ -339,6 +341,8 @@ OWP is a glue contract, not a replacement for existing standards. Scene descript
 ## 11. Dependency resolution
 
 `spec.dependencies` lists exact package references `<namespace>/<name>@<version>` (strings), or mappings `{ref, source}` where `source` is a package source used for that dependency before the global sources. Version ranges are not allowed.
+
+Dependencies point down the hierarchy Ontology ← World ← World Model: an OntologyPackage depends on OntologyPackages; a WorldPackage on OntologyPackages and WorldPackages; a WorldModelPackage on any of the three. A resolved dependency of another kind is the warning `resolve.dependency-direction`. Dependencies declared with `as` are extensions (section 13) and are not checked.
 
 A resolver finds each reference in an ordered list of package sources. This alpha defines three source types; a registry or OCI transport is another source type and does not change these rules:
 
@@ -470,7 +474,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.api-version` | 5 | a discovered OWP document's `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
-| `profile.descriptive` | 6.1 | no definition and no WorldDefinition asset |
+| `profile.descriptive` | 6.1 | no `spec.world.definition` |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
 | `profile.viewable.world-ref` | 6.1 | default View `worldRef` is not `self` or the package identity |
 | `profile.stateful` | 6.1 | no State Compiler, no `defaultStateCompiler`, or it is not a local compiler |
@@ -559,6 +563,10 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
 | `asset.kind-unknown` | 8 | external `spec.assets` entry kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
+| `asset.kind-reserved` | 8 | vocabulary kind marked `reserved` |
+| `view.outside-world` | 6 | View `projection.include` name outside the declared `spec.world.boundary.included` |
+| `compiler.field-outside-view` | 6 | State Compiler field `<entity>.<property>` whose entity its View does not include |
+| `resolve.dependency-direction` | 11 | dependency on a package kind above the dependent's place in the hierarchy |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
 | `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
 | `experimental.delegation-exceeds-authority` | C.3 | a delegation grants actions or decisions the delegator's roles do not hold |
@@ -567,6 +575,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside an experimental value set |
 | `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
+| `experimental.graph-ontology` | C | graph KnowledgeAsset without `spec.conformsTo.ontology` |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 

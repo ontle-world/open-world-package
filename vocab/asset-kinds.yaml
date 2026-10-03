@@ -7,55 +7,51 @@ kind: AssetKindVocabulary
 # stability:
 #   standard      part of this specification's vocabulary
 #   experimental  may change or be removed; using it is a warning (asset.kind-experimental)
+#   reserved      name kept for a future definition; it has no schema or rules yet, so using it is a
+#                 warning (asset.kind-reserved)
 #
 # Group names are informative and do not affect validation.
 groups:
   semanticWorld:
     SemanticProfile: {stability: standard}
     OntologyTermIndex: {stability: standard}
-    WorldDefinition: {stability: standard}
     WorldViewProfile: {stability: standard}
     StateCompilerProfile: {stability: standard}
+    SemanticBinding: {stability: standard}
   interfaceIntegration:
     SourceSystemSchemaProfile: {stability: standard}
-    SourceAdapterProfile: {stability: standard}
-    MappingSpec: {stability: standard}
-    IdentityResolutionProfile: {stability: standard}
+    SourceAdapterProfile: {stability: reserved}
+    IdentityResolutionProfile: {stability: reserved}
     ObservationAcquisitionProfile: {stability: standard}
     ActionBindingProfile: {stability: standard}
     CommitContract: {stability: standard}
     EffectVerificationProfile: {stability: standard}
   referenceProfiles:
-    ReferenceEnterpriseProfile: {stability: standard}
-    ReferenceIndustryProfile: {stability: standard}
+    ReferenceEnterpriseProfile: {stability: reserved}
+    ReferenceIndustryProfile: {stability: reserved}
     ScenarioProfile: {stability: standard}
     EnvironmentProfile: {stability: standard}
   modelRepresentation:
-    WorldModelContract: {stability: standard}
     ModelArtifact: {stability: standard}
     RepresentationAdapterProfile: {stability: standard}
-    ResolutionProfile: {stability: standard}
-    AggregationCoarseGrainingProfile: {stability: standard}
   capabilityOperational:
     CapabilityContract: {stability: standard}
-    SkillProfile: {stability: standard}
-    ToolProfile: {stability: standard}
+    SkillProfile: {stability: reserved}
+    ToolProfile: {stability: reserved}
     AgentProfile: {stability: standard}
-    WorkflowProfile: {stability: standard}
-    OperationalAsset: {stability: standard}
-    SemanticBinding: {stability: standard}
+    WorkflowProfile: {stability: reserved}
+    OperationalAsset: {stability: reserved}
   evaluationTestEvidence:
     Dataset: {stability: standard}
-    ReferenceFixture: {stability: standard}
-    NegativeFixture: {stability: standard}
-    BenchmarkCase: {stability: standard}
-    AcceptanceCase: {stability: standard}
-    Validator: {stability: standard}
+    ReferenceFixture: {stability: reserved}
+    NegativeFixture: {stability: reserved}
+    BenchmarkCase: {stability: reserved}
+    AcceptanceCase: {stability: reserved}
     EvaluationProfile: {stability: standard}
     VerifierPackage: {stability: standard}
     CompatibilityEvidence: {stability: standard}
   governancePublication:
-    Attestation: {stability: standard}
+    Attestation: {stability: reserved}
   taskWork:
     TaskSetProfile: {stability: experimental}
     WorkPatternProfile: {stability: experimental}

@@ -373,6 +373,30 @@ def cross_package_errors(resolution: Resolution) -> list[str]:
     return errors
 
 
+# Package kinds each kind may depend on: the hierarchy Ontology <- World <- World Model (spec section 11).
+DEPENDENCY_DIRECTIONS = {
+    "OntologyPackage": ("OntologyPackage",),
+    "WorldPackage": ("OntologyPackage", "WorldPackage"),
+    "WorldModelPackage": ("OntologyPackage", "WorldPackage", "WorldModelPackage"),
+}
+
+
+def dependency_direction_warnings(resolution: Resolution) -> list[str]:
+    """Dependencies that point up the hierarchy. Extension dependencies (declared with `as`) are exempt."""
+    warnings: list[str] = []
+    for pkg in resolution.packages.values():
+        allowed = DEPENDENCY_DIRECTIONS.get(pkg.kind or "")
+        for dep in (pkg.manifest.get("spec") or {}).get("dependencies") or []:
+            if allowed is None or (isinstance(dep, dict) and "as" in dep):
+                continue
+            ref = dep if isinstance(dep, str) else dep.get("ref") if isinstance(dep, dict) else None
+            target = resolution.packages.get(ref) if isinstance(ref, str) else None
+            if target is not None and target.kind not in allowed:
+                warnings.append(f"resolve.dependency-direction: {pkg.identity} ({pkg.kind}) depends on {ref} ({target.kind}); "
+                                f"allowed for {pkg.kind}: {', '.join(allowed)}")
+    return warnings
+
+
 def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tuple[ValidationResult, Resolution]:
     """Validate a package, its resolved dependency closure, and the cross-package grounding rules."""
     result = validate_package(path)
@@ -386,6 +410,7 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
         if pkg is not resolution.root:
             errors += [f"resolve.dependency-invalid: {ident}: {e}" for e in validate_package(pkg.root).errors]
     errors += cross_package_errors(resolution)
+    warnings += dependency_direction_warnings(resolution)
     return ValidationResult(not errors, errors, warnings, result.manifest), resolution
 
 

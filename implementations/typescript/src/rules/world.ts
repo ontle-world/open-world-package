@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import { Context, error, hasAssetOfKind, LocalAsset, localAssetsOfKind, Profile, PROFILES, warn } from "../context.js";
 import { Problem } from "../structure.js";
 import { get, isNonEmptyString, isObj, Obj, packageFile } from "../util.js";
+import { localKinds, resolvedInclude } from "./experimental.js";
 
 /**
  * Spec section 6.1: WorldPackage conformance profiles.
@@ -30,8 +31,7 @@ function assetSpec(a: LocalAsset): Record<string, unknown> | undefined {
 
 const descriptive: ProfileCheck = (ctx, w) => {
   if (isNonEmptyString(w.world?.definition)) return [];
-  if (hasAssetOfKind(ctx, "WorldDefinition")) return [];
-  return [{ rule: "profile.descriptive", msg: "requires spec.world.definition or a WorldDefinition asset" }];
+  return [{ rule: "profile.descriptive", msg: "requires spec.world.definition" }];
 };
 
 const viewable: ProfileCheck = (ctx, w) => {
@@ -239,4 +239,38 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
     }
   }
   return out;
+}
+
+/**
+ * Spec section 6: a View selects from the World's boundary, and a State Compiler's fields name entities its
+ * View selects. Warnings: `view.outside-world` when spec.world.boundary.included is declared, and
+ * `compiler.field-outside-view` for a field `<entity>.<property>` whose entity the View does not include.
+ */
+export function checkContainment(ctx: Context): void {
+  const included = get(ctx.manifest, "spec", "world", "boundary", "included");
+  const boundary = new Set(Array.isArray(included) ? included.filter((x): x is string => typeof x === "string") : []);
+  const kinds = localKinds(ctx);
+  const docs = new Map<string, unknown>();
+  for (const a of ctx.localAssets) if (!docs.has(a.rawPath)) docs.set(a.rawPath, a.doc);
+  const includes = new Map<string, Set<string>>();
+  for (const [p, k] of [...kinds].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    if (k !== "WorldViewProfile") continue;
+    const names = new Set(resolvedInclude(p, docs, kinds));
+    includes.set(p, names);
+    if (boundary.size === 0) continue;
+    for (const name of [...names].sort()) {
+      if (!boundary.has(name)) warn(ctx, "view.outside-world", `${p}: projection.include "${name}" is not in spec.world.boundary.included`, p);
+    }
+  }
+  for (const c of localAssetsOfKind(ctx, "StateCompilerProfile")) {
+    const view = get(c.doc, "spec", "worldViewRef");
+    const names = typeof view === "string" ? includes.get(view) : undefined;
+    if (!names || names.size === 0) continue;
+    for (const field of compilerFields(ctx, c).fields ?? []) {
+      const dot = field.indexOf(".");
+      if (dot > 0 && !names.has(field.slice(0, dot))) {
+        warn(ctx, "compiler.field-outside-view", `${c.rawPath}: field "${field}" names "${field.slice(0, dot)}", which ${view}'s projection.include does not list`, c.rawPath);
+      }
+    }
+  }
 }

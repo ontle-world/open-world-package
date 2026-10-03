@@ -105,6 +105,7 @@ def main() -> int:
         target.mkdir(parents=True)
         for f in ("align.ttl", "mappings.sssom.tsv", "owp.yaml", "ONTOLOGY.md"):
             shutil.copy2(pkg / f, target / f)
+        shutil.copytree(pkg / "semantics", target / "semantics")  # the term index owp.yaml points to
         title = (pkg / "ONTOLOGY.md").read_text(encoding="utf-8").splitlines()[0].lstrip("# ")
         links.append(f'<li><a href="{pkg.name}/align.ttl">{html.escape(title)}</a> · <a href="{pkg.name}/mappings.sssom.tsv">SSSOM</a> · <a href="{pkg.name}/owp.yaml">package</a></li>')
     (out / "alignments" / "index.html").write_text(page("OWP alignments", "<h1>OWP alignments</h1><p>Informative: OWP conformance never depends on them. "

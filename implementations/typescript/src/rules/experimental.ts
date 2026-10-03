@@ -106,7 +106,7 @@ const FAMILY_IDS: Record<string, [string, string]> = {
   knowledge: ["knowledge.field", "knowledge.reference"],
 };
 /** Value sets that grow with use: a value outside them is a warning even on standard kinds. */
-const OPEN_VALUE_SETS = new Set(["workPatterns", "artifactTypes", "artifactRepresentations", "artifactOperations", "knowledgeRoles"]);
+export const OPEN_VALUE_SETS = new Set(["workPatterns", "artifactTypes", "artifactRepresentations", "artifactOperations", "knowledgeRoles"]);
 
 /** The id and severity a check reports for a standard kind of FAMILIES (or for a promoted reference field). */
 function promote(family: string | undefined, refRule: string | undefined, rule: string, msg: string): { rule: string; error: boolean } {
@@ -238,7 +238,7 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       for (const r of values(sub(s, "requires").worldViews)) c.localRef(r, ["WorldViewProfile"], "spec.requires.worldViews");
       for (const r of values(sub(s, "requires").knowledge)) c.localRef(r, ["KnowledgeAsset"], "spec.requires.knowledge");
       for (const r of values(sub(s, "produces").artifacts)) c.localRef(r, ["ArtifactContract"], "spec.produces.artifacts");
-      // Appendix C.4: composition.
+      // Spec section 16: composition.
       for (const r of values(sub(s, "requires").actors)) c.localRef(r, ["ActorProfile", "RoleProfile"], "spec.requires.actors");
       for (const r of values(s.workPatternRefs)) c.localRef(r, ["WorkPatternProfile"], "spec.workPatternRefs");
       for (const [f, kind] of [["scenarios", "ScenarioProfile"], ["skills", "SkillProfile"], ["tools", "ToolProfile"]]) {

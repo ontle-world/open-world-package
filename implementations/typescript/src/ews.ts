@@ -269,8 +269,8 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   const { perSubject, latent } = outputLists(comp.spec);
   const bindings = comp.spec.bindings as Record<string, Obj>;
   const order = (a: Observation, b: Observation) => (a.observedAt < b.observedAt ? -1 : a.observedAt > b.observedAt ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-  const units = outputUnits(comp.spec) ?? {};
-  const candidates = (field: string, src: Obj, estimates: boolean, since?: string, sameUnit = false) => {
+  const units: Record<string, string> = outputUnits(comp.spec) ?? Object.create(null);
+  const candidates = (field: string, src: Obj, estimates: boolean, since?: string, sameUnit = false, counted = false) => {
     const cands = observations
       .filter((o) => o.type === src.from && o.observedAt <= asOf && Object.prototype.hasOwnProperty.call(o.values, src.value as string)
         && ("estimatedBy" in o) === estimates && (since === undefined || o.observedAt > since))
@@ -278,9 +278,9 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
     // Spec 12.5: a reported unit must be the field's declared unit; values are never converted.
     const reported = new Set<string>();
     for (const o of cands) {
-      const u = isObj(o.units) ? (o.units as Record<string, string>)[src.value as string] : undefined;
+      const u = isObj(o.units) && Object.prototype.hasOwnProperty.call(o.units, src.value as string) ? (o.units as Record<string, string>)[src.value as string] : undefined;
       if (u === undefined) continue;
-      if (field in units && u !== units[field]) {
+      if (field in units && !counted && u !== units[field]) { // a count's unit is not the unit of what it counts
         throw new Error(refusal("ews.input", `observation ${o.id} reports "${String(src.value)}" in "${u}", but "${field}" is declared in "${units[field]}"`));
       }
       reported.add(u);
@@ -311,7 +311,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
       } else if (form === "aggregate") {
         const a = b.aggregate as Obj;
         const since = "window" in a ? shift(asOf, durationSeconds(a.window)!) : undefined;
-        for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string)))) {
+        for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string), ["count", "distinct_count"].includes(a.function as string)))) {
           const r = aggregate(g, a.value as string, a.function as string);
           if (r) out.set(k, r);
         }

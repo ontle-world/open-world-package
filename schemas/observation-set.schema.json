@@ -79,7 +79,7 @@
         },
         "provenance": {
           "type": "object",
-          "description": "Where the observations came from, for example a knowledge extraction (spec section 12, Appendix C.1). Not used by compilation or EWS equality.",
+          "description": "Where the observations came from, for example a knowledge extraction (spec sections 12 and 19.2). Not used by compilation or EWS equality.",
           "properties": {
             "extraction": {
               "type": "string"

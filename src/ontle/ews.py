@@ -16,7 +16,7 @@ from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
 from .yamlio import YAMLError, load_yaml
 
 SELECTORS = {"latest", "all"}
-TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z")
 
 
 def load_document(path: str | Path) -> Any:
@@ -88,8 +88,8 @@ def load_compiler(world_root: Path, manifest: dict[str, Any], compiler_path: str
 
 AGGREGATE_FUNCTIONS = {"count", "distinct_count", "sum", "mean", "min", "max"}
 CONDITIONS = {"eq", "in", "gt", "gte", "lt", "lte"}
-DURATION_RE = re.compile(r"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$")
-SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
+DURATION_RE = re.compile(r"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?\Z")
+SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\Z")
 
 
 def duration_seconds(value: Any) -> int | None:
@@ -191,11 +191,12 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
             crit = c.get("criterion") if isinstance(c.get("criterion"), dict) else {}
             if field in units:
                 errors.append(f"compiler.unit: StateCompilerProfile {rel} field {field!r} is a classification; a label has no unit")
-            if "unit" in crit and crit["unit"] != units.get(c.get("input")):
-                errors.append(f"compiler.unit: StateCompilerProfile {rel} binding {field!r} criterion.unit {crit['unit']!r} must equal the unit of its input {c.get('input')!r} ({units.get(c.get('input'))!r})")
+            input_unit = units.get(c["input"]) if isinstance(c.get("input"), str) else None
+            if crit.get("unit") is not None and crit["unit"] != input_unit:
+                errors.append(f"compiler.unit: StateCompilerProfile {rel} binding {field!r} criterion.unit {crit['unit']!r} must equal the unit of its input {c.get('input')!r} ({input_unit!r})")
     # classification inputs must not form a cycle
-    graph = {f: b["classify"].get("input") for f, b in bindings.items()
-             if binding_form(b) == "classify" and isinstance(b["classify"], dict)}
+    graph = {f: b["classify"]["input"] for f, b in bindings.items()
+             if binding_form(b) == "classify" and isinstance(b["classify"], dict) and isinstance(b["classify"].get("input"), str)}
     for start in graph:
         seen, cur = set(), start
         while cur in graph and cur not in seen:
@@ -206,13 +207,15 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
     return errors
 
 
-UCUM_CODE_RE = re.compile(r"^[!-~]+$")  # a UCUM code: printable ASCII without spaces (compared as text, never converted)
+UCUM_CODE_RE = re.compile(r"^[!-~]+\Z")  # a UCUM code: printable ASCII without spaces (compared as text, never converted)
 
 
 def output_units(compiler: dict[str, Any]) -> dict[str, str] | None:
     """spec.outputSchema.units (section 12.5): EWS field -> UCUM code; {} when absent, None when malformed."""
     schema = compiler.get("outputSchema") if isinstance(compiler.get("outputSchema"), dict) else {}
-    units = schema.get("units", {})
+    units = schema.get("units")
+    if units is None:  # absent or null: no units declared
+        return {}
     if not isinstance(units, dict) or not all(isinstance(k, str) and isinstance(v, str) and UCUM_CODE_RE.match(v) for k, v in units.items()):
         return None
     return units
@@ -371,7 +374,8 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
 
     units = output_units(compiler) or {}
 
-    def candidates(field: str, src: dict[str, Any], estimates: bool, since: str | None = None, same_unit: bool = False) -> list[dict[str, Any]]:
+    def candidates(field: str, src: dict[str, Any], estimates: bool, since: str | None = None, same_unit: bool = False,
+                   counted: bool = False) -> list[dict[str, Any]]:
         cands = sorted((o for o in obs if o["type"] == src["from"] and o["observedAt"] <= as_of and src["value"] in o["values"]
                         and ("estimatedBy" in o) == estimates and (since is None or o["observedAt"] > since)),
                        key=lambda o: (o["observedAt"], o["id"]))
@@ -380,7 +384,7 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
         for o in cands:
             u = (o.get("units") or {}).get(src["value"])
             if u is not None:
-                if field in units and u != units[field]:
+                if field in units and not counted and u != units[field]:  # a count's unit is not the unit of what it counts
                     raise OWPError(f"ews.input: observation {o['id']} reports {src['value']!r} in {u!r}, but {field!r} is declared in {units[field]!r}")
                 reported[u] = o["id"]
         if same_unit and len(reported) > 1:
@@ -409,7 +413,8 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
         elif form == "aggregate":
             a = b["aggregate"]
             since = _shift(as_of, duration_seconds(a["window"])) if "window" in a else None
-            groups = grouped(field, candidates(field, a, False, since, same_unit=a["function"] in ("sum", "mean", "min", "max")))
+            groups = grouped(field, candidates(field, a, False, since, same_unit=a["function"] in ("sum", "mean", "min", "max"),
+                                                counted=a["function"] in ("count", "distinct_count")))
             out = {}
             for k, g in groups.items():
                 r = _aggregate(g, a["value"], a["function"])

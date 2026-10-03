@@ -233,10 +233,12 @@ def daily_counts(observations: dict[str, Any], binding: dict[str, Any], states: 
         seq.sort(key=lambda x: x[0])
         times = [at for at, _ in seq]
         cut = next((i for i in range(1, len(seq)) if times[i] == times[i - 1]), len(seq))
-        seq = seq[:cut - 1] if cut < len(seq) else seq
+        end = as_of or seq[-1][0]
+        if cut < len(seq):  # stop counting before the tie
+            end = min(end, times[cut] - timedelta(seconds=1))
+            seq = seq[:cut - 1]
         if not seq:
             continue
-        end = as_of or seq[-1][0]
         day, k, prev = seq[0][0], 0, None
         while day <= end:
             while k + 1 < len(seq) and seq[k + 1][0] <= day:
@@ -305,7 +307,12 @@ def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, A
         return answer("llm", skipped=f"Claude API unavailable: {exc}")
     if response.stop_reason == "refusal":
         return answer("llm", skipped="the request was declined")
-    data = json.loads(next(b.text for b in response.content if b.type == "text"))
+    if response.stop_reason == "max_tokens":
+        return answer("llm", skipped="the answer was cut off at max_tokens")
+    try:
+        data = json.loads(next(b.text for b in response.content if b.type == "text"))
+    except (StopIteration, json.JSONDecodeError) as exc:
+        return answer("llm", skipped=f"the answer was not the expected JSON: {exc}")
     return answer("llm",
                   expected_outcome=data["expected_outcome"],
                   range=data["range"],

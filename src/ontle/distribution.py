@@ -254,7 +254,7 @@ def _term_index(archives: list[Path]) -> dict[str, Any]:
     import tempfile
     from .binding import binding_curies
     from .core import load_manifest, local_assets
-    from .ontology import _load, _profile_curies, expand, terms as ontology_terms
+    from .ontology import _load, _profile_curies, expand, inside_package, terms as ontology_terms
     defined: dict[str, set[str]] = {}
     used: dict[str, set[str]] = {}
     mappings: list[dict[str, str]] = []
@@ -277,9 +277,11 @@ def _term_index(archives: list[Path]) -> dict[str, Any]:
                 defined.setdefault(iri, set()).add(identity)
             ontology = (manifest.get("spec") or {}).get("ontology") or {}
             for entry in ontology.get("entrypoints") or []:
-                if isinstance(entry, dict) and entry.get("role") == "mappings" and isinstance(entry.get("path"), str):
+                if not (isinstance(entry, dict) and inside_package(root, entry.get("path"))):  # archives are not validated here
+                    continue
+                if entry.get("role") == "mappings":
                     mappings.append({"package": identity, "path": entry["path"], "format": str(entry.get("format"))})
-                if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
+                if entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
                     doc = _load(root / entry["path"])
                     for _, value, term_type in _profile_curies(doc) if isinstance(doc, dict) else []:
                         iri = expand(value, prefixes) if isinstance(value, str) and not term_type else None

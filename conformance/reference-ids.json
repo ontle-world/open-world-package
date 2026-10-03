@@ -178,6 +178,21 @@
     "view.outside-world"
    ]
   },
+  "binding-null-sections": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-prototype-names": {
+   "errors": [
+    "binding.semantic-ids",
+    "binding.subjects"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
   "binding-semantic-ids-syntax": {
    "errors": [
     "binding.semantic-ids"
@@ -206,6 +221,15 @@
    "errors": [],
    "warnings": [
     "binding.term-unscoped",
+    "view.outside-world"
+   ]
+  },
+  "binding-trailing-newline": {
+   "errors": [
+    "binding.curie",
+    "binding.semantic-ids"
+   ],
+   "warnings": [
     "view.outside-world"
    ]
   },
@@ -253,6 +277,13 @@
    ],
    "warnings": []
   },
+  "compiler-classify-input-list": {
+   "errors": [
+    "compiler.binding",
+    "compiler.unit"
+   ],
+   "warnings": []
+  },
   "compiler-field-outside-view": {
    "errors": [],
    "warnings": [
@@ -262,6 +293,12 @@
   "compiler-latent-binding-mismatch": {
    "errors": [
     "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "compiler-latent-field-unknown": {
+   "errors": [
+    "compiler.latent-field"
    ],
    "warnings": []
   },
@@ -316,6 +353,10 @@
    ],
    "warnings": []
   },
+  "compiler-prototype-field-names": {
+   "errors": [],
+   "warnings": []
+  },
   "compiler-unit-count-dimension": {
    "errors": [
     "compiler.unit"
@@ -335,6 +376,10 @@
    "warnings": []
   },
   "compiler-units": {
+   "errors": [],
+   "warnings": []
+  },
+  "compiler-units-null": {
    "errors": [],
    "warnings": []
   },
@@ -395,6 +440,12 @@
   "evaluation-assessment-kind-unknown": {
    "errors": [
     "evaluation.assessment-kind"
+   ],
+   "warnings": []
+  },
+  "evaluation-evaluator-ref-not-actor": {
+   "errors": [
+    "evaluation.evaluator-ref"
    ],
    "warnings": []
   },
@@ -612,6 +663,20 @@
   "identity-with-slash": {
    "errors": [
     "manifest.identity"
+   ],
+   "warnings": []
+  },
+  "knowledge-reference-missing": {
+   "errors": [
+    "knowledge.reference"
+   ],
+   "warnings": [
+    "knowledge.graph-ontology"
+   ]
+  },
+  "knowledge-representation-unknown": {
+   "errors": [
+    "knowledge.field"
    ],
    "warnings": []
   },

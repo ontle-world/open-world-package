@@ -500,7 +500,7 @@ def _check_content(content: dict[str, Any], rel: str, root: Path, declared: set[
     warnings.extend(ref_warnings)
 
 
-# --- experimental fields of standard kinds (spec Appendix C.4) ------------------
+# --- experimental fields of standard kinds (spec Appendix C.1) ------------------
 
 def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, local_kinds: dict[str, str],
                            declared: set[str]) -> tuple[list[str], list[str]]:
@@ -714,7 +714,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
     return {"nodes": nodes, "edges": edges}
 
 
-EXPERIMENTAL_FIELDS = {  # spec Appendix C.4
+EXPERIMENTAL_FIELDS = {  # spec Appendix C.1
     "WorldViewProfile": [("specializes",), ("projection", "exclude")],
 }
 

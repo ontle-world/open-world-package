@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata: {name: parts, version: 0.1.0}
+spec:
+  source: knowledge/missing.yaml
+  query:
+    language: sparql
+    text: SELECT ?equipment ?part WHERE { ?equipment <https://example.org/plant#hasPart> ?part }
+  observations:
+  - type: KG.equipment_part
+    id: [equipment, part]
+    values: {part: part}
+    multi: true

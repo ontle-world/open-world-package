@@ -1,12 +1,13 @@
 apiVersion: openworld/v1alpha1
 kind: ValueSetVocabulary
-# Value sets. For an experimental set, a value outside it is a warning (experimental.value);
-# for a standard set, it is an error with the rule id of the field (spec section 15). An extension value
-# <extension>:<value> is accepted when the extension is declared (section 13).
+# Value sets. For a closed set (open: false, or no open key), a value outside it is an error with the rule id of the field;
+# for an open set (open: true), which grows with use, it is the warning value.unknown (spec sections 15-19).
+# An extension value <extension>:<value> is accepted when the extension is declared (section 13).
 # Labels are informative. A work pattern's family is its workNodeFamilies value.
 valueSets:
   workPatterns:
-    stability: experimental
+    stability: standard
+    open: true
     usedBy: WorkPatternProfile.spec.pattern.kind, TaskSetProfile.spec.task.workPatterns
     values:
       observe: {label: Observe / Monitor, family: observe_knowledge}
@@ -32,7 +33,8 @@ valueSets:
       evaluate: {label: Evaluate, family: evaluate_recover}
       learn: {label: Learn / Update, family: evaluate_recover}
   artifactTypes:
-    stability: experimental
+    stability: standard
+    open: true
     usedBy: ArtifactContract.spec.artifact.type
     values:
       document: {label: Document}
@@ -56,7 +58,8 @@ valueSets:
       evaluation_asset: {label: Evaluation asset}
       template: {label: Template}
   artifactRepresentations:
-    stability: experimental
+    stability: standard
+    open: true
     usedBy: ArtifactContract.spec.artifact.representation
     values:
       document: {label: Document}
@@ -68,7 +71,8 @@ valueSets:
       code: {label: Source code}
       configuration: {label: Configuration}
   actorKinds:
-    stability: experimental
+    stability: standard
+    open: false
     usedBy: ConsumerRepresentationProfile.spec.actor.kind
     values:
       human: {label: Human}
@@ -76,7 +80,8 @@ valueSets:
       model: {label: Model}
       system: {label: System}
   knowledgeRoles:
-    stability: experimental
+    stability: standard
+    open: true
     usedBy: KnowledgeAsset.spec.roles
     values:
       source: {label: Source}
@@ -88,7 +93,8 @@ valueSets:
       graph: {label: Graph}
       glossary: {label: Glossary}
   knowledgeRepresentations:
-    stability: experimental
+    stability: standard
+    open: false
     usedBy: KnowledgeAsset.spec.representation
     values:
       graph: {label: Graph}
@@ -97,14 +103,16 @@ valueSets:
       rules: {label: Rules}
       index: {label: Retrieval index}
   queryLanguages:
-    stability: experimental
+    stability: standard
+    open: false
     usedBy: KnowledgeExtractionProfile.spec.query.language
     values:
       sparql: {label: SPARQL 1.1}
       opencypher: {label: openCypher}
       gql: {label: ISO GQL}
   workNodeFamilies:
-    stability: experimental
+    stability: standard
+    open: false
     usedBy: WorkPatternProfile.spec.graph.nodes[].family, WorkPatternProfile.spec.pattern.family
     values:
       observe_knowledge: {label: Observe / Knowledge}
@@ -114,7 +122,8 @@ valueSets:
       execute_operate: {label: Execute / Operate}
       evaluate_recover: {label: Evaluate / Recover}
   artifactOperations:
-    stability: experimental
+    stability: standard
+    open: true
     usedBy: ArtifactContract.spec.allowedOperations
     values:
       create: {label: Create}
@@ -136,7 +145,8 @@ valueSets:
       deploy: {label: Deploy}
       activate: {label: Activate}
   actorTypes:
-    stability: experimental
+    stability: standard
+    open: false
     usedBy: ActorProfile.spec.actorType
     values:
       human: {label: Human}

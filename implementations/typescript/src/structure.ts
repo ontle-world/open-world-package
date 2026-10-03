@@ -148,7 +148,7 @@ export const EFFECTIVE_WORLD_STATE: Shape = closed(
 /** A standard asset document: apiVersion, kind, metadata, and a closed spec (schemas/<kind>.schema.json). */
 const standard = (spec: Record<string, Shape>): Shape => closed({ ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed(spec) }, false);
 
-// Standard kinds with defined fields. Fields marked experimental are Appendix C.4 additions; their
+// Standard kinds with defined fields. Fields marked experimental are Appendix C.1 additions; their
 // own checks are warnings (src/rules/experimental.ts), but undefined keys are schema.unknown-field.
 
 /** schemas/world-view-profile.schema.json */

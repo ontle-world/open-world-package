@@ -24,8 +24,8 @@ from typing import Any
 from .core import MANIFEST, SEMVER_PATTERN, OWPError, ValidationResult, load_manifest, local_assets, validate_package, verify_archive
 from .yamlio import load_yaml
 
-PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@\s]+)/(?P<name>[^/@\s]+)@(?P<version>{SEMVER_PATTERN})$")
-GIT_SOURCE_RE = re.compile(r"^git\+(?P<url>.+?)@(?P<rev>[^@#]+)(?:#subdir=(?P<subdir>.+))?$")
+PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@\s]+)/(?P<name>[^/@\s]+)@(?P<version>{SEMVER_PATTERN})\Z")
+GIT_SOURCE_RE = re.compile(r"^git\+(?P<url>.+?)@(?P<rev>[^@#]+)(?:#subdir=(?P<subdir>.+))?\Z")
 
 
 @dataclass
@@ -170,8 +170,19 @@ class GitSource(PackageSource):
         super().__init__(spec)
         self.url, self.rev, self.subdir = url, rev, subdir
 
+    def _commit_of_rev(self) -> str:
+        """The commit a tag or branch names now (it can move), so the cache is keyed by commit; a full commit is used as is."""
+        if re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", self.rev):
+            return self.rev
+        try:
+            refs = [line.split("\t") for line in _git("ls-remote", self.url, self.rev, f"{self.rev}^{{}}").splitlines() if "\t" in line]
+        except OWPError:
+            return self.rev  # an abbreviated commit, or a remote that does not list refs: keyed by rev as given
+        peeled = [c for c, ref in refs if ref.endswith("^{}")]  # an annotated tag: the commit it points to
+        return (peeled or [c for c, _ in refs] or [self.rev])[0]
+
     def _checkout(self) -> tuple[Path, str]:
-        key = hashlib.sha256(f"{self.url}@{self.rev}".encode()).hexdigest()[:32]
+        key = hashlib.sha256(f"{self.url}@{self._commit_of_rev()}".encode()).hexdigest()[:32]
         target = cache_dir() / "git" / key
         if not (target / ".git").exists():
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -535,18 +546,14 @@ def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] |
     return out
 
 
-def _concepts(field: str, value: Any, bspec: dict[str, Any], prefixes: dict[str, str], value_iri: Any) -> Any:
+def _concepts(field: str, value: Any, bspec: dict[str, Any], prefixes: dict[str, str]) -> Any:
     """A coded value (or each element of a list) as {"@id": concept IRI} when the field's binding declares `values`."""
+    from .binding import concept_iris
     fb = (bspec.get("fields") or {}).get(field) if isinstance(bspec.get("fields"), dict) else None
     values = fb.get("values") if isinstance(fb, dict) and isinstance(fb.get("values"), dict) else None
     if values is None:
         return value
-    out = []
-    for v in value if isinstance(value, list) else [value]:
-        iri = value_iri(values, v, prefixes)
-        if iri is None:
-            raise OWPError(f"binding.values: {field}: value {v!r} has no map entry and cannot be appended to base as an IRI")
-        out.append({"@id": iri})
+    out = [{"@id": iri} for iri in concept_iris(field, values, value, prefixes)]
     return out if isinstance(value, list) else out[0]
 
 
@@ -554,7 +561,7 @@ def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[st
                    prefixes: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """Section 12.3/14: per-subject state as individuals, when the SemanticBinding maps the field's subjects to IRIs.
     A field whose binding declares `values` gives concept IRIs instead of codes."""
-    from .binding import subject_iri, value_iri
+    from .binding import subject_iri
     from .ews import binding_form, output_lists
     bspec = binding.get("spec") or {}
     subjects = bspec.get("subjects") if isinstance(bspec.get("subjects"), dict) else {}
@@ -588,5 +595,5 @@ def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[st
             node = nodes.setdefault(subject_iri(rule, subject), {"@id": subject_iri(rule, subject)})
             if isinstance(types.get(otype), str):
                 node["@type"] = types[otype]
-            node[field] = _concepts(field, value, bspec, prefixes or {}, value_iri)
+            node[field] = _concepts(field, value, bspec, prefixes or {})
     return [nodes[k] for k in sorted(nodes)]

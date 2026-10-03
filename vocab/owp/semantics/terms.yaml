@@ -33,6 +33,8 @@ spec:
     type: class
   - iri: https://w3id.org/owp/ns#Resolution
     type: class
+  - iri: https://w3id.org/owp/ns#Resolutions
+    type: concept
   - iri: https://w3id.org/owp/ns#SemanticBinding
     type: class
   - iri: https://w3id.org/owp/ns#StateCompilerProfile
@@ -83,10 +85,14 @@ spec:
     type: property
   - iri: https://w3id.org/owp/ns#resolution
     type: property
+  - iri: https://w3id.org/owp/ns#resolved
+    type: individual
   - iri: https://w3id.org/owp/ns#stateCompiler
     type: property
   - iri: https://w3id.org/owp/ns#subjectKey
     type: property
+  - iri: https://w3id.org/owp/ns#unresolved
+    type: individual
   - iri: https://w3id.org/owp/ns#window
     type: property
   - iri: https://w3id.org/owp/ns#worldRef

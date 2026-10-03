@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:owp:schema:experimental:RoleProfile:v1alpha1",
-  "title": "RoleProfile (experimental)",
-  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "$id": "urn:owp:schema:delegation-profile:v1alpha1",
+  "title": "DelegationProfile",
+  "description": "DelegationProfile (spec section 17).",
   "type": "object",
   "properties": {
     "apiVersion": {
       "const": "openworld/v1alpha1"
     },
     "kind": {
-      "const": "RoleProfile"
+      "const": "DelegationProfile"
     },
     "metadata": {
       "type": "object",
@@ -35,59 +35,83 @@
     "spec": {
       "type": "object",
       "properties": {
-        "permissions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "actions": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "scope": {
-                "type": "string"
-              },
-              "extensions": {
-                "$ref": "#/$defs/extensions"
-              }
-            },
-            "additionalProperties": false
-          }
+        "delegator": {
+          "type": "string"
         },
-        "authorities": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "decisions": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "scope": {
-                "type": "string"
-              },
-              "ceiling": {
-                "type": "object",
-                "description": "Open container: keys are not checked."
-              },
-              "extensions": {
-                "$ref": "#/$defs/extensions"
-              }
-            },
-            "additionalProperties": false
-          }
+        "delegatee": {
+          "type": "string"
         },
-        "responsibilities": {
+        "scope": {
+          "type": "string"
+        },
+        "permittedActions": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "accountabilities": {
+        "authorityCeiling": {
+          "type": "object",
+          "properties": {
+            "decisions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "limits": {
+              "type": "object",
+              "description": "Open container: keys are not checked."
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "validFrom": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        },
+        "revocation": {
+          "type": "object",
+          "properties": {
+            "by": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "escalation": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "when": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidenceRefs": {
           "type": "array",
           "items": {
             "type": "string"

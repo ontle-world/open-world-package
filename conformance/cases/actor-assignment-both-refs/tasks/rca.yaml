@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: TaskSetProfile
+metadata: {name: rca}
+spec:
+  requires: {worldViews: [views/task.yaml]}

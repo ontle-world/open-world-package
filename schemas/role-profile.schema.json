@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:owp:schema:experimental:KnowledgeExtractionProfile:v1alpha1",
-  "title": "KnowledgeExtractionProfile (experimental)",
-  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "$id": "urn:owp:schema:role-profile:v1alpha1",
+  "title": "RoleProfile",
+  "description": "RoleProfile (spec section 17).",
   "type": "object",
   "properties": {
     "apiVersion": {
       "const": "openworld/v1alpha1"
     },
     "kind": {
-      "const": "KnowledgeExtractionProfile"
+      "const": "RoleProfile"
     },
     "metadata": {
       "type": "object",
@@ -35,72 +35,62 @@
     "spec": {
       "type": "object",
       "properties": {
-        "source": {
-          "type": "string"
-        },
-        "parameters": {
-          "type": "object",
-          "description": "Parameter name -> {type: string|number|boolean}."
-        },
-        "query": {
-          "type": "object",
-          "properties": {
-            "language": {
-              "type": "string"
-            },
-            "text": {
-              "type": "string"
-            },
-            "extensions": {
-              "$ref": "#/$defs/extensions"
-            }
-          },
-          "additionalProperties": false
-        },
-        "observations": {
+        "permissions": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string"
-              },
-              "id": {
+              "actions": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
               },
-              "subject": {
+              "scope": {
                 "type": "string"
-              },
-              "values": {
-                "type": "object",
-                "description": "Observation values key -> result column."
-              },
-              "multi": {
-                "type": "boolean"
-              },
-              "observedAt": {
-                "type": "object",
-                "properties": {
-                  "column": {
-                    "type": "string"
-                  },
-                  "default": {
-                    "type": "string"
-                  },
-                  "extensions": {
-                    "$ref": "#/$defs/extensions"
-                  }
-                },
-                "additionalProperties": false
               },
               "extensions": {
                 "$ref": "#/$defs/extensions"
               }
             },
             "additionalProperties": false
+          }
+        },
+        "authorities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "decisions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "scope": {
+                "type": "string"
+              },
+              "ceiling": {
+                "type": "object",
+                "description": "Open container: keys are not checked."
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accountabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
         "extensions": {

@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: RoleProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  permissions:
+  - {actions: [read_claims, propose_capa], scope: qms}
+  authorities:
+  - {decisions: [approve_capa], scope: plant_3, ceiling: {costLimit: 10000}}
+  responsibilities: [investigate_claims]
+  accountabilities: [capa_effectiveness]

@@ -126,6 +126,17 @@ rules:
   grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}
   grounding.ontology-term: {severity: error, section: "14", summary: "expanded binding IRI is not a term of a dependency OntologyPackage"}
   schema.unknown-field: {severity: error, section: "8, 12", summary: "a key that is neither a defined field nor an extensions block"}
+  view.conditioning-ref: {severity: error, section: "6", summary: "conditioning.actorRef, roleRefs, or taskRef that does not name a local ActorProfile, RoleProfile, or TaskSetProfile"}
+  evaluation.evaluator-ref: {severity: error, section: "15.1", summary: "evaluatorRef that does not name a local ActorProfile"}
+  work.field: {severity: error, section: "16", summary: "TaskSetProfile or WorkPatternProfile: missing or malformed field, or a value outside a closed value set; a reference that does not name a local asset of the expected kind (including work pattern graph references)"}
+  work.reference: {severity: error, section: "16", summary: "TaskSetProfile or WorkPatternProfile: missing or malformed field, or a value outside a closed value set; a reference that does not name a local asset of the expected kind (including work pattern graph references)"}
+  actor.field: {severity: error, section: "17", summary: "ActorProfile, RoleProfile, or DelegationProfile: missing or malformed field (including timestamps, periods, and assignments), or a value outside a closed value set; a reference that does not name a local asset of the expected kind"}
+  actor.reference: {severity: error, section: "17", summary: "ActorProfile, RoleProfile, or DelegationProfile: missing or malformed field (including timestamps, periods, and assignments), or a value outside a closed value set; a reference that does not name a local asset of the expected kind"}
+  actor.delegation-exceeds-authority: {severity: error, section: "17", summary: "a delegation grants actions or decisions the delegator's roles do not hold"}
+  artifact.field: {severity: error, section: "18", summary: "ArtifactContract or ConsumerRepresentationProfile: missing or malformed field, a value outside a closed value set, or an actor block other than actor.kind; a reference that does not name a local asset or file of the expected kind"}
+  artifact.reference: {severity: error, section: "18", summary: "ArtifactContract or ConsumerRepresentationProfile: missing or malformed field, a value outside a closed value set, or an actor block other than actor.kind; a reference that does not name a local asset or file of the expected kind"}
+  knowledge.field: {severity: error, section: "19", summary: "KnowledgeAsset or KnowledgeExtractionProfile: missing or malformed field or content, or a value outside a closed value set; a reference that does not name a local asset or file, or a conformsTo.ontology not in spec.dependencies"}
+  knowledge.reference: {severity: error, section: "19", summary: "KnowledgeAsset or KnowledgeExtractionProfile: missing or malformed field or content, or a value outside a closed value set; a reference that does not name a local asset or file, or a conformsTo.ontology not in spec.dependencies"}
   extension.name: {severity: error, section: "13.1", summary: "as malformed or reserved"}
   extension.duplicate: {severity: error, section: "13.1", summary: "extension name declared twice"}
   extension.declaration: {severity: error, section: "13.1", summary: "mustUnderstand without as, or not a boolean"}
@@ -143,11 +154,11 @@ rules:
   compiler.field-outside-view: {severity: warning, section: "6", summary: "State Compiler field <entity>.<property> whose entity its View does not include"}
   resolve.dependency-direction: {severity: warning, section: "11", summary: "dependency on a package kind above the dependent's place in the hierarchy"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
-  compiler.multi-latest: {severity: warning, section: "C.1", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}
-  experimental.delegation-exceeds-authority: {severity: warning, section: "C.3", summary: "a delegation grants actions or decisions the delegator's roles do not hold"}
+  compiler.multi-latest: {severity: warning, section: "19.2", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}
+  value.unknown: {severity: warning, section: "16-19", summary: "value outside an open value set"}
+  knowledge.graph-ontology: {severity: warning, section: "19.1", summary: "graph KnowledgeAsset without spec.conformsTo.ontology"}
   binding.term-unscoped: {severity: warning, section: "14", summary: "binding term outside the World boundary and every View projection"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
-  experimental.value: {severity: warning, section: "C", summary: "value outside an experimental value set"}
+  experimental.value: {severity: warning, section: "C", summary: "value outside a value set in an experimental kind"}
   experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes cycle"}
-  experimental.graph-ontology: {severity: warning, section: "C", summary: "graph KnowledgeAsset without spec.conformsTo.ontology"}

@@ -17,23 +17,14 @@ When a profile is promoted, its warnings become errors where the spec says MUST,
 
 ## Promoted
 
-Promoted to the standard (spec section 15): EvaluationProfile `assessmentKind`, `subject`, `objective`, `criteria`, `verifierRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; ScenarioProfile fields; CapabilityContract `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`; WorldViewProfile `constraints`, `evidenceRefs`. They were used in at least three domains and do not reference experimental kinds. Fields that reference experimental kinds (`purpose.actorRef`, `roleRef`, `taskRef`, `evaluatorRef`, `outcomeRefs`) stay experimental until those kinds are promoted.
+- Spec section 15: EvaluationProfile `assessmentKind`, `subject`, `objective`, `criteria`, `verifierRef`, `evidenceRefs`, `validityScope`, `resultSchemaRef`; ScenarioProfile fields; CapabilityContract `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`; WorldViewProfile `constraints`, `evidenceRefs`.
+- Spec sections 16-19 (this alpha): TaskSetProfile, WorkPatternProfile and its graph, ActorProfile, RoleProfile, DelegationProfile, ArtifactContract, ConsumerRepresentationProfile, KnowledgeAsset, KnowledgeExtractionProfile, and the fields that reference them: WorldViewProfile `conditioning.actorRef`, `roleRefs`, `taskRef`; EvaluationProfile `evaluatorRef`; CapabilityContract `outcomeRefs`. Their checks became errors under the ids `work.*`, `actor.*`, `artifact.*`, `knowledge.*`, `view.conditioning-ref`, and `evaluation.evaluator-ref`. The vocabularies the taxonomy leaves open (work patterns, artifact types and representations, artifact operations, knowledge roles) stay open: a value outside them is the warning `value.unknown`.
 
 ## Status
 
 | Profile | Semantic | Portability | Example domains | Machine contract | Interoperability |
 |---|---|---|---|---|---|
-| ActorProfile, RoleProfile, DelegationProfile (C.3) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| WorldViewProfile actor/role/task refs (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| WorkPatternProfile graph (C.2) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| ArtifactContract (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| EvaluationProfile `evaluatorRef` (C.4) | reviewed | yes | manufacturing, research, robotics | schema, cases | 2 implementations, round trips |
-| CapabilityContract `outcomeRefs` (C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| TaskSetProfile (C, C.4) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| KnowledgeAsset (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
-| KnowledgeExtractionProfile (C.1) | reviewed | yes | manufacturing, sales, research | schema, cases, extraction suite | 2 implementations, round trips |
-| ConsumerRepresentationProfile (C) | reviewed | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
+| ArtifactTemplate (C) | reviewed | yes | none yet | schema, cases | 2 implementations, round trips |
+| WorldViewProfile `specializes`, `projection.exclude` (C.1) | open: View composition is undecided | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 
 Round trips: every example and valid conformance case keeps its verdict, error ids, and warning ids after `ontle pack` and unpacking (`tests/test_roundtrip.py`) and after every YAML file is re-serialized in a different layout (Python `tests/test_roundtrip.py`, TypeScript `scripts/check-roundtrip.mjs`).
-
-Still open for every profile: independent review of the semantic gate and the maintainers' publication decision.

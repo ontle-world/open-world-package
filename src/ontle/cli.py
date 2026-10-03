@@ -331,7 +331,7 @@ def build_parser():
     y.add_argument("path", nargs="?", default=".")
     y.set_defaults(func=cmd_ontology_index)
 
-    x = sp.add_parser("kg", help="knowledge graph tooling (experimental, spec Appendix C.1)")
+    x = sp.add_parser("kg", help="knowledge graph tooling (spec section 19)")
     ksp = x.add_subparsers(dest="kg_command", required=True)
     y = ksp.add_parser("extract", help="run a KnowledgeExtractionProfile and print the ObservationSet (SPARQL needs the rdf extra)")
     y.add_argument("package", help="package directory")

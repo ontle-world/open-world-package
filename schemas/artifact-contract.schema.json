@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:owp:schema:experimental:TaskSetProfile:v1alpha1",
-  "title": "TaskSetProfile (experimental)",
-  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "$id": "urn:owp:schema:artifact-contract:v1alpha1",
+  "title": "ArtifactContract",
+  "description": "ArtifactContract (spec section 18).",
   "type": "object",
   "properties": {
     "apiVersion": {
       "const": "openworld/v1alpha1"
     },
     "kind": {
-      "const": "TaskSetProfile"
+      "const": "ArtifactContract"
     },
     "metadata": {
       "type": "object",
@@ -35,20 +35,14 @@
     "spec": {
       "type": "object",
       "properties": {
-        "task": {
+        "artifact": {
           "type": "object",
           "properties": {
-            "objectiveRefs": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+            "type": {
+              "type": "string"
             },
-            "workPatterns": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+            "representation": {
+              "type": "string"
             },
             "extensions": {
               "$ref": "#/$defs/extensions"
@@ -56,79 +50,34 @@
           },
           "additionalProperties": false
         },
-        "requires": {
-          "type": "object",
-          "properties": {
-            "worldRefs": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "worldViews": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "knowledge": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "actors": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "extensions": {
-              "$ref": "#/$defs/extensions"
-            }
-          },
-          "additionalProperties": false
+        "purposeRef": {
+          "type": "string"
         },
-        "workPatternRefs": {
+        "audienceRef": {
+          "type": "string"
+        },
+        "inputs": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "mayUse": {
+        "sourceBindings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "structure": {
           "type": "object",
           "properties": {
-            "worldModels": {
+            "required": {
               "type": "array",
               "items": {
                 "type": "string"
               }
             },
-            "capabilities": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "workflows": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "scenarios": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "skills": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "tools": {
+            "optional": {
               "type": "array",
               "items": {
                 "type": "string"
@@ -140,10 +89,10 @@
           },
           "additionalProperties": false
         },
-        "produces": {
+        "serialization": {
           "type": "object",
           "properties": {
-            "artifacts": {
+            "formats": {
               "type": "array",
               "items": {
                 "type": "string"
@@ -154,6 +103,84 @@
             }
           },
           "additionalProperties": false
+        },
+        "delivery": {
+          "type": "object",
+          "properties": {
+            "destinations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "approvalRequired": {
+              "type": "boolean"
+            },
+            "policyRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "schemaRef": {
+          "type": "string"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedOperations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "supersedes": {
+          "type": "string"
+        },
+        "validationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "evaluationRefs": {
           "type": "array",

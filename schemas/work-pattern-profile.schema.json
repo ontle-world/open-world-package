@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:owp:schema:experimental:WorkPatternProfile:v1alpha1",
-  "title": "WorkPatternProfile (experimental)",
-  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "$id": "urn:owp:schema:work-pattern-profile:v1alpha1",
+  "title": "WorkPatternProfile",
+  "description": "WorkPatternProfile (spec section 16).",
   "type": "object",
   "properties": {
     "apiVersion": {

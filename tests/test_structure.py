@@ -72,11 +72,13 @@ class StructureMatchesJsonSchema(unittest.TestCase):
                 schema = json.loads((SCHEMAS / f"{name}.schema.json").read_text(encoding="utf-8"))
                 self.compare(table, schema, schema, "")
 
-    def test_experimental_tables(self):
+    def test_profile_tables(self):
+        """The kinds of spec sections 16-19 have schemas in schemas/; the experimental ones in schemas/experimental/."""
         for kind, table in experimental.TABLES.items():
             name = re.sub(r"(?<!^)(?=[A-Z])", "-", kind).lower()
+            folder = SCHEMAS if kind in experimental.FAMILIES else SCHEMAS / "experimental"
             with self.subTest(kind=kind):
-                schema = json.loads((SCHEMAS / "experimental" / f"{name}.schema.json").read_text(encoding="utf-8"))
+                schema = json.loads((folder / f"{name}.schema.json").read_text(encoding="utf-8"))
                 self.compare(table, schema, schema, "")
 
 

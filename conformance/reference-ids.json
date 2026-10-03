@@ -1,37 +1,52 @@
 {
  "cases": {
+  "actor-assignment-bad-period": {
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
+  },
+  "actor-assignment-both-refs": {
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
+  },
+  "actor-assignment-wrong-kind": {
+   "errors": [
+    "actor.reference"
+   ],
+   "warnings": []
+  },
+  "actor-assignments": {
+   "errors": [],
+   "warnings": []
+  },
   "actor-role-delegation": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "actor-type-unknown": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.value"
-   ]
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
   },
   "artifact-contract-full": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "artifact-operation-unknown": {
    "errors": [],
    "warnings": [
-    "asset.kind-experimental",
-    "experimental.value"
+    "value.unknown"
    ]
   },
   "artifact-supersedes-unpinned": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.field"
-   ]
+   "errors": [
+    "artifact.field"
+   ],
+   "warnings": []
   },
   "asset-api-version-mismatch": {
    "errors": [
@@ -194,9 +209,7 @@
   },
   "capability-minimal": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "capability-unknown-field": {
    "errors": [
@@ -273,26 +286,35 @@
    ],
    "warnings": []
   },
+  "consumer-actor-block-mismatch": {
+   "errors": [
+    "artifact.field"
+   ],
+   "warnings": []
+  },
   "consumer-actor-ref": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.reference"
-   ]
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
+  },
+  "consumer-view-ref-wrong-kind": {
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
   },
   "delegation-bad-period": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.field"
-   ]
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
   },
   "delegation-exceeds-authority": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.delegation-exceeds-authority"
-   ]
+   "errors": [
+    "actor.delegation-exceeds-authority"
+   ],
+   "warnings": []
   },
   "dependency-range": {
    "errors": [
@@ -322,47 +344,35 @@
    "errors": [
     "evaluation.assessment-kind"
    ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evaluation-profile-portable": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evaluation-result-schema-missing": {
    "errors": [
     "evaluation.result-schema"
    ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evaluation-subject-missing": {
    "errors": [
     "evaluation.subject"
    ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evaluation-unknown-field": {
    "errors": [
     "schema.unknown-field"
    ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evaluation-verifier-ref-unpinned": {
    "errors": [
     "evaluation.verifier-ref"
    ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "evidence-compiler-out-of-scope": {
    "errors": [
@@ -440,52 +450,10 @@
    ],
    "warnings": []
   },
-  "experimental-actor-block-mismatch": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.field"
-   ]
-  },
-  "experimental-extension-value": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
-  },
-  "experimental-extension-value-undeclared": {
-   "errors": [
-    "extension.undeclared"
-   ],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
-  },
   "experimental-kinds": {
    "errors": [],
    "warnings": [
     "asset.kind-experimental"
-   ]
-  },
-  "experimental-reference-wrong-kind": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.reference"
-   ]
-  },
-  "experimental-unknown-field": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.field"
-   ]
-  },
-  "experimental-value-unknown": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.value"
    ]
   },
   "extension-block-asset-undeclared": {
@@ -579,16 +547,14 @@
   "extraction-multi-latest": {
    "errors": [],
    "warnings": [
-    "asset.kind-experimental",
     "compiler.multi-latest",
-    "experimental.graph-ontology"
+    "knowledge.graph-ontology"
    ]
   },
   "extraction-profile": {
    "errors": [],
    "warnings": [
-    "asset.kind-experimental",
-    "experimental.graph-ontology"
+    "knowledge.graph-ontology"
    ]
   },
   "identity-with-slash": {
@@ -994,16 +960,13 @@
   },
   "task-set-composition": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "task-set-composition-wrong-kind": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.reference"
-   ]
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
   },
   "view-external-world-not-dependency": {
    "errors": [
@@ -1045,40 +1008,56 @@
     "experimental.reference"
    ]
   },
+  "work-pattern-extension-value": {
+   "errors": [],
+   "warnings": []
+  },
+  "work-pattern-extension-value-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
   "work-pattern-graph": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "work-pattern-graph-dangling": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.reference"
-   ]
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
   },
   "work-pattern-graph-duplicate-node": {
+   "errors": [
+    "work.field",
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-kind-unknown": {
    "errors": [],
    "warnings": [
-    "asset.kind-experimental",
-    "experimental.field",
-    "experimental.reference"
+    "value.unknown"
    ]
   },
   "work-pattern-loop-bound": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.field"
-   ]
+   "errors": [
+    "work.field"
+   ],
+   "warnings": []
   },
   "work-pattern-node-family-unknown": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.value"
-   ]
+   "errors": [
+    "work.field"
+   ],
+   "warnings": []
+  },
+  "work-pattern-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
   },
   "world-action-ready": {
    "errors": [],
@@ -1157,17 +1136,14 @@
    "warnings": []
   },
   "world-view-actor-ref-wrong-kind": {
-   "errors": [],
-   "warnings": [
-    "asset.kind-experimental",
-    "experimental.reference"
-   ]
+   "errors": [
+    "view.conditioning-ref"
+   ],
+   "warnings": []
   },
   "world-view-portable": {
    "errors": [],
-   "warnings": [
-    "asset.kind-experimental"
-   ]
+   "warnings": []
   },
   "world-view-unknown-field": {
    "errors": [

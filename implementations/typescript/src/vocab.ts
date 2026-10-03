@@ -51,10 +51,10 @@ export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
     CompatibilityEvidence: S,
   },
   governancePublication: { Attestation: R },
-  taskWork: { TaskSetProfile: X, WorkPatternProfile: X },
-  knowledge: { KnowledgeAsset: X, KnowledgeExtractionProfile: X },
-  artifactRepresentation: { ArtifactContract: X, ArtifactTemplate: X, ConsumerRepresentationProfile: X },
-  actorAuthority: { ActorProfile: X, RoleProfile: X, DelegationProfile: X },
+  taskWork: { TaskSetProfile: S, WorkPatternProfile: S },
+  knowledge: { KnowledgeAsset: S, KnowledgeExtractionProfile: S },
+  artifactRepresentation: { ArtifactContract: S, ArtifactTemplate: X, ConsumerRepresentationProfile: S },
+  actorAuthority: { ActorProfile: S, RoleProfile: S, DelegationProfile: S },
   packageSupport: { PackageExample: S },
 };
 

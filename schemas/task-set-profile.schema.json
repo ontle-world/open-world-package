@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:owp:schema:experimental:KnowledgeAsset:v1alpha1",
-  "title": "KnowledgeAsset (experimental)",
-  "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+  "$id": "urn:owp:schema:task-set-profile:v1alpha1",
+  "title": "TaskSetProfile",
+  "description": "TaskSetProfile (spec section 16).",
   "type": "object",
   "properties": {
     "apiVersion": {
       "const": "openworld/v1alpha1"
     },
     "kind": {
-      "const": "KnowledgeAsset"
+      "const": "TaskSetProfile"
     },
     "metadata": {
       "type": "object",
@@ -35,26 +35,104 @@
     "spec": {
       "type": "object",
       "properties": {
-        "roles": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "objectiveRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "workPatterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "requires": {
+          "type": "object",
+          "properties": {
+            "worldRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "worldViews": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "knowledge": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "actors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "workPatternRefs": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "representation": {
-          "type": "string"
-        },
-        "format": {
-          "type": "string"
-        },
-        "conformsTo": {
+        "mayUse": {
           "type": "object",
           "properties": {
-            "ontology": {
-              "type": "string"
+            "worldModels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
-            "shapes": {
-              "type": "string"
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "workflows": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scenarios": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "extensions": {
               "$ref": "#/$defs/extensions"
@@ -62,59 +140,20 @@
           },
           "additionalProperties": false
         },
-        "snapshot": {
+        "produces": {
           "type": "object",
           "properties": {
-            "asOf": {
-              "type": "string"
+            "artifacts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
           },
           "additionalProperties": false
-        },
-        "content": {
-          "type": "object",
-          "properties": {
-            "path": {
-              "type": "string"
-            },
-            "ref": {
-              "$ref": "#/$defs/externalRef"
-            },
-            "extensions": {
-              "$ref": "#/$defs/extensions"
-            }
-          },
-          "additionalProperties": false
-        },
-        "delta": {
-          "type": "object",
-          "properties": {
-            "base": {
-              "type": "string"
-            },
-            "format": {
-              "type": "string"
-            },
-            "extensions": {
-              "$ref": "#/$defs/extensions"
-            }
-          },
-          "additionalProperties": false
-        },
-        "provenance": {
-          "type": "string"
-        },
-        "license": {
-          "type": "string"
-        },
-        "access": {
-          "type": "string"
-        },
-        "sensitivity": {
-          "type": "string"
         },
         "evaluationRefs": {
           "type": "array",

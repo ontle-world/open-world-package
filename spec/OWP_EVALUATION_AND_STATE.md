@@ -216,8 +216,9 @@ These fields of standard kinds are part of the standard. Their schemas are under
 | `verifierRef` | a local VerifierProfile path or a pinned `<name>@<version>` |
 | `evidenceRefs`, `validityScope` | supporting evidence; where the profile applies |
 | `resultSchemaRef` | a file in the package describing results |
+| `evaluatorRef` | the actor that performs the assessment: a local ActorProfile (section 17) |
 
-Rules: `evaluation.assessment-kind`, `evaluation.subject`, `evaluation.verifier-ref`, `evaluation.result-schema`.
+Rules: `evaluation.assessment-kind`, `evaluation.subject`, `evaluation.verifier-ref`, `evaluation.result-schema`, `evaluation.evaluator-ref`.
 
 ### 15.2 ScenarioProfile
 
@@ -237,7 +238,7 @@ Rules: `scenario.engine-kind`, `scenario.baseline-ref`, `scenario.confidence`.
 
 ### 15.3 CapabilityContract
 
-A capability is the ability to achieve a class of outcomes under a defined context. Fields: `description`, `effect`, `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`. Scoring or assessment methods are not part of the contract; publishers add them as extensions.
+A capability is the ability to achieve a class of outcomes under a defined context. Fields: `description`, `effect`, `outcomeRefs` (the outcomes it achieves), `context`, `requiredInputs`, `capacity`, `maturity`, `validityScope`, `evidenceRefs`. Scoring or assessment methods are not part of the contract; publishers add them as extensions.
 
 ### 15.4 WorldViewProfile
 
@@ -246,8 +247,8 @@ A View's fields follow `WorldView = Project(World, ViewSpec)` (section 6):
 | Field | Holds |
 |---|---|
 | `purpose` | what the View is for, as text: `task`, `objective`, `actorScope` |
-| `projection` | what is selected and how it is represented: `include`, `exclude` (Appendix C), `principle`, `scale`, `resolution`, `timeScope` |
-| `conditioning` | optional conditions: `authorityScope`, and the experimental references `actorRef`, `roleRefs`, `taskRef` (Appendix C.4) |
+| `projection` | what is selected and how it is represented: `include`, `exclude` (experimental, Appendix C), `principle`, `scale`, `resolution`, `timeScope` |
+| `conditioning` | optional conditions: `authorityScope`, and the references `actorRef` (ActorProfile), `roleRefs` (RoleProfile), `taskRef` (TaskSetProfile) of sections 16-17 (`view.conditioning-ref`) |
 | `externalWorldRefs` | other Worlds the View reads (section 6) |
 
 A View MAY also list `constraints` and `evidenceRefs`.

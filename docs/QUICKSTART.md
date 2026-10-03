@@ -120,7 +120,7 @@ ontle validate --resolve --source .. .
 ontle inspect .            # semanticCoverage shows how many EWS fields are bound
 ```
 
-## 9. Describe who does the work (experimental)
+## 9. Describe who does the work
 
 Add these as asset files like any other: `ActorProfile`, `RoleProfile`, `DelegationProfile`, `CapabilityContract`, `TaskSetProfile`, `WorkPatternProfile`, `ArtifactContract`, and `ConsumerRepresentationProfile`. Then see how they connect:
 
@@ -128,7 +128,7 @@ Add these as asset files like any other: `ActorProfile`, `RoleProfile`, `Delegat
 ontle inspect . --graph    # who does what, with which View, producing which artifact
 ```
 
-These kinds are experimental (spec Appendix C): problems in them are warnings, not errors. `examples/research/assay-optimization-world` is a small complete example.
+These kinds are standard (spec sections 16-19, `spec/OWP_WORK_AND_ACTORS.md`). Who holds a role or task can be declared on the ActorProfile (`assignments`) or left to runtime observations; choose per World (section 17.1). Some vocabularies (work patterns, artifact types) are open: a value outside them is a warning, so you can use your own. `examples/research/assay-optimization-world` is a small complete example.
 
 ## 10. Add publisher-specific data
 

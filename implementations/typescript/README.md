@@ -42,7 +42,7 @@ Section numbers refer to the specification, which is split across files with unc
 | `src/rules/ontology.ts` | 3.1 OntologyPackage contract and ontology conformance profiles |
 | `src/rules/binding.ts` | 14 SemanticBinding (single-package; cross-package grounding called from `src/resolve.ts`) |
 | `src/rules/standard-fields.ts` | 15 EvaluationProfile and ScenarioProfile fields (errors) |
-| `src/rules/experimental.ts` | Appendix C experimental kinds (warnings), World View `specializes`, work pattern graphs (C.2), actors, roles, and delegation (C.3), remaining experimental fields of standard kinds (C.4) |
+| `src/rules/experimental.ts` | 16-19 work, actor, artifact, and knowledge kinds (errors, via `promote`), and the remaining experimental kind and View `specializes` (Appendix C, warnings) |
 | `src/structure.ts` | 8 defined fields: field tables mirroring `schemas/*.schema.json` (manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract, ObservationSet, EWS) |
 | `src/rules/extensions.ts` | 13 extension declarations, definitions, `extensions` blocks |
 | `src/vocab.ts` | 8 asset-kind vocabulary and Appendix C value sets (copies of `vocab/asset-kinds.yaml` and `vocab/value-sets.yaml`, checked by `scripts/check-vocab.mjs`) |

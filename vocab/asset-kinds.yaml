@@ -56,18 +56,18 @@ groups:
   governancePublication:
     Attestation: {stability: reserved}
   taskWork:
-    TaskSetProfile: {stability: experimental}
-    WorkPatternProfile: {stability: experimental}
+    TaskSetProfile: {stability: standard}
+    WorkPatternProfile: {stability: standard}
   knowledge:
-    KnowledgeAsset: {stability: experimental}
-    KnowledgeExtractionProfile: {stability: experimental}
+    KnowledgeAsset: {stability: standard}
+    KnowledgeExtractionProfile: {stability: standard}
   artifactRepresentation:
-    ArtifactContract: {stability: experimental}
+    ArtifactContract: {stability: standard}
     ArtifactTemplate: {stability: experimental}
-    ConsumerRepresentationProfile: {stability: experimental}
+    ConsumerRepresentationProfile: {stability: standard}
   actorAuthority:
-    ActorProfile: {stability: experimental}
-    RoleProfile: {stability: experimental}
-    DelegationProfile: {stability: experimental}
+    ActorProfile: {stability: standard}
+    RoleProfile: {stability: standard}
+    DelegationProfile: {stability: standard}
   packageSupport:
     PackageExample: {stability: standard}

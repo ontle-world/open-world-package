@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: DelegationProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  delegator: actors/manager.yaml
+  delegatee: actors/agent.yaml
+  scope: claim_rca
+  permittedActions: [propose_capa]
+  authorityCeiling: {decisions: [], limits: {costLimit: 0}}
+  validFrom: "2026-10-01T00:00:00Z"
+  expiresAt: "2026-12-31T00:00:00Z"
+  revocation: {by: [actors/manager.yaml]}
+  escalation: {to: [actors/director.yaml], when: [cost_over_ceiling]}

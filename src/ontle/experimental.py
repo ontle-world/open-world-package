@@ -1,10 +1,13 @@
-"""Experimental asset kinds (spec Appendix C).
+"""Work, actor, artifact, and knowledge kinds (spec sections 16-19) and the experimental kinds (Appendix C).
 
-Every check here produces warnings, so experimental kinds never change whether
-a package is valid. Extension rules (section 13) still apply and stay errors.
-The field tables mirror ``schemas/experimental/*.schema.json``.
+The checks are written once and report experimental ids. For the standard kinds in FAMILIES, _promote
+re-issues them as errors under the family's ids (an unknown value of an open value set stays a warning);
+the experimental kinds (ArtifactTemplate) and fields (View specialization) keep warnings, so they never
+change whether a package is valid. Extension rules (section 13) are errors for all of them.
 """
 from __future__ import annotations
+
+import re
 
 from importlib import resources
 from pathlib import Path
@@ -117,6 +120,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "capabilityRefs": VALUE,
         "agentRef": VALUE,
         "memberOf": VALUE,
+        "assignments": array(closed({"roleRef": VALUE, "taskRef": VALUE, "scope": VALUE, "validFrom": VALUE, "expiresAt": VALUE})),
     }),
     "RoleProfile": _document({
         "permissions": array(closed({"actions": VALUE, "scope": VALUE})),
@@ -139,6 +143,46 @@ TABLES: dict[str, dict[str, Any]] = {
 }
 
 ACTOR_BLOCKS = ("human", "agent", "model", "system")
+
+# Kinds promoted to the standard (spec sections 16-19). Their checks are errors under the family's rule ids;
+# a value outside an open value set (which grows with use, taxonomy not frozen) stays a warning, value.unknown.
+FAMILIES = {
+    "TaskSetProfile": "work", "WorkPatternProfile": "work",
+    "ArtifactContract": "artifact", "ConsumerRepresentationProfile": "artifact",
+    "ActorProfile": "actor", "RoleProfile": "actor", "DelegationProfile": "actor",
+    "KnowledgeAsset": "knowledge", "KnowledgeExtractionProfile": "knowledge",
+}
+FAMILY_IDS = {  # (field id, reference id) per family
+    "work": ("work.field", "work.reference"),
+    "actor": ("actor.field", "actor.reference"),
+    "artifact": ("artifact.field", "artifact.reference"),
+    "knowledge": ("knowledge.field", "knowledge.reference"),
+}
+OPEN_VALUE_SETS = frozenset({"workPatterns", "artifactTypes", "artifactRepresentations", "artifactOperations", "knowledgeRoles"})
+
+
+def _promote(kind: str, errors: list[str], warnings: list[str]) -> tuple[list[str], list[str]]:
+    """Re-issue the checks of a standard kind of FAMILIES under its own ids and severities."""
+    family = FAMILIES.get(kind)
+    if family is None:
+        return errors, warnings
+    field_id, reference_id = FAMILY_IDS[family]
+    kept: list[str] = []
+    for w in warnings:
+        rule, _, rest = w.partition(": ")
+        if rule == "experimental.field":
+            errors.append(f"{field_id}: {rest}")
+        elif rule == "experimental.reference":
+            errors.append(f"{reference_id}: {rest}")
+        elif rule == "experimental.value":
+            m = re.search(r"is not in the value set (\w+)$", rest)
+            if m and m.group(1) in OPEN_VALUE_SETS:
+                kept.append(f"value.unknown: {rest}")
+            else:
+                errors.append(f"{field_id}: {rest}")
+        else:
+            kept.append(w)
+    return errors, kept
 
 
 def _load_value_sets() -> dict[str, set[str]]:
@@ -167,7 +211,7 @@ def _check_value(value: Any, value_set: str, where: str, rel: str, declared: set
         if name not in declared:
             errors.append(f"extension.undeclared: {rel}: {where} {value!r} uses extension {name!r}, which spec.dependencies does not declare with 'as'")
     elif value not in VALUE_SETS[value_set]:
-        warnings.append(f"experimental.value: {rel}: {where} {value!r} is not in the experimental value set {value_set}")
+        warnings.append(f"experimental.value: {rel}: {where} {value!r} is not in the value set {value_set}")
 
 
 def _check_standard_value(value: Any, value_set: str, rule: str, where: str, rel: str, declared: set[str], errors: list[str]) -> None:
@@ -195,6 +239,15 @@ def _check_local_ref(ref: Any, kinds: tuple[str, ...] | None, where: str, rel: s
         warnings.append(f"experimental.reference: {rel}: {where} {ref!r} is not a listed local asset")
     elif kinds is not None and kind not in kinds:
         warnings.append(f"experimental.reference: {rel}: {where} {ref!r} is a {kind}, expected {' or '.join(kinds)}")
+
+
+def _check_period(start: Any, end: Any, where: str, rel: str, warnings: list[str]) -> None:
+    """validFrom and expiresAt, when given, are UTC timestamps and validFrom comes first."""
+    for field, value in (("validFrom", start), ("expiresAt", end)):
+        if value is not None and not _valid_timestamp(value):
+            warnings.append(f"experimental.field: {rel}: {where}.{field} must be UTC YYYY-MM-DDTHH:MM:SSZ")
+    if _valid_timestamp(start) and _valid_timestamp(end) and not start < end:
+        warnings.append(f"experimental.field: {rel}: {where}.validFrom must be before {where}.expiresAt")
 
 
 def _file_in_package(root: Path, rel: Any) -> bool:
@@ -276,7 +329,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
     errors: list[str] = []
     warnings: list[str] = []
     for issue in structure.structure_errors(doc, TABLES[kind], rel, declared):
-        if issue.startswith("schema.unknown-field: "):
+        if issue.startswith("schema.unknown-field: ") and kind not in FAMILIES:
             warnings.append("experimental.field: " + issue[len("schema.unknown-field: "):])
         else:
             errors.append(issue)
@@ -363,7 +416,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             _check_value(spec["representation"], "knowledgeRepresentations", "spec.representation", rel, declared, errors, warnings)
         ontology = sub("conformsTo").get("ontology")
         if ontology is None and spec.get("representation") == "graph":
-            warnings.append(f"experimental.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
+            warnings.append(f"knowledge.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
                             "that is its T-box in spec.conformsTo.ontology")
         if ontology is not None:
             dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in spec_manifest.get("dependencies") or []}
@@ -383,6 +436,17 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             _check_local_ref(spec["agentRef"], ("AgentProfile",), "spec.agentRef", rel, local_kinds, warnings)
         for ref in _values(spec.get("memberOf")):
             _check_local_ref(ref, ("ActorProfile",), "spec.memberOf", rel, local_kinds, warnings)
+        for i, a in enumerate(spec.get("assignments") or [] if isinstance(spec.get("assignments"), list) else []):
+            if not isinstance(a, dict):
+                continue
+            where = f"spec.assignments[{i}]"
+            if ("roleRef" in a) == ("taskRef" in a):
+                warnings.append(f"experimental.field: {rel}: {where} names exactly one of roleRef or taskRef")
+            elif "roleRef" in a:
+                _check_local_ref(a["roleRef"], ("RoleProfile",), f"{where}.roleRef", rel, local_kinds, warnings)
+            else:
+                _check_local_ref(a["taskRef"], ("TaskSetProfile",), f"{where}.taskRef", rel, local_kinds, warnings)
+            _check_period(a.get("validFrom"), a.get("expiresAt"), where, rel, warnings)
     elif kind == "DelegationProfile":
         for field in ("delegator", "delegatee"):
             _check_local_ref(spec.get(field), ("ActorProfile",), f"spec.{field}", rel, local_kinds, warnings)
@@ -391,19 +455,14 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
                 _check_local_ref(ref, ("ActorProfile",), "spec.revocation.by", rel, local_kinds, warnings)
         for ref in _values(sub("escalation").get("to")):
             _check_local_ref(ref, ("ActorProfile",), "spec.escalation.to", rel, local_kinds, warnings)
-        start, end = spec.get("validFrom"), spec.get("expiresAt")
-        for field, value in (("validFrom", start), ("expiresAt", end)):
-            if value is not None and not _valid_timestamp(value):
-                warnings.append(f"experimental.field: {rel}: spec.{field} must be UTC YYYY-MM-DDTHH:MM:SSZ")
-        if _valid_timestamp(start) and _valid_timestamp(end) and not start < end:
-            warnings.append(f"experimental.field: {rel}: spec.validFrom must be before spec.expiresAt")
+        _check_period(spec.get("validFrom"), spec.get("expiresAt"), "spec", rel, warnings)
         granted = _delegator_grants(spec.get("delegator"), local_kinds, docs)
         if granted is not None:
             actions, decisions = granted
             over = [a for a in _values(spec.get("permittedActions")) if a not in actions | decisions]
             over += [d for d in _values(sub("authorityCeiling").get("decisions")) if d not in decisions]
             if over:
-                warnings.append(f"experimental.delegation-exceeds-authority: {rel}: delegates {', '.join(map(str, over))}, which the delegator's roles do not grant")
+                errors.append(f"actor.delegation-exceeds-authority: {rel}: delegates {', '.join(map(str, over))}, which the delegator's roles do not grant")
     elif kind == "KnowledgeExtractionProfile":
         _check_local_ref(spec.get("source"), ("KnowledgeAsset",), "spec.source", rel, local_kinds, warnings)
         if "language" not in sub("query"):
@@ -417,7 +476,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             if not (isinstance(template, dict) and isinstance(template.get("type"), str) and isinstance(template.get("id"), list)
                     and template["id"] and isinstance(template.get("values"), dict) and template["values"]):
                 warnings.append(f"experimental.field: {rel}: spec.observations[{i}] needs type, a non-empty id column list, and a values mapping")
-    return errors, warnings
+    return _promote(kind, errors, warnings)
 
 
 def _check_content(content: dict[str, Any], rel: str, root: Path, declared: set[str],
@@ -454,11 +513,14 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
         return value if isinstance(value, dict) else {}
 
     if kind == "WorldViewProfile":
+        # Standard fields (spec section 6): conditioning on a local actor, role, or task.
+        found: list[str] = []
         for field, kinds in (("actorRef", ("ActorProfile",)), ("taskRef", ("TaskSetProfile",))):
             if sub("conditioning").get(field) is not None:
-                _check_local_ref(sub("conditioning")[field], kinds, f"spec.conditioning.{field}", rel, local_kinds, warnings)
+                _check_local_ref(sub("conditioning")[field], kinds, f"spec.conditioning.{field}", rel, local_kinds, found)
         for ref in _values(sub("conditioning").get("roleRefs")):
-            _check_local_ref(ref, ("RoleProfile",), "spec.conditioning.roleRefs", rel, local_kinds, warnings)
+            _check_local_ref(ref, ("RoleProfile",), "spec.conditioning.roleRefs", rel, local_kinds, found)
+        errors += [f"view.conditioning-ref: {e.partition(': ')[2]}" for e in found]
     elif kind == "EvaluationProfile":
         # Standard fields (spec section 15.1): errors.
         if "assessmentKind" in spec:
@@ -475,9 +537,10 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
                 errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierProfile or a pinned <name>@<version>")
         if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
             errors.append(f"evaluation.result-schema: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
-        # Experimental field (Appendix C.4): warning.
         if spec.get("evaluatorRef") is not None:
-            _check_local_ref(spec["evaluatorRef"], ("ActorProfile",), "spec.evaluatorRef", rel, local_kinds, warnings)
+            found = []
+            _check_local_ref(spec["evaluatorRef"], ("ActorProfile",), "spec.evaluatorRef", rel, local_kinds, found)
+            errors += [f"evaluation.evaluator-ref: {e.partition(': ')[2]}" for e in found]
     elif kind == "ScenarioProfile":
         # Standard fields (spec section 15.2): errors.
         if "kind" in sub("engine"):
@@ -589,6 +652,10 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "implemented_by", s.get("agentRef"))
             for v in _values(s.get("memberOf")):
                 edge(rel, "member_of", v)
+            for a in s.get("assignments") or [] if isinstance(s.get("assignments"), list) else []:
+                if isinstance(a, dict):
+                    edge(rel, "assigned_role", a.get("roleRef"))
+                    edge(rel, "assigned_task", a.get("taskRef"))
         elif kind == "DelegationProfile":
             edge(rel, "delegated_by", s.get("delegator"))
             edge(rel, "delegated_to", s.get("delegatee"))
@@ -648,9 +715,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
 
 
 EXPERIMENTAL_FIELDS = {  # spec Appendix C.4
-    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("conditioning", "actorRef"), ("conditioning", "roleRefs"), ("conditioning", "taskRef")],
-    "EvaluationProfile": [("evaluatorRef",)],
-    "CapabilityContract": [("outcomeRefs",)],
+    "WorldViewProfile": [("specializes",), ("projection", "exclude")],
 }
 
 

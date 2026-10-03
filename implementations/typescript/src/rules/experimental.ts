@@ -1,7 +1,9 @@
 /**
- * Spec Appendix C: experimental asset kinds and World View specialization.
- * Every check here is a warning (`experimental.field`, `experimental.value`, `experimental.reference`);
- * extension rules (spec 13) stay errors. Field tables follow ../../schemas/experimental/*.schema.json.
+ * Work, actor, artifact, and knowledge kinds (spec sections 16-19) and the experimental kinds (Appendix C).
+ * The checks are written once with experimental ids; for the standard kinds in FAMILIES, promote() reports
+ * them as errors under the family's ids (an unknown value of an open value set stays the warning
+ * `value.unknown`). ArtifactTemplate and View specialization stay experimental: warnings only. Extension
+ * rules (spec 13) are errors for all of them.
  */
 import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
@@ -70,7 +72,10 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     query: closed(leaves("language", "text")),
     observations: list(closed({ ...leaves("type", "id", "subject", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
-  ActorProfile: doc(leaves("actorType", "roleRefs", "capabilityRefs", "agentRef", "memberOf")),
+  ActorProfile: doc({
+    ...leaves("actorType", "roleRefs", "capabilityRefs", "agentRef", "memberOf"),
+    assignments: list(closed(leaves("roleRef", "taskRef", "scope", "validFrom", "expiresAt"))),
+  }),
   RoleProfile: doc({
     permissions: list(closed(leaves("actions", "scope"))),
     authorities: list(closed({ ...leaves("decisions", "scope"), ceiling: OPEN })),
@@ -86,6 +91,40 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
 
 const ACTOR_BLOCKS = ["human", "agent", "model", "system"];
 
+/** Kinds promoted to the standard (spec sections 16-19) and their rule-id family. */
+export const FAMILIES: Record<string, string> = {
+  TaskSetProfile: "work", WorkPatternProfile: "work",
+  ArtifactContract: "artifact", ConsumerRepresentationProfile: "artifact",
+  ActorProfile: "actor", RoleProfile: "actor", DelegationProfile: "actor",
+  KnowledgeAsset: "knowledge", KnowledgeExtractionProfile: "knowledge",
+};
+/** (field id, reference id) per family. */
+const FAMILY_IDS: Record<string, [string, string]> = {
+  work: ["work.field", "work.reference"],
+  actor: ["actor.field", "actor.reference"],
+  artifact: ["artifact.field", "artifact.reference"],
+  knowledge: ["knowledge.field", "knowledge.reference"],
+};
+/** Value sets that grow with use: a value outside them is a warning even on standard kinds. */
+const OPEN_VALUE_SETS = new Set(["workPatterns", "artifactTypes", "artifactRepresentations", "artifactOperations", "knowledgeRoles"]);
+
+/** The id and severity a check reports for a standard kind of FAMILIES (or for a promoted reference field). */
+function promote(family: string | undefined, refRule: string | undefined, rule: string, msg: string): { rule: string; error: boolean } {
+  if (refRule && rule === "experimental.reference") return { rule: refRule, error: true };
+  if (family === undefined) return { rule, error: false };
+  const [fieldId, referenceId] = FAMILY_IDS[family];
+  switch (rule) {
+    case "experimental.field": return { rule: fieldId, error: true };
+    case "experimental.reference": return { rule: referenceId, error: true };
+    case "experimental.value": {
+      const m = /is not in the value set (\w+)$/.exec(msg);
+      return m && OPEN_VALUE_SETS.has(m[1]) ? { rule: "value.unknown", error: false } : { rule: fieldId, error: true };
+    }
+    case "actor.delegation-exceeds-authority": return { rule, error: true };
+    default: return { rule, error: false };
+  }
+}
+
 /** A single value or a list of values; null/absent is no values. */
 const values = (v: unknown): unknown[] => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
 const sub = (o: Obj, k: string): Obj => (isObj(o[k]) ? (o[k] as Obj) : {});
@@ -99,10 +138,15 @@ class Checker {
     private readonly localKinds: Map<string, string>,
     /** Listed local asset path -> parsed document. */
     private readonly docs: Map<string, unknown>,
+    /** Rule-id family of a promoted kind (FAMILIES); undefined for experimental kinds. */
+    private readonly family?: string,
+    /** For a standard kind's promoted reference field: the error id of a bad reference. */
+    private readonly refRule?: string,
   ) {}
 
   warn(rule: string, msg: string): void {
-    warn(this.ctx, rule, `${this.file}: ${msg}`, this.file);
+    const p = promote(this.family, this.refRule, rule, msg);
+    (p.error ? error : warn)(this.ctx, p.rule, `${this.file}: ${msg}`, this.file);
   }
 
   /** An existing file inside the package, given as a package-relative path (not ./ or backslashes). */
@@ -143,7 +187,7 @@ class Checker {
         error(this.ctx, "extension.undeclared", `${this.file}: ${at} "${v}" uses extension "${name}", which spec.dependencies does not declare with "as"`, this.file);
       }
     } else if (!VALUE_SETS[set].includes(v)) {
-      this.warn("experimental.value", `${at} "${v}" is not in the experimental value set ${set}`);
+      this.warn("experimental.value", `${at} "${v}" is not in the value set ${set}`);
     }
   }
 
@@ -177,6 +221,14 @@ class Checker {
     }
     for (const p of r.warnings) this.warn(p.rule, p.msg);
   }
+}
+
+/** validFrom and expiresAt, when given, are UTC timestamps and validFrom comes first. */
+function checkPeriod(c: Checker, start: unknown, end: unknown, at: string): void {
+  for (const [f, v] of [["validFrom", start], ["expiresAt", end]] as const) {
+    if (present(v) && !isUtcTimestamp(v)) c.warn("experimental.field", `${at}.${f} must be UTC YYYY-MM-DDTHH:MM:SSZ`);
+  }
+  if (isUtcTimestamp(start) && isUtcTimestamp(end) && !(start < end)) c.warn("experimental.field", `${at}.validFrom must be before ${at}.expiresAt`);
 }
 
 function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): void {
@@ -240,7 +292,7 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       if ("representation" in s) c.value(s.representation, "knowledgeRepresentations", "spec.representation");
       const ontology = sub(s, "conformsTo").ontology;
       if ((ontology === undefined || ontology === null) && s.representation === "graph") {
-        c.warn("experimental.graph-ontology", "a graph KnowledgeAsset is an A-box; declare the OntologyPackage that is its T-box in spec.conformsTo.ontology");
+        c.warn("knowledge.graph-ontology", "a graph KnowledgeAsset is an A-box; declare the OntologyPackage that is its T-box in spec.conformsTo.ontology");
       }
       if (ontology !== undefined && ontology !== null) {
         const deps = Array.isArray(manifestSpec.dependencies) ? manifestSpec.dependencies : [];
@@ -258,17 +310,20 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       for (const r of values(s.capabilityRefs)) c.localRef(r, ["CapabilityContract"], "spec.capabilityRefs");
       if (present(s.agentRef)) c.localRef(s.agentRef, ["AgentProfile"], "spec.agentRef");
       for (const r of values(s.memberOf)) c.localRef(r, ["ActorProfile"], "spec.memberOf");
+      (Array.isArray(s.assignments) ? s.assignments : []).forEach((a, i) => {
+        if (!isObj(a)) return;
+        const at = `spec.assignments[${i}]`;
+        if (("roleRef" in a) === ("taskRef" in a)) c.warn("experimental.field", `${at} names exactly one of roleRef or taskRef`);
+        else if ("roleRef" in a) c.localRef(a.roleRef, ["RoleProfile"], `${at}.roleRef`);
+        else c.localRef(a.taskRef, ["TaskSetProfile"], `${at}.taskRef`);
+        checkPeriod(c, a.validFrom, a.expiresAt, at);
+      });
       break;
     case "DelegationProfile": {
       for (const f of ["delegator", "delegatee"]) c.localRef(s[f], ["ActorProfile"], `spec.${f}`);
       for (const r of values(sub(s, "revocation").by)) c.localRef(r, ["ActorProfile"], "spec.revocation.by");
       for (const r of values(sub(s, "escalation").to)) c.localRef(r, ["ActorProfile"], "spec.escalation.to");
-      const start = s.validFrom;
-      const end = s.expiresAt;
-      for (const [f, v] of [["validFrom", start], ["expiresAt", end]] as const) {
-        if (present(v) && !isUtcTimestamp(v)) c.warn("experimental.field", `spec.${f} must be UTC YYYY-MM-DDTHH:MM:SSZ`);
-      }
-      if (isUtcTimestamp(start) && isUtcTimestamp(end) && !(start < end)) c.warn("experimental.field", "spec.validFrom must be before spec.expiresAt");
+      checkPeriod(c, s.validFrom, s.expiresAt, "spec");
       const granted = c.delegatorGrants(s.delegator);
       if (granted) {
         const over = [
@@ -276,7 +331,7 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
           ...values(sub(s, "authorityCeiling").decisions).filter((d) => !(typeof d === "string" && granted.decisions.has(d))),
         ];
         if (over.length > 0) {
-          c.warn("experimental.delegation-exceeds-authority", `delegates ${over.map(String).join(", ")}, which the delegator's roles do not grant`);
+          c.warn("actor.delegation-exceeds-authority", `delegates ${over.map(String).join(", ")}, which the delegator's roles do not grant`);
         }
       }
       break;
@@ -387,22 +442,23 @@ export function localKinds(ctx: Context): Map<string, string> {
 /** One experimental asset document; runs after all assets are collected so references to later-listed assets resolve. */
 export function checkExperimentalAsset(ctx: Context, a: LocalAsset, kinds = localKinds(ctx)): void {
   if (!isObj(a.doc)) return;
-  const c = new Checker(ctx, a.rawPath, kinds, localDocs(ctx));
+  const c = new Checker(ctx, a.rawPath, kinds, localDocs(ctx), FAMILIES[a.kind]);
   for (const p of structureProblems(a.doc, EXPERIMENTAL_STRUCTURES[a.kind], ctx.extensionNames)) {
-    if (p.rule === "schema.unknown-field") c.warn("experimental.field", p.msg);
+    if (p.rule === "schema.unknown-field" && !(a.kind in FAMILIES)) c.warn("experimental.field", p.msg);
     else error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
   }
   const manifestSpec = isObj(ctx.manifest.spec) ? ctx.manifest.spec : {};
   checkDocument(c, a.kind, isObj(a.doc.spec) ? a.doc.spec : {}, manifestSpec);
 }
 
-/** Standard kinds that also have Appendix C.4 experimental fields (warnings only); their standard fields are spec 15. */
+/** Standard kinds whose actor, role, and task references are checked here (spec sections 6, 15.1). */
 export const STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS = ["WorldViewProfile", "EvaluationProfile", "ScenarioProfile", "CapabilityContract"];
 
-/** Appendix C.4: warnings for the experimental fields of a standard-kind asset document. */
+/** Spec 6 and 15.1: conditioning and evaluator references of standard kinds name local assets of the right kind (errors). */
 export function checkStandardKindFields(ctx: Context, a: LocalAsset): void {
   if (!isObj(a.doc)) return;
-  const c = new Checker(ctx, a.rawPath, localKinds(ctx), localDocs(ctx));
+  const refRule = a.kind === "WorldViewProfile" ? "view.conditioning-ref" : a.kind === "EvaluationProfile" ? "evaluation.evaluator-ref" : undefined;
+  const c = new Checker(ctx, a.rawPath, localKinds(ctx), localDocs(ctx), undefined, refRule);
   const s = isObj(a.doc.spec) ? a.doc.spec : {};
   if (a.kind === "WorldViewProfile") {
     for (const [f, kind] of [["actorRef", "ActorProfile"], ["taskRef", "TaskSetProfile"]]) {

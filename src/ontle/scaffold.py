@@ -38,14 +38,14 @@ HINTS = {
     "EvaluationProfile": "Set assessmentKind, subject, and criteria; bump metadata.version when they change (spec sections 9, 15.1).",
     "ScenarioProfile": "Describe baseline, assumptions, intervention, and engine (spec section 15.2).",
     "CapabilityContract": "Describe the outcomes this capability achieves and under which context (spec section 15.3).",
-    "TaskSetProfile": "Name the Views, actors, knowledge, work patterns, and artifacts this task uses (spec Appendix C).",
-    "WorkPatternProfile": "Pick pattern.kind from vocab/value-sets.yaml workPatterns; add a graph if the steps matter (Appendix C.2).",
-    "ArtifactContract": "Set artifact.type, representation, formats, and allowedOperations (Appendix C).",
-    "ConsumerRepresentationProfile": "Set actor.kind and keep only the matching human/agent/model/system block (Appendix C).",
-    "KnowledgeAsset": "Set roles, representation, and content (a path or an ExternalRef) (Appendix C).",
-    "ActorProfile": "actorType: human, ai_agent, team, organization, external_institution, or automated_system (Appendix C.3).",
-    "RoleProfile": "permissions: what the role may do; authorities: what it may decide (Appendix C.3).",
-    "DelegationProfile": "Delegate only actions and decisions the delegator's roles grant, for a bounded period (Appendix C.3).",
+    "TaskSetProfile": "Name the Views, actors, knowledge, work patterns, and artifacts this task uses (spec section 16).",
+    "WorkPatternProfile": "Pick pattern.kind from vocab/value-sets.yaml workPatterns; add a graph if the steps matter (spec section 16.1).",
+    "ArtifactContract": "Set artifact.type, representation, formats, and allowedOperations (spec section 18).",
+    "ConsumerRepresentationProfile": "Set actor.kind and keep only the matching human/agent/model/system block (spec section 18).",
+    "KnowledgeAsset": "Set roles, representation, and content (a path or an ExternalRef) (spec section 19).",
+    "ActorProfile": "actorType: human, ai_agent, team, organization, external_institution, or automated_system; assignments optional (spec section 17).",
+    "RoleProfile": "permissions: what the role may do; authorities: what it may decide (spec section 17).",
+    "DelegationProfile": "Delegate only actions and decisions the delegator's roles grant, for a bounded period (spec section 17).",
 }
 
 
@@ -53,10 +53,11 @@ def schema_url(kind: str) -> str | None:
     """Schema of a kind for editors (yaml-language-server), or None when the kind has no schema."""
     if kind in SCHEMAS:
         return SCHEMA_BASE + SCHEMAS[kind]
-    from .experimental import TABLES
+    from .experimental import FAMILIES, TABLES
     if kind in TABLES:
         import re as _re
-        return SCHEMA_BASE + "experimental/" + _re.sub(r"(?<!^)(?=[A-Z])", "-", kind).lower() + ".schema.json"
+        folder = "" if kind in FAMILIES else "experimental/"
+        return SCHEMA_BASE + folder + _re.sub(r"(?<!^)(?=[A-Z])", "-", kind).lower() + ".schema.json"
     return None
 
 

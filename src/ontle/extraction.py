@@ -1,4 +1,4 @@
-"""Knowledge extraction (spec Appendix C.1): query results -> ObservationSet.
+"""Knowledge extraction (spec section 19.2): query results -> ObservationSet.
 
 The transform is deterministic and covered by the conformance suite. Running the
 query is runtime (or tooling) work: the reference CLI runs SPARQL over a local

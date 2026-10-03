@@ -513,35 +513,35 @@ cases:
     satisfiedProfile: viewable
     warnings: [asset.kind-experimental]
     rule: "Experimental kinds (spec Appendix C) are valid and reported with asset.kind-experimental."
-  experimental-unknown-field:
+  work-pattern-unknown-field:
+    valid: false
+    errors: [schema.unknown-field]
+    satisfiedProfile: viewable
+    rule: "WorkPatternProfile accepts only its defined fields."
+  work-pattern-kind-unknown:
     valid: true
     satisfiedProfile: viewable
-    warnings: [experimental.field]
-    rule: "An undefined field in an experimental kind is a warning, not an error."
-  experimental-value-unknown:
-    valid: true
+    warnings: [value.unknown]
+    rule: "A value outside an open value set (workPatterns) is a warning."
+  consumer-view-ref-wrong-kind:
+    valid: false
+    errors: [artifact.reference]
     satisfiedProfile: viewable
-    warnings: [experimental.value]
-    rule: "A value outside an experimental value set is a warning."
-  experimental-reference-wrong-kind:
-    valid: true
+    rule: "A reference must name a local asset of the expected kind."
+  consumer-actor-block-mismatch:
+    valid: false
+    errors: [artifact.field]
     satisfiedProfile: viewable
-    warnings: [experimental.reference]
-    rule: "An experimental reference must name a local asset of the expected kind; otherwise a warning."
-  experimental-actor-block-mismatch:
-    valid: true
-    satisfiedProfile: viewable
-    warnings: [experimental.field]
     rule: "A ConsumerRepresentationProfile carries only the block named by actor.kind."
-  experimental-extension-value:
+  work-pattern-extension-value:
     valid: true
     satisfiedProfile: viewable
-    rule: "An extension value <extension>:<value> is accepted in an experimental value set when the extension is declared."
-  experimental-extension-value-undeclared:
+    rule: "An extension value <extension>:<value> is accepted in a value set when the extension is declared."
+  work-pattern-extension-value-undeclared:
     valid: false
     errors: [extension.undeclared]
     satisfiedProfile: viewable
-    rule: "Extension rules stay errors inside experimental kinds."
+    rule: "An extension value needs its extension declared."
   view-specializes:
     valid: true
     satisfiedProfile: viewable
@@ -682,95 +682,111 @@ cases:
   extraction-profile:
     valid: true
     satisfiedProfile: model-ready
-    warnings: [asset.kind-experimental]
-    rule: "A KnowledgeExtractionProfile over a local KnowledgeAsset is valid; multi-valued types are read with select: all."
+    warnings: [knowledge.graph-ontology]
+    rule: "A KnowledgeExtractionProfile over a local KnowledgeAsset is valid; a graph KnowledgeAsset without its ontology is a warning."
   extraction-multi-latest:
     valid: true
     satisfiedProfile: model-ready
-    warnings: [compiler.multi-latest]
+    warnings: [compiler.multi-latest, knowledge.graph-ontology]
     rule: "Reading a multi-valued extracted type with select: latest is a warning."
   artifact-contract-full:
     valid: true
     satisfiedProfile: viewable
-    warnings: [asset.kind-experimental]
     rule: "ArtifactContract keeps type, representation, format, and storage apart and lists allowed operations."
   artifact-operation-unknown:
     valid: true
     satisfiedProfile: viewable
-    warnings: [experimental.value]
-    rule: "allowedOperations come from the value set artifactOperations."
+    warnings: [value.unknown]
+    rule: "allowedOperations come from the open value set artifactOperations; another value is a warning."
   artifact-supersedes-unpinned:
-    valid: true
+    valid: false
+    errors: [artifact.field]
     satisfiedProfile: viewable
-    warnings: [experimental.field]
     rule: "supersedes is a pinned <name>@<version> reference."
   work-pattern-graph:
     valid: true
     satisfiedProfile: viewable
-    warnings: [asset.kind-experimental]
     rule: "A work pattern graph of nodes, transitions, guards, events, and loops."
   work-pattern-graph-dangling:
-    valid: true
+    valid: false
+    errors: [work.reference]
     satisfiedProfile: viewable
-    warnings: [experimental.reference]
     rule: "Transitions refer to declared nodes."
   work-pattern-graph-duplicate-node:
-    valid: true
+    valid: false
+    errors: [work.field, work.reference]
     satisfiedProfile: viewable
-    warnings: [experimental.field]
     rule: "Node ids are unique."
   work-pattern-node-family-unknown:
-    valid: true
+    valid: false
+    errors: [work.field]
     satisfiedProfile: viewable
-    warnings: [experimental.value]
     rule: "Node families come from the value set workNodeFamilies."
   work-pattern-loop-bound:
-    valid: true
+    valid: false
+    errors: [work.field]
     satisfiedProfile: viewable
-    warnings: [experimental.field]
     rule: "maxIterations is a positive integer."
   actor-role-delegation:
     valid: true
     satisfiedProfile: viewable
-    warnings: [asset.kind-experimental]
-    rule: "Actors occupy roles that grant permissions and authority; a delegation stays within the delegator's grants."
+    rule: "Actors occupy roles that grant permissions and authority; a delegation stays within the delegator's grants (spec section 17)."
+  actor-assignments:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "An ActorProfile may declare assignments to a local RoleProfile or TaskSetProfile, standing or for a period (spec section 17.1)."
+  actor-assignment-both-refs:
+    valid: false
+    errors: [actor.field]
+    satisfiedProfile: viewable
+    rule: "An assignment names exactly one of roleRef and taskRef."
+  actor-assignment-wrong-kind:
+    valid: false
+    errors: [actor.reference]
+    satisfiedProfile: viewable
+    rule: "An assignment's roleRef names a local RoleProfile."
+  actor-assignment-bad-period:
+    valid: false
+    errors: [actor.field]
+    satisfiedProfile: viewable
+    rule: "An assignment's validFrom comes before its expiresAt."
   actor-type-unknown:
-    valid: true
+    valid: false
+    errors: [actor.field]
     satisfiedProfile: viewable
-    warnings: [experimental.value]
-    rule: "actorType comes from the value set actorTypes; persona is not an actor type."
+    rule: "actorType comes from the closed value set actorTypes; persona is not an actor type."
   delegation-exceeds-authority:
-    valid: true
+    valid: false
+    errors: [actor.delegation-exceeds-authority]
     satisfiedProfile: viewable
-    warnings: [experimental.delegation-exceeds-authority]
     rule: "A delegation cannot grant actions or decisions the delegator's roles do not hold."
   delegation-bad-period:
-    valid: true
+    valid: false
+    errors: [actor.field]
     satisfiedProfile: viewable
-    warnings: [experimental.field]
     rule: "validFrom is before expiresAt."
   consumer-actor-ref:
-    valid: true
+    valid: false
+    errors: [artifact.reference]
     satisfiedProfile: viewable
-    warnings: [experimental.reference]
     rule: "ConsumerRepresentationProfile actor.ref names an ActorProfile."
   world-view-portable:
     valid: true
     satisfiedProfile: viewable
-    rule: "A World View may name the actor, role, and task it serves, its constraints, and evidence (C.4)."
+    rule: "A World View may name the actor, role, and task it serves, its constraints, and evidence."
   world-view-unknown-field:
     valid: false
     errors: [schema.unknown-field]
     rule: "WorldViewProfile accepts only its defined fields."
   world-view-actor-ref-wrong-kind:
-    valid: true
-    warnings: [experimental.reference]
+    valid: false
+    errors: [view.conditioning-ref]
     satisfiedProfile: viewable
-    rule: "purpose.actorRef names a local ActorProfile."
+    rule: "conditioning.actorRef names a local ActorProfile."
   evaluation-profile-portable:
     valid: true
     satisfiedProfile: viewable
-    rule: "An EvaluationProfile may state its assessment kind, subject, criteria, verifier, and evaluator (C.4)."
+    rule: "An EvaluationProfile may state its assessment kind, subject, criteria, verifier, and evaluator."
   evaluation-assessment-kind-unknown:
     valid: false
     errors: [evaluation.assessment-kind]
@@ -798,7 +814,7 @@ cases:
   capability-minimal:
     valid: true
     satisfiedProfile: viewable
-    rule: "A CapabilityContract may state outcomes, context, inputs, capacity, and maturity (C.4)."
+    rule: "A CapabilityContract may state outcomes, context, inputs, capacity, and maturity."
   capability-unknown-field:
     valid: false
     errors: [schema.unknown-field]
@@ -806,12 +822,11 @@ cases:
     rule: "CapabilityContract accepts only its defined fields; scoring models are not part of it."
   task-set-composition:
     valid: true
-    warnings: [asset.kind-experimental]
     satisfiedProfile: viewable
-    rule: "A TaskSet composes actors, work patterns, and scenarios with its Views (C.4)."
+    rule: "A TaskSet composes actors, work patterns, and scenarios with its Views."
   task-set-composition-wrong-kind:
-    valid: true
-    warnings: [experimental.reference]
+    valid: false
+    errors: [work.reference]
     satisfiedProfile: viewable
     rule: "workPatternRefs name local WorkPatternProfiles."
   evaluation-verifier-ref-unpinned:

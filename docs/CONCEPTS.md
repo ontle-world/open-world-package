@@ -51,9 +51,9 @@ See `spec/OWP_SPEC.md` section 6.1.
 
 An OntologyPackage publishes classes and properties with a namespace IRI, prefixes, and typed entrypoints (schema, shapes, mappings). A World binds its own names and EWS fields to those terms with a SemanticBinding, so two Worlds that both bind `claim.status` to the same property mean the same thing. See `spec/OWP_SEMANTICS.md` (sections 3.1 and 14).
 
-## Work, artifacts, and consumers (experimental)
+## Work, actors, artifacts, and consumers
 
-A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. An actor or task may have its own World View, often specializing a shared base View; Views without an actor or task are just as valid. A Task Set is a task definition: actual work items (task instances) are World state that arrives as observations, not assets. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are experimental; see `spec/OWP_EXPERIMENTAL.md`.
+A Task Set bundles domain work: which work patterns it follows (prioritize, diagnose, ...), which Views and knowledge it needs, and which artifacts it produces. An actor or task may have its own World View, often specializing a shared base View; Views without an actor or task are just as valid. A Task Set is a task definition: actual work items (task instances) are World state that arrives as observations, not assets. A Consumer Representation Profile says how a View reaches one kind of actor: a person receives an artifact such as a board or report, an agent receives a structured context with tool and memory scope, a model receives EWS through its Representation Adapter. These kinds are standard; see `spec/OWP_WORK_AND_ACTORS.md`. Who holds a role or task can be published with the World (`ActorProfile.spec.assignments`) or left to runtime observations.
 
 ## Extensions
 

@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [toString, constructor]
+    latent: [toString, constructor]
+  bindings:
+    toString: {aggregate: {from: ot.alarm, value: code, function: count}}
+    constructor:
+      classify:
+        input: toString
+        criterion: {id: overheat, rules: [{when: {gt: 80}, label: hot}], otherwise: normal}

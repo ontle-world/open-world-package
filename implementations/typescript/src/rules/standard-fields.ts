@@ -1,7 +1,7 @@
 /**
  * Spec section 15: standard fields of EvaluationProfile (15.1) and ScenarioProfile (15.2). These checks are
  * errors. CapabilityContract (15.3) and WorldViewProfile (15.4) have no rules beyond their defined fields
- * (src/structure.ts); the remaining experimental fields of these kinds are Appendix C.4 warnings
+ * (src/structure.ts); the remaining experimental fields of these kinds are Appendix C.1 warnings
  * (src/rules/experimental.ts).
  */
 import { Context, error, LocalAsset } from "../context.js";

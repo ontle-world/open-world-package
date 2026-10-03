@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  assessmentKind: validation
+  subject: {kind: artifact, ref: artifacts/report.yaml}
+  objective: report_supports_capa_decision
+  criteria:
+  - {metric: evidence_coverage, rubric: share of claims with linked evidence, threshold: 0.9}
+  verifierRef: report-verifier@0.1.0
+  evaluatorRef: roles/manager.yaml
+  metrics: [evidence_coverage]

@@ -1,0 +1,87 @@
+VERSION "1.2"
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+_:ews a owp:EffectiveWorldState ;
+  dct:conformsTo <https://w3id.org/owp/spec/v1alpha1> ;
+  owp:worldRef <https://w3id.org/owp/pkg/acme/w/0.1.0> ;
+  owp:worldView <https://w3id.org/owp/pkg/acme/w/0.1.0#views/default.yaml> ;
+  owp:stateCompiler <https://w3id.org/owp/pkg/acme/w/0.1.0#state/default-compiler.yaml> ;
+  owp:asOf "2026-01-02T00:00:00Z"^^xsd:dateTimeStamp ;
+  prov:wasGeneratedBy _:run .
+_:run a owp:Compilation ; prov:qualifiedAssociation [ a prov:Association ; prov:hadPlan <https://w3id.org/owp/pkg/acme/w/0.1.0#state/default-compiler.yaml> ] .
+_:d1 a owp:Classification ;
+  owp:criterion [ a owp:Criterion ; dct:identifier "attention-threshold" ; dct:hasVersion "0.1.0" ] .
+_:d2 a owp:Aggregate ;
+  owp:function "count" ;
+  owp:window "PT24H" .
+_:v1 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.status" ;
+  owp:subjectKey "item 1" ;
+  owp:resolution owp:resolved ;
+  rdf:reifies <<( <https://example.org/item/item%201> <https://example.org/ns#status> "active" )>> ;
+  prov:wasDerivedFrom _:o1 .
+_:v2 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.status" ;
+  owp:subjectKey "item-2" ;
+  owp:resolution owp:resolved ;
+  rdf:reifies <<( <https://example.org/item/item-2> <https://example.org/ns#status> "blocked" )>> ;
+  prov:wasDerivedFrom _:o2 .
+_:v3 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.events_24h" ;
+  owp:subjectKey "item-2" ;
+  owp:resolution owp:resolved ;
+  rdf:value "2"^^xsd:integer ;
+  prov:wasDerivedFrom _:o3 , _:o4 ;
+  owp:derivation _:d2 .
+_:v4 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.events_24h" ;
+  owp:subjectKey "item-1" ;
+  owp:resolution owp:resolved ;
+  rdf:value "1"^^xsd:integer ;
+  prov:wasDerivedFrom _:o5 ;
+  owp:derivation _:d2 .
+_:v5 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.attention" ;
+  owp:subjectKey "item-2" ;
+  owp:resolution owp:resolved ;
+  rdf:value "needs_attention" ;
+  prov:wasDerivedFrom _:o3 , _:o4 ;
+  owp:derivation _:d1 .
+_:v6 a owp:StateValue ;
+  owp:inState _:ews ;
+  owp:field "item.attention" ;
+  owp:subjectKey "item-1" ;
+  owp:resolution owp:resolved ;
+  rdf:value "normal" ;
+  prov:wasDerivedFrom _:o5 ;
+  owp:derivation _:d1 .
+_:o1 a owp:Observation ;
+  dct:identifier "s1" ;
+  owp:observationType "source.item_status" ;
+  owp:observedAt "2026-01-01T08:00:00Z"^^xsd:dateTimeStamp .
+_:o2 a owp:Observation ;
+  dct:identifier "s3" ;
+  owp:observationType "source.item_status" ;
+  owp:observedAt "2026-01-01T15:00:00Z"^^xsd:dateTimeStamp .
+_:o3 a owp:Observation ;
+  dct:identifier "e1" ;
+  owp:observationType "source.item_event" ;
+  owp:observedAt "2026-01-01T14:00:00Z"^^xsd:dateTimeStamp .
+_:o4 a owp:Observation ;
+  dct:identifier "e2" ;
+  owp:observationType "source.item_event" ;
+  owp:observedAt "2026-01-01T16:00:00Z"^^xsd:dateTimeStamp .
+_:o5 a owp:Observation ;
+  dct:identifier "e3" ;
+  owp:observationType "source.item_event" ;
+  owp:observedAt "2026-01-01T17:00:00Z"^^xsd:dateTimeStamp .
+_:run prov:used _:o1 , _:o2 , _:o3 , _:o4 , _:o5 .

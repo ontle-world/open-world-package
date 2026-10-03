@@ -15,6 +15,7 @@ const isCurie = (v: unknown): v is string => typeof v === "string" && CURIE_RE.t
 const SECTIONS = ["terms", "fields", "observationTypes", "actions"];
 
 /** [where, value] for every ontology reference in a SemanticBinding document. */
+const own = (o: unknown, k: string): boolean => isObj(o) && Object.prototype.hasOwnProperty.call(o, k);
 /** ISO 29002-5 IRDI, such as 0173-1#02-AAO677#002 (ECLASS) or 0112/2///61360_4#AAE530#002 (IEC CDD). */
 const IRDI_RE = /^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}$/;
 const absoluteIri = (v: unknown): boolean => typeof v === "string" && !v.includes(" ") && (v.includes("://") || v.startsWith("urn:"));
@@ -85,11 +86,11 @@ export function checkSemanticBindings(ctx: Context): void {
       if (!isCurie(value)) report({ rule: "binding.curie", msg: `${where} ${JSON.stringify(value)} must be a CURIE <prefix>:<local name>` });
     }
     // Spec 14: spec.subjects maps observation types listed in observationTypes to {base} or {iri: true}.
-    if ("subjects" in spec) {
+    if (spec.subjects !== undefined && spec.subjects !== null) {
       const types = isObj(spec.observationTypes) ? spec.observationTypes : {};
       if (!isObj(spec.subjects)) report({ rule: "binding.subjects", msg: "spec.subjects must be a mapping of observation type to {base} or {iri: true}" });
       else for (const [otype, r] of Object.entries(spec.subjects)) {
-        if (!(otype in types)) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} is not listed in spec.observationTypes` });
+        if (!own(types, otype)) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} is not listed in spec.observationTypes` });
         const ok = isObj(r) && Object.keys(r).length === 1
           && ((typeof r.base === "string" && /^[A-Za-z][A-Za-z0-9+.-]*:/.test(r.base)) || r.iri === true);
         if (!ok) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} must be {base: <absolute IRI prefix>} or {iri: true}` });
@@ -112,7 +113,7 @@ export function checkSemanticBindings(ctx: Context): void {
       }
     }
     // Spec 14: external dictionary identifiers (IRDIs or IRIs) attached to bound names, by section.
-    if ("semanticIds" in spec) {
+    if (spec.semanticIds !== undefined && spec.semanticIds !== null) {
       const ids = spec.semanticIds;
       if (!isObj(ids)) report({ rule: "binding.semantic-ids", msg: "spec.semanticIds must be a mapping of section (terms, fields, observationTypes, actions) to name to identifiers" });
       else for (const [section, names] of Object.entries(ids)) {
@@ -122,7 +123,7 @@ export function checkSemanticBindings(ctx: Context): void {
         }
         const bound = isObj(spec[section]) ? (spec[section] as Obj) : {};
         for (const [name, list] of Object.entries(names)) {
-          if (!(name in bound)) report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name} is not bound in spec.${section}` });
+          if (!own(bound, name)) report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name} is not bound in spec.${section}` });
           if (!Array.isArray(list) || list.length === 0) {
             report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name} must be a non-empty list of IRDIs or absolute IRIs` });
             continue;

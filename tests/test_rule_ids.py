@@ -80,5 +80,33 @@ class ReferenceIdsTests(unittest.TestCase):
                          "run python scripts/reference_ids.py and review the diff")
 
 
+
+# Error ids that no conformance case reaches yet. A new error id needs a case; remove an id here when it gets one.
+UNCOVERED_ERRORS = {"asset.entry", "asset.list", "evidence.detached-subject", "evidence.required", "ews.shape",
+                    "ews.state-compiler", "manifest.metadata", "manifest.spec", "manifest.version",
+                    "profile.ontology.mapped", "resolve.reference", "world.spec", "worldmodel.spec"}
+
+
+class CoverageTests(unittest.TestCase):
+    def test_every_error_id_has_a_conformance_case(self):
+        text = "".join(p.read_text(encoding="utf-8") for p in sorted((ROOT / "conformance").rglob("*.yaml")) if "expected" in p.name)
+        text += (ROOT / "conformance" / "reference-ids.json").read_text(encoding="utf-8")
+        covered = {r for r in REGISTRY if re.search(rf"(?<![\w.-]){re.escape(r)}(?![\w-])", text)}
+        errors = {r for r, v in REGISTRY.items() if v["severity"] == "error"}
+        self.assertEqual(sorted(errors - covered - UNCOVERED_ERRORS), [], "error ids without a conformance case")
+        self.assertEqual(sorted(UNCOVERED_ERRORS & covered), [], "covered now: remove from UNCOVERED_ERRORS")
+
+    def test_open_value_sets_match_the_vocabulary(self):
+        from ontle.experimental import OPEN_VALUE_SETS
+        sets = yaml.safe_load((ROOT / "vocab" / "value-sets.yaml").read_text(encoding="utf-8"))["valueSets"]
+        self.assertEqual(sorted(OPEN_VALUE_SETS), sorted(n for n, v in sets.items() if v.get("open") is True))
+
+    def test_sssom_metadata_is_yaml(self):
+        for tsv in sorted((ROOT / "alignments").glob("*/mappings.sssom.tsv")):
+            header = "".join(line[2:] for line in tsv.read_text(encoding="utf-8").splitlines(True) if line.startswith("#"))
+            meta = yaml.safe_load(header)
+            for key in ("curie_map", "mapping_set_id", "mapping_set_version", "license"):
+                self.assertIn(key, meta, f"{tsv}: {key}")
+
 if __name__ == "__main__":
     unittest.main()

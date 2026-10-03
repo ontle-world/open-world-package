@@ -17,9 +17,9 @@ ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"]
 FORMATS = {"owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"}
 ROLES = {"schema", "shapes", "mappings", "labels"}
 TERM_TYPES = {"class", "property", "individual", "datatype", "concept"}
-PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
-IRI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:\S+$")
-CURIE_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):([^\s/][^\s]*)$")
+PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*\Z")
+IRI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:\S+\Z")
+CURIE_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):([^\s/][^\s]*)\Z")
 
 def inside_package(root: Path, rel: Any) -> bool:
     """rel is a package-relative path of an existing file inside the package root."""
@@ -43,7 +43,7 @@ def _load(path: Path) -> Any:
 def expand(curie: str, prefixes: dict[str, str]) -> str | None:
     """Expand a CURIE with declared prefixes; a full IRI is returned unchanged; None if the prefix is undeclared."""
     match = CURIE_RE.match(curie)
-    if match and match.group(1) in prefixes:
+    if match and isinstance(prefixes.get(match.group(1)), str):
         return prefixes[match.group(1)] + match.group(2)
     if "://" in curie or curie.startswith("urn:"):
         return curie
@@ -116,7 +116,8 @@ def ontology_issues(root: Path, spec: dict[str, Any], declared: set[str]) -> tup
                 continue
             errors.extend(structure_errors(doc, SEMANTIC_PROFILE, path, declared))
             for where, value, _ in _profile_curies(doc):
-                if not isinstance(value, str) or expand(value, prefixes) is None:
+                declared_prefix = isinstance(value, str) and (m := CURIE_RE.match(value)) is not None and m.group(1) in prefixes  # an invalid one is ontology.prefix
+                if not isinstance(value, str) or (expand(value, prefixes) is None and not declared_prefix):
                     errors.append(f"ontology.prefix-undeclared: {path}: {where} {value!r} uses a prefix that spec.ontology.prefixes does not declare")
     term_index = ontology.get("termIndex")
     if term_index is not None:
@@ -182,14 +183,15 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
     out: set[str] = set()
     for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and isinstance(entry.get("path"), str):
+        if (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema"
+                and inside_package(root, entry.get("path"))):  # never read outside the package
             doc = _load(root / entry["path"])
             if isinstance(doc, dict):
                 for _, value, term_type in _profile_curies(doc):
                     if term_type and isinstance(value, str) and expand(value, prefixes):
                         out.add(expand(value, prefixes))  # type: ignore[arg-type]
     index = ontology.get("termIndex")
-    if isinstance(index, str):
+    if inside_package(root, index):
         doc = _load(root / index)
         for term in ((doc or {}).get("spec") or {}).get("terms") or [] if isinstance(doc, dict) else []:
             if isinstance(term, dict) and isinstance(term.get("iri"), str):
@@ -248,11 +250,15 @@ def _rdf_terms(path: Path, rdf_format: str) -> dict[str, str]:
         raise OWPError(f"cannot read {path.name} as {rdf_format}: {' '.join(str(exc).split())[:200]}") from exc
     types = {OWL.Class: "class", RDFS.Class: "class", OWL.ObjectProperty: "property", OWL.DatatypeProperty: "property",
              RDF.Property: "property", OWL.NamedIndividual: "individual",
-             RDFS.Datatype: "datatype", SKOS.Concept: "concept"}
+             RDFS.Datatype: "datatype", SKOS.Concept: "concept", SKOS.ConceptScheme: "concept"}
     out: dict[str, str] = {}
     for subject, rdf_type in graph.subject_objects(RDF.type):
         if isinstance(subject, rdflib.URIRef) and rdf_type in types:
             out.setdefault(str(subject), types[rdf_type])
+    # Instances of a class the file defines are individuals too, whether or not they are typed owl:NamedIndividual.
+    for subject, rdf_type in graph.subject_objects(RDF.type):
+        if isinstance(subject, rdflib.URIRef) and out.get(str(rdf_type)) == "class":
+            out.setdefault(str(subject), "individual")
     return out
 
 

@@ -261,14 +261,14 @@ export function outputListProblems(spec: Record<string, unknown> | undefined, ew
   return out;
 }
 
-const UCUM_CODE_RE = /^[!-~]+$/; // a UCUM code: printable ASCII without spaces (compared as text, never converted)
+export const UCUM_CODE_RE = /^[!-~]+$/; // a UCUM code: printable ASCII without spaces (compared as text, never converted)
 
 /** spec.outputSchema.units (spec 12.5): EWS field -> UCUM code; {} when absent, null when malformed. */
 export function outputUnits(spec: Record<string, unknown> | undefined): Record<string, string> | null {
   const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
   const u = schema.units ?? {};
   if (!isObj(u) || !Object.values(u).every((v) => typeof v === "string" && UCUM_CODE_RE.test(v))) return null;
-  return u as Record<string, string>;
+  return Object.assign(Object.create(null), u) as Record<string, string>; // no prototype: a field named "toString" is not a unit
 }
 
 /** UCUM unity: `1`, or an annotation only, such as `{alarm}`. */
@@ -283,7 +283,7 @@ export function unitProblems(spec: Record<string, unknown> | undefined, ewsField
   if ("units" in schema && declared === null) {
     out.push({ rule: "compiler.unit", msg: "spec.outputSchema.units must map EWS fields to UCUM codes (printable ASCII, no spaces)" });
   }
-  const units = declared ?? {};
+  const units: Record<string, string> = declared ?? Object.create(null);
   if (!unknown) for (const k of Object.keys(units)) if (!(ewsFields ?? []).includes(k)) out.push({ rule: "compiler.unit", msg: `spec.outputSchema.units names "${k}", which is not one of its EWS fields` });
   const bindings = isObj(spec?.bindings) ? (spec!.bindings as Obj) : {};
   for (const [field, b] of Object.entries(bindings)) {
@@ -298,7 +298,7 @@ export function unitProblems(spec: Record<string, unknown> | undefined, ewsField
       const crit = isObj(c.criterion) ? c.criterion : {};
       if (field in units) out.push({ rule: "compiler.unit", msg: `field "${field}" is a classification; a label has no unit` });
       const inputUnit = typeof c.input === "string" ? units[c.input] : undefined;
-      if ("unit" in crit && crit.unit !== inputUnit) {
+      if (crit.unit !== undefined && crit.unit !== null && crit.unit !== inputUnit) {
         out.push({ rule: "compiler.unit", msg: `binding "${field}" criterion.unit ${JSON.stringify(crit.unit)} must equal the unit of its input ${JSON.stringify(c.input)} (${JSON.stringify(inputUnit ?? null)})` });
       }
     }

@@ -97,7 +97,7 @@ export function checkAssetStructure(ctx: Context): void {
     for (const p of problems) error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
     if (STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS.includes(a.kind)) {
       checkStandardFields(ctx, a); // spec 15: errors
-      checkStandardKindFields(ctx, a); // Appendix C.4: warnings
+      checkStandardKindFields(ctx, a); // Appendix C.1: warnings
     }
   }
   checkViewSpecialization(ctx);

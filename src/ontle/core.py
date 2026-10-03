@@ -36,12 +36,12 @@ ASSET_KIND_STABILITY = _load_vocabulary()
 KNOWN_ASSET_KINDS = set(ASSET_KIND_STABILITY)
 DOCUMENT_KINDS = {"ObservationSet", "EffectiveWorldState"}  # OWP documents that are package files, not assets
 SEMVER_PATTERN = r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
-SEMVER_RE = re.compile(rf"^{SEMVER_PATTERN}$")
+SEMVER_RE = re.compile(rf"^{SEMVER_PATTERN}\Z")
 # Exact reference to a versioned asset: <name>@<semver>. Ranges are not allowed.
-PINNED_REF_RE = re.compile(rf"^[^@\s]+@{SEMVER_PATTERN}$")
+PINNED_REF_RE = re.compile(rf"^[^@\s]+@{SEMVER_PATTERN}\Z")
 # Exact package reference: <namespace>/<name>@<semver>.
-PACKAGE_REF_RE = re.compile(rf"^[^/@#\s]+/[^/@#\s]+@{SEMVER_PATTERN}$")
-IDENTITY_PART_RE = re.compile(r"^[^/@#\s]+$")
+PACKAGE_REF_RE = re.compile(rf"^[^/@#\s]+/[^/@#\s]+@{SEMVER_PATTERN}\Z")
+IDENTITY_PART_RE = re.compile(r"^[^/@#\s]+\Z")
 EWS = "EffectiveWorldState"
 
 # WorldPackage conformance profiles. Each profile includes every requirement of the previous ones.

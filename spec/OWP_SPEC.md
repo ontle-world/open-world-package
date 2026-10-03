@@ -564,7 +564,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `scenario.engine-kind` | 15.2 | `engine.kind` outside its value set |
 | `scenario.baseline-ref` | 15.2 | `baselineStateRef` is neither a file in the package nor a URI |
 | `scenario.confidence` | 15.2 | `confidence` is not a number from 0 to 1 |
-| `extraction.input` | C.1 | invalid extraction input; nothing is produced |
+| `extraction.input` | 19.2 | invalid extraction input; nothing is produced |
 | `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
 | `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
 | `ews.state-compiler` | 12 | named State Compiler is not a local asset, or has no `spec` |

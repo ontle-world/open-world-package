@@ -69,5 +69,32 @@ class EwsTurtleTests(unittest.TestCase):
         with self.assertRaises(OWPError):
             ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
 
+    def test_subject_keys_are_percent_encoded_and_iri_subjects_checked(self):
+        from ontle.core import OWPError
+        world, manifest, ews, observations = self.compiled()
+        spec = ews["spec"]
+        spec["state"]["item.status"] = {"item 1": "active"}
+        spec["provenance"]["item.status"] = {"item 1": []}
+        binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"]}},
+                            "subjects": {"source.item_status": {"base": "https://example.org/item/"}}}}
+        ttl = ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+        self.assertIn("<https://example.org/item/item%201>", ttl)
+        binding["spec"]["subjects"]["source.item_status"] = {"iri": True}
+        with self.assertRaises(OWPError):  # "item 1" is not an IRI
+            ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+
+    def test_coded_lists_numbers_and_special_floats(self):
+        from ontle.rdfexport import _literal
+        world, manifest, ews, observations = self.compiled()
+        ews["spec"]["state"]["item.status"] = {"item-1": ["active", 3]}
+        binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"],
+                                                       "values": {"base": "https://example.org/status/", "map": {"3": "ex:Three"}}}},
+                            "subjects": {"source.item_status": {"base": "https://example.org/item/"}}}}
+        ttl = ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+        self.assertIn("<<( <https://example.org/item/item-1> <https://example.org/ns#status> <https://example.org/status/active> )>>", ttl)
+        self.assertIn("<<( <https://example.org/item/item-1> <https://example.org/ns#status> <https://example.org/ns#Three> )>>", ttl)  # 3 by its text
+        self.assertEqual([_literal(float(x)) for x in ("nan", "inf", "-inf")],
+                         ['"NaN"^^xsd:double', '"INF"^^xsd:double', '"-INF"^^xsd:double'])
+
 if __name__ == "__main__":
     unittest.main()

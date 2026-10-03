@@ -682,6 +682,53 @@ cases:
     errors: [binding.semantic-ids]
     satisfiedProfile: model-ready
     rule: "semanticIds values are IRDIs in canonical # form (ISO 29002-5) or absolute IRIs."
+  binding-prototype-names:
+    valid: false
+    errors: [binding.subjects, binding.semantic-ids]
+    satisfiedProfile: model-ready
+    rule: "Names such as toString or constructor are ordinary names: they are bound only when the binding binds them."
+  binding-null-sections:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "A null subjects or semanticIds section is the same as an absent one."
+  binding-trailing-newline:
+    valid: false
+    errors: [binding.curie, binding.semantic-ids]
+    satisfiedProfile: model-ready
+    rule: "A CURIE or identifier with a trailing newline is malformed."
+  compiler-units-null:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "outputSchema.units: null declares no units."
+  compiler-classify-input-list:
+    valid: false
+    errors: [compiler.binding, compiler.unit]
+    satisfiedProfile: viewable
+    rule: "classify.input names one EWS field; a criterion unit then has no input unit to match."
+  compiler-prototype-field-names:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "EWS fields named toString or constructor have no declared unit unless units names them."
+  compiler-latent-field-unknown:
+    valid: false
+    errors: [compiler.latent-field]
+    satisfiedProfile: viewable
+    rule: "outputSchema.latent names EWS fields of the compiler."
+  evaluation-evaluator-ref-not-actor:
+    valid: false
+    errors: [evaluation.evaluator-ref]
+    satisfiedProfile: viewable
+    rule: "An EvaluationProfile's evaluatorRef names a local ActorProfile (spec section 15)."
+  knowledge-reference-missing:
+    valid: false
+    errors: [knowledge.reference]
+    satisfiedProfile: model-ready
+    rule: "A KnowledgeExtractionProfile's source is a listed local KnowledgeAsset (spec section 19)."
+  knowledge-representation-unknown:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: model-ready
+    rule: "knowledgeRepresentations is a closed value set: another value is knowledge.field (spec section 19)."
   binding-subjects:
     valid: false
     errors: [binding.subjects]

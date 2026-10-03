@@ -64,9 +64,9 @@ export const ASSET_KIND_STABILITY: Map<string, Stability> = new Map(
 );
 
 /**
- * Experimental value sets, copied from vocab/value-sets.yaml (spec Appendix C; checked by
- * scripts/check-vocab.mjs). A value outside its set is a warning; `<extension>:<value>` is
- * accepted when the extension is declared.
+ * Value sets, copied from vocab/value-sets.yaml (checked by scripts/check-vocab.mjs). A value
+ * outside a closed set is an error, outside an open set (OPEN_VALUE_SETS) the warning value.unknown;
+ * `<extension>:<value>` is accepted when the extension is declared.
  */
 export const VALUE_SETS: Record<string, string[]> = {
   workPatterns: [

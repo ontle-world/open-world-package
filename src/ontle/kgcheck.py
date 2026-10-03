@@ -184,23 +184,25 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
             if p not in properties:
                 found[("kg.unknown-property", f"property {name} is not defined by the ontology")] += 1
                 continue
-            # A property declared under several types has several domains; any one of them is enough.
-            domains = sorted(m for d in tbox.objects(p, RDFS.domain) for m in members(d))
-            label = " or ".join(graph.namespace_manager.normalizeUri(d) for d in domains)
+            # Each rdfs:domain must hold (RDFS reads several as an intersection); within one owl:unionOf domain,
+            # the domain of a property several types declare, any member is enough. Ranges likewise.
+            nn = graph.namespace_manager.normalizeUri
+            label_of = lambda groups: " and ".join("(" + " or ".join(map(nn, g)) + ")" if len(g) > 1 else nn(g[0]) for g in groups)
+            domains = sorted((sorted(members(d)) for d in tbox.objects(p, RDFS.domain)), key=str)
             if domains and s not in types:
-                found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {label} cannot be checked")] += 1
-            elif domains and not any(d in types[s] for d in domains):
-                found[("kg.domain", f"subject of {name} is not a {label}")] += 1
-            ranges = sorted(r for d in tbox.objects(p, RDFS.range) for r in members(d) if r in classes and r not in enums)  # datatypes and enumerations are not checked
-            label = " or ".join(graph.namespace_manager.normalizeUri(r) for r in ranges)
+                found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {label_of(domains)} cannot be checked")] += 1
+            elif domains and not all(any(m in types[s] for m in g) for g in domains):
+                found[("kg.domain", f"subject of {name} is not a {label_of(domains)}")] += 1
+            ranges = [g for g in sorted((sorted(r for r in members(d) if r in classes and r not in enums)  # datatypes and enumerations are not checked
+                                         for d in tbox.objects(p, RDFS.range)), key=str) if g]
             if not ranges:
                 continue
             if isinstance(o, rdflib.Literal):
-                found[("kg.range", f"object of {name} is a literal, not a {label}")] += 1
+                found[("kg.range", f"object of {name} is a literal, not a {label_of(ranges)}")] += 1
             elif o not in types:
-                found[("kg.untyped", f"object of {name} has no rdf:type, so range {label} cannot be checked")] += 1
-            elif not any(r in types[o] for r in ranges):
-                found[("kg.range", f"object of {name} is not a {label}")] += 1
+                found[("kg.untyped", f"object of {name} has no rdf:type, so range {label_of(ranges)} cannot be checked")] += 1
+            elif not all(any(r in types[o] for r in g) for g in ranges):
+                found[("kg.range", f"object of {name} is not a {label_of(ranges)}")] += 1
         report.checked.append(rel)
         report.findings += [KgFinding(code, rel, message, n) for (code, message), n in sorted(found.items())]
     return report

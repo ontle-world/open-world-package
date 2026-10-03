@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeAsset
+metadata: {name: kg}
+spec:
+  roles: [graph]
+  representation: hologram
+  format: turtle
+  snapshot: {asOf: "2026-09-01T00:00:00Z"}
+  content: {path: kg/plant.ttl}

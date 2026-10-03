@@ -11,9 +11,9 @@ import re
 from typing import Any
 
 EXTENSIONS = "extensions"
-EXTENSION_NAME_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}$")
+EXTENSION_NAME_RE = re.compile(r"^[a-z][a-z0-9-]{0,62}\Z")
 RESERVED_EXTENSION_NAMES = {"owp", "openworld"}
-EXTENSION_KIND_RE = re.compile(r"^([a-z][a-z0-9-]{0,62}):([A-Z][A-Za-z0-9]*)$")
+EXTENSION_KIND_RE = re.compile(r"^([a-z][a-z0-9-]{0,62}):([A-Z][A-Za-z0-9]*)\Z")
 
 
 def closed(fields: dict[str, Any], extensions: bool = True) -> dict[str, Any]:
@@ -33,8 +33,8 @@ EXTERNAL_REF = closed({
     "mediaType": VALUE, "size": VALUE, "status": VALUE,
 })
 PROVIDERS = {"huggingface", "oci", "git", "https", "s3", "gcs", "doi"}
-COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
-DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+COMMIT_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})\Z")
+DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}\Z")
 FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
 
 ONTOLOGY = closed({
@@ -132,7 +132,7 @@ def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
 
 
 # Standard kinds with defined fields (spec sections 8 and 15). Fields marked "experimental" are
-# listed in spec Appendix C.4: accepted, and the checks on them produce warnings only.
+# listed in spec Appendix C.1: accepted, and the checks on them produce warnings only.
 WORLD_VIEW_PROFILE = _standard({
     "externalWorldRefs": VALUE,
     "specializes": VALUE,                                  # experimental
@@ -296,7 +296,7 @@ def extension_definition_errors(spec: dict[str, Any]) -> list[str]:
         return ["extension.definition: spec.extensionDefinition must be a mapping"]
     errors = []
     kinds = definition.get("kinds")
-    if kinds is not None and not (isinstance(kinds, list) and all(isinstance(k, str) and re.match(r"^[A-Z][A-Za-z0-9]*$", k) for k in kinds)):
+    if kinds is not None and not (isinstance(kinds, list) and all(isinstance(k, str) and re.match(r"^[A-Z][A-Za-z0-9]*\Z", k) for k in kinds)):
         errors.append("extension.definition: spec.extensionDefinition.kinds must be a list of PascalCase kind names without a prefix")
     schemas = definition.get("schemas")
     if schemas is not None and not (isinstance(schemas, list) and all(isinstance(s, str) and s for s in schemas)):

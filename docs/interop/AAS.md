@@ -10,7 +10,7 @@ The [Asset Administration Shell](https://industrialdigitaltwin.org/en/content-hu
 | `semanticId` of an element (IRDI or IRI) | `semanticIds` in the SemanticBinding (spec section 14), on the bound field or term. |
 | `valueId` and value lists of a property | `values` on the field: map codes to concept IRIs. |
 | Unit of a property (from its concept description) | `outputSchema.units` (UCUM) in the State Compiler, and `unit` (such as QUDT) in the SemanticBinding. OWP does not convert units. |
-| AASX package | Not an OWP package. An AASX holds one asset's shells and supplementary files. An OWP package holds a World's definitions and is resolved by identity and digest. |
+| AASX package | Not an OWP package. An AASX exchanges shells, submodels, and supplementary files, for one asset or several. An OWP package holds a World's definitions and is resolved by identity and digest. |
 | Operations of a submodel | Actions in an `ActionBindingProfile`, with a commit contract and effect verification. |
 
 ## Example

@@ -294,8 +294,17 @@ class Source {
           fs.mkdirSync(this.cacheDir, { recursive: true });
           const url = /^[a-z]+:\/\//i.test(git.url) || git.url.includes("@") ? git.url : path.resolve(this.baseDir, git.url);
           execFileSync("git", ["clone", "--quiet", url, dir], { stdio: "pipe" });
+        } else if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(git.rev)) {
+          // A tag or branch can move: update the cached clone (offline, the cached refs are used).
+          try {
+            execFileSync("git", ["-C", dir, "fetch", "--quiet", "--force", "--tags", "origin", "+refs/heads/*:refs/remotes/origin/*"], { stdio: "pipe" });
+          } catch { /* offline */ }
         }
-        execFileSync("git", ["-C", dir, "checkout", "--quiet", git.rev], { stdio: "pipe" });
+        try { // a branch: its fetched head, not the local branch made at clone time
+          execFileSync("git", ["-C", dir, "checkout", "--quiet", "--detach", `refs/remotes/origin/${git.rev}`], { stdio: "pipe" });
+        } catch {
+          execFileSync("git", ["-C", dir, "checkout", "--quiet", git.rev], { stdio: "pipe" });
+        }
         const commit = execFileSync("git", ["-C", dir, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
         const root = git.subdir ? path.join(dir, git.subdir) : dir;
         this.cache = listDirectoryCandidates(root, this.cacheDir, this.spec).map((c) =>

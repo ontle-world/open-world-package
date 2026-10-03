@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from urllib.parse import quote
 from typing import Any
 
 from .ontology import CURIE_RE, expand
@@ -86,8 +87,8 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
     return errors, warnings
 
 
-IRI_SAFE_CODE = re.compile(r"^[A-Za-z0-9._~-]+$")  # a code that can be appended to `base` as is
-IRDI_RE = re.compile(r"^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}$")  # ISO 29002-5, e.g. 0173-1#02-AAO677#002
+IRI_SAFE_CODE = re.compile(r"^[A-Za-z0-9._~-]+\Z")  # a code that can be appended to `base` as is
+IRDI_RE = re.compile(r"^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}\Z")  # ISO 29002-5, e.g. 0173-1#02-AAO677#002
 
 
 def _absolute_iri(value: Any) -> bool:
@@ -140,6 +141,8 @@ def semantic_ids_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
 
 def value_iri(values: dict[str, Any], code: Any, prefixes: dict[str, str]) -> str | None:
     """The concept IRI of a coded value: its `map` entry, else `base` + code when the code is IRI-safe; None otherwise."""
+    if isinstance(code, int) and not isinstance(code, bool):
+        code = str(code)  # a numeric code is looked up by its decimal text, so map: {"3": ...} covers the value 3
     if not isinstance(code, str):
         return None
     mapped = (values.get("map") or {}).get(code) if isinstance(values.get("map"), dict) else None
@@ -169,8 +172,29 @@ def subjects_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
     return errors
 
 
+IRI_FORBIDDEN = re.compile(r'[\x00-\x20<>"{}|^`\\]')  # characters an IRI never contains (RFC 3987)
+
+
 def subject_iri(rule: dict[str, Any], subject: str) -> str:
-    return subject if rule.get("iri") is True else f"{rule['base']}{subject}"
+    """The IRI of a subject key under a `subjects` rule: base + the percent-encoded key, or the key itself (which must be an IRI)."""
+    from .core import OWPError  # local import: core imports this module
+    if rule.get("iri") is True:
+        if IRI_FORBIDDEN.search(subject) or not re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", subject):
+            raise OWPError(f"binding.subjects: subject {subject!r} is not an absolute IRI, but its rule is {{iri: true}}")
+        return subject
+    return f"{rule['base']}{quote(subject, safe='')}"
+
+
+def concept_iris(field: str, values: dict[str, Any], value: Any, prefixes: dict[str, str]) -> list[str]:
+    """Concept IRIs of a coded value, or of each element of a list value; refuses a code without one."""
+    from .core import OWPError  # local import: core imports this module
+    out = []
+    for v in value if isinstance(value, list) else [value]:
+        iri = value_iri(values, v, prefixes)
+        if iri is None:
+            raise OWPError(f"binding.values: {field}: value {v!r} has no map entry and cannot be appended to base as an IRI")
+        out.append(iri)
+    return out
 
 
 def grounding_issues(package_identity: str, binding_docs: dict[str, dict[str, Any]],

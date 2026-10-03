@@ -224,6 +224,42 @@ class StandardVocabularyTests(unittest.TestCase):
             self.assertFalse(report.ok)
 
 
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_separate_domains_must_all_hold(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        ns = "https://example.org/v#"
+        vocab = ('<?xml version="1.0"?>\n<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" '
+                 'xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:owl="http://www.w3.org/2002/07/owl#">\n'
+                 f'  <owl:Class rdf:about="{ns}A"/>\n  <owl:Class rdf:about="{ns}B"/>\n'
+                 f'  <owl:ObjectProperty rdf:about="{ns}p"><rdfs:domain rdf:resource="{ns}A"/><rdfs:domain rdf:resource="{ns}B"/></owl:ObjectProperty>\n'
+                 f'  <owl:NamedIndividual rdf:about="{ns}i"/>\n</rdf:RDF>\n')
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            _standard_vocabulary(d / "v", ns, "v", vocab)
+            write_term_index(d / "v", d / "v" / "owp.yaml")
+            world = init_project("w", "test", "minimal", d / "w")
+            (world / "kg").mkdir()
+            (world / "knowledge.yaml").write_text(
+                "apiVersion: openworld/v1alpha1\nkind: KnowledgeAsset\nmetadata: {name: kg}\n"
+                "spec: {roles: [graph], representation: graph, format: turtle, conformsTo: {ontology: standards/v@1.0.0}, content: {path: kg/g.ttl}}\n",
+                encoding="utf-8")
+            manifest = world / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("spec:\n", "spec:\n  dependencies: [standards/v@1.0.0]\n", 1), encoding="utf-8")
+            kg = world / "kg" / "g.ttl"
+            kg.write_text(f"@prefix v: <{ns}> .\n@prefix ex: <https://example.org/> .\n"
+                          "ex:x a v:A ; v:p v:i .\nex:y a v:A , v:B ; v:p v:i .\n", encoding="utf-8")
+            report = check_knowledge_graphs(world, [str(d)])
+        # RDFS reads two rdfs:domain triples as both: ex:x (only an A) is outside the domain, ex:y is inside
+        self.assertEqual([(f.code, f.count) for f in report.findings], [("kg.domain", 1)])
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_vocabulary_index_includes_its_individuals_and_schemes(self):
+        index = yaml.safe_load((ROOT / "vocab" / "owp" / "semantics" / "terms.yaml").read_text(encoding="utf-8"))
+        types = {t["iri"]: t["type"] for t in index["spec"]["terms"]}
+        self.assertEqual(types["https://w3id.org/owp/ns#resolved"], "individual")
+        self.assertEqual(types["https://w3id.org/owp/ns#Resolutions"], "concept")
+
+
 class OwlExportTests(unittest.TestCase):
     """spec 3.1, RDF meaning of owp-yaml: the export is OWL 2 DL."""
 

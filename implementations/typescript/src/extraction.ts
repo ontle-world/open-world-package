@@ -1,5 +1,5 @@
 /**
- * Spec Appendix C.1: knowledge extraction. Turns query result rows (column -> JSON value) into an
+ * Spec section 19.2: knowledge extraction. Turns query result rows (column -> JSON value) into an
  * ObservationSet with a KnowledgeExtractionProfile. Running the query is outside the specification.
  */
 import { canon, isUtcTimestamp } from "./ews.js";

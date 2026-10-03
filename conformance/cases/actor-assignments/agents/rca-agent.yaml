@@ -1,0 +1,4 @@
+apiVersion: openworld/v1alpha1
+kind: AgentProfile
+metadata: {name: rca-agent}
+spec: {}

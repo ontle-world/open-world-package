@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyTermIndex
+spec:
+  terms:
+  - {iri: "https://example.org/upper#MaterialEntity", type: class}
+  - {iri: "https://example.org/upper#Process", type: class}

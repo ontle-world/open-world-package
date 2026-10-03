@@ -92,7 +92,7 @@ More commands:
 ontle inspect . --graph --resolved-views
 ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension in owp.yaml
 
-# knowledge graphs (experimental; needs the rdf extra)
+# knowledge graphs (needs the rdf extra)
 ontle kg check . --source ../ontologies      # does the graph (A-box) use only its ontology's (T-box) classes and properties?
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
 ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
@@ -119,8 +119,8 @@ ontle export --format turtle
 - `examples/business/quality-scenario-world-model` — runnable reference World Models for one scenario: persistence, three-point, Monte Carlo, and Markov baselines on a CPU, and an LLM model as the minimum bar (`python models/run.py --baselines`)
 - `examples/ontology/lab-ontology`, `examples/ontology/sales-ontology` — T-boxes of the assay and sales example graphs
 - `examples/ontology/quality-ontology` — ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World
-- `examples/research/assay-optimization-world` — laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario (experimental kinds)
-- `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers (experimental kinds)
+- `examples/research/assay-optimization-world` — laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario
+- `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers
 - `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
 - `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package
 

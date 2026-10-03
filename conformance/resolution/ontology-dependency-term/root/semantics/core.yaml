@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - {id: d:Machine, subClassOf: up:MaterialEntity}
+  - {id: d:Repair, subClassOf: [up:Process]}

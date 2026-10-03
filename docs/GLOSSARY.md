@@ -1,6 +1,6 @@
 # Glossary
 
-Terms that OWP keeps apart. Each entry says which asset or field carries the concept. Experimental items are marked (spec Appendix C).
+Terms that OWP keeps apart. Each entry says which asset or field carries the concept.
 
 ## World and views
 
@@ -16,7 +16,7 @@ Terms that OWP keeps apart. Each entry says which asset or field carries the con
 | Operational context | EWS combined at run time with the acting actor's context, the task, available resources, and the dynamics and constraints that apply. Runtime-derived, not packaged. | — |
 | World Model | A model grounded in a World through named Views and State Compilers. | `WorldModelPackage` |
 
-## Actors and authority (experimental)
+## Actors and authority (spec section 17)
 
 | Term | Meaning | Where |
 |---|---|---|
@@ -29,11 +29,12 @@ Terms that OWP keeps apart. Each entry says which asset or field carries the con
 | Responsibility | Work an actor must perform. | `RoleProfile.spec.responsibilities` |
 | Accountability | An outcome an actor answers for. | `RoleProfile.spec.accountabilities` |
 | Delegation | A bounded, time-limited transfer of permission or authority from one actor to another. | `DelegationProfile` |
+| Assignment | Who holds a role or task, standing or for a period. Declared on the actor, or observed at run time; the author chooses. | `ActorProfile.spec.assignments`, or observations |
 | Agent implementation | How an AI agent is built and configured. Distinct from its place in the World. | `AgentProfile` (pointed to by `ActorProfile.spec.agentRef`) |
 
 Capability is also distinct from competency (an individual's skill), resource (something used), process (a sequence of work), capacity (how much can be done), and performance (how well it was done).
 
-## Work and artifacts (experimental)
+## Work and artifacts (spec sections 16 and 18)
 
 | Term | Meaning | Where |
 |---|---|---|

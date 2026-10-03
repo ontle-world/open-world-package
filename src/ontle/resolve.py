@@ -335,11 +335,38 @@ def _binding_grounding_errors(pkg: ResolvedPackage, resolution: Resolution) -> l
     return grounding_issues(pkg.identity, binding_docs, ontologies)
 
 
+def _ontology_dependency_errors(pkg: ResolvedPackage, resolution: Resolution) -> list[str]:
+    """Spec 3.1: a term an OntologyPackage uses from the namespace of an OntologyPackage it depends on is defined there."""
+    if pkg.kind != "OntologyPackage":
+        return []
+    from .ontology import _load, _profile_curies, expand, terms as ontology_terms
+    deps = []
+    for ref, _ in _dependency_refs(pkg.manifest):
+        dep = resolution.packages.get(ref)
+        iri = (((dep.manifest.get("spec") or {}).get("ontology") or {}).get("iri") if dep is not None and dep.kind == "OntologyPackage" else None)
+        if isinstance(iri, str) and iri:
+            deps.append((ref, iri, ontology_terms(dep.root, dep.manifest)[1]))  # type: ignore[union-attr]
+    ontology = (pkg.manifest.get("spec") or {}).get("ontology") or {}
+    prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
+    errors: list[str] = []
+    for entry in ontology.get("entrypoints") or [] if deps else []:
+        if not (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and isinstance(entry.get("path"), str)):
+            continue
+        doc = _load(pkg.root / entry["path"])
+        for where, value, term_type in _profile_curies(doc) if isinstance(doc, dict) else []:
+            full = expand(value, prefixes) if isinstance(value, str) and not term_type else None
+            for ref, iri, defined in deps:
+                if full and full.startswith(iri) and full not in defined:
+                    errors.append(f"ontology.dependency-term: {pkg.identity}: {entry['path']}: {where} {value!r} ({full}) is not a term of {ref}")
+    return errors
+
+
 def cross_package_errors(resolution: Resolution) -> list[str]:
     """Rules that need more than one package: extension definitions and World Model grounding against the referenced World."""
     errors: list[str] = []
     for pkg in resolution.packages.values():
         errors += _binding_grounding_errors(pkg, resolution)
+        errors += _ontology_dependency_errors(pkg, resolution)
         deps = (pkg.manifest.get("spec") or {}).get("dependencies") or []
         for dep in deps if isinstance(deps, list) else []:
             if not (isinstance(dep, dict) and isinstance(dep.get("as"), str) and isinstance(dep.get("ref"), str)):

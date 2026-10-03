@@ -354,6 +354,7 @@
                       "owp-yaml",
                       "turtle",
                       "jsonld",
+                      "rdf-xml",
                       "owl-xml",
                       "ntriples",
                       "linkml",

@@ -14,7 +14,7 @@ from .structure import SEMANTIC_PROFILE, TERM_INDEX, external_ref_issues, struct
 from .yamlio import dump_yaml, load_yaml
 
 ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"]
-FORMATS = {"owp-yaml", "turtle", "jsonld", "owl-xml", "ntriples", "linkml", "sssom-tsv"}
+FORMATS = {"owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"}
 ROLES = {"schema", "shapes", "mappings", "labels"}
 TERM_TYPES = {"class", "property", "individual", "datatype", "concept"}
 PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
@@ -199,7 +199,9 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
 
 # --- tooling (T): index generation and export -------------------------------
 
-RDF_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "owl-xml": "xml", "ntriples": "nt"}
+RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+RDFS_NS = "http://www.w3.org/2000/01/rdf-schema#"
+RDF_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "rdf-xml": "xml", "ntriples": "nt"}  # OWL/XML (owl-xml) needs an OWL API tool
 
 
 def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
@@ -218,7 +220,10 @@ def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str
                 if term_type and isinstance(value, str) and expand(value, prefixes):
                     found.setdefault(expand(value, prefixes), term_type)  # type: ignore[arg-type]
         elif fmt in RDF_FORMATS:
-            found.update({iri: t for iri, t in _rdf_terms(path, RDF_FORMATS[fmt]).items() if iri not in found})
+            # Only the terms this ontology defines: those in its own namespace (an RDF file also declares terms
+            # it borrows, such as rdfs:label or Dublin Core annotations).
+            namespace = ontology.get("iri") if isinstance(ontology.get("iri"), str) else ""
+            found.update({iri: t for iri, t in _rdf_terms(path, RDF_FORMATS[fmt]).items() if iri not in found and iri.startswith(namespace)})
         else:
             from .core import OWPError
             raise OWPError(f"cannot build a term index from format {fmt!r}; write spec.ontology.termIndex by hand")
@@ -232,10 +237,17 @@ def _rdf_terms(path: Path, rdf_format: str) -> dict[str, str]:
     except ImportError as exc:
         from .core import OWPError
         raise OWPError("RDF entrypoints need rdflib: pip install 'ontle-open-world[rdf]'") from exc
+    if not path.is_file():
+        from .core import OWPError
+        raise OWPError(f"schema entrypoint {path.name} does not exist; run ontle validate on the package")
     graph = rdflib.Graph()
-    graph.parse(path, format=rdf_format)
+    try:
+        graph.parse(path, format=rdf_format)
+    except Exception as exc:  # rdflib raises parser-specific errors
+        from .core import OWPError
+        raise OWPError(f"cannot read {path.name} as {rdf_format}: {' '.join(str(exc).split())[:200]}") from exc
     types = {OWL.Class: "class", RDFS.Class: "class", OWL.ObjectProperty: "property", OWL.DatatypeProperty: "property",
-             RDF.Property: "property", OWL.AnnotationProperty: "property", OWL.NamedIndividual: "individual",
+             RDF.Property: "property", OWL.NamedIndividual: "individual",
              RDFS.Datatype: "datatype", SKOS.Concept: "concept"}
     out: dict[str, str] = {}
     for subject, rdf_type in graph.subject_objects(RDF.type):
@@ -265,7 +277,12 @@ def write_term_index(root: Path, manifest_path: Path) -> Path:
 
 
 def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
-    """Turtle or JSON-LD for the owp-yaml schema entrypoints (classes, subclasses, properties, labels, domains, ranges)."""
+    """Turtle or JSON-LD for the owp-yaml schema entrypoints, as OWL 2 DL (spec section 3.1, "RDF meaning").
+
+    A type is an owl:Class, or, with `enum`, an rdfs:Datatype enumerating its literal values. A property whose
+    range is a datatype (xsd:, rdf:langString, rdfs:Literal, an enum type, or none) is an owl:DatatypeProperty,
+    otherwise an owl:ObjectProperty. A property declared under several types has their union as its domain.
+    """
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
     prefixes = dict(ontology.get("prefixes") or {})
     triples: list[tuple[str, str, str, bool]] = []  # subject, predicate, object, object-is-literal
@@ -273,55 +290,118 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
     def iri(value: Any) -> str | None:
         return expand(value, prefixes) if isinstance(value, str) else None
 
+    specs = []
     for entry in ontology.get("entrypoints") or []:
-        if not (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema"):
-            continue
-        spec = (_load(root / entry["path"]) or {}).get("spec") or {}
+        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
+            specs.append((_load(root / entry["path"]) or {}).get("spec") or {})
+    enums: dict[str, list[Any]] = {}
+    for spec in specs:
         for t in spec.get("types") or []:
-            cls = iri(t.get("id"))
+            if isinstance(t, dict) and iri(t.get("id")) and isinstance(t.get("enum"), list):
+                enums[iri(t.get("id"))] = t["enum"]  # type: ignore[index]
+    literal_ranges = ("http://www.w3.org/2001/XMLSchema#", RDF_NS + "langString", RDFS_NS + "Literal")
+    props: dict[str, dict[str, set[str]]] = {}  # property -> {"domains": ..., "ranges": ...}
+
+    def declare(prop: str, domain: str | None, rng: str | None) -> None:
+        entry = props.setdefault(prop, {"domains": set(), "ranges": set()})
+        if domain:
+            entry["domains"].add(domain)
+        if rng:
+            entry["ranges"].add(rng)
+
+    for spec in specs:
+        for t in spec.get("types") or []:
+            cls = iri(t.get("id")) if isinstance(t, dict) else None
             if not cls:
                 continue
-            triples.append((cls, "rdf:type", "owl:Class", False))
-            for parent in t.get("subClassOf") or [] if isinstance(t.get("subClassOf"), list) else []:
-                if iri(parent):
+            if cls in enums:
+                triples.append((cls, "rdf:type", "rdfs:Datatype", False))
+            else:
+                triples.append((cls, "rdf:type", "owl:Class", False))
+            parents = t.get("subClassOf")
+            for parent in parents if isinstance(parents, list) else [parents] if parents else []:
+                if iri(parent) and cls not in enums:
                     triples.append((cls, "rdfs:subClassOf", iri(parent), False))  # type: ignore[arg-type]
             for lang, text in (t.get("label") or {}).items() if isinstance(t.get("label"), dict) else []:
                 triples.append((cls, "rdfs:label", f"{text}@{lang}", True))
             for p in t.get("properties") or []:
-                prop = iri(p.get("id"))
-                if prop:
-                    rng = iri(p.get("range"))
-                    triples.append((prop, "rdf:type", "owl:ObjectProperty" if rng else "owl:DatatypeProperty", False))
-                    triples.append((prop, "rdfs:domain", cls, False))
-                    if rng:
-                        triples.append((prop, "rdfs:range", rng, False))
+                if isinstance(p, dict) and iri(p.get("id")):
+                    declare(iri(p["id"]), cls, iri(p.get("range")))  # type: ignore[arg-type]
         for r in spec.get("relations") or []:
-            prop = iri(r.get("id"))
-            if prop:
-                triples.append((prop, "rdf:type", "owl:ObjectProperty", False))
-                for key, pred in (("domain", "rdfs:domain"), ("range", "rdfs:range")):
-                    if iri(r.get(key)):
-                        triples.append((prop, pred, iri(r.get(key)), False))  # type: ignore[arg-type]
-    std = {"rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-           "owl": "http://www.w3.org/2002/07/owl#"}
-    if fmt == "jsonld":
-        nodes: dict[str, dict[str, Any]] = {}
-        for s, p, o, lit in triples:
-            node = nodes.setdefault(s, {"@id": s})
-            if p == "rdf:type":
-                node.setdefault("@type", []).append(o)
-            elif lit:
-                text, _, lang = o.rpartition("@")
-                node.setdefault(p, []).append({"@value": text, "@language": lang})
-            else:
-                node.setdefault(p, []).append({"@id": o})
-        return json.dumps({"@context": {**std, **prefixes}, "@graph": list(nodes.values())}, indent=2, ensure_ascii=False) + "\n"
+            if isinstance(r, dict) and iri(r.get("id")):
+                declare(iri(r["id"]), iri(r.get("domain")), iri(r.get("range")))  # type: ignore[arg-type]
+                props[iri(r["id"])].setdefault("relation", set()).add("yes")  # type: ignore[index]
+    # Classes used but defined elsewhere (a dependency ontology) are declared, as OWL 2 DL requires.
+    defined = {s for s, p, o, _ in triples if p == "rdf:type"}
+    used = {o for s, p, o, lit in triples if p == "rdfs:subClassOf" and not lit}
+    used |= {r for info in props.values() for key in ("domains", "ranges") for r in info[key] if r not in enums and not r.startswith(literal_ranges)}
+    for cls in sorted(used - defined):
+        triples.append((cls, "rdf:type", "owl:Class", False))
+    unions: list[tuple[str, list[str], bool]] = []  # (subject, members, members-are-literals) for owl:unionOf / owl:oneOf
+    for cls, values in enums.items():
+        unions.append((cls, [json.dumps(v if isinstance(v, str) else json.dumps(v), ensure_ascii=False) for v in values], True))
+    for prop, info in sorted(props.items()):
+        ranges = sorted(info["ranges"])
+        is_data = not info.get("relation") and (not ranges or all(r in enums or r.startswith(literal_ranges) for r in ranges))
+        triples.append((prop, "rdf:type", "owl:DatatypeProperty" if is_data else "owl:ObjectProperty", False))
+        domains = sorted(info["domains"])
+        if len(domains) == 1:
+            triples.append((prop, "rdfs:domain", domains[0], False))
+        elif domains:
+            unions.append((f"{prop}#domain", domains, False))  # several declaring types: the union, not the intersection
+            triples.append((prop, "rdfs:domain", f"_:{len(unions) - 1}", False))
+        if len(ranges) == 1:
+            triples.append((prop, "rdfs:range", ranges[0], False))
+        elif ranges:
+            unions.append((f"{prop}#range", ranges, False))
+            triples.append((prop, "rdfs:range", f"_:{len(unions) - 1}", False))
+    std = {"rdf": RDF_NS, "rdfs": RDFS_NS, "owl": "http://www.w3.org/2002/07/owl#"}
+
+    def ref(o: str) -> str:
+        if o.startswith("_:"):
+            return f"_:u{o[2:]}"
+        return o if o.split(":", 1)[0] in std and "://" not in o else f"<{o}>"
+
     lines = [f"@prefix {k}: <{v}> ." for k, v in {**std, **prefixes}.items()] + [""]
+    if isinstance(ontology.get("iri"), str):
+        lines.append(f"<{ontology['iri'].rstrip('#/')}> rdf:type owl:Ontology .")
     for s, p, o, lit in triples:
         if lit:
             text, _, lang = o.rpartition("@")
             obj = json.dumps(text, ensure_ascii=False) + f"@{lang}"
         else:
-            obj = o if o.split(":", 1)[0] in std and "://" not in o else f"<{o}>"
+            obj = ref(o)
         lines.append(f"<{s}> {p} {obj} .")
-    return "\n".join(lines) + "\n"
+    for i, (subject, members, literals) in enumerate(unions):
+        items = " ".join(members if literals else [ref(m) for m in members])
+        if literals:  # an enum type: the datatype of exactly these literal values
+            lines.append(f"<{subject}> owl:equivalentClass [ rdf:type rdfs:Datatype ; owl:oneOf ( {items} ) ] .")
+        else:
+            lines.append(f"_:u{i} rdf:type owl:Class ; owl:unionOf ( {items} ) .")
+    turtle = "\n".join(lines) + "\n"
+    if fmt != "jsonld":
+        return turtle
+    # JSON-LD of the same graph, built directly (no RDF library needed).
+    def node_ref(o: str) -> dict[str, Any]:
+        return {"@id": f"_:u{o[2:]}"} if o.startswith("_:") else {"@id": o}
+
+    nodes: dict[str, dict[str, Any]] = {}
+    if isinstance(ontology.get("iri"), str):
+        nodes[ontology["iri"].rstrip("#/")] = {"@id": ontology["iri"].rstrip("#/"), "@type": ["owl:Ontology"]}
+    for s, p, o, lit in triples:
+        node = nodes.setdefault(s, {"@id": s})
+        if p == "rdf:type":
+            node.setdefault("@type", []).append(o)
+        elif lit:
+            text, _, lang = o.rpartition("@")
+            node.setdefault(p, []).append({"@value": text, "@language": lang})
+        else:
+            node.setdefault(p, []).append(node_ref(o))
+    for i, (subject, members, literals) in enumerate(unions):
+        if literals:
+            values = [{"@value": json.loads(m)} for m in members]
+            nodes.setdefault(subject, {"@id": subject}).setdefault("owl:equivalentClass", []).append(
+                {"@type": "rdfs:Datatype", "owl:oneOf": {"@list": values}})
+        else:
+            nodes[f"_:u{i}"] = {"@id": f"_:u{i}", "@type": ["owl:Class"], "owl:unionOf": {"@list": [{"@id": m} for m in members]}}
+    return json.dumps({"@context": {**std, **prefixes}, "@graph": list(nodes.values())}, indent=2, ensure_ascii=False) + "\n"

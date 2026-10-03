@@ -23,14 +23,25 @@ spec:
     profile: mapped
 ```
 
-- Ontology packages this ontology builds on are listed in `spec.dependencies`; there is no separate import list.
+- Ontology packages this ontology builds on are listed in `spec.dependencies`; there is no separate import list. Under resolution (section 11), an identifier an `owp-yaml` schema uses (a `subClassOf`, `domain`, or `range`) that falls in the `iri` namespace of a dependency OntologyPackage MUST be a term that package defines (`ontology.dependency-term`).
 - `iri` and every `prefixes` value are absolute IRIs; prefix names match `[A-Za-z][A-Za-z0-9_-]*`.
-- Each entrypoint has a package-relative `path` naming an existing file inside the package, a `format` (`owp-yaml`, `turtle`, `jsonld`, `owl-xml`, `ntriples`, `linkml`, `sssom-tsv`), and a `role` (`schema`, `shapes`, `mappings`, `labels`).
+- Each entrypoint has a package-relative `path` naming an existing file inside the package, a `format` (`owp-yaml`, `turtle`, `jsonld`, `rdf-xml` (RDF/XML, as most `.owl` and `.rdf` files are), `owl-xml` (the OWL 2 XML serialization), `ntriples`, `linkml`, `sssom-tsv`), and a `role` (`schema`, `shapes`, `mappings`, `labels`).
 - An `owp-yaml` entrypoint is a `SemanticProfile` document (`schemas/semantic-profile.schema.json`): `types` (each with `id`, optional `label`, `subClassOf`, `enum`, and `properties` with `id` and `range`) and `relations` (`id`, `domain`, `range`). Identifiers are CURIEs whose prefixes are declared in `prefixes`, or absolute IRIs.
 - `termIndex` names an `OntologyTermIndex` document inside the package (`schemas/ontology-term-index.schema.json`) listing term IRIs with a type (`class`, `property`, `individual`, `datatype`, `concept`). The reference CLI writes it with `ontle ontology index`, and `ontle pack` writes it when it is required and missing and the optional RDF tooling is installed.
 - Validation reads only the manifest, OWP YAML documents, and file existence. RDF, LinkML, and SSSOM content is not parsed for validity, so every implementation reaches the same verdict. Tooling may check that content and report it separately.
 
-**T-box and A-box.** An OntologyPackage holds the T-box: classes, properties, relations, and the constraints on them. Facts about individual things (this lot, that machine) are an A-box and belong in a World package, as a graph KnowledgeAsset that names its OntologyPackage in `spec.conformsTo.ontology` (Appendix C), or as observations. A term index MAY list `individual` terms only for fixed members of the vocabulary itself, such as enumeration values.
+**T-box and A-box.** An OntologyPackage holds the T-box: classes, properties, relations, and the constraints on them. Facts about individual things (this lot, that machine) are an A-box and belong in a World package, as a graph KnowledgeAsset that names its OntologyPackage in `spec.conformsTo.ontology` (section 19.1), or as observations. A term index MAY list `individual` terms only for fixed members of the vocabulary itself, such as enumeration values.
+
+**RDF meaning of owp-yaml (informative).** Tooling that exports an `owp-yaml` schema as RDF (`ontle export`) produces OWL 2 DL:
+
+| owp-yaml | OWL 2 / RDFS |
+|---|---|
+| type | `owl:Class`; `subClassOf` (one identifier or a list) gives `rdfs:subClassOf` |
+| type with `enum` | `rdfs:Datatype` equivalent to `owl:oneOf` over the literal values (the values stay strings, as in EWS) |
+| property with a datatype range (`xsd:`, `rdf:langString`, `rdfs:Literal`, an enum type) or no range | `owl:DatatypeProperty` |
+| property with a class range, and every relation | `owl:ObjectProperty` |
+| a property declared under several types | `rdfs:domain` is their `owl:unionOf` (two plain `rdfs:domain` triples would mean the intersection) |
+| a class used from another ontology | declared `owl:Class` |
 
 The terms an ontology defines are the expanded identifiers of its `owp-yaml` schema entrypoints (types, their properties, and relations) together with the terms in its `termIndex`.
 

@@ -16,7 +16,7 @@ import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependen
 import { parseContractRef } from "./rules/worldmodel.js";
 import { viewExternalNames } from "./rules/world.js";
 import { bindingGroundingProblems } from "./rules/binding.js";
-import { ontologyTerms } from "./rules/ontology.js";
+import { ontologyTerms, ontologyUses } from "./rules/ontology.js";
 import { validatePackage, ValidationResult } from "./validate.js";
 
 export interface Candidate {
@@ -509,6 +509,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
 
   // Spec 14: SemanticBinding CURIEs resolve against the package's dependency OntologyPackages.
   for (const n of nodes.values()) for (const p of bindingGrounding(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
+  for (const n of nodes.values()) for (const p of ontologyDependencyProblems(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
 
   // Cross-package rules for every WorldModelPackage in the closure.
   for (const n of nodes.values()) {
@@ -516,6 +517,22 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   }
 
   return { ...base, errors, warnings, valid: errors.length === 0, resolved };
+}
+
+/** Spec 3.1: a term an OntologyPackage uses from the namespace of an OntologyPackage it depends on is defined there. */
+function ontologyDependencyProblems(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {
+  if (pkg.kind !== "OntologyPackage") return [];
+  const deps = pkg.deps
+    .map((d) => nodes.get(d.ref))
+    .filter((d): d is Node => d !== undefined && d.kind === "OntologyPackage")
+    .map((d) => ({ ref: d.identity, iri: get(d.manifest, "spec", "ontology", "iri"), terms: ontologyTerms(d.dir, d.manifest).terms }))
+    .filter((d): d is { ref: string; iri: string; terms: Set<string> } => typeof d.iri === "string" && d.iri.length > 0);
+  if (deps.length === 0) return [];
+  return ontologyUses(pkg.dir, pkg.manifest).flatMap(({ file, where, value, iri }) =>
+    deps
+      .filter((d) => iri.startsWith(d.iri) && !d.terms.has(iri))
+      .map((d) => ({ rule: "ontology.dependency-term", msg: `${file}: ${where} "${value}" (${iri}) is not a term of ${d.ref}` })),
+  );
 }
 
 function bindingGrounding(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {

@@ -1,7 +1,8 @@
-"""Regenerate schemas/experimental/*.schema.json from the field tables in src/ontle/experimental.py,
-and the schemas of standard kinds whose tables live in src/ontle/structure.py.
+"""Regenerate the schemas of the kinds whose field tables are in src/ontle/experimental.py (the standard kinds of
+spec sections 16-19 into schemas/, the experimental ones into schemas/experimental/), and of the standard kinds
+whose tables live in src/ontle/structure.py.
 
-Run from the repository root after changing an experimental kind:
+Run from the repository root after changing one of those kinds:
 
     PYTHONPATH=src python scripts/generate_experimental_schemas.py
 
@@ -25,6 +26,7 @@ STRING_LISTS = {
     "triggers", "nodes", "roleRefs", "memberOf", "actions", "decisions", "responsibilities", "accountabilities",
     "permittedActions", "by", "to", "when", "actors", "workPatternRefs", "scenarios", "skills", "tools",
 }
+SECTIONS = {"work": 16, "actor": 17, "artifact": 18, "knowledge": 19}
 STRING_LISTS |= {"assumptions", "constraints", "outcomeRefs", "requiredInputs", "changedBecause", "include", "exclude"}
 BOOLEANS = {"approvalRequired", "multi"}
 ANY = {"metrics", "tasks", "checks", "threshold", "confidence", "rubric", "effect"}
@@ -69,22 +71,33 @@ def file_name(kind: str) -> str:
 
 
 def main() -> None:
-    out_dir = ROOT / "schemas" / "experimental"
     for kind, table in experimental.TABLES.items():
         schema = convert(table)
         schema["properties"]["apiVersion"] = {"const": "openworld/v1alpha1"}
         schema["properties"]["kind"] = {"const": kind}
         schema["required"] = ["spec"]  # apiVersion and kind are inherited from owp.yaml and the asset entry (spec section 5)
+        family = experimental.FAMILIES.get(kind)
+        if family:
+            out, head = ROOT / "schemas" / file_name(kind), {
+                "$id": f"urn:owp:schema:{file_name(kind).removesuffix('.schema.json')}:v1alpha1",
+                "title": kind,
+                "description": f"{kind} (spec section {SECTIONS[family]}).",
+            }
+            (ROOT / "schemas" / "experimental" / file_name(kind)).unlink(missing_ok=True)
+        else:
+            out, head = ROOT / "schemas" / "experimental" / file_name(kind), {
+                "$id": f"urn:owp:schema:experimental:{kind}:v1alpha1",
+                "title": f"{kind} (experimental)",
+                "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+            }
         doc = {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": f"urn:owp:schema:experimental:{kind}:v1alpha1",
-            "title": f"{kind} (experimental)",
-            "description": "Experimental asset kind (spec Appendix C). Violations are warnings, not errors.",
+            **head,
             **schema,
             "$defs": {"extensions": MANIFEST["$defs"]["extensions"], "externalRef": MANIFEST["$defs"]["externalRef"]},
         }
-        (out_dir / file_name(kind)).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        print(file_name(kind))
+        out.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(out.relative_to(ROOT))
     for kind, (table_name, spec_required) in STANDARD.items():
         schema = convert(getattr(structure, table_name))
         schema["properties"]["apiVersion"] = {"const": "openworld/v1alpha1"}
@@ -96,7 +109,7 @@ def main() -> None:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": f"urn:owp:schema:{file_name(kind).removesuffix('.schema.json')}:v1alpha1",
             "title": kind,
-            "description": f"{kind} (spec sections 8 and 15). Fields listed in spec Appendix C.4 remain experimental: accepted, with warnings only from their checks.",
+            "description": f"{kind} (spec sections 8 and 15)." + (" The fields of View specialization (spec Appendix C.1) remain experimental: accepted, with warnings only from their checks." if kind == "WorldViewProfile" else ""),
             **schema,
             "$defs": {"extensions": MANIFEST["$defs"]["extensions"]},
         }

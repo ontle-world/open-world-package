@@ -44,7 +44,17 @@ $N ArtifactTemplate artifacts/templates/report-template.yaml
 $N ActorProfile actors/manager.yaml
 $N RoleProfile roles/manager-role.yaml
 $N CapabilityContract capabilities/analysis.yaml
+$N ActorProfile actors/agent.yaml
 $N DelegationProfile delegations/manager-to-agent.yaml
+# Standard kinds need their required references filled in, as an author would.
+python - "$TMP/demo-world/delegations/manager-to-agent.yaml" <<'PY'
+import sys, yaml
+path = sys.argv[1]
+doc = yaml.safe_load(open(path, encoding="utf-8"))
+doc["spec"].update(delegator="actors/manager.yaml", delegatee="actors/agent.yaml",
+                   validFrom="2026-01-01T00:00:00Z", expiresAt="2026-02-01T00:00:00Z")
+open(path, "w", encoding="utf-8").write(yaml.safe_dump(doc, sort_keys=False))
+PY
 ontle validate "$TMP/demo-world"
 ontle validate "$TMP/demo-ontology"
 ontle validate "$TMP/demo-model"

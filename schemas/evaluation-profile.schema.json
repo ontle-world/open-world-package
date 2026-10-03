@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:owp:schema:evaluation-profile:v1alpha1",
   "title": "EvaluationProfile",
-  "description": "EvaluationProfile (spec sections 8 and 15). Fields listed in spec Appendix C.4 remain experimental: accepted, with warnings only from their checks.",
+  "description": "EvaluationProfile (spec sections 8 and 15).",
   "type": "object",
   "properties": {
     "apiVersion": {

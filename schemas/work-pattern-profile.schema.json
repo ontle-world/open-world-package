@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:work-pattern-profile:v1alpha1",
+  "title": "WorkPatternProfile",
+  "description": "WorkPatternProfile (spec section 16).",
+  "type": "object",
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "WorkPatternProfile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "family": {
+              "type": "string"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "objective": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "semanticRoles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "semanticRoles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "inputContracts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputContracts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiredContracts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "optionalCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "graph": {
+          "type": "object",
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "family": {
+                    "type": "string"
+                  },
+                  "patternKind": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "transitions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string"
+                  },
+                  "to": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "guard": {
+                    "type": "string"
+                  },
+                  "event": {
+                    "type": "string"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "guards": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "events": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "triggers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "loops": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "maxIterations": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "until": {
+                    "type": "string"
+                  },
+                  "extensions": {
+                    "$ref": "#/$defs/extensions"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        "worldViewRef": {
+          "type": "string"
+        },
+        "governanceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evaluationRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "spec"
+  ],
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "externalRef": {
+      "description": "Reference to an artifact outside the package (spec section 5.1).",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "anyOf": [
+            {
+              "enum": [
+                "huggingface",
+                "oci",
+                "git",
+                "https",
+                "s3",
+                "gcs",
+                "doi"
+              ]
+            },
+            {
+              "pattern": "^[a-z][a-z0-9-]{0,62}:.+$"
+            }
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "bound",
+            "unbound"
+          ],
+          "default": "bound"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

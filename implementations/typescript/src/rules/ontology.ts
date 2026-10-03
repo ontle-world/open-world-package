@@ -12,7 +12,7 @@ import { externalRefProblems } from "./externalref.js";
 export const ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"] as const;
 export type OntologyProfile = (typeof ONTOLOGY_PROFILES)[number];
 
-const FORMATS = ["owp-yaml", "turtle", "jsonld", "owl-xml", "ntriples", "linkml", "sssom-tsv"];
+const FORMATS = ["owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"];
 const ROLES = ["schema", "shapes", "mappings", "labels"];
 const TERM_TYPES = ["class", "property", "individual", "datatype", "concept"];
 const PREFIX_RE = /^[A-Za-z][A-Za-z0-9_-]*$/;
@@ -92,6 +92,24 @@ export function ontologyTerms(dir: string, manifest: Obj): { prefixes: Record<st
   const list = get(index, "spec", "terms");
   for (const t of Array.isArray(list) ? list : []) if (isObj(t) && typeof t.iri === "string") terms.add(t.iri);
   return { prefixes, terms };
+}
+
+/** Every identifier the owp-yaml schema entrypoints use (not define), expanded with the package's prefixes. */
+export function ontologyUses(dir: string, manifest: Obj): Array<{ file: string; where: string; value: string; iri: string }> {
+  const o = get(manifest, "spec", "ontology");
+  const ontology = isObj(o) ? o : {};
+  const prefixes = isObj(ontology.prefixes) ? ontology.prefixes : {};
+  const out: Array<{ file: string; where: string; value: string; iri: string }> = [];
+  for (const e of Array.isArray(ontology.entrypoints) ? ontology.entrypoints : []) {
+    if (!isObj(e) || e.format !== "owp-yaml" || e.role !== "schema" || typeof e.path !== "string") continue;
+    const norm = normalizeRelPath(e.path);
+    const doc = norm === null ? undefined : loadDoc(path.join(dir, norm));
+    for (const [where, value, defines] of doc ? profileIdentifiers(doc) : []) {
+      const iri = !defines && typeof value === "string" ? expandCurie(value, prefixes) : null;
+      if (iri !== null) out.push({ file: e.path, where, value: value as string, iri });
+    }
+  }
+  return out;
 }
 
 /** Single-package checks of spec.ontology (always applied, independent of the declared profile). */

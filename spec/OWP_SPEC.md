@@ -12,6 +12,16 @@ OWP packages portable contracts for:
 
 The standard does not require a particular runtime, model checkpoint format, database, graph store, simulator, or hosted registry.
 
+**Document map.** The specification is split into documents that share one section numbering:
+
+| Document | Sections |
+|---|---|
+| `OWP_SPEC.md` (this document) | 1-8 packages, assets, World/View/EWS/Model, integrity, validation; 10-11 adjacent standards, dependency resolution; 13 extensions; Appendices A (rule ids) and B (notation) |
+| `OWP_SEMANTICS.md` | 3.1 OntologyPackage; 14 semantic binding |
+| `OWP_EVALUATION_AND_STATE.md` | 9 evaluation evidence; 12 Effective World State; 15 evaluation, scenario, capability, and View fields |
+| `OWP_WORK_AND_ACTORS.md` | 16 work; 17 actors, roles, delegation, assignments; 18 artifacts and consumer representations; 19 knowledge and extraction |
+| `OWP_EXPERIMENTAL.md` | Appendix C: experimental kinds and fields (informative) |
+
 ## 2. Manifest
 
 Every package root contains exactly one machine manifest:
@@ -55,7 +65,7 @@ WorldModelPackage
 
 Human card: `WORLD.md`.
 
-A World is the target reality itself (a plant, a supply chain, a physical system). A World package is a persistent representation of it: explicit and intentionally incomplete. Its boundary, profiles, and bindings are the contract for representing that World, not claims about what the World is. A World need not contain actors or tasks; an enterprise World usually does, as content it represents (spec Appendix C). It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
+A World is the target reality itself (a plant, a supply chain, a physical system). A World package is a persistent representation of it: explicit and intentionally incomplete. Its boundary, profiles, and bindings are the contract for representing that World, not claims about what the World is. A World need not contain actors or tasks; an enterprise World usually does, as content it represents (sections 16-19). It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
 
 A World is useful without a World Model. Reference and taxonomy Worlds (organizations, material taxonomies, regulatory concepts) need not compile state. A WorldPackage therefore declares a conformance profile (section 6.1) that states how far along the World -> View -> EWS chain it goes. Starter templates generate a default View and State Compiler and declare `stateful`.
 
@@ -256,7 +266,7 @@ spec:
     - acme/supplier-world@1.2.0#supplier              # a name of an external World
 ```
 
-Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `conditioning.taskRef`, `actorRef`, or `roleRefs` (Appendix C.4) records the task, actor, or roles it is conditioned on.
+Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `conditioning.taskRef`, `actorRef`, or `roleRefs` records the task, actor, or roles it is conditioned on; each names a local TaskSetProfile, ActorProfile, or RoleProfile (`view.conditioning-ref`).
 
 An EWS is the runtime materialization of a View (section 12). A runtime that acts combines it with other runtime context (the acting actor's current roles, assignments, and resources, the task, and the dynamics and constraints that apply). Those combinations are runtime objects, like EWS, and are not packaged assets.
 
@@ -346,6 +356,7 @@ Precise meaning of the checks above:
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
+- **Open value sets** (sections 16-19): a value outside one is the warning `value.unknown`, so these vocabularies can grow without making packages invalid.
 
 The reference validator also rejects legacy manifest names, validates typed local YAML asset references, detects duplicate paths, and requires a Representation Adapter for every WorldModelPackage (an identity adapter is valid when no transform is needed). Additional domain-specific validators may be layered on top.
 
@@ -521,6 +532,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ontology.format` | 3.1 | unknown entrypoint `format` |
 | `ontology.parse` | 3.1 | `owp-yaml` entrypoint is not a SemanticProfile document |
 | `ontology.prefix-undeclared` | 3.1 | SemanticProfile identifier uses an undeclared prefix |
+| `ontology.dependency-term` | 3.1 | under resolution, an identifier an `owp-yaml` schema uses from a dependency OntologyPackage's namespace that the dependency does not define |
 | `ontology.term-index` | 3.1 | `termIndex` missing, not an OntologyTermIndex, or a malformed term |
 | `ontology.external-import` | 3.1 | `externalImports` entry without an absolute `iri` or a `ref` |
 | `profile.ontology.vocabulary`, `profile.ontology.schema`, `profile.ontology.constrained`, `profile.ontology.mapped` | 3.1 | declared ontology profile not satisfied |
@@ -571,6 +583,13 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |
 | `grounding.ontology-term` | 14 | expanded binding IRI is not a term of a dependency OntologyPackage |
 | `schema.unknown-field` | 8, 12 | a key that is neither a defined field nor an `extensions` block |
+| `view.conditioning-ref` | 6 | `conditioning.actorRef`, `roleRefs`, or `taskRef` that does not name a local ActorProfile, RoleProfile, or TaskSetProfile |
+| `evaluation.evaluator-ref` | 15.1 | `evaluatorRef` that does not name a local ActorProfile |
+| `work.field`, `work.reference` | 16 | TaskSetProfile or WorkPatternProfile: missing or malformed field, or a value outside a closed value set; a reference that does not name a local asset of the expected kind (including work pattern graph references) |
+| `actor.field`, `actor.reference` | 17 | ActorProfile, RoleProfile, or DelegationProfile: missing or malformed field (including timestamps, periods, and assignments), or a value outside a closed value set; a reference that does not name a local asset of the expected kind |
+| `actor.delegation-exceeds-authority` | 17 | a delegation grants actions or decisions the delegator's roles do not hold |
+| `artifact.field`, `artifact.reference` | 18 | ArtifactContract or ConsumerRepresentationProfile: missing or malformed field, a value outside a closed value set, or an actor block other than `actor.kind`; a reference that does not name a local asset or file of the expected kind |
+| `knowledge.field`, `knowledge.reference` | 19 | KnowledgeAsset or KnowledgeExtractionProfile: missing or malformed field or content, or a value outside a closed value set; a reference that does not name a local asset or file, or a `conformsTo.ontology` not in `spec.dependencies` |
 | `extension.name` | 13.1 | `as` malformed or reserved |
 | `extension.duplicate` | 13.1 | extension name declared twice |
 | `extension.declaration` | 13.1 | `mustUnderstand` without `as`, or not a boolean |
@@ -593,14 +612,14 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `compiler.field-outside-view` | 6 | State Compiler field `<entity>.<property>` whose entity its View does not include |
 | `resolve.dependency-direction` | 11 | dependency on a package kind above the dependent's place in the hierarchy |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
-| `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
-| `experimental.delegation-exceeds-authority` | C.3 | a delegation grants actions or decisions the delegator's roles do not hold |
+| `compiler.multi-latest` | 19.2 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
+| `value.unknown` | 16-19 | value outside an open value set |
+| `knowledge.graph-ontology` | 19.1 | graph KnowledgeAsset without `spec.conformsTo.ontology` |
 | `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
-| `experimental.value` | C | value outside an experimental value set |
+| `experimental.value` | C | value outside a value set in an experimental kind |
 | `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
-| `experimental.graph-ontology` | C | graph KnowledgeAsset without `spec.conformsTo.ontology` |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 

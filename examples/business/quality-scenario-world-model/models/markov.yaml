@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: markov
+spec:
+  description: Next-status probabilities counted from the status sequences in the World's observations.
+  implementationStatus: reference_baseline
+  bundled: true
+  entrypoint: models/run.py#markov

@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata:
+  name: scenario-outcome
+  version: 0.1.0
+spec:
+  assessmentKind: evaluation
+  objective: Compare World Models on the quality-hold scenario against the outcome recorded after the horizon.
+  checks:
+  - range_contains_observed_outcome
+  - expected_outcome_error
+  - uncertainty_declared
+  - beats_persistence

@@ -26,6 +26,8 @@ classifiers = [
 rdf = ["rdflib>=7.0"]
 # Reading LeRobot parquet files in demos/physical-ai/extract.py.
 demo = ["pyarrow>=15"]
+# The LLM World Model in examples/business/quality-scenario-world-model.
+llm = ["anthropic"]
 
 [project.scripts]
 ontle = "ontle.cli:main"

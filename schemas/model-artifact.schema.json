@@ -58,6 +58,10 @@
         "supportedProviders": {
           "type": "array"
         },
+        "entrypoint": {
+          "type": "string",
+          "description": "Code that runs the model, inside the package: <package-relative path>[#<name>] (spec section 8)."
+        },
         "extensions": {
           "$ref": "#/$defs/extensions"
         }

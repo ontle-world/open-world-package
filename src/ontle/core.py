@@ -608,6 +608,11 @@ def validate_package(path: str | Path) -> ValidationResult:
             continue
         errors.extend(_external_world_errors(rel, _spec_of(local_asset_docs.get(rel)), spec))
 
+    for rel, k in sorted(local_asset_kinds.items()):
+        entry = _spec_of(local_asset_docs.get(rel)).get("entrypoint") if k == "ModelArtifact" else None
+        if entry is not None and not (isinstance(entry, str) and ontology_module.inside_package(root, entry.partition("#")[0])):
+            errors.append(f"model.entrypoint: {rel}: spec.entrypoint {entry!r} must name a file in the package (<path>[#<name>])")
+
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:
             warnings.append("worldmodel.model-artifact-missing: WorldModelPackage should reference a ModelArtifact, even if it is contract-only/unbound")

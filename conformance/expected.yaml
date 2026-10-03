@@ -326,6 +326,10 @@ cases:
   model-grounded:
     valid: true
     rule: "A World Model names compatible World Views and State Compilers as <worldRef>#<asset path>."
+  model-entrypoint-missing:
+    valid: false
+    errors: [model.entrypoint]
+    rule: "A ModelArtifact entrypoint <path>[#<name>] names a file in the package; models/run.py is not there."
   model-grounding-dotslash-path:
     valid: false
     errors: [worldmodel.grounding-ref]

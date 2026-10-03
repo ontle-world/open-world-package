@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: three-point
+spec:
+  description: Best, base, and worst cases from the scenario's low, mode, and high; expectation is the PERT mean.
+  implementationStatus: reference_baseline
+  bundled: true
+  entrypoint: models/run.py#three_point

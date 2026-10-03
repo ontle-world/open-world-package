@@ -227,7 +227,7 @@ A scenario is not a prediction: it is a baseline, assumptions, an intervention, 
 |---|---|
 | `baselineStateRef` | a file in the package (for example an EWS or ObservationSet document) or a URI |
 | `assumptions`, `constraints` | lists of conditions |
-| `intervention`, `uncertainty`, `expectedOutcome` | open mappings |
+| `intervention`, `uncertainty`, `expectedOutcome` | open mappings; by convention `uncertainty` gives each outcome variable as `{low, mode, high}` (a missing `mode` reads as the midpoint), which three-point and Monte Carlo models use directly |
 | `engine` | `kind` (`rule`, `score_ranking`, `optimization`, `simulation`, `ml_prediction`, `world_model`, `llm_reasoning`, or an extension value) and `ref` |
 | `timeHorizon` | an ISO 8601 duration such as `P14D` |
 | `confidence` | a number from 0 to 1 |

@@ -31,8 +31,8 @@ def _resolvers(base: dict | None = None) -> dict:
     return table
 
 
-class CoreLoader(yaml.SafeLoader):
-    """SafeLoader with YAML 1.2 core schema scalars; non-string and duplicate keys raise an error."""
+class _CoreMixin:
+    """YAML 1.2 core schema scalars; non-string and duplicate keys raise an error."""
 
     yaml_implicit_resolvers = _resolvers()
 
@@ -48,6 +48,15 @@ class CoreLoader(yaml.SafeLoader):
                         "while constructing a mapping", node.start_mark, f"found duplicate key {key_node.value!r}", key_node.start_mark)
                 seen.add(key_node.value)
         return super().construct_mapping(node, deep=deep)
+
+
+class CoreLoader(_CoreMixin, yaml.SafeLoader):
+    """Pure-Python loader with the YAML 1.2 core schema."""
+
+
+# libyaml parses about ten times faster; scalar resolution and construction stay in Python, so both loaders
+# return the same data.
+FastCoreLoader = type("FastCoreLoader", (_CoreMixin, yaml.CSafeLoader), {}) if yaml.__with_libyaml__ else CoreLoader
 
 
 def _construct_int(loader: CoreLoader, node: yaml.ScalarNode) -> int:
@@ -68,8 +77,9 @@ def _construct_float(loader: CoreLoader, node: yaml.ScalarNode) -> float:
     return float(value)
 
 
-CoreLoader.add_constructor("tag:yaml.org,2002:int", _construct_int)
-CoreLoader.add_constructor("tag:yaml.org,2002:float", _construct_float)
+for _loader in {CoreLoader, FastCoreLoader}:
+    _loader.add_constructor("tag:yaml.org,2002:int", _construct_int)
+    _loader.add_constructor("tag:yaml.org,2002:float", _construct_float)
 
 
 class CoreDumper(yaml.SafeDumper):
@@ -80,7 +90,7 @@ class CoreDumper(yaml.SafeDumper):
 
 def load_yaml(text: str | bytes) -> Any:
     """Parse one YAML document with the YAML 1.2 core schema."""
-    return yaml.load(text, Loader=CoreLoader)
+    return yaml.load(text, Loader=FastCoreLoader)
 
 
 def dump_yaml(data: Any, **kwargs: Any) -> str:

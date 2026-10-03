@@ -4,6 +4,7 @@ import { fileExists, isNonEmptyString, isObj, isYamlPath, loadYamlFile, normaliz
 import { EXTENSION_KIND_RE } from "../structure.js";
 import { externalRefProblems } from "./externalref.js";
 import { ASSET_KIND_STABILITY } from "../vocab.js";
+import { IGNORE_FILE, isIgnored, loadIgnore } from "../ignore.js";
 import { DOCUMENT_KINDS, isOwpDocument, packageDocuments } from "../discovery.js";
 
 /**
@@ -41,6 +42,7 @@ export function collectAssets(ctx: Context): void {
   const assets = isObj(spec) ? spec.assets : undefined;
   if (assets !== undefined && !Array.isArray(assets)) error(ctx, "asset.list", "spec.assets must be a list", "owp.yaml");
   const seen = new Map<string, number>();
+  const ignoreRules = loadIgnore(ctx.root);
   (Array.isArray(assets) ? assets : []).forEach((a, i) => {
     const where = `spec.assets[${i}]`;
     if (!isObj(a)) {
@@ -113,6 +115,10 @@ export function collectAssets(ctx: Context): void {
     }
     if (!fileExists(abs)) {
       error(ctx, "asset.missing-file", `${where}.path "${raw}" does not exist as a file in the package`, raw);
+      return;
+    }
+    if (isIgnored(ignoreRules, norm)) {
+      error(ctx, "asset.missing-file", `${where}.path "${raw}" is excluded by ${IGNORE_FILE}, so it is not a package file`, raw);
       return;
     }
     asset.exists = true;

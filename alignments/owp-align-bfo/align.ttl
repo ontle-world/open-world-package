@@ -1,0 +1,16 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+<https://w3id.org/owp/align/bfo> a owl:Ontology ;
+  owl:imports <https://w3id.org/owp/ns> , <http://purl.obolibrary.org/obo/bfo/2020/bfo-core.ttl> , <http://purl.obolibrary.org/obo/iao/2026-03-30/iao.owl> ;
+  rdfs:comment "Informative alignment of OWP to BFO 2020 (ISO/IEC 21838-2) and IAO. OWP documents and records are information content entities. A World is not aligned: it may be designed, simulated, or of mixed BFO categories."@en .
+owp:Document rdfs:subClassOf obo:IAO_0000310 .         # document
+owp:Package rdfs:subClassOf obo:IAO_0000310 .          # document: a collection of ICEs understood together
+owp:StateCompilerProfile rdfs:subClassOf obo:IAO_0000033 .  # directive information entity (not a plan specification: no objective parts)
+owp:Criterion rdfs:subClassOf obo:IAO_0000033 .        # directive information entity
+owp:Observation rdfs:subClassOf obo:IAO_0000030 .      # information content entity (a source report need not be a reliable data entity)
+owp:StateValue rdfs:subClassOf obo:IAO_0000030 .       # information content entity (an unresolved alternative is not claimed true)
+owp:Derivation rdfs:subClassOf obo:IAO_0000030 .       # information content entity
+owp:Compilation rdfs:subClassOf obo:BFO_0000015 .      # process
+owp:represents rdfs:subPropertyOf obo:IAO_0000136 .    # is about

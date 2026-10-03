@@ -1,0 +1,31 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld
+  name: owp-align-dul
+  version: 0.1.0
+  title: OWP to DOLCE+DnS Ultralite
+  license: CC-BY-4.0
+spec:
+  dependencies:
+  - openworld/owp-vocabulary@0.1.0
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/owp/align/dul#
+    prefixes:
+      owp: https://w3id.org/owp/ns#
+      dul: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+    entrypoints:
+    - path: align.ttl
+      format: turtle
+      role: schema
+    - path: mappings.sssom.tsv
+      format: sssom-tsv
+      role: mappings
+    externalImports:
+    - iri: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+      ref:
+        provider: https
+        uri: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl
+        digest: sha256:e5f6429596d2c7014730bad85aaaa9c39530235f27f596cd0e7ce85e6bbcba66
+    termIndex: semantics/terms.yaml

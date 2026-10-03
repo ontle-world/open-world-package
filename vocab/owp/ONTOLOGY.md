@@ -1,0 +1,11 @@
+# OWP vocabulary
+
+RDF terms for OWP's own concepts, in the namespace `https://w3id.org/owp/ns#` (OWL 2 DL). It defines only what other vocabularies lack. Provenance, time, licensing, and catalog terms come from PROV-O, XSD, DCTERMS, and DCAT.
+
+- **Documents.** Package and asset documents, an Effective World State (`owp:EffectiveWorldState`), and an ObservationSet are information. Each instance is one version (one digest) of the content. A World (`owp:World`) is the reality a World package represents (`owp:represents`).
+- **Values.** One EWS value for one subject is an `owp:StateValue`. In RDF 1.2 output it reifies the unasserted triple (subject, bound property, value) and carries `owp:resolution` (`owp:resolved` or `owp:unresolved`), its observations (`prov:wasDerivedFrom`), and its `owp:derivation` (`owp:Estimate`, `owp:Aggregate`, `owp:Classification`).
+- **Runs.** `owp:Compilation` is one run of a State Compiler.
+
+Alignments to PROV-O, BFO 2020 with IAO, and DOLCE+DnS Ultralite are separate packages under `alignments/`. They are informative, so OWP conformance never depends on them. The namespace is stable across spec versions. Each release adds an `owl:versionIRI`.
+
+License: CC BY 4.0.

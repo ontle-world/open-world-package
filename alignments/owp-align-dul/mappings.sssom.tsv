@@ -1,0 +1,25 @@
+# curie_map:
+#   owp: https://w3id.org/owp/ns#
+#   prov: http://www.w3.org/ns/prov#
+#   obo: http://purl.obolibrary.org/obo/
+#   dul: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+#   dct: http://purl.org/dc/terms/
+#   sosa: http://www.w3.org/ns/sosa/
+#   dcat: http://www.w3.org/ns/dcat#
+#   skos: http://www.w3.org/2004/02/skos/core#
+#   semapv: https://w3id.org/semapv/vocab/
+# mapping_set_id: https://w3id.org/owp/align/v1alpha1/owp-align-dul.sssom.tsv
+# mapping_set_version: 0.1.0-draft
+# license: https://creativecommons.org/licenses/by/4.0/
+# mapping_date: 2026-10-04
+# comment: Informative. Subclass rows are axioms in owp-align-*.ttl, checked with HermiT (consistent, no unsatisfiable classes, sample data imported). Target versions: PROV-O 2013-04-30, BFO 2020 core (ISO/IEC 21838-2), IAO 2026-03-30, DUL (ontologydesignpatterns.org), SOSA/SSN 2017.
+subject_id	predicate_id	object_id	mapping_justification	confidence	comment
+owp:World	rdfs:subClassOf	dul:Entity	semapv:ManualMappingCuration	0.9	real, possible, or imaginary
+owp:Document	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.9	
+owp:Package	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.85	
+owp:Observation	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.9	
+owp:StateValue	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.9	
+owp:Derivation	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.9	
+owp:Criterion	rdfs:subClassOf	dul:InformationObject	semapv:ManualMappingCuration	0.85	expresses a dul:Description
+owp:Compilation	rdfs:subClassOf	dul:Action	semapv:ManualMappingCuration	0.8	a software agent executing the Method the State Compiler expresses
+owp:represents	rdfs:subPropertyOf	dul:isAbout	semapv:ManualMappingCuration	0.9	

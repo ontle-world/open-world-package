@@ -1,0 +1,36 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld
+  name: owp-align-bfo
+  version: 0.1.0
+  title: OWP to BFO 2020 and IAO
+  license: CC-BY-4.0
+spec:
+  dependencies:
+  - openworld/owp-vocabulary@0.1.0
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/owp/align/bfo#
+    prefixes:
+      owp: https://w3id.org/owp/ns#
+      obo: http://purl.obolibrary.org/obo/
+    entrypoints:
+    - path: align.ttl
+      format: turtle
+      role: schema
+    - path: mappings.sssom.tsv
+      format: sssom-tsv
+      role: mappings
+    externalImports:
+    - iri: http://purl.obolibrary.org/obo/BFO_
+      ref:
+        provider: https
+        uri: https://raw.githubusercontent.com/BFO-ontology/BFO-2020/0900316ea9d330f599bd110f7f6504ed33a87fc8/21838-2/owl/bfo-core.ttl
+        digest: sha256:a7f0385eb859e707fa81bad532ff252427dc3490e3896a929332016fc53d9ece
+    - iri: http://purl.obolibrary.org/obo/IAO_
+      ref:
+        provider: https
+        uri: https://raw.githubusercontent.com/information-artifact-ontology/IAO/v2026-03-30/iao.owl
+        digest: sha256:c27ff2964a2ad8165bc365698b628aae95108411384aa4450e6e1b1e82bf0f41
+    termIndex: semantics/terms.yaml

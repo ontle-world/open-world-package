@@ -16,6 +16,22 @@ OWP does not replace existing standards. Each of them answers part of the questi
 | MLflow model signature | input/output/parameter schemas | the semantic origin of those inputs (View, EWS contract, adapter) |
 | OCI | content addressing, manifests, referrers | nothing new; OCI can transport `.owp.zip` archives |
 
+## OWP vocabulary and alignments
+
+OWP's own concepts have RDF terms in `vocab/owp` (namespace `https://w3id.org/owp/ns#`, OWL 2 DL, CC BY 4.0). The vocabulary defines only what other vocabularies lack, and reuses PROV-O, XSD, DCTERMS, and DCAT for provenance, time, licensing, and catalogs. OWP's core takes no position on upper ontologies.
+
+Alignments are separate OntologyPackages under `alignments/`. Each holds OWL axioms (`align.ttl`) and an SSSOM mapping set with justification and confidence. They are informative: OWP conformance never depends on them.
+
+| Package | Aligns OWP to | Notes |
+|---|---|---|
+| `owp-align-prov` | PROV-O (2013-04-30) | documents, observations and values are `prov:Entity`; a compilation is a `prov:Activity`; a State Compiler is a `prov:Plan` |
+| `owp-align-bfo` | BFO 2020 (ISO/IEC 21838-2) and IAO | documents are IAO documents; values and observations are information content entities; a compilation is a BFO process; a World is not aligned, since it may be designed or simulated |
+| `owp-align-dul` | DOLCE+DnS Ultralite | documents are InformationObjects that express Descriptions (a View) or Methods (a State Compiler); an EWS is about a Situation; a compilation is an Action |
+
+Cross-standard links that are not subclass axioms use SKOS match predicates, never `owl:equivalentClass`. Examples: an OWP observation record is a `skos:closeMatch` of `sosa:Observation`, because it need not be an act of observing.
+
+`scripts/check_alignments.sh` reasons over the vocabulary and each alignment with HermiT, through ROBOT. It uses the upstream ontologies pinned by digest in each package's `externalImports`. Each check is run with the sample data and against deliberately wrong inputs. CI runs it.
+
 ## Binding convention
 
 Asset YAML files tie their parts to standards under `spec.standardBindings` (spec section 5.3): each named binding has a `standard`, and `terms` (local names to the standard's type names), a `ref` to an artifact, or both. Each `ref` uses the ExternalRef shape of spec section 5.1. Unbound references say so explicitly instead of pointing at an invented artifact:

@@ -1,0 +1,31 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld
+  name: owp-align-prov
+  version: 0.1.0
+  title: OWP to PROV-O
+  license: CC-BY-4.0
+spec:
+  dependencies:
+  - openworld/owp-vocabulary@0.1.0
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/owp/align/prov#
+    prefixes:
+      owp: https://w3id.org/owp/ns#
+      prov: http://www.w3.org/ns/prov#
+    entrypoints:
+    - path: align.ttl
+      format: turtle
+      role: schema
+    - path: mappings.sssom.tsv
+      format: sssom-tsv
+      role: mappings
+    externalImports:
+    - iri: http://www.w3.org/ns/prov#
+      ref:
+        provider: https
+        uri: https://www.w3.org/ns/prov-o-20130430.ttl
+        digest: sha256:3d03c8e15753178541fb8cd59fbefecaf1861f9c37ef75190c6e938b85fb0c3d
+    termIndex: semantics/terms.yaml

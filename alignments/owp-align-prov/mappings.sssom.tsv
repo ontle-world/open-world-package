@@ -1,0 +1,31 @@
+# curie_map:
+#   owp: https://w3id.org/owp/ns#
+#   prov: http://www.w3.org/ns/prov#
+#   obo: http://purl.obolibrary.org/obo/
+#   dul: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#
+#   dct: http://purl.org/dc/terms/
+#   sosa: http://www.w3.org/ns/sosa/
+#   dcat: http://www.w3.org/ns/dcat#
+#   skos: http://www.w3.org/2004/02/skos/core#
+#   semapv: https://w3id.org/semapv/vocab/
+# mapping_set_id: https://w3id.org/owp/align/v1alpha1/owp-align-prov.sssom.tsv
+# mapping_set_version: 0.1.0-draft
+# license: https://creativecommons.org/licenses/by/4.0/
+# mapping_date: 2026-10-04
+# comment: Informative. Subclass rows are axioms in owp-align-*.ttl, checked with HermiT (consistent, no unsatisfiable classes, sample data imported). Target versions: PROV-O 2013-04-30, BFO 2020 core (ISO/IEC 21838-2), IAO 2026-03-30, DUL (ontologydesignpatterns.org), SOSA/SSN 2017.
+subject_id	predicate_id	object_id	mapping_justification	confidence	comment
+owp:Document	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.95	
+owp:Package	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.95	
+owp:Observation	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.95	
+owp:StateValue	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.9	
+owp:Derivation	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.9	
+owp:Derivation	skos:relatedMatch	prov:Derivation	semapv:ManualMappingCuration	0.6	prov:Derivation is a qualified influence naming one source; an OWP aggregate draws on many
+owp:Criterion	rdfs:subClassOf	prov:Entity	semapv:ManualMappingCuration	0.9	not prov:Plan: a rule set is not a set of steps
+owp:ObservationSet	rdfs:subClassOf	prov:Collection	semapv:ManualMappingCuration	0.9	
+owp:hasObservation	rdfs:subPropertyOf	prov:hadMember	semapv:ManualMappingCuration	0.9	
+owp:StateCompilerProfile	rdfs:subClassOf	prov:Plan	semapv:ManualMappingCuration	0.85	
+owp:Compilation	rdfs:subClassOf	prov:Activity	semapv:ManualMappingCuration	0.95	
+owp:dependsOn	rdfs:subPropertyOf	dct:requires	semapv:ManualMappingCuration	0.9	in owp-core; not prov:wasInfluencedBy (a declared dependency is no PROV influence)
+owp:Observation	skos:closeMatch	sosa:Observation	semapv:ManualMappingCuration	0.6	an OWP record may not be an act of observing
+owp:ObservationSet	skos:closeMatch	sosa:ObservationCollection	semapv:ManualMappingCuration	0.6	SOSA/SSN 2023 draft term
+owp:Package	skos:closeMatch	dcat:Resource	semapv:ManualMappingCuration	0.7	an archive is a dcat:Distribution

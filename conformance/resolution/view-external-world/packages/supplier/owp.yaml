@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: supplier
+  version: 1.0.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture supplier World.
+    boundary:
+      included: [supplier]
+  conformance:
+    profile: descriptive

@@ -68,5 +68,17 @@ class RuleIdRegistryTests(unittest.TestCase):
         self.assertEqual(typescript_ids(), set(REGISTRY))
 
 
+
+class ReferenceIdsTests(unittest.TestCase):
+    def test_python_reports_exactly_the_reference_ids(self):
+        """conformance/reference-ids.json is current (the TypeScript runner checks the same file)."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("reference_ids", ROOT / "scripts" / "reference_ids.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertEqual(module.render(module.compute()), (ROOT / "conformance" / "reference-ids.json").read_text(encoding="utf-8"),
+                         "run python scripts/reference_ids.py and review the diff")
+
+
 if __name__ == "__main__":
     unittest.main()

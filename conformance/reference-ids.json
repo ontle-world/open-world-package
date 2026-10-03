@@ -1,0 +1,1373 @@
+{
+ "cases": {
+  "actor-role-delegation": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "actor-type-unknown": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.value"
+   ]
+  },
+  "artifact-contract-full": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "artifact-operation-unknown": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.value"
+   ]
+  },
+  "artifact-supersedes-unpinned": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
+  },
+  "asset-api-version-mismatch": {
+   "errors": [
+    "asset.api-version"
+   ],
+   "warnings": []
+  },
+  "asset-dotslash-path": {
+   "errors": [
+    "asset.path-form"
+   ],
+   "warnings": []
+  },
+  "asset-duplicate-key": {
+   "errors": [
+    "asset.yaml"
+   ],
+   "warnings": []
+  },
+  "asset-duplicate-path": {
+   "errors": [
+    "asset.duplicate-path"
+   ],
+   "warnings": []
+  },
+  "asset-foreign-yaml": {
+   "errors": [],
+   "warnings": []
+  },
+  "asset-header-omitted": {
+   "errors": [],
+   "warnings": []
+  },
+  "asset-kind-reserved": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-reserved"
+   ]
+  },
+  "asset-local-path-listed": {
+   "errors": [
+    "asset.path-or-ref"
+   ],
+   "warnings": []
+  },
+  "asset-missing-file": {
+   "errors": [
+    "asset.missing-file"
+   ],
+   "warnings": []
+  },
+  "asset-missing-kind": {
+   "errors": [
+    "asset.kind"
+   ],
+   "warnings": []
+  },
+  "asset-nested-package": {
+   "errors": [],
+   "warnings": []
+  },
+  "asset-non-string-key": {
+   "errors": [
+    "asset.yaml"
+   ],
+   "warnings": []
+  },
+  "asset-path-and-ref": {
+   "errors": [
+    "asset.path-or-ref",
+    "ref.provider",
+    "ref.shape"
+   ],
+   "warnings": []
+  },
+  "asset-path-escapes-package": {
+   "errors": [
+    "asset.path-escape"
+   ],
+   "warnings": []
+  },
+  "asset-unknown-kind": {
+   "errors": [
+    "asset.kind"
+   ],
+   "warnings": []
+  },
+  "asset-unparseable-yaml": {
+   "errors": [
+    "asset.yaml"
+   ],
+   "warnings": []
+  },
+  "asset-without-api-version": {
+   "errors": [
+    "profile.viewable"
+   ],
+   "warnings": []
+  },
+  "binding-asset-missing": {
+   "errors": [
+    "binding.asset"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-field-shape": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-field-unknown": {
+   "errors": [
+    "binding.field-unknown"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-not-curie": {
+   "errors": [
+    "binding.curie"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-subjects": {
+   "errors": [
+    "binding.subjects"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-term-unscoped": {
+   "errors": [],
+   "warnings": [
+    "binding.term-unscoped",
+    "view.outside-world"
+   ]
+  },
+  "binding-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-valid": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "capability-minimal": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "capability-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "compiler-classify-cycle": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "compiler-field-outside-view": {
+   "errors": [],
+   "warnings": [
+    "compiler.field-outside-view"
+   ]
+  },
+  "compiler-latent-binding-mismatch": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-mismatch": {
+   "errors": [
+    "compiler.output-schema-mismatch"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-missing-bindings": {
+   "errors": [
+    "compiler.output-schema-ref",
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-missing-file": {
+   "errors": [
+    "compiler.output-schema-ref",
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-no-properties": {
+   "errors": [
+    "compiler.output-schema-ref",
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-not-json": {
+   "errors": [
+    "compiler.output-schema-ref",
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-not-utf8": {
+   "errors": [
+    "compiler.output-schema-ref",
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "compiler-output-schema-ref-null": {
+   "errors": [],
+   "warnings": []
+  },
+  "compiler-per-subject-unknown-field": {
+   "errors": [
+    "compiler.per-subject-field"
+   ],
+   "warnings": []
+  },
+  "consumer-actor-ref": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "delegation-bad-period": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
+  },
+  "delegation-exceeds-authority": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.delegation-exceeds-authority"
+   ]
+  },
+  "dependency-range": {
+   "errors": [
+    "manifest.dependency"
+   ],
+   "warnings": []
+  },
+  "eval-bad-version": {
+   "errors": [
+    "eval.version"
+   ],
+   "warnings": []
+  },
+  "eval-duplicate-name": {
+   "errors": [
+    "eval.duplicate-name"
+   ],
+   "warnings": []
+  },
+  "eval-supersedes-range": {
+   "errors": [
+    "eval.supersedes"
+   ],
+   "warnings": []
+  },
+  "evaluation-assessment-kind-unknown": {
+   "errors": [
+    "evaluation.assessment-kind"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evaluation-profile-portable": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evaluation-result-schema-missing": {
+   "errors": [
+    "evaluation.result-schema"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evaluation-subject-missing": {
+   "errors": [
+    "evaluation.subject"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evaluation-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evaluation-verifier-ref-unpinned": {
+   "errors": [
+    "evaluation.verifier-ref"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "evidence-compiler-out-of-scope": {
+   "errors": [
+    "evidence.scope.state-compiler"
+   ],
+   "warnings": []
+  },
+  "evidence-external-profile": {
+   "errors": [],
+   "warnings": []
+  },
+  "evidence-local-profile-unversioned": {
+   "errors": [
+    "evidence.version-mismatch"
+   ],
+   "warnings": [
+    "eval.version-missing"
+   ]
+  },
+  "evidence-missing-result": {
+   "errors": [
+    "evidence.result"
+   ],
+   "warnings": []
+  },
+  "evidence-pinned": {
+   "errors": [],
+   "warnings": []
+  },
+  "evidence-scope-worldref-mismatch": {
+   "errors": [
+    "evidence.scope.world-ref"
+   ],
+   "warnings": []
+  },
+  "evidence-subject-mismatch": {
+   "errors": [
+    "evidence.subject"
+   ],
+   "warnings": []
+  },
+  "evidence-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "evidence-unpinned-profile": {
+   "errors": [
+    "evidence.unpinned"
+   ],
+   "warnings": []
+  },
+  "evidence-unpinned-verifier": {
+   "errors": [
+    "evidence.unpinned"
+   ],
+   "warnings": []
+  },
+  "evidence-verifier-version-mismatch": {
+   "errors": [
+    "evidence.version-mismatch"
+   ],
+   "warnings": []
+  },
+  "evidence-version-mismatch": {
+   "errors": [
+    "evidence.version-mismatch"
+   ],
+   "warnings": []
+  },
+  "evidence-view-out-of-scope": {
+   "errors": [
+    "evidence.scope.world-view"
+   ],
+   "warnings": []
+  },
+  "experimental-actor-block-mismatch": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
+  },
+  "experimental-extension-value": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "experimental-extension-value-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "experimental-kinds": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "experimental-reference-wrong-kind": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "experimental-unknown-field": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
+  },
+  "experimental-value-unknown": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.value"
+   ]
+  },
+  "extension-block-asset-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "extension-block-not-mapping": {
+   "errors": [
+    "extension.block"
+   ],
+   "warnings": []
+  },
+  "extension-block-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "extension-blocks": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-definition": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-definition-malformed": {
+   "errors": [
+    "extension.definition"
+   ],
+   "warnings": []
+  },
+  "extension-definition-missing-schema": {
+   "errors": [
+    "extension.definition"
+   ],
+   "warnings": []
+  },
+  "extension-duplicate": {
+   "errors": [
+    "extension.duplicate"
+   ],
+   "warnings": []
+  },
+  "extension-kind-declared": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-kind-malformed": {
+   "errors": [
+    "asset.kind"
+   ],
+   "warnings": []
+  },
+  "extension-kind-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "extension-must-understand": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-must-understand-without-as": {
+   "errors": [
+    "extension.declaration"
+   ],
+   "warnings": []
+  },
+  "extension-name-form": {
+   "errors": [
+    "extension.name"
+   ],
+   "warnings": []
+  },
+  "extension-name-not-string": {
+   "errors": [
+    "extension.name"
+   ],
+   "warnings": []
+  },
+  "extension-name-reserved": {
+   "errors": [
+    "extension.name"
+   ],
+   "warnings": []
+  },
+  "extraction-multi-latest": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "compiler.multi-latest",
+    "experimental.graph-ontology"
+   ]
+  },
+  "extraction-profile": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.graph-ontology"
+   ]
+  },
+  "identity-with-slash": {
+   "errors": [
+    "manifest.identity"
+   ],
+   "warnings": []
+  },
+  "manifest-bad-api-version": {
+   "errors": [
+    "manifest.api-version"
+   ],
+   "warnings": []
+  },
+  "manifest-colon-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "manifest-duplicate-key": {
+   "errors": [
+    "manifest.load"
+   ],
+   "warnings": []
+  },
+  "manifest-open-containers": {
+   "errors": [],
+   "warnings": []
+  },
+  "manifest-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "manifest-unknown-kind": {
+   "errors": [
+    "manifest.kind"
+   ],
+   "warnings": []
+  },
+  "manifest-unknown-metadata-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "manifest-yaml-core-scalars": {
+   "errors": [],
+   "warnings": []
+  },
+  "model-adapter-wrong-source": {
+   "errors": [
+    "worldmodel.adapter-source"
+   ],
+   "warnings": []
+  },
+  "model-entrypoint-missing": {
+   "errors": [
+    "model.entrypoint"
+   ],
+   "warnings": []
+  },
+  "model-grounded": {
+   "errors": [],
+   "warnings": []
+  },
+  "model-grounding-dotslash-path": {
+   "errors": [
+    "worldmodel.grounding-ref"
+   ],
+   "warnings": []
+  },
+  "model-missing-adapter": {
+   "errors": [
+    "worldmodel.adapter",
+    "worldmodel.adapter-ref"
+   ],
+   "warnings": []
+  },
+  "model-missing-compilers": {
+   "errors": [
+    "worldmodel.compatible-compilers"
+   ],
+   "warnings": []
+  },
+  "model-missing-views": {
+   "errors": [
+    "worldmodel.compatible-views"
+   ],
+   "warnings": []
+  },
+  "model-no-roles": {
+   "errors": [
+    "worldmodel.roles"
+   ],
+   "warnings": []
+  },
+  "model-view-other-world": {
+   "errors": [
+    "worldmodel.grounding-ref"
+   ],
+   "warnings": []
+  },
+  "model-world-ref-not-package-reference": {
+   "errors": [
+    "manifest.dependency",
+    "worldmodel.world-ref"
+   ],
+   "warnings": []
+  },
+  "model-wrong-input-contract": {
+   "errors": [
+    "worldmodel.input-contract"
+   ],
+   "warnings": []
+  },
+  "ontology-bad-iri": {
+   "errors": [
+    "ontology.iri"
+   ],
+   "warnings": []
+  },
+  "ontology-bad-prefix": {
+   "errors": [
+    "ontology.prefix"
+   ],
+   "warnings": []
+  },
+  "ontology-constrained-missing-shapes": {
+   "errors": [
+    "profile.ontology.constrained"
+   ],
+   "warnings": []
+  },
+  "ontology-entrypoint-escape": {
+   "errors": [
+    "ontology.entrypoint"
+   ],
+   "warnings": []
+  },
+  "ontology-entrypoint-missing-file": {
+   "errors": [
+    "ontology.entrypoint"
+   ],
+   "warnings": []
+  },
+  "ontology-external-import": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-external-import-missing-ref": {
+   "errors": [
+    "ontology.external-import"
+   ],
+   "warnings": []
+  },
+  "ontology-mapped": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-missing-iri": {
+   "errors": [
+    "profile.ontology.vocabulary"
+   ],
+   "warnings": []
+  },
+  "ontology-missing-spec": {
+   "errors": [
+    "ontology.spec"
+   ],
+   "warnings": []
+  },
+  "ontology-no-profile": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-owp-yaml-not-semantic-profile": {
+   "errors": [
+    "ontology.parse"
+   ],
+   "warnings": []
+  },
+  "ontology-prefix-undeclared": {
+   "errors": [
+    "ontology.prefix-undeclared"
+   ],
+   "warnings": []
+  },
+  "ontology-profile-unknown": {
+   "errors": [
+    "profile.unknown"
+   ],
+   "warnings": []
+  },
+  "ontology-schema-owp-yaml": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-schema-rdf-with-index": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-schema-rdf-without-index": {
+   "errors": [
+    "profile.ontology.schema"
+   ],
+   "warnings": []
+  },
+  "ontology-semantic-profile-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "ontology-term-index-malformed": {
+   "errors": [
+    "ontology.term-index"
+   ],
+   "warnings": []
+  },
+  "ontology-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "ontology-unknown-format": {
+   "errors": [
+    "ontology.format"
+   ],
+   "warnings": []
+  },
+  "ontology-vocabulary": {
+   "errors": [],
+   "warnings": []
+  },
+  "package-example-extensions": {
+   "errors": [],
+   "warnings": []
+  },
+  "package-example-kind-not-checked": {
+   "errors": [],
+   "warnings": []
+  },
+  "package-example-unparseable": {
+   "errors": [
+    "asset.yaml"
+   ],
+   "warnings": []
+  },
+  "package-ignore": {
+   "errors": [],
+   "warnings": []
+  },
+  "package-ignore-listed-example": {
+   "errors": [
+    "asset.missing-file"
+   ],
+   "warnings": []
+  },
+  "package-ignore-negation": {
+   "errors": [
+    "asset.kind"
+   ],
+   "warnings": []
+  },
+  "package-legacy-manifest": {
+   "errors": [
+    "package.legacy-manifest"
+   ],
+   "warnings": []
+  },
+  "package-legacy-world-yaml": {
+   "errors": [
+    "package.legacy-manifest"
+   ],
+   "warnings": []
+  },
+  "package-missing-card": {
+   "errors": [
+    "package.card"
+   ],
+   "warnings": []
+  },
+  "ref-bad-digest": {
+   "errors": [
+    "ref.shape"
+   ],
+   "warnings": []
+  },
+  "ref-bad-status": {
+   "errors": [
+    "ref.shape"
+   ],
+   "warnings": []
+  },
+  "ref-extension-provider": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-extension-provider-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "ref-filelist": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-missing-uri": {
+   "errors": [
+    "ref.shape"
+   ],
+   "warnings": []
+  },
+  "ref-oci-digest": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-pinned-commit": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-status-null": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-unbound": {
+   "errors": [],
+   "warnings": []
+  },
+  "ref-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "ref-unknown-provider": {
+   "errors": [
+    "ref.provider"
+   ],
+   "warnings": []
+  },
+  "ref-unpinned": {
+   "errors": [],
+   "warnings": [
+    "ref.unpinned"
+   ]
+  },
+  "scenario-baseline-missing": {
+   "errors": [
+    "scenario.baseline-ref"
+   ],
+   "warnings": []
+  },
+  "scenario-confidence-range": {
+   "errors": [
+    "scenario.confidence"
+   ],
+   "warnings": []
+  },
+  "scenario-engine-unknown": {
+   "errors": [
+    "scenario.engine-kind"
+   ],
+   "warnings": []
+  },
+  "scenario-portable": {
+   "errors": [],
+   "warnings": []
+  },
+  "standard-binding-license-null": {
+   "errors": [
+    "standard.license"
+   ],
+   "warnings": []
+  },
+  "standard-binding-shape": {
+   "errors": [
+    "schema.unknown-field",
+    "standard.binding"
+   ],
+   "warnings": []
+  },
+  "standard-binding-unlicensed": {
+   "errors": [
+    "standard.license"
+   ],
+   "warnings": []
+  },
+  "standard-binding-unpinned": {
+   "errors": [
+    "standard.unpinned"
+   ],
+   "warnings": []
+  },
+  "standard-binding-valid": {
+   "errors": [],
+   "warnings": []
+  },
+  "task-set-composition": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "task-set-composition-wrong-kind": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "view-external-world-not-dependency": {
+   "errors": [
+    "view.external-world"
+   ],
+   "warnings": []
+  },
+  "view-external-world-undeclared": {
+   "errors": [
+    "view.external-world"
+   ],
+   "warnings": []
+  },
+  "view-in-world-model-package": {
+   "errors": [
+    "view.world-ref"
+   ],
+   "warnings": []
+  },
+  "view-outside-world": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "view-specializes": {
+   "errors": [],
+   "warnings": []
+  },
+  "view-specializes-cycle": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "view-specializes-missing": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "work-pattern-graph": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "work-pattern-graph-dangling": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "work-pattern-graph-duplicate-node": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field",
+    "experimental.reference"
+   ]
+  },
+  "work-pattern-loop-bound": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
+  },
+  "work-pattern-node-family-unknown": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.value"
+   ]
+  },
+  "world-action-ready": {
+   "errors": [],
+   "warnings": []
+  },
+  "world-action-ready-missing-commit": {
+   "errors": [
+    "profile.action-ready"
+   ],
+   "warnings": []
+  },
+  "world-bad-binding-field": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "world-bad-binding-select": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "world-compiler-unknown-view": {
+   "errors": [
+    "profile.stateful.compiler-view"
+   ],
+   "warnings": []
+  },
+  "world-compiler-wrong-output-contract": {
+   "errors": [
+    "profile.stateful.output-contract"
+   ],
+   "warnings": []
+  },
+  "world-default-compiler-other-view": {
+   "errors": [
+    "profile.stateful.default-compiler-view"
+   ],
+   "warnings": []
+  },
+  "world-descriptive-default": {
+   "errors": [],
+   "warnings": []
+  },
+  "world-descriptive-missing-definition": {
+   "errors": [
+    "profile.descriptive"
+   ],
+   "warnings": []
+  },
+  "world-model-ready-missing-schema": {
+   "errors": [
+    "profile.model-ready.output-schema"
+   ],
+   "warnings": []
+  },
+  "world-model-ready-via-schema-ref": {
+   "errors": [],
+   "warnings": []
+  },
+  "world-stateful-missing-compiler": {
+   "errors": [
+    "profile.stateful"
+   ],
+   "warnings": []
+  },
+  "world-stateful-satisfies-higher": {
+   "errors": [],
+   "warnings": []
+  },
+  "world-unknown-profile": {
+   "errors": [
+    "profile.unknown"
+   ],
+   "warnings": []
+  },
+  "world-view-actor-ref-wrong-kind": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "world-view-portable": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental"
+   ]
+  },
+  "world-view-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "world-viewable": {
+   "errors": [],
+   "warnings": []
+  },
+  "world-viewable-missing-default-view": {
+   "errors": [
+    "profile.viewable"
+   ],
+   "warnings": []
+  },
+  "yaml-directive": {
+   "errors": [],
+   "warnings": []
+  },
+  "yaml-tab-in-flow": {
+   "errors": [
+    "asset.yaml"
+   ],
+   "warnings": []
+  }
+ },
+ "resolutionCases": {
+  "archive-source": {
+   "errors": [],
+   "warnings": []
+  },
+  "archive-tampered": {
+   "errors": [
+    "resolve.source",
+    "resolve.unresolved"
+   ],
+   "warnings": []
+  },
+  "archive-unlocked-file": {
+   "errors": [
+    "resolve.source",
+    "resolve.unresolved"
+   ],
+   "warnings": []
+  },
+  "binding-grounded": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-prefix-conflict": {
+   "errors": [
+    "grounding.prefix-conflict"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-prefix-unknown": {
+   "errors": [
+    "grounding.prefix-unknown"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-term-unknown": {
+   "errors": [
+    "grounding.ontology-term"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "compiler-missing-in-world": {
+   "errors": [
+    "grounding.state-compiler"
+   ],
+   "warnings": []
+  },
+  "compiler-view-not-compatible": {
+   "errors": [
+    "grounding.compiler-view"
+   ],
+   "warnings": []
+  },
+  "dependency-cycle": {
+   "errors": [
+    "resolve.cycle"
+   ],
+   "warnings": []
+  },
+  "dependency-direction": {
+   "errors": [],
+   "warnings": [
+    "resolve.dependency-direction"
+   ]
+  },
+  "dependency-mapping-source": {
+   "errors": [],
+   "warnings": []
+  },
+  "descriptive-dependency": {
+   "errors": [],
+   "warnings": []
+  },
+  "diamond": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-defined": {
+   "errors": [],
+   "warnings": []
+  },
+  "extension-without-definition": {
+   "errors": [
+    "extension.definition"
+   ],
+   "warnings": []
+  },
+  "git-bundle-source": {
+   "errors": [],
+   "warnings": []
+  },
+  "git-missing-rev": {
+   "errors": [
+    "resolve.source",
+    "resolve.unresolved"
+   ],
+   "warnings": []
+  },
+  "grounded": {
+   "errors": [],
+   "warnings": []
+  },
+  "hidden-directory-skipped": {
+   "errors": [
+    "resolve.unresolved"
+   ],
+   "warnings": []
+  },
+  "invalid-dependency": {
+   "errors": [
+    "grounding.compiler-view",
+    "resolve.dependency-invalid"
+   ],
+   "warnings": []
+  },
+  "non-root-model-grounding": {
+   "errors": [
+    "grounding.compiler-view",
+    "grounding.world-view"
+   ],
+   "warnings": []
+  },
+  "unresolvable-world": {
+   "errors": [
+    "resolve.unresolved"
+   ],
+   "warnings": []
+  },
+  "version-conflict": {
+   "errors": [
+    "resolve.version-conflict"
+   ],
+   "warnings": []
+  },
+  "view-external-world": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "view-missing-in-world": {
+   "errors": [
+    "grounding.world-view"
+   ],
+   "warnings": []
+  },
+  "view-path-wrong-kind": {
+   "errors": [
+    "grounding.compiler-view",
+    "grounding.world-view"
+   ],
+   "warnings": []
+  },
+  "world-ref-not-a-dependency": {
+   "errors": [
+    "grounding.world-not-dependency"
+   ],
+   "warnings": []
+  },
+  "world-ref-not-world": {
+   "errors": [
+    "grounding.world-kind"
+   ],
+   "warnings": []
+  }
+ }
+}

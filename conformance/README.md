@@ -6,6 +6,8 @@ A single implementation reading its own packages does not demonstrate interopera
 
 All expected outcomes are in `expected.yaml`. Rule ids are listed in `spec/rule-ids.yaml`. For an invalid case, `errors` lists the rule ids (spec Appendix A) a conforming implementation MUST report; it MAY report more. `warnings`, when present, lists warning ids it MUST report; it MAY report more. `rule` is informative; error wording and ordering are implementation-defined.
 
+`reference-ids.json` is not part of the suite's requirements. It records every id the two reference implementations in this repository report for each validation and resolution case, and both are tested against it, so they report exactly the same ids. After a change that alters reported ids, regenerate it with `python scripts/reference_ids.py` and review the diff.
+
 ## Sections
 
 | Section | Fixtures | A conforming implementation must |

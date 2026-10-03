@@ -157,6 +157,11 @@ function main(): number {
   cacheDir = fs.mkdtempSync(path.join(cacheParent, "conformance-"));
 
   const doc = parse(fs.readFileSync(path.join(suite, "expected.yaml"), "utf8")) as Record<string, unknown>;
+  // reference-ids.json: every id the reference implementations report; this implementation must report exactly these.
+  const refFile = path.join(suite, "reference-ids.json");
+  const reference = fs.existsSync(refFile)
+    ? (JSON.parse(fs.readFileSync(refFile, "utf8")) as Record<string, Record<string, { errors: string[]; warnings: string[] }>>)
+    : undefined;
   const rows: Row[] = [];
   const unlisted: string[] = [];
   for (const [section, [subdir, run]] of Object.entries(SECTIONS)) {
@@ -182,6 +187,18 @@ function main(): number {
         if (missing.length) {
           row.ok = false;
           row.got += ` missing ${label} [${missing.join(",")}]`;
+        }
+      }
+      const ref = reference?.[section]?.[id];
+      if (reference?.[section] && row.got !== "exception") {
+        const uniq = (xs: string[]) => [...new Set(xs)].sort();
+        const same = (a: string[], b: string[]) => JSON.stringify(uniq(a)) === JSON.stringify(uniq(b));
+        if (!ref) {
+          row.ok = false;
+          row.got += " (not in reference-ids.json)";
+        } else if (!same(row.ids, ref.errors) || !same(row.warnIds ?? [], ref.warnings)) {
+          row.ok = false;
+          row.got += ` ids differ from reference-ids.json: errors [${uniq(row.ids).join(",")}] warnings [${uniq(row.warnIds ?? []).join(",")}]`;
         }
       }
       const { ids: _ids, warnIds: _warnIds, ...rest } = row;

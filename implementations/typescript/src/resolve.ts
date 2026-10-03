@@ -439,8 +439,10 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
         continue;
       }
       if (cand.error) {
+        // As in the Python reference: the reason, then the dependency stays unresolved.
         reported.add(dep.ref);
         err("resolve.source", `${dep.ref}: ${cand.error}`);
+        err("resolve.unresolved", `cannot resolve ${dep.ref} (required by ${node.identity}): the copy found is unusable`);
         continue;
       }
       versionOf.set(k, dep.version);

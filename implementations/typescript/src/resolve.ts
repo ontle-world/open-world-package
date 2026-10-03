@@ -5,7 +5,7 @@
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { localAssetKinds } from "./discovery.js";
+import { localAssetKinds, packageDocuments } from "./discovery.js";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { get, isObj, loadYamlFile, Obj } from "./util.js";
@@ -14,6 +14,7 @@ import { Issue } from "./context.js";
 import { readZip } from "./zip.js";
 import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependencies.js";
 import { parseContractRef } from "./rules/worldmodel.js";
+import { viewExternalNames } from "./rules/world.js";
 import { bindingGroundingProblems } from "./rules/binding.js";
 import { ontologyTerms } from "./rules/ontology.js";
 import { validatePackage, ValidationResult } from "./validate.js";
@@ -478,6 +479,26 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
       const target = d.as === undefined ? nodes.get(d.ref) : undefined;
       if (allowed && target && !allowed.includes(target.kind)) {
         warnings.push({ code: "resolve.dependency-direction", message: `${n.identity} (${n.kind}) depends on ${d.ref} (${target.kind}); allowed for ${n.kind}: ${allowed.join(", ")}` });
+      }
+    }
+  }
+
+  // Spec 6: a View's external Worlds resolve to WorldPackages; names taken from them are in their boundary.
+  for (const n of nodes.values()) {
+    if (n.kind !== "WorldPackage") continue;
+    for (const d of packageDocuments(n.dir)) {
+      if (!d.ok || !isObj(d.value) || d.value.kind !== "WorldViewProfile") continue;
+      const refs = get(d.value, "spec", "externalWorldRefs");
+      for (const r of Array.isArray(refs) ? refs : []) {
+        const target = typeof r === "string" ? nodes.get(r) : undefined;
+        if (target && target.kind !== "WorldPackage") err("view.external-world", `${n.identity}: ${d.rel}: external World ${r} resolves to a ${target.kind}, not a WorldPackage`);
+      }
+      for (const [r, name] of viewExternalNames(d.value)) {
+        const target = nodes.get(r);
+        const included = target && target.kind === "WorldPackage" ? get(target.manifest, "spec", "world", "boundary", "included") : undefined;
+        if (Array.isArray(included) && included.length > 0 && !included.includes(name)) {
+          warnings.push({ code: "view.outside-world", message: `${n.identity}: ${d.rel}: projection.include '${r}#${name}' is not in that World's spec.world.boundary.included` });
+        }
       }
     }
   }

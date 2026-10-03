@@ -255,10 +255,12 @@ export function checkContainment(ctx: Context): void {
   const includes = new Map<string, Set<string>>();
   for (const [p, k] of [...kinds].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
     if (k !== "WorldViewProfile") continue;
-    const names = new Set(resolvedInclude(p, docs, kinds));
-    includes.set(p, names);
+    const all = resolvedInclude(p, docs, kinds);
+    const own = all.filter((x) => !x.includes("#"));
+    // A compiler field may describe an entity of an external World the View selects.
+    includes.set(p, new Set([...own, ...all.filter((x) => x.includes("#")).map((x) => x.slice(x.indexOf("#") + 1))]));
     if (boundary.size === 0) continue;
-    for (const name of [...names].sort()) {
+    for (const name of [...own].sort()) {
       if (!boundary.has(name)) warn(ctx, "view.outside-world", `${p}: projection.include "${name}" is not in spec.world.boundary.included`, p);
     }
   }
@@ -273,4 +275,43 @@ export function checkContainment(ctx: Context): void {
       }
     }
   }
+}
+
+/** Spec 6: a World View belongs to the WorldPackage that contains it (`view.world-ref`). */
+export function checkViewOwnership(ctx: Context): void {
+  const views = [...localAssetsOfKind(ctx, "WorldViewProfile")].sort((a, b) => (a.rawPath < b.rawPath ? -1 : a.rawPath > b.rawPath ? 1 : 0));
+  for (const v of views) {
+    if (ctx.packageKind !== "WorldPackage") {
+      error(ctx, "view.world-ref", `${v.rawPath}: a WorldViewProfile belongs to a WorldPackage, not a ${ctx.packageKind}`, v.rawPath);
+      continue;
+    }
+    const ref = get(v.doc, "spec", "worldRef");
+    if (ref !== undefined && ref !== null && ref !== "self" && ref !== ctx.rawIdentity) {
+      error(ctx, "view.world-ref", `${v.rawPath}: spec.worldRef ${JSON.stringify(ref)} must be "self" or this package's identity ${ctx.rawIdentity ?? ""}; list another World in spec.externalWorldRefs`, v.rawPath);
+    }
+    // Other Worlds the View reads are named in spec.externalWorldRefs and listed in spec.dependencies.
+    const refs = get(v.doc, "spec", "externalWorldRefs");
+    if (refs !== undefined && refs !== null && !(Array.isArray(refs) && refs.every((r) => typeof r === "string"))) {
+      error(ctx, "view.external-world", `${v.rawPath}: spec.externalWorldRefs must be a list of package references`, v.rawPath);
+      continue;
+    }
+    const declared = new Set((refs ?? []) as string[]);
+    const depsRaw = get(ctx.manifest, "spec", "dependencies");
+    const deps = new Set((Array.isArray(depsRaw) ? depsRaw : []).map((d) => (isObj(d) ? d.ref : d)));
+    for (const r of declared) {
+      if (!deps.has(r)) error(ctx, "view.external-world", `${v.rawPath}: external World ${r} must also be listed in spec.dependencies`, v.rawPath);
+    }
+    for (const [r, name] of viewExternalNames(v.doc)) {
+      if (!declared.has(r)) error(ctx, "view.external-world", `${v.rawPath}: projection.include '${r}#${name}' names a World that spec.externalWorldRefs does not list`, v.rawPath);
+    }
+  }
+}
+
+/** [world ref, name] for each projection.include entry written as <world ref>#<name>. */
+export function viewExternalNames(doc: unknown): Array<[string, string]> {
+  const include = get(doc, "spec", "projection", "include");
+  if (!Array.isArray(include)) return [];
+  return include
+    .filter((x): x is string => typeof x === "string" && x.includes("#"))
+    .map((x) => [x.slice(0, x.indexOf("#")), x.slice(x.indexOf("#") + 1)]);
 }

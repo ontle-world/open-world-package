@@ -298,6 +298,29 @@ def _asset_structure_errors(doc: dict[str, Any], asset_kind: Any, rel: str, exte
     return errors
 
 
+def view_external_names(vspec: dict[str, Any]) -> list[tuple[str, str]]:
+    """(world ref, name) for each projection.include entry written as <world ref>#<name>."""
+    include = (vspec.get("projection") or {}).get("include") if isinstance(vspec.get("projection"), dict) else None
+    return [tuple(x.split("#", 1)) for x in include if isinstance(x, str) and "#" in x] if isinstance(include, list) else []  # type: ignore[misc]
+
+
+def _external_world_errors(rel: str, vspec: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    """Section 6: a View names the other Worlds it reads in spec.externalWorldRefs, and each is a dependency."""
+    errors: list[str] = []
+    refs = vspec.get("externalWorldRefs")
+    if refs is not None and not (isinstance(refs, list) and all(isinstance(r, str) for r in refs)):
+        return [f"view.external-world: {rel}: spec.externalWorldRefs must be a list of package references"]
+    declared = set(refs or [])
+    deps = {d if isinstance(d, str) else d.get("ref") for d in spec.get("dependencies") or [] if isinstance(d, (str, dict))}
+    for ref in refs or []:
+        if ref not in deps:
+            errors.append(f"view.external-world: {rel}: external World {ref} must also be listed in spec.dependencies")
+    for ref, name in view_external_names(vspec):
+        if ref not in declared:
+            errors.append(f"view.external-world: {rel}: projection.include '{ref}#{name}' names a World that spec.externalWorldRefs does not list")
+    return errors
+
+
 def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
                           ews_fields: dict[str, list[str] | None]) -> list[str]:
     """Section 6: a View selects from the World's boundary, and a State Compiler's fields belong to its View's names."""
@@ -310,8 +333,10 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
         if k != "WorldViewProfile":
             continue
         names = (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include")
-        includes[rel] = {x for x in names if isinstance(x, str)} if isinstance(names, list) else set()
-        for name in sorted(includes[rel] - included) if included else []:
+        own = {x for x in names if isinstance(x, str) and "#" not in x} if isinstance(names, list) else set()
+        external = {x.split("#", 1)[1] for x in names if isinstance(x, str) and "#" in x} if isinstance(names, list) else set()
+        includes[rel] = own | external  # a compiler field may describe an entity of an external World the View selects
+        for name in sorted(own - included) if included else []:
             warnings.append(f"view.outside-world: {rel}: projection.include {name!r} is not in spec.world.boundary.included")
     for rel, k in sorted(local_asset_kinds.items()):
         if k != "StateCompilerProfile":
@@ -577,6 +602,18 @@ def validate_package(path: str | Path) -> ValidationResult:
     warnings.extend(bind_warnings)
     if kind == "WorldPackage":
         warnings.extend(_containment_warnings(spec, local_asset_kinds, local_asset_docs, ews_fields))
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "WorldViewProfile":
+            continue
+        if kind != "WorldPackage":
+            errors.append(f"view.world-ref: {rel}: a WorldViewProfile belongs to a WorldPackage, not a {kind}")
+            continue
+        vspec = _spec_of(local_asset_docs.get(rel))
+        view_world = vspec.get("worldRef")
+        if view_world is not None and view_world not in {"self", identity}:
+            errors.append(f"view.world-ref: {rel}: spec.worldRef {view_world!r} must be 'self' or this package's identity {identity}; "
+                          "list another World in spec.externalWorldRefs")
+        errors.extend(_external_world_errors(rel, vspec, spec))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:

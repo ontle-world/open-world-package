@@ -861,6 +861,21 @@ cases:
     warnings: [asset.kind-reserved]
     satisfiedProfile: descriptive
     rule: "A reserved vocabulary kind has no schema or rules yet; using it is a warning."
+  view-world-ref-foreign:
+    valid: false
+    errors: [view.world-ref]
+    satisfiedProfile: model-ready
+    rule: "Every View belongs to the World package that contains it, not only the default View; another World's content reaches it through dependencies and the boundary."
+  view-external-world-undeclared:
+    valid: false
+    errors: [view.external-world]
+    satisfiedProfile: model-ready
+    rule: "A projection.include entry <world ref>#<name> uses a World listed in spec.externalWorldRefs."
+  view-external-world-not-dependency:
+    valid: false
+    errors: [view.external-world]
+    satisfiedProfile: model-ready
+    rule: "Each spec.externalWorldRefs entry is also listed in spec.dependencies."
   view-outside-world:
     valid: true
     warnings: [view.outside-world]
@@ -891,6 +906,12 @@ cases:
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
 resolutionCases:
+  view-external-world:
+    valid: true
+    warnings: [view.outside-world]
+    resolved:
+      conformance/supplier@1.0.0: null
+    rule: "A View reads another World it lists in spec.externalWorldRefs; a name taken from it outside that World's boundary is a warning."
   dependency-direction:
     valid: true
     warnings: [resolve.dependency-direction]

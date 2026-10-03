@@ -243,7 +243,19 @@ World(schema)
 -> World Model
 ```
 
-A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `purpose.taskRef`, `actorRef`, or `roleRef` (Appendix C.4) records the task or actor it is conditioned on.
+A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. A View belongs to the World package that contains it: a WorldViewProfile is an asset of a WorldPackage, and its `spec.worldRef` MUST be `self` or that package's identity (`view.world-ref`). A View that also reads other Worlds names them explicitly:
+
+```yaml
+spec:
+  worldRef: self
+  externalWorldRefs: [acme/supplier-world@1.2.0]     # other Worlds this View reads
+  projection:
+    include:
+    - lot                                             # a name of this World
+    - acme/supplier-world@1.2.0#supplier              # a name of an external World
+```
+
+Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `purpose.taskRef`, `actorRef`, or `roleRef` (Appendix C.4) records the task or actor it is conditioned on.
 
 An EWS is the runtime materialization of a View (section 12). A runtime that acts combines it with other runtime context (the acting actor's current roles, assignments, and resources, the task, and the dynamics and constraints that apply). Those combinations are runtime objects, like EWS, and are not packaged assets.
 
@@ -481,6 +493,8 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.descriptive` | 6.1 | no `spec.world.definition` |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
 | `profile.viewable.world-ref` | 6.1 | default View `worldRef` is not `self` or the package identity |
+| `view.world-ref` | 6 | a WorldViewProfile outside a WorldPackage, or a View whose `worldRef` is not `self` or the package identity |
+| `view.external-world` | 6 | `externalWorldRefs` not a list, an entry not in `spec.dependencies`, a `<world ref>#<name>` include whose World it does not list, or (under resolution) an external World that is not a WorldPackage |
 | `profile.stateful` | 6.1 | no State Compiler, no `defaultStateCompiler`, or it is not a local compiler |
 | `profile.stateful.default-compiler-view` | 6.1 | default compiler does not compile `defaultView` |
 | `profile.stateful.compiler-view` | 6.1 | a compiler's `worldViewRef` is not a local View |
@@ -568,7 +582,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `asset.kind-unknown` | 8 | external `spec.assets` entry kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `asset.kind-reserved` | 8 | vocabulary kind marked `reserved` |
-| `view.outside-world` | 6 | View `projection.include` name outside the declared `spec.world.boundary.included` |
+| `view.outside-world` | 6 | View `projection.include` name outside the declared `spec.world.boundary.included` of its World, or (under resolution) of the external World it names |
 | `compiler.field-outside-view` | 6 | State Compiler field `<entity>.<property>` whose entity its View does not include |
 | `resolve.dependency-direction` | 11 | dependency on a package kind above the dependent's place in the hierarchy |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |

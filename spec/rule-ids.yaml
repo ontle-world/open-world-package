@@ -35,6 +35,8 @@ rules:
   profile.descriptive: {severity: error, section: "6.1", summary: "no spec.world.definition"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
   profile.viewable.world-ref: {severity: error, section: "6.1", summary: "default View worldRef is not self or the package identity"}
+  view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile outside a WorldPackage, or a View whose worldRef is not self or the package identity"}
+  view.external-world: {severity: error, section: "6", summary: "externalWorldRefs not a list, an entry not in spec.dependencies, a <world ref>#<name> include whose World it does not list, or (under resolution) an external World that is not a WorldPackage"}
   profile.stateful: {severity: error, section: "6.1", summary: "no State Compiler, no defaultStateCompiler, or it is not a local compiler"}
   profile.stateful.default-compiler-view: {severity: error, section: "6.1", summary: "default compiler does not compile defaultView"}
   profile.stateful.compiler-view: {severity: error, section: "6.1", summary: "a compiler's worldViewRef is not a local View"}
@@ -131,7 +133,7 @@ rules:
   asset.kind-unknown: {severity: warning, section: "8", summary: "external spec.assets entry kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   asset.kind-reserved: {severity: warning, section: "8", summary: "vocabulary kind marked reserved"}
-  view.outside-world: {severity: warning, section: "6", summary: "View projection.include name outside the declared spec.world.boundary.included"}
+  view.outside-world: {severity: warning, section: "6", summary: "View projection.include name outside the declared spec.world.boundary.included of its World, or (under resolution) of the external World it names"}
   compiler.field-outside-view: {severity: warning, section: "6", summary: "State Compiler field <entity>.<property> whose entity its View does not include"}
   resolve.dependency-direction: {severity: warning, section: "11", summary: "dependency on a package kind above the dependent's place in the hierarchy"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}

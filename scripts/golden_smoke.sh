@@ -17,6 +17,7 @@ ontle export examples/ontology/quality-ontology --format turtle >/dev/null
 ontle export examples/ontology/quality-ontology --format jsonld >/dev/null
 
 ontle validate --resolve --source examples examples/business/manufacturing-quality-world
+for p in vocab/owp alignments/owp-align-prov alignments/owp-align-bfo alignments/owp-align-dul; do ontle validate --resolve --source vocab --source alignments "$p"; done
 ontle validate --resolve --source examples examples/business/quality-transition-world-model
 ontle validate --resolve --source examples examples/physical-ai/multimodal-action-world-model
 

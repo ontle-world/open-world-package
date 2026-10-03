@@ -143,6 +143,15 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
             if name not in (fields or []):
                 errors.append(f"{rule}: StateCompilerProfile {rel} spec.outputSchema.{key} names {name!r}, which is not one of its EWS fields")
     per_subject, latent = output_lists(compiler)
+    units = output_units(compiler)
+    if "units" in schema:
+        if units is None:
+            errors.append(f"compiler.unit: StateCompilerProfile {rel} spec.outputSchema.units must map EWS fields to UCUM codes (printable ASCII, no spaces)")
+        else:
+            for name in units if not unknown else []:
+                if name not in (fields or []):
+                    errors.append(f"compiler.unit: StateCompilerProfile {rel} spec.outputSchema.units names {name!r}, which is not one of its EWS fields")
+    units = units or {}
     bindings = compiler.get("bindings")
     if bindings is None:
         return errors
@@ -174,8 +183,16 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
                     errors.append(f"{where} aggregate.function must be one of {sorted(AGGREGATE_FUNCTIONS)}")
                 if "window" in a and duration_seconds(a["window"]) is None:
                     errors.append(f"{where} aggregate.window must be an ISO 8601 duration such as PT24H or P7D")
+                if a.get("function") in ("count", "distinct_count") and field in units and not dimensionless(units[field]):
+                    errors.append(f"compiler.unit: StateCompilerProfile {rel} field {field!r} is a {a['function']}, so its unit must be dimensionless (1 or an annotation such as {{alarm}}), not {units[field]!r}")
         else:
             errors += _classify_errors(b["classify"], field, where, fields, per_subject, unknown)
+            c = b["classify"] if isinstance(b["classify"], dict) else {}
+            crit = c.get("criterion") if isinstance(c.get("criterion"), dict) else {}
+            if field in units:
+                errors.append(f"compiler.unit: StateCompilerProfile {rel} field {field!r} is a classification; a label has no unit")
+            if "unit" in crit and crit["unit"] != units.get(c.get("input")):
+                errors.append(f"compiler.unit: StateCompilerProfile {rel} binding {field!r} criterion.unit {crit['unit']!r} must equal the unit of its input {c.get('input')!r} ({units.get(c.get('input'))!r})")
     # classification inputs must not form a cycle
     graph = {f: b["classify"].get("input") for f, b in bindings.items()
              if binding_form(b) == "classify" and isinstance(b["classify"], dict)}
@@ -187,6 +204,23 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
         if cur == start:
             errors.append(f"compiler.binding: StateCompilerProfile {rel} classification inputs form a cycle through {start!r}")
     return errors
+
+
+UCUM_CODE_RE = re.compile(r"^[!-~]+$")  # a UCUM code: printable ASCII without spaces (compared as text, never converted)
+
+
+def output_units(compiler: dict[str, Any]) -> dict[str, str] | None:
+    """spec.outputSchema.units (section 12.5): EWS field -> UCUM code; {} when absent, None when malformed."""
+    schema = compiler.get("outputSchema") if isinstance(compiler.get("outputSchema"), dict) else {}
+    units = schema.get("units", {})
+    if not isinstance(units, dict) or not all(isinstance(k, str) and isinstance(v, str) and UCUM_CODE_RE.match(v) for k, v in units.items()):
+        return None
+    return units
+
+
+def dimensionless(unit: str) -> bool:
+    """UCUM unity: `1`, or an annotation only, such as `{alarm}`."""
+    return unit == "1" or bool(re.fullmatch(r"\{[^{}]*\}", unit))
 
 
 def _classify_errors(c: Any, field: str, where: str, fields: list[str] | None, per_subject: list[str], unknown: bool) -> list[str]:
@@ -241,6 +275,9 @@ def _observations(doc: dict[str, Any]) -> list[dict[str, Any]]:
             raise OWPError(f"ews.input: observation {o['id']} subject must be a string")
         if "estimatedBy" in o and not (isinstance(o["estimatedBy"], str) and o["estimatedBy"]):
             raise OWPError(f"ews.input: observation {o['id']} estimatedBy must be a non-empty string")
+        if "units" in o and not (isinstance(o["units"], dict) and all(isinstance(k, str) and isinstance(v, str) and UCUM_CODE_RE.match(v)
+                                                                     for k, v in o["units"].items())):
+            raise OWPError(f"ews.input: observation {o['id']} units must map value keys to UCUM codes")
     return obs
 
 
@@ -332,10 +369,23 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
     by_id = {o["id"]: o for o in obs}
     per_subject, latent = output_lists(compiler)
 
-    def candidates(src: dict[str, Any], estimates: bool, since: str | None = None) -> list[dict[str, Any]]:
-        return sorted((o for o in obs if o["type"] == src["from"] and o["observedAt"] <= as_of and src["value"] in o["values"]
-                       and ("estimatedBy" in o) == estimates and (since is None or o["observedAt"] > since)),
-                      key=lambda o: (o["observedAt"], o["id"]))
+    units = output_units(compiler) or {}
+
+    def candidates(field: str, src: dict[str, Any], estimates: bool, since: str | None = None, same_unit: bool = False) -> list[dict[str, Any]]:
+        cands = sorted((o for o in obs if o["type"] == src["from"] and o["observedAt"] <= as_of and src["value"] in o["values"]
+                        and ("estimatedBy" in o) == estimates and (since is None or o["observedAt"] > since)),
+                       key=lambda o: (o["observedAt"], o["id"]))
+        # Section 12.5: a reported unit must be the field's declared unit; values are never converted.
+        reported = {}
+        for o in cands:
+            u = (o.get("units") or {}).get(src["value"])
+            if u is not None:
+                if field in units and u != units[field]:
+                    raise OWPError(f"ews.input: observation {o['id']} reports {src['value']!r} in {u!r}, but {field!r} is declared in {units[field]!r}")
+                reported[u] = o["id"]
+        if same_unit and len(reported) > 1:
+            raise OWPError(f"ews.input: {field!r} would combine values in different units ({', '.join(sorted(reported))}); units are not converted")
+        return cands
 
     def grouped(field: str, cands: list[dict[str, Any]]) -> dict[str | None, list[dict[str, Any]]]:
         if field not in per_subject:
@@ -355,11 +405,11 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
         if form in ("observe", "estimate"):
             src = b if form == "observe" else b["estimate"]
             out = {k: _resolve(g, src["value"], src.get("select", "latest"))
-                   for k, g in grouped(field, candidates(src, form == "estimate")).items() if g}
+                   for k, g in grouped(field, candidates(field, src, form == "estimate")).items() if g}
         elif form == "aggregate":
             a = b["aggregate"]
             since = _shift(as_of, duration_seconds(a["window"])) if "window" in a else None
-            groups = grouped(field, candidates(a, False, since))
+            groups = grouped(field, candidates(field, a, False, since, same_unit=a["function"] in ("sum", "mean", "min", "max")))
             out = {}
             for k, g in groups.items():
                 r = _aggregate(g, a["value"], a["function"])

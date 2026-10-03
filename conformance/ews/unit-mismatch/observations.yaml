@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: t1, type: ot.temp, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {c: 61}, units: {c: Cel}}
+  - {id: t2, type: ot.temp, subject: press-7, observedAt: "2026-01-01T00:00:02Z", values: {c: 147}, units: {c: "[degF]"}}
+  - {id: a1, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:03Z", values: {code: jam}}

@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
 import { API_VERSION } from "./vocab.js";
-import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields } from "./rules/world.js";
+import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields, outputUnits, unitProblems } from "./rules/world.js";
 import { localAssetKinds } from "./discovery.js";
 import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
@@ -206,6 +206,7 @@ export interface Observation {
   values: Obj;
   subject?: string;
   estimatedBy?: string;
+  units?: Record<string, string>;
 }
 
 export type CompileResult = { ok: true; ews: Obj } | { ok: false; errors: string[] };
@@ -235,6 +236,7 @@ export function parseObservationSet(doc: unknown): { observations: Observation[]
     if (!isObj(o.values)) input(`observations[${i}] is missing a values mapping`);
     if ("subject" in o && typeof o.subject !== "string") input(`observations[${i}].subject must be a string`);
     if ("estimatedBy" in o && !isNonEmptyString(o.estimatedBy)) input(`observations[${i}].estimatedBy must be a non-empty string`);
+    if ("units" in o && !(isObj(o.units) && Object.values(o.units).every((u) => typeof u === "string" && /^[!-~]+$/.test(u)))) input(`observation ${String(o.id)} units must map value keys to UCUM codes`);
     if (errors.length === 0) observations.push(o as unknown as Observation);
   });
   return { observations, errors };
@@ -257,6 +259,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
     ...comp.fieldProblems.map((p) => refusal(p.rule, p.msg)),
     ...outputListProblems(comp.spec, comp.fields).map((p) => refusal(p.rule, p.msg)),
     ...bindingProblems(comp.spec, comp.fields).map((m) => refusal("compiler.binding", m)),
+    ...unitProblems(comp.spec, comp.fields).map((p) => refusal(p.rule, p.msg)),
   ];
   if (bp.length) return { ok: false, errors: bp };
   // Spec 12: an unknown field makes the ObservationSet invalid input, so compilation is refused.
@@ -266,11 +269,25 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   const { perSubject, latent } = outputLists(comp.spec);
   const bindings = comp.spec.bindings as Record<string, Obj>;
   const order = (a: Observation, b: Observation) => (a.observedAt < b.observedAt ? -1 : a.observedAt > b.observedAt ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-  const candidates = (src: Obj, estimates: boolean, since?: string) =>
-    observations
+  const units = outputUnits(comp.spec) ?? {};
+  const candidates = (field: string, src: Obj, estimates: boolean, since?: string, sameUnit = false) => {
+    const cands = observations
       .filter((o) => o.type === src.from && o.observedAt <= asOf && Object.prototype.hasOwnProperty.call(o.values, src.value as string)
         && ("estimatedBy" in o) === estimates && (since === undefined || o.observedAt > since))
       .sort(order);
+    // Spec 12.5: a reported unit must be the field's declared unit; values are never converted.
+    const reported = new Set<string>();
+    for (const o of cands) {
+      const u = isObj(o.units) ? (o.units as Record<string, string>)[src.value as string] : undefined;
+      if (u === undefined) continue;
+      if (field in units && u !== units[field]) {
+        throw new Error(refusal("ews.input", `observation ${o.id} reports "${String(src.value)}" in "${u}", but "${field}" is declared in "${units[field]}"`));
+      }
+      reported.add(u);
+    }
+    if (sameUnit && reported.size > 1) throw new Error(refusal("ews.input", `"${field}" would combine values in different units (${[...reported].sort().join(", ")}); units are not converted`));
+    return cands;
+  };
   const grouped = (field: string, cands: Observation[]): Map<string | null, Observation[]> => {
     if (!perSubject.includes(field)) return new Map([[null, cands]]);
     const m = new Map<string | null, Observation[]>();
@@ -290,11 +307,11 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
       const out = new Map<string | null, Result>();
       if (form === "observe" || form === "estimate") {
         const src = (form === "observe" ? b : b.estimate) as Obj;
-        for (const [k, g] of grouped(field, candidates(src, form === "estimate"))) if (g.length) out.set(k, resolve(g, src.value as string, (src.select as string | undefined) ?? "latest"));
+        for (const [k, g] of grouped(field, candidates(field, src, form === "estimate"))) if (g.length) out.set(k, resolve(g, src.value as string, (src.select as string | undefined) ?? "latest"));
       } else if (form === "aggregate") {
         const a = b.aggregate as Obj;
         const since = "window" in a ? shift(asOf, durationSeconds(a.window)!) : undefined;
-        for (const [k, g] of grouped(field, candidates(a, false, since))) {
+        for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string)))) {
           const r = aggregate(g, a.value as string, a.function as string);
           if (r) out.set(k, r);
         }

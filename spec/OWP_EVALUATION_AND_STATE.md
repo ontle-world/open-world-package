@@ -202,6 +202,25 @@ bindings:
 
 The record states how a latent value was produced, so a consumer can tell a measured `down` from an estimated health index or a `high` risk judged by `alarm-escalation@1.2.0`. An opaque compiler declares `latent` the same way and its EWS carries the same records.
 
+### 12.5 Units
+
+A State Compiler MAY declare the unit of a field's values in `spec.outputSchema.units`, a mapping from EWS field to a UCUM code (`Cel`, `mm/s`, `kW.h`, `{alarm}`). Units are declared per field and never per value: EWS values stay plain JSON, so EWS equality (section 12.2) and the numeric rules of 12.4 are unchanged. A unit is a property of the compiler that `stateCompiler` names, and EWS documents carry none.
+
+```yaml
+outputSchema:
+  fields: [line.temp, equipment.alarms_24h]
+  units: {line.temp: Cel, equipment.alarms_24h: "{alarm}"}
+```
+
+- `units` keys are EWS fields of the compiler, and values are UCUM codes: non-empty printable ASCII without spaces (`compiler.unit`). Codes are compared as text; `mm/s` and `mm.s-1` are different codes.
+- A `count` or `distinct_count` field, if it declares a unit, declares a dimensionless one: `1` or an annotation only, such as `{alarm}` (`compiler.unit`).
+- A classification field declares no unit, since a label has none. A `criterion` MAY declare `unit`, which MUST equal its input field's unit (`compiler.unit`), so that a threshold is not read in the wrong unit.
+- An observation MAY report units per `values` key: `units: {c: Cel}`. When a candidate reports a unit for the key a binding reads and the field declares a different one, the input is rejected (`ews.input`). A candidate without a reported unit is taken to be in the declared unit.
+- A `sum`, `mean`, `min`, or `max` aggregate rejects candidates that report different units, whether or not the field declares one (`ews.input`).
+- Implementations MUST NOT convert units. Conversion belongs before compilation, where observations are acquired.
+
+A SemanticBinding MAY name the unit as an ontology term, such as a QUDT unit (section 14). The UCUM code in the compiler is what compilation checks.
+
 ## 15. Evaluation, scenario, capability, and view fields
 
 These fields of standard kinds are part of the standard. Their schemas are under `schemas/`; undefined keys are errors (section 8).

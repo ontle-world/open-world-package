@@ -28,6 +28,7 @@ export function bindingCuries(doc: unknown): Array<[string, unknown]> {
       if (!isObj(v)) continue;
       out.push([`spec.fields.${field}.class`, v.class]);
       (Array.isArray(v.path) ? v.path : []).forEach((step, i) => out.push([`spec.fields.${field}.path[${i}]`, step]));
+      if ("unit" in v) out.push([`spec.fields.${field}.unit`, v.unit]); // a unit term (e.g. QUDT) of a dependency ontology (spec 14)
     }
   }
   return out;

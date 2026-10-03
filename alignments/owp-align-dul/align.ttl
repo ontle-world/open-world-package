@@ -1,0 +1,21 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix dul: <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+<https://w3id.org/owp/align/dul> a owl:Ontology ;
+  owl:imports <https://w3id.org/owp/ns> , <http://www.ontologydesignpatterns.org/ont/dul/DUL.owl> ;
+  rdfs:comment "Informative alignment of OWP to DOLCE+DnS Ultralite. Documents are InformationObjects that express Descriptions; an EWS is about a Situation."@en .
+owp:World rdfs:subClassOf dul:Entity .
+owp:Document rdfs:subClassOf dul:InformationObject .
+owp:Package rdfs:subClassOf dul:InformationObject .
+owp:Observation rdfs:subClassOf dul:InformationObject .
+owp:StateValue rdfs:subClassOf dul:InformationObject .
+owp:Derivation rdfs:subClassOf dul:InformationObject .
+owp:Criterion rdfs:subClassOf dul:InformationObject .
+owp:Compilation rdfs:subClassOf dul:Action .  # a software agent executing the method the State Compiler expresses
+owp:represents rdfs:subPropertyOf dul:isAbout .
+# Description and Situation (D&S): a View or a State Compiler expresses a Description; an EWS is about a Situation.
+owp:WorldViewProfile rdfs:subClassOf [ a owl:Restriction ; owl:onProperty dul:expresses ; owl:someValuesFrom dul:Description ] .
+owp:StateCompilerProfile rdfs:subClassOf [ a owl:Restriction ; owl:onProperty dul:expresses ; owl:someValuesFrom dul:Method ] .
+owp:Criterion rdfs:subClassOf [ a owl:Restriction ; owl:onProperty dul:expresses ; owl:someValuesFrom dul:Description ] .
+owp:EffectiveWorldState rdfs:subClassOf [ a owl:Restriction ; owl:onProperty dul:isAbout ; owl:someValuesFrom dul:Situation ] .

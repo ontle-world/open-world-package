@@ -7,7 +7,7 @@ from typing import Any
 from .ontology import CURIE_RE, expand
 from .structure import OPEN, VALUE, closed, structure_errors
 
-FIELD_BINDING = closed({"class": VALUE, "path": VALUE})
+FIELD_BINDING = closed({"class": VALUE, "path": VALUE, "unit": VALUE})
 
 SEMANTIC_BINDING = closed({
     "apiVersion": VALUE,
@@ -33,6 +33,8 @@ def binding_curies(doc: dict[str, Any]) -> list[tuple[str, str]]:
             out.append((f"spec.fields.{field}.class", value.get("class")))
             for i, step in enumerate(value.get("path") or [] if isinstance(value.get("path"), list) else []):
                 out.append((f"spec.fields.{field}.path[{i}]", step))
+            if "unit" in value:  # a unit term, such as a QUDT unit, of a dependency ontology (section 14)
+                out.append((f"spec.fields.{field}.unit", value["unit"]))
     return out
 
 

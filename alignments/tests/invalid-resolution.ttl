@@ -1,0 +1,8 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <https://example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+<https://example.org/invalid> a owl:Ontology ; owl:imports <https://w3id.org/owp/ns> .
+ex:v a owp:StateValue ; owp:resolution ex:maybe .
+ex:maybe owl:differentFrom owp:resolved , owp:unresolved .

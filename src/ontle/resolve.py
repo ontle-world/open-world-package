@@ -477,6 +477,27 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
     return ValidationResult(not errors, errors, warnings, result.manifest), resolution
 
 
+def ews_rdf(world_path: str | Path, ews: dict[str, Any], observations: dict[str, Any], sources: list[str] | None = None) -> str:
+    """The EWS as Turtle 1.2 in the OWP vocabulary. Bound fields and subjects become triple terms when the World's
+    SemanticBinding and its dependency ontologies resolve; otherwise values are given as rdf:value."""
+    from .ontology import terms as ontology_terms
+    from .rdfexport import ews_turtle
+    root, manifest = load_manifest(world_path)
+    binding_rel = ((manifest.get("spec") or {}).get("world") or {}).get("semanticBinding")
+    binding, prefixes = None, {}
+    if isinstance(binding_rel, str):
+        resolution = resolve_package(world_path, sources)
+        if resolution.errors:
+            raise OWPError("; ".join(resolution.errors) + " (the SemanticBinding's ontologies are needed for --rdf: pass --source)")
+        world = resolution.root
+        for ref, _ in _dependency_refs(world.manifest):
+            dep = resolution.packages.get(ref)
+            if dep is not None and dep.kind == "OntologyPackage":
+                prefixes.update(ontology_terms(dep.root, dep.manifest)[0])
+        binding = _load_asset(world, binding_rel)
+    return ews_turtle(root, manifest, ews, observations, binding, prefixes)
+
+
 def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] | None = None) -> dict[str, Any]:
     """The EWS document as JSON with an @context mapping bound fields to ontology IRIs. The EWS content is unchanged."""
     from .binding import jsonld_context

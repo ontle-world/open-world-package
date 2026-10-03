@@ -1,0 +1,17 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+<https://w3id.org/owp/align/prov> a owl:Ontology ;
+  owl:imports <https://w3id.org/owp/ns> , <http://www.w3.org/ns/prov-o-20130430> ;
+  rdfs:comment "Informative alignment of OWP to PROV-O (W3C Recommendation 2013-04-30). owp:Derivation is not prov:Derivation (a qualified influence names one influencer; an aggregate draws on many): see the SSSOM set."@en .
+owp:Document rdfs:subClassOf prov:Entity .
+owp:Package rdfs:subClassOf prov:Entity .
+owp:Observation rdfs:subClassOf prov:Entity .
+owp:StateValue rdfs:subClassOf prov:Entity .
+owp:Derivation rdfs:subClassOf prov:Entity .
+owp:Criterion rdfs:subClassOf prov:Entity .
+owp:ObservationSet rdfs:subClassOf prov:Collection .
+owp:hasObservation rdfs:subPropertyOf prov:hadMember .
+owp:StateCompilerProfile rdfs:subClassOf prov:Plan .
+owp:Compilation rdfs:subClassOf prov:Activity .

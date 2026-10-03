@@ -16,6 +16,40 @@ OWP does not replace existing standards. Each of them answers part of the questi
 | MLflow model signature | input/output/parameter schemas | the semantic origin of those inputs (View, EWS contract, adapter) |
 | OCI | content addressing, manifests, referrers | nothing new; OCI can transport `.owp.zip` archives |
 
+## OWP vocabulary and alignments
+
+OWP's own concepts have RDF terms in `vocab/owp` (namespace `https://w3id.org/owp/ns#`, OWL 2 DL, CC BY 4.0). The vocabulary defines only what other vocabularies lack, and reuses PROV-O, XSD, DCTERMS, and DCAT for provenance, time, licensing, and catalogs. OWP's core takes no position on upper ontologies.
+
+Alignments are separate OntologyPackages under `alignments/`. Each holds OWL axioms (`align.ttl`) and an SSSOM mapping set with justification and confidence. They are informative: OWP conformance never depends on them.
+
+| Package | Aligns OWP to | Notes |
+|---|---|---|
+| `owp-align-prov` | PROV-O (2013-04-30) | documents, observations and values are `prov:Entity`; a compilation is a `prov:Activity`; a State Compiler is a `prov:Plan` |
+| `owp-align-bfo` | BFO 2020 (ISO/IEC 21838-2) and IAO | documents are IAO documents; values and observations are information content entities; a compilation is a BFO process; a World is not aligned, since it may be designed or simulated |
+| `owp-align-dul` | DOLCE+DnS Ultralite | documents are InformationObjects that express Descriptions (a View) or Methods (a State Compiler); an EWS is about a Situation; a compilation is an Action |
+
+Cross-standard links that are not subclass axioms use SKOS match predicates, never `owl:equivalentClass`. Examples: an OWP observation record is a `skos:closeMatch` of `sosa:Observation`, because it need not be an act of observing.
+
+`scripts/check_alignments.sh` reasons over the vocabulary and each alignment with HermiT, through ROBOT. It uses the upstream ontologies pinned by digest in each package's `externalImports`. Each check is run with the sample data and against deliberately wrong inputs. CI runs it.
+
+## RDF output and identifiers
+
+`ontle ews compile ... --rdf` writes an EWS as Turtle 1.2 in the OWP vocabulary:
+
+- **The document.** The EWS is an `owp:EffectiveWorldState`. Its `dct:conformsTo` is `<https://w3id.org/owp/spec/v1alpha1>`, from `apiVersion`, written as an IRI rather than a string. It is `prov:wasGeneratedBy` an `owp:Compilation`, whose plan is the State Compiler.
+- **Values.** Every value, every alternative of an unresolved field, and every subject of a per-subject field becomes an `owp:StateValue`. It carries `owp:field`, `owp:resolution`, the observations it came from (`prov:wasDerivedFrom`), and its `owp:derivation`.
+- **Triple terms.** When the World's SemanticBinding gives the field a one-step path and its subjects IRIs, the StateValue reifies the triple (subject, property, value). The triple is stated without being asserted, so an unresolved alternative is never claimed true. Otherwise, the value is given as `rdf:value`.
+
+Packages and assets get IRIs from their identity. The mapping can be reversed, because namespace, name and version cannot contain `/`, `@` or `#`.
+
+| OWP reference | IRI |
+|---|---|
+| `acme/plant@0.1.0` | `https://w3id.org/owp/pkg/acme/plant/0.1.0` |
+| `acme/plant@0.1.0#views/task.yaml` | `https://w3id.org/owp/pkg/acme/plant/0.1.0#views/task.yaml` |
+| `apiVersion: openworld/v1alpha1` | `https://w3id.org/owp/spec/v1alpha1` |
+
+These IRIs identify packages. They do not say where to download them: the registry and `.owp.zip` archives give the locations, and a consumer verifies digests.
+
 ## Binding convention
 
 Asset YAML files tie their parts to standards under `spec.standardBindings` (spec section 5.3): each named binding has a `standard`, and `terms` (local names to the standard's type names), a `ref` to an artifact, or both. Each `ref` uses the ExternalRef shape of spec section 5.1. Unbound references say so explicitly instead of pointing at an invented artifact:

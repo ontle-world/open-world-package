@@ -1,0 +1,25 @@
+# Sample instance data: a World package, a View and State Compiler, two observations, an EWS with an aggregate and a
+# classification value, and the compilation that produced it. check_alignments.sh points its owl:imports at each module.
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <https://example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+<https://example.org/sample> a owl:Ontology ; owl:imports <https://w3id.org/owp/ns> .
+ex:plant a owp:World .
+ex:pkg a owp:WorldPackage ; owp:packageId "acme/plant@0.1.0" ; owp:represents ex:plant ; owp:hasAsset ex:view , ex:compiler .
+ex:view a owp:WorldViewProfile .
+ex:compiler a owp:StateCompilerProfile ; owp:compiles ex:view .
+ex:obs-set a owp:ObservationSet ; owp:hasObservation ex:o1 , ex:o2 .
+ex:o1 a owp:Observation ; owp:observationType "OT.alarm" ; owp:observedAt "2026-01-01T12:00:00Z"^^xsd:dateTimeStamp .
+ex:o2 a owp:Observation ; owp:observationType "OT.alarm" ; owp:observedAt "2026-01-01T13:00:00Z"^^xsd:dateTimeStamp .
+ex:ews a owp:EffectiveWorldState ; owp:worldRef ex:pkg ; owp:worldView ex:view ; owp:stateCompiler ex:compiler ;
+  owp:asOf "2026-01-02T00:00:00Z"^^xsd:dateTimeStamp ; owp:missingField "m.health" ; prov:wasGeneratedBy ex:run .
+ex:run a owp:Compilation ; prov:used ex:o1 , ex:o2 ; prov:qualifiedAssociation [ a prov:Association ; prov:hadPlan ex:compiler ; prov:agent ex:ontle ] .
+ex:ontle a prov:SoftwareAgent .
+ex:v1 a owp:StateValue ; owp:inState ex:ews ; owp:field "m.alarms_24h" ; owp:subjectKey "press-7" ;
+  owp:resolution owp:resolved ; owp:derivation ex:d1 ; prov:wasDerivedFrom ex:o1 , ex:o2 .
+ex:d1 a owp:Aggregate ; owp:function "count" ; owp:window "PT24H" .
+ex:v2 a owp:StateValue ; owp:inState ex:ews ; owp:field "m.risk" ; owp:subjectKey "press-7" ; owp:resolution owp:resolved ; owp:derivation ex:d2 .
+ex:d2 a owp:Classification ; owp:criterion ex:crit .
+ex:crit a owp:Criterion .

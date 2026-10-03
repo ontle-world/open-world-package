@@ -1,0 +1,20 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld
+  name: owp-vocabulary
+  version: 0.1.0
+  title: OWP vocabulary
+  description: RDF terms for OWP's own concepts (World, packages, World Views, State Compilers, EWS, observations, derivations), in OWL 2 DL.
+  license: CC-BY-4.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/owp/ns#
+    prefixes:
+      owp: https://w3id.org/owp/ns#
+    entrypoints:
+    - path: ns.ttl
+      format: turtle
+      role: schema
+    termIndex: semantics/terms.yaml

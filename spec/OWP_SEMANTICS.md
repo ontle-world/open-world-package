@@ -70,6 +70,7 @@ spec:
   fields:                                  # EWS field -> class and property path
     claim.status: {class: q:Claim, path: [q:claimStatus]}
     lot.genealogy: {class: q:Lot, path: [q:derivedFrom]}
+    line.temp: {class: q:Line, path: [q:temperature], unit: unit:DEG_C}   # unit: optional, e.g. a QUDT unit
   observationTypes:                        # observation type -> class
     QMS.claim: q:Claim
   actions:                                 # action name -> term
@@ -83,7 +84,7 @@ A WorldPackage names its binding with `spec.world.semanticBinding`, the path of 
 Single-package rules:
 
 - `spec.world.semanticBinding`, when present, is a local SemanticBinding asset.
-- Every value in `terms`, `observationTypes`, and `actions`, and every `class` and `path` entry in `fields`, is a CURIE `<prefix>:<local name>`.
+- Every value in `terms`, `observationTypes`, and `actions`, and every `class`, `path`, and `unit` entry in `fields`, is a CURIE `<prefix>:<local name>`. A field's `unit` names its unit as an ontology term (for example from QUDT, whose units carry their UCUM codes as `qudt:ucumCode`); the State Compiler's UCUM code (section 12.5) is what compilation checks.
 - Every key of `fields` is an EWS field (section 12.1) of some local State Compiler.
 - Every key of `subjects` is listed in `observationTypes`, and its value is `{base: <absolute IRI prefix>}` (the subject is appended) or `{iri: true}` (the subject already is an IRI) (`binding.subjects`). With it, a per-subject EWS field becomes statements about individuals: the reference CLI's `ontle ews compile --jsonld` adds an `@graph` with one node per subject, typed with the observation type's class, and `ontle kg check` can compare those individuals with a knowledge graph.
 - A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.

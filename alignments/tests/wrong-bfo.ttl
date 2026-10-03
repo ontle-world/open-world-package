@@ -1,0 +1,5 @@
+# A deliberately wrong alignment: OWP documents as BFO processes. The check must find it inconsistent.
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+owp:Document rdfs:subClassOf obo:BFO_0000015 .

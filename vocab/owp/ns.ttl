@@ -1,0 +1,99 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+
+<https://w3id.org/owp/ns> a owl:Ontology ;
+  owl:versionIRI <https://w3id.org/owp/ns/v1alpha1> ;
+  dct:title "Open World Package vocabulary"@en ;
+  rdfs:comment "Terms for OWP's own concepts. Provenance, time, licensing and catalog terms are reused from PROV, XSD, DCTERMS and DCAT, not redefined."@en .
+
+# --- terms reused from other vocabularies, declared for OWL 2 DL --------------------------------
+dct:title a owl:AnnotationProperty .
+skos:prefLabel a owl:AnnotationProperty .
+skos:definition a owl:AnnotationProperty .
+skos:inScheme a owl:AnnotationProperty .
+skos:Concept a owl:Class .
+skos:ConceptScheme a owl:Class .
+
+# --- what OWP documents are about ---------------------------------------------------------------
+owp:World a owl:Class ; rdfs:label "World"@en ;
+  rdfs:comment "A target reality (a plant, a supply chain, a robot cell). Not a document: a World package represents it."@en .
+
+# --- documents ----------------------------------------------------------------------------------
+owp:Document a owl:Class ; rdfs:label "OWP document"@en ;
+  rdfs:comment "A YAML document of an OWP package or runtime: a manifest, an asset, an ObservationSet, or an EWS. One instance is one version of the content (one digest); a file on disk is a bearer of it. The document, not the reality it describes."@en .
+owp:Package a owl:Class ; rdfs:label "package"@en ;
+  rdfs:comment "An OWP package, identified as <namespace>/<name>@<version>."@en .
+owp:WorldPackage a owl:Class ; rdfs:subClassOf owp:Package .
+owp:WorldModelPackage a owl:Class ; rdfs:subClassOf owp:Package .
+owp:OntologyPackage a owl:Class ; rdfs:subClassOf owp:Package .
+owp:Asset a owl:Class ; rdfs:subClassOf owp:Document ; rdfs:label "asset"@en .
+owp:WorldViewProfile a owl:Class ; rdfs:subClassOf owp:Asset .
+owp:StateCompilerProfile a owl:Class ; rdfs:subClassOf owp:Asset .
+owp:SemanticBinding a owl:Class ; rdfs:subClassOf owp:Asset .
+owp:EffectiveWorldState a owl:Class ; rdfs:subClassOf owp:Document ; rdfs:label "Effective World State"@en ;
+  rdfs:comment "The state of one World View at one asOf, compiled by one State Compiler."@en .
+owp:ObservationSet a owl:Class ; rdfs:subClassOf owp:Document .
+
+# --- records inside documents ---------------------------------------------------------------------
+owp:Observation a owl:Class ; rdfs:label "observation record"@en ;
+  rdfs:comment "One entry of an ObservationSet: what a source reported (it may or may not be an act of observing)."@en .
+owp:StateValue a owl:Class ; rdfs:label "state value"@en ;
+  rdfs:comment "One value of an EWS field for one subject. In RDF 1.2 output a StateValue is the reifier of the triple term (subject, bound property, value): stated, not asserted, so an unresolved alternative is not claimed true. The rdf:reifies link is RDF 1.2 and outside OWL 2."@en .
+owp:Derivation a owl:Class ; rdfs:label "derivation"@en .
+owp:Estimate a owl:Class ; rdfs:subClassOf owp:Derivation .
+owp:Aggregate a owl:Class ; rdfs:subClassOf owp:Derivation .
+owp:Classification a owl:Class ; rdfs:subClassOf owp:Derivation .
+# Not disjoint: a classifier's output can be an Estimate and a Classification; a value may also have several derivations.
+owp:Criterion a owl:Class ; rdfs:label "criterion"@en ;
+  rdfs:comment "The declared basis of a classification: id, version, rules, basis. Part of a State Compiler document, not a document itself."@en .
+
+# --- what happens --------------------------------------------------------------------------------
+owp:Compilation a owl:Class ; rdfs:label "compilation"@en ;
+  rdfs:comment "One run of a State Compiler over observations, producing an EWS."@en .
+
+# The kinds of thing above are pairwise distinct.
+[] a owl:AllDisjointClasses ; owl:members ( owp:World owp:Document owp:Package owp:Observation owp:StateValue owp:Derivation owp:Criterion owp:Compilation ) .
+
+# --- resolution of a value -------------------------------------------------------------------------
+owp:Resolution a owl:Class ; rdfs:subClassOf skos:Concept .
+owp:Resolutions a skos:ConceptScheme ; skos:prefLabel "EWS value resolution"@en .
+owp:resolved a owp:Resolution ; skos:inScheme owp:Resolutions ; skos:prefLabel "resolved"@en .
+owp:unresolved a owp:Resolution ; skos:inScheme owp:Resolutions ; skos:prefLabel "unresolved"@en ;
+  skos:definition "One of several alternatives the newest observations disagree on."@en .
+owp:resolved owl:differentFrom owp:unresolved .
+owp:Resolution owl:equivalentClass [ a owl:Class ; owl:oneOf ( owp:resolved owp:unresolved ) ] .
+
+# --- object properties --------------------------------------------------------------------------
+owp:represents a owl:ObjectProperty ; rdfs:domain owp:WorldPackage ; rdfs:range owp:World .
+owp:dependsOn a owl:ObjectProperty ; rdfs:subPropertyOf dct:requires ; rdfs:domain owp:Package ; rdfs:range owp:Package .
+dct:requires a owl:ObjectProperty .
+owp:hasAsset a owl:ObjectProperty ; rdfs:domain owp:Package ; rdfs:range owp:Asset .
+owp:groundedIn a owl:ObjectProperty ; rdfs:domain owp:WorldModelPackage ; rdfs:range owp:WorldPackage .
+owp:compiles a owl:ObjectProperty ; rdfs:domain owp:StateCompilerProfile ; rdfs:range owp:WorldViewProfile .
+owp:worldRef a owl:ObjectProperty ; rdfs:domain owp:EffectiveWorldState ; rdfs:range owp:WorldPackage .
+owp:worldView a owl:ObjectProperty ; rdfs:domain owp:EffectiveWorldState ; rdfs:range owp:WorldViewProfile .
+owp:stateCompiler a owl:ObjectProperty ; rdfs:domain owp:EffectiveWorldState ; rdfs:range owp:StateCompilerProfile .
+owp:inState a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain owp:StateValue ; rdfs:range owp:EffectiveWorldState .
+owp:resolution a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain owp:StateValue ; rdfs:range owp:Resolution .
+owp:derivation a owl:ObjectProperty ; rdfs:domain owp:StateValue ; rdfs:range owp:Derivation .
+owp:criterion a owl:ObjectProperty , owl:FunctionalProperty ; rdfs:domain owp:Classification ; rdfs:range owp:Criterion .
+owp:hasObservation a owl:ObjectProperty ; rdfs:domain owp:ObservationSet ; rdfs:range owp:Observation .
+
+# --- data properties ----------------------------------------------------------------------------
+owp:packageId a owl:DatatypeProperty ; rdfs:domain owp:Package ; rdfs:range xsd:string .
+owp:asOf a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain owp:EffectiveWorldState ; rdfs:range xsd:dateTimeStamp .
+owp:missingField a owl:DatatypeProperty ; rdfs:domain owp:EffectiveWorldState ; rdfs:range xsd:string .
+owp:field a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain owp:StateValue ; rdfs:range xsd:string .
+owp:subjectKey a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain owp:StateValue ; rdfs:range xsd:string .
+owp:observationType a owl:DatatypeProperty ; rdfs:domain owp:Observation ; rdfs:range xsd:string .
+owp:observedAt a owl:DatatypeProperty , owl:FunctionalProperty ; rdfs:domain owp:Observation ; rdfs:range xsd:dateTimeStamp .
+owp:estimatedBy a owl:DatatypeProperty ; rdfs:domain owp:Observation ; rdfs:range xsd:string ;
+  rdfs:comment "Identifier of the estimator (a package reference, an asset path, or another identifier)."@en .
+owp:function a owl:DatatypeProperty ; rdfs:domain owp:Aggregate ; rdfs:range xsd:string .
+owp:window a owl:DatatypeProperty ; rdfs:domain owp:Aggregate ; rdfs:range xsd:string ;
+  rdfs:comment "An ISO 8601 duration such as PT24H. Typed as a string: xsd:dayTimeDuration is not in the OWL 2 datatype map."@en .

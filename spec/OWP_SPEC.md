@@ -516,6 +516,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `compiler.binding` | 12.2, 12.4 | malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match `latent`, or a classification cycle |
 | `compiler.per-subject-field` | 12.3 | `outputSchema.perSubject` is not a list of EWS fields of the compiler |
 | `compiler.latent-field` | 12.4 | `outputSchema.latent` is not a list of EWS fields of the compiler |
+| `compiler.unit` | 12.5 | `outputSchema.units` that is not a mapping of EWS fields to UCUM codes, a dimensioned unit on a count, a unit on a classification, or a criterion unit unlike its input's |
 | `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
 | `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
 | `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |

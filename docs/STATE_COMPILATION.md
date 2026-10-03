@@ -62,7 +62,11 @@ State that is not observed directly is latent; list such fields in `latent` and 
 
 A classification always names its criterion, so a consumer can tell which rule judged a value; `basis` may point at the SOP or standard it comes from. The EWS records how each latent value was produced in `derivation`.
 
-## 6. Read the EWS
+## 6. Declare units
+
+Give a numeric field its unit as a UCUM code: `outputSchema.units: {line.temp: Cel, item.events_24h: "{event}"}`. A count takes a dimensionless unit (`1` or an annotation in braces). An observation may report its unit (`units: {temp: Cel}`). If that differs from the field's unit, compilation refuses the input instead of converting. Convert where observations are acquired, before compiling. To say what the unit means in an ontology, add `unit: unit:DEG_C` (QUDT) to the field's SemanticBinding entry.
+
+## 7. Read the EWS
 
 | Section | Holds |
 |---|---|
@@ -74,7 +78,7 @@ A classification always names its criterion, so a consumer can tell which rule j
 
 Every field of the compiler appears in exactly one of `state`, `unresolved`, and `missing` (for a per-subject field, each subject in one of them).
 
-## 7. Check and keep an expected EWS
+## 8. Check and keep an expected EWS
 
 ```bash
 ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z > ews.yaml

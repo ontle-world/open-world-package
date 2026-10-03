@@ -1,0 +1,7 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <https://example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+<https://example.org/invalid> a owl:Ontology ; owl:imports <https://w3id.org/owp/ns> .
+ex:e a owp:EffectiveWorldState ; owp:asOf "2026-01-02T00:00:00"^^xsd:dateTime .

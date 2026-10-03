@@ -12,27 +12,15 @@ spec:
   - laboratory
   world:
     description: WORLD.md
-    definition: Assays, plates, reagents, instruments, experiment runs, measurements,
-      and the protocols that produce them.
+    definition: Assays, plates, reagents, instruments, experiment runs, measurements, and the protocols that produce them.
     boundary:
-      included:
-      - assay
-      - plate
-      - reagent
-      - instrument
-      - experiment_run
-      - measurement
-      - protocol
-      excluded:
-      - lims_implementation
-      - instrument_control_software
+      included: [assay, plate, reagent, instrument, experiment_run, measurement, protocol]
+      excluded: [lims_implementation, instrument_control_software]
     defaultView: views/scientist.yaml
   conformance:
     profile: viewable
   validity:
     limitations:
-    - Illustrative example; no real laboratory data. Uses experimental asset kinds
-      (spec Appendix C).
+    - Illustrative example; no real laboratory data. Uses experimental asset kinds (spec Appendix C).
   assets:
-  - kind: PackageExample
-    path: examples/baseline-observations.yaml
+  - {kind: PackageExample, path: examples/baseline-observations.yaml}

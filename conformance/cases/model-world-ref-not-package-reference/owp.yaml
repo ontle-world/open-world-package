@@ -9,8 +9,7 @@ spec:
   - world@0.1.0
   worldModel:
     description: WORLDMODEL.md
-    roles:
-    - dynamics_prediction
+    roles: [dynamics_prediction]
     semanticGrounding:
       worldRef: world@0.1.0
       compatibleWorldViews:

@@ -11,27 +11,17 @@ spec:
   - sales
   world:
     description: WORLD.md
-    definition: Accounts, opportunities, sales activity, territories, quotas, and
-      the priorities assigned to accounts.
+    definition: Accounts, opportunities, sales activity, territories, quotas, and the priorities assigned to accounts.
     boundary:
-      included:
-      - account
-      - opportunity
-      - activity
-      - territory
-      - quota
-      - priority
-      excluded:
-      - complete_crm_implementation
-      - pricing_engine
+      included: [account, opportunity, activity, territory, quota, priority]
+      excluded: [complete_crm_implementation, pricing_engine]
     defaultView: views/account-manager.yaml
     defaultStateCompiler: state/account-priority-compiler.yaml
   conformance:
     profile: model-ready
   validity:
     limitations:
-    - Illustrative example; no real CRM data. Uses experimental asset kinds (spec
-      Appendix C).
+    - Illustrative example; no real CRM data. Uses experimental asset kinds (spec Appendix C).
   assets:
   - kind: PackageExample
     path: examples/observations.yaml

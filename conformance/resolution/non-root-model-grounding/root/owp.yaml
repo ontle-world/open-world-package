@@ -10,8 +10,7 @@ spec:
   - conformance/model@0.1.0
   worldModel:
     description: WORLDMODEL.md
-    roles:
-    - dynamics_prediction
+    roles: [dynamics_prediction]
     semanticGrounding:
       worldRef: conformance/world@0.1.0
       compatibleWorldViews:

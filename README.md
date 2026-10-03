@@ -47,10 +47,7 @@ ontle validate .
 ontle inspect .
 ontle pack .
 
-# Generated files point editors (VS Code YAML, yaml-language-server) at their JSON Schema.
 ```
-
-Each asset file says what it is with `apiVersion` and `kind`; `owp.yaml` does not list local assets. Write a file by hand, or let `ontle new` write a skeleton:
 
 The generated project contains only the authoring surface. `.ontle/` is generator-owned metadata and can be ignored by most users.
 
@@ -64,16 +61,29 @@ ontle init my-world-model --template worldmodel --world ./my-world
 ontle init my-vla-world-model --template worldmodel-multimodal
 ```
 
-Adding assets:
+## Adding assets
+
+An asset is a YAML file that says what it is. Put it anywhere in the package; `owp.yaml` does not list it.
+
+```yaml
+# views/manager.yaml
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: manager
+spec:
+  worldRef: self
+  purpose: {task: assign_accounts, objective: balance_territories}
+  projection: {include: [account, territory]}
+```
+
+`ontle validate .` finds it by its `apiVersion` and `kind`. To start from a skeleton with editor schema hints, run `ontle new WorldViewProfile views/manager.yaml`; it works for any asset kind.
+
+More commands:
 
 ```bash
-ontle new WorldViewProfile views/manager.yaml          # any asset kind; the file is found by its kind
-ontle new StateCompilerProfile state/manager.yaml
-ontle new ScenarioProfile scenarios/claim-rca.yaml
-ontle new WorldViewProfile views/regional.yaml --specializes views/default.yaml   # experimental
-ontle new TaskSetProfile tasks/account-priority.yaml                              # experimental
-ontle add extension acme/quality-extension@1.2.0       # declare a publisher extension in owp.yaml
 ontle inspect . --graph --resolved-views
+ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension in owp.yaml
 
 # knowledge extraction (experimental; SPARQL needs the rdf extra)
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml

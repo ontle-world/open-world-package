@@ -1,0 +1,29 @@
+# Daily transition probabilities for the Markov baseline (models/markov.yaml).
+# These are assumptions, not estimates: each row is a prior worth `strength` observed days.
+# run.py adds the daily transitions observed in the World up to the EWS asOf, so observed
+# history overrides the prior as it accumulates. Rows sum to 1; the last state of each field
+# is absorbing.
+step: P1D
+strength: 10
+source: assumption
+fields:
+  quality_incident.status:
+    states: [open, under_investigation, contained, closed]
+    rows:
+      open: {open: 0.6, under_investigation: 0.4}
+      under_investigation: {under_investigation: 0.8, contained: 0.15, closed: 0.05}
+      contained: {contained: 0.85, closed: 0.15}
+      closed: {closed: 1.0}
+  claim.status:
+    states: [open, under_review, closed]
+    rows:
+      open: {open: 0.7, under_review: 0.3}
+      under_review: {under_review: 0.85, closed: 0.15}
+      closed: {closed: 1.0}
+  capa.status:
+    states: [proposed, approved, implemented, verified]
+    rows:
+      proposed: {proposed: 0.7, approved: 0.3}
+      approved: {approved: 0.85, implemented: 0.15}
+      implemented: {implemented: 0.9, verified: 0.1}
+      verified: {verified: 1.0}

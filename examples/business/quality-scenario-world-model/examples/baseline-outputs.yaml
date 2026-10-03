@@ -82,21 +82,34 @@ results:
   range: {}
   risk: null
   uncertainty:
-    method: empirical_transition_counts
-    note: no observed transition from a state keeps it (p=1.0)
+    method: markov_chain
+    step: P1D
+    steps: 14
+    matrix: assumption prior (strength 10) updated with observed daily transitions
   predicted_transition:
-    QMS.capa:CAPA-9:
-      from: approved
-      next:
-        approved: 1.0
-      observed_transitions: 0
-    QMS.claim:CLM-001:
-      from: open
-      next:
-        open: 1.0
-      observed_transitions: 0
-    QMS.nonconformance:NC-17:
-      from: under_investigation
-      next:
+    quality_incident.status:
+      from:
         under_investigation: 1.0
+      at_horizon:
+        under_investigation: 0.06
+        contained: 0.182
+        closed: 0.757
+      observed_transitions: 1
+    claim.status:
+      from:
+        open: 1.0
+      at_horizon:
+        open: 0.012
+        under_review: 0.203
+        closed: 0.786
+      observed_transitions: 1
+    capa.status:
+      from:
+        proposed: 0.5
+        approved: 0.5
+      at_horizon:
+        proposed: 0.003
+        approved: 0.147
+        implemented: 0.401
+        verified: 0.449
       observed_transitions: 0

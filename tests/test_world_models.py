@@ -36,11 +36,25 @@ class ReferenceWorldModelTests(unittest.TestCase):
                     self.assertLessEqual(bounds[name]["low"], value)
                     self.assertLessEqual(value, bounds[name]["high"])
 
+    def test_markov_rows_are_distributions_and_horizon_sums_to_one(self):
+        params = yaml.safe_load((PACKAGE / "models" / "markov-transitions.yaml").read_text(encoding="utf-8"))
+        for field, spec in params["fields"].items():
+            for state, row in spec["rows"].items():
+                with self.subTest(field=field, state=state):
+                    self.assertTrue(set(row) <= set(spec["states"]))
+                    self.assertAlmostEqual(sum(row.values()), 1.0)
+        markov = next(r for r in run("--baselines")["results"] if r["model"] == "markov")
+        self.assertEqual(markov["uncertainty"]["steps"], 14)
+        for field, out in markov["predicted_transition"].items():
+            with self.subTest(field=field):
+                self.assertAlmostEqual(sum(out["at_horizon"].values()), 1.0, places=2)
+        self.assertEqual(markov["predicted_transition"]["capa.status"]["from"], {"proposed": 0.5, "approved": 0.5})
+
     def test_every_model_artifact_points_at_a_function(self):
         source = RUN.read_text(encoding="utf-8")
         for path in sorted((PACKAGE / "models").glob("*.yaml")):
             doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-            if doc["kind"] != "ModelArtifact":
+            if doc.get("kind") != "ModelArtifact":
                 continue
             file, _, name = doc["spec"]["entrypoint"].partition("#")
             with self.subTest(artifact=path.name):

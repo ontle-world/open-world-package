@@ -3,7 +3,7 @@
     python models/run.py --model <persistence|three_point|monte_carlo|markov|llm> [--world <World dir>]
     python models/run.py --baselines > examples/baseline-outputs.yaml   # the four deterministic models
 
-Every model reads the World's EWS (the scenario's baselineStateRef) and the ScenarioProfile, and answers
+Every model reads the World's EWS (the scenario's baselineStateRef), its State Compiler, and the ScenarioProfile, and answers
 in the same shape: expected_outcome, range, risk, uncertainty, predicted_transition. The four baselines
 run on the CPU with the standard library and are deterministic (Monte Carlo uses a fixed seed). The LLM
 model is the minimum bar a production World Model must clear; it needs the `anthropic` package and
@@ -15,7 +15,9 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -32,11 +34,12 @@ def load(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def inputs(world: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """(EWS spec, scenario spec, observations) from the World package."""
+def inputs(world: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """(EWS spec, scenario spec, observations, State Compiler spec) from the World package."""
     scenario = load(world / SCENARIO)["spec"]
     ews = load(world / scenario["baselineStateRef"])["spec"]
-    return ews, scenario, load(world / OBSERVATIONS)
+    compiler = load(world / ews["stateCompiler"].partition("#")[2])["spec"]
+    return ews, scenario, load(world / OBSERVATIONS), compiler
 
 
 def ranges(scenario: dict[str, Any]) -> dict[str, dict[str, float]]:
@@ -61,7 +64,7 @@ def answer(model: str, **fields: Any) -> dict[str, Any]:
 
 # --- deterministic baselines -------------------------------------------------------------------------
 
-def persistence(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any]) -> dict[str, Any]:
+def persistence(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
     """Nothing changes over the horizon: every resolved field keeps its value. The floor every model must beat."""
     state = ews.get("state") or {}
     return answer("persistence",
@@ -69,7 +72,7 @@ def persistence(ews: dict[str, Any], scenario: dict[str, Any], observations: dic
                   uncertainty={"method": "none", "note": "assumes no change; unresolved fields stay unresolved"})
 
 
-def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any]) -> dict[str, Any]:
+def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
     """Best, base, and worst cases from the scenario's {low, mode, high}; the expectation is the PERT mean."""
     rs = ranges(scenario)
     expected = {n: round((r["low"] + 4 * r["mode"] + r["high"]) / 6, 3) for n, r in rs.items()}
@@ -81,7 +84,7 @@ def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dic
                   uncertainty={"method": "three_point", "distribution": "PERT mean of low, mode, high"})
 
 
-def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any],
+def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any],
                 runs: int = 2000, seed: int = 20261003) -> dict[str, Any]:
     """Seeded draws from a triangular distribution per variable; reports mean and P10/P50/P90."""
     rng = random.Random(seed)
@@ -101,29 +104,93 @@ def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dic
                   uncertainty={"method": "monte_carlo", "distribution": "triangular(low, mode, high)", "runs": runs, "seed": seed})
 
 
-def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any]) -> dict[str, Any]:
-    """Next-status probabilities from the status sequences seen per subject up to the EWS asOf (a transition table)."""
-    as_of = (ews.get("context") or {}).get("asOf") or "9999"
-    seqs: dict[tuple[str, str], list[tuple[str, str, str]]] = {}
+def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
+    """Status distributions at the horizon from a daily transition matrix.
+
+    The matrix is the assumed prior in models/markov-transitions.yaml, updated with the daily transitions
+    observed per subject up to the EWS asOf. The chain starts from the EWS value; an unresolved field starts
+    split evenly over its candidates. The horizon is the scenario's timeHorizon in steps.
+    """
+    params = load(HERE / "markov-transitions.yaml")
+    step = duration_days(params["step"])
+    steps = round(duration_days(scenario.get("timeHorizon") or params["step"]) / step)
+    as_of = parse_time((ews.get("context") or {}).get("asOf"))
+    bindings = compiler.get("bindings") or {}
+    result = {}
+    for field, spec in params["fields"].items():
+        states = spec["states"]
+        counts = daily_counts(observations, (bindings.get(field) or {}), states, step, as_of)
+        matrix = [[(params["strength"] * spec["rows"][a].get(b, 0.0) + counts[i][j]) / (params["strength"] + sum(counts[i]))
+                   for j, b in enumerate(states)] for i, a in enumerate(states)]
+        start = initial(ews, field, states)
+        if start is None:
+            continue
+        dist = start
+        for _ in range(steps):
+            dist = [sum(dist[i] * matrix[i][j] for i in range(len(states))) for j in range(len(states))]
+        result[field] = {
+            "from": {s: round(p, 3) for s, p in zip(states, start) if p},
+            "at_horizon": {s: round(p, 3) for s, p in zip(states, dist) if round(p, 3)},
+            "observed_transitions": sum(map(sum, counts)),
+        }
+    return answer("markov", predicted_transition=result,
+                  uncertainty={"method": "markov_chain", "step": params["step"], "steps": steps,
+                               "matrix": f"{params['source']} prior (strength {params['strength']}) updated with observed daily transitions"})
+
+
+def duration_days(text: str) -> float:
+    """Days in a day/hour ISO 8601 duration (P14D, PT12H, P1DT6H)."""
+    m = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?)?", text)
+    if not m or not any(m.groups()):
+        raise ValueError(f"unsupported duration {text!r}")
+    return int(m.group(1) or 0) + int(m.group(2) or 0) / 24
+
+
+def parse_time(text: Any) -> datetime | None:
+    return datetime.fromisoformat(str(text).replace("Z", "+00:00")) if text else None
+
+
+def initial(ews: dict[str, Any], field: str, states: list[str]) -> list[float] | None:
+    """Start distribution: the EWS value, or an even split over unresolved candidates in the state list."""
+    value = (ews.get("state") or {}).get(field)
+    candidates = [value] if value is not None else list((ews.get("unresolved") or {}).get(field) or [])
+    known = [c for c in candidates if c in states]
+    if not known:
+        return None
+    return [known.count(s) / len(known) for s in states]
+
+
+def daily_counts(observations: dict[str, Any], binding: dict[str, Any], states: list[str],
+                 step: float, as_of: datetime | None) -> list[list[int]]:
+    """Transitions between consecutive steps of each subject's status, up to asOf (no peeking past it).
+
+    A subject's status at a step is its latest observed value; observations sharing a timestamp have no
+    order, so a subject is skipped from the first such tie on.
+    """
+    counts = [[0] * len(states) for _ in states]
+    seqs: dict[str, list[tuple[datetime, str]]] = {}
     for o in (observations.get("spec") or {}).get("observations") or []:
-        if "status" in (o.get("values") or {}) and o.get("subject") and str(o["observedAt"]) <= as_of:  # no peeking past asOf
-            seqs.setdefault((o["type"], o["subject"]), []).append((o["observedAt"], o["id"], str(o["values"]["status"])))
-    counts: dict[str, dict[str, dict[str, int]]] = {}
-    current: dict[str, dict[str, str]] = {}
-    for (otype, subject), seq in sorted(seqs.items()):
-        states = [s for _, _, s in sorted(seq)]
-        for a, b in zip(states, states[1:]):
-            row = counts.setdefault(otype, {}).setdefault(a, {})
-            row[b] = row.get(b, 0) + 1
-        current.setdefault(otype, {})[subject] = states[-1]
-    transition = {}
-    for otype, subjects in sorted(current.items()):
-        for subject, state in sorted(subjects.items()):
-            row = counts.get(otype, {}).get(state)
-            nxt = {s: round(n / sum(row.values()), 3) for s, n in sorted(row.items())} if row else {state: 1.0}
-            transition[f"{otype}:{subject}"] = {"from": state, "next": nxt, "observed_transitions": sum(row.values()) if row else 0}
-    return answer("markov", predicted_transition=transition,
-                  uncertainty={"method": "empirical_transition_counts", "note": "no observed transition from a state keeps it (p=1.0)"})
+        value = (o.get("values") or {}).get(binding.get("value"))
+        at = parse_time(o.get("observedAt"))
+        if o.get("type") == binding.get("from") and o.get("subject") and value in states and at and (as_of is None or at <= as_of):
+            seqs.setdefault(o["subject"], []).append((at, value))
+    for seq in seqs.values():
+        seq.sort(key=lambda x: x[0])
+        times = [at for at, _ in seq]
+        cut = next((i for i in range(1, len(seq)) if times[i] == times[i - 1]), len(seq))
+        seq = seq[:cut - 1] if cut < len(seq) else seq
+        if not seq:
+            continue
+        end = as_of or seq[-1][0]
+        day, k, prev = seq[0][0], 0, None
+        while day <= end:
+            while k + 1 < len(seq) and seq[k + 1][0] <= day:
+                k += 1
+            cur = states.index(seq[k][1])
+            if prev is not None:
+                counts[prev][cur] += 1
+            prev, day = cur, day + timedelta(days=step)
+    return counts
 
 
 BASELINES = {"persistence": persistence, "three_point": three_point, "monte_carlo": monte_carlo, "markov": markov}
@@ -156,13 +223,13 @@ SYSTEM = (
 )
 
 
-def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any]) -> dict[str, Any]:
+def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
     """Claude predicts the scenario outcome from the EWS, the scenario, and the baselines' answers."""
     try:
         import anthropic
     except ImportError:
         return answer("llm", skipped="the anthropic package is not installed (pip install anthropic)")
-    baselines = {name: fn(ews, scenario, observations) for name, fn in BASELINES.items() if name != "markov"}
+    baselines = {name: fn(ews, scenario, observations, compiler) for name, fn in BASELINES.items()}
     prompt = json.dumps({"ews": ews, "scenario": scenario, "baselines": baselines}, indent=2, sort_keys=True, default=str)
     try:
         client = anthropic.Anthropic()
@@ -210,11 +277,11 @@ def main() -> int:
     args = ap.parse_args()
     if not args.model and not args.baselines:
         ap.error("give --model or --baselines")
-    ews, scenario, observations = inputs(args.world)
+    ews, scenario, observations, compiler = inputs(args.world)
     names = list(BASELINES) if args.baselines else [args.model]
     out = {"scenario": "openworld-examples/manufacturing-quality-world@0.1.0#" + SCENARIO,
            "asOf": (ews.get("context") or {}).get("asOf"),
-           "results": [MODELS[n](ews, scenario, observations) for n in names]}
+           "results": [MODELS[n](ews, scenario, observations, compiler) for n in names]}
     sys.stdout.write(yaml.dump(out, Dumper=NoAliases, sort_keys=False, allow_unicode=True, width=120))
     return 0
 

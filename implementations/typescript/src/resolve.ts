@@ -559,7 +559,10 @@ function crossPackageProblems(model: Node, nodes: Map<string, Node>): Array<{ ru
   const compilerPaths = paths("compatibleStateCompilers");
   for (const p of viewPaths) {
     const k = assetKind(p);
-    if (k !== "WorldViewProfile") out.push({ rule: "grounding.world-view", msg: `compatible World View ${worldRef}#${p} is ${k ? `a ${k}` : "not an asset"} in ${worldRef}; expected a WorldViewProfile` });
+    if (k !== "WorldViewProfile") {
+      const views = [...worldKinds].filter(([, kind]) => kind === "WorldViewProfile").map(([v]) => v).sort();
+      out.push({ rule: "grounding.world-view", msg: `compatible World View ${worldRef}#${p} is ${k ? `a ${k}` : "not an asset"} in ${worldRef}; expected a WorldViewProfile (its Views: ${views.join(", ") || "none"})` });
+    }
   }
   for (const p of compilerPaths) {
     const k = assetKind(p);

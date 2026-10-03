@@ -361,7 +361,9 @@ def cross_package_errors(resolution: Resolution) -> list[str]:
             rel = ref.partition("#")[2]
             view_paths.add(rel)
             if _local_asset_kind(world, rel) != "WorldViewProfile":
-                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {ref} is not a WorldViewProfile asset of {world_ref}")
+                views = sorted(p for p, k in world.local_assets()[0].items() if k == "WorldViewProfile")
+                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {ref} is not a WorldViewProfile asset of {world_ref}"
+                              f" (its Views: {', '.join(views) or 'none'})")
         for ref in grounding.get("compatibleStateCompilers") or []:
             rel = ref.partition("#")[2]
             if _local_asset_kind(world, rel) != "StateCompilerProfile":

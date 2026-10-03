@@ -15,6 +15,7 @@ spec:
       through explicit interfaces.
     boundary:
       included:
+      - item
       - organization
       - work
       - decisions
@@ -33,4 +34,6 @@ spec:
     limitations: []
   assets:
   - kind: PackageExample
-    path: examples/basic.yaml
+    path: examples/observations.yaml
+  - kind: PackageExample
+    path: examples/expected-ews.yaml

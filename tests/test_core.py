@@ -33,7 +33,7 @@ class OntleTests(unittest.TestCase):
             (p / "scenarios" / "s.yaml").write_text("apiVersion: openworld/v1alpha1\nkind: ScenarioProfile\nmetadata: {name: s}\nspec: {objective: x}\n")
             (p / "notes.yaml").write_text("just: data\n")
             self.assertTrue(validate_package(p).valid)
-            self.assertEqual(inspect_package(p)["asset_count"], 4)  # view, compiler, example, scenario
+            self.assertEqual(inspect_package(p)["asset_count"], 5)  # view, compiler, two examples, scenario
             self.assertEqual((p / "owp.yaml").read_text(), before)
 
     def test_add_extension_declares_dependency(self):
@@ -174,7 +174,7 @@ class OntleTests(unittest.TestCase):
     def test_missing_asset_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")
-            (p / "examples" / "basic.yaml").unlink()
+            (p / "examples" / "observations.yaml").unlink()
             result = validate_package(p)
             self.assertFalse(result.valid)
             self.assertTrue(any("does not exist" in e for e in result.errors))
@@ -224,12 +224,15 @@ class OntleTests(unittest.TestCase):
             data = yaml.safe_load(manifest.read_text(encoding="utf-8"))
             data["spec"]["conformance"]["profile"] = "model-ready"
             manifest.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+            self.assertTrue(validate_package(p).valid)  # the starter's compiler declares its fields
+            compiler = p / "state" / "default-compiler.yaml"
+            cdata = yaml.safe_load(compiler.read_text(encoding="utf-8"))
+            del cdata["spec"]["outputSchema"], cdata["spec"]["bindings"]
+            compiler.write_text(yaml.safe_dump(cdata, sort_keys=False), encoding="utf-8")
             result = validate_package(p)
             self.assertFalse(result.valid)
             self.assertTrue(any("outputSchema" in e for e in result.errors))
-            compiler = p / "state" / "default-compiler.yaml"
-            cdata = yaml.safe_load(compiler.read_text(encoding="utf-8"))
-            cdata["spec"]["outputSchema"] = {"fields": ["entity.state"]}
+            cdata["spec"]["outputSchema"] = {"fields": ["item.state"]}
             compiler.write_text(yaml.safe_dump(cdata, sort_keys=False), encoding="utf-8")
             result = validate_package(p)
             self.assertTrue(result.valid, result.errors)
@@ -325,7 +328,7 @@ class OntleTests(unittest.TestCase):
             with zipfile.ZipFile(archive, "r") as zf:
                 names = zf.namelist()
             self.assertIn("owp.yaml", names)
-            self.assertIn(".owpignore", names)
+            self.assertNotIn(".owpignore", names)  # dot paths are not package files
             self.assertFalse(any(n.startswith("drafts/") for n in names))
             (p / ".owpignore").write_text("drafts/\nWORLD.md\n")  # the manifest's world description is then missing
             with self.assertRaisesRegex(OWPError, "without the files .owpignore excludes"):

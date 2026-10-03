@@ -1,0 +1,12 @@
+# Illustrative outcome of the quality-hold scenario, as if recorded at the end of its 14-day horizon.
+# It is not a real record: it exists so `run.py --evaluate` has something to score against.
+spec:
+  scenario: openworld-examples/manufacturing-quality-world@0.1.0#scenarios/quality-hold.yaml
+  observedAt: '2026-09-19T00:00:00Z'
+  outcome:
+    escapedDefects: 1
+    deliveryDelayDays: 3
+  state:
+    quality_incident.status: contained
+    claim.status: closed
+    capa.status: implemented

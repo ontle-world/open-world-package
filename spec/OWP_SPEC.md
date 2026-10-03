@@ -301,7 +301,7 @@ Every WorldModelPackage requires compatible View and State Compiler references r
 
 ## 7. Integrity
 
-`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files (without the paths `.owpignore` excludes, section 5) and one `owp.lock.json`:
+`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files and one `owp.lock.json`. Package files are the files under the package root except paths with a component that starts with `.` (such as `.env`, `.git`, `.owpignore`) or is named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, `.owp.zip` archives, and paths `.owpignore` excludes (section 5); these are the paths discovery skips. `owp.yaml` is always a package file:
 
 ```json
 {

@@ -2,44 +2,27 @@ scenario: openworld-examples/manufacturing-quality-world@0.1.0#scenarios/quality
 asOf: '2026-09-05T00:00:00Z'
 results:
 - model: persistence
-  expected_outcome: {}
-  range: {}
-  risk: null
-  uncertainty:
-    method: none
-    note: assumes no change; unresolved fields stay unresolved
+  provides:
+  - uncertainty
+  - predicted_transition
   predicted_transition:
     claim.status:
       from: open
-      to: open
-      p: 1.0
-    equipment.condition_events:
-      from:
-      - vibration_warning
-      - vibration_cleared
-      to:
-      - vibration_warning
-      - vibration_cleared
-      p: 1.0
-    inspection.results:
-      from:
-      - seal_leak_detected
-      to:
-      - seal_leak_detected
-      p: 1.0
-    lot.genealogy:
-      from:
-      - RM-778
-      - RM-779
-      to:
-      - RM-778
-      - RM-779
-      p: 1.0
+      at_horizon:
+        open: 1.0
     quality_incident.status:
       from: under_investigation
-      to: under_investigation
-      p: 1.0
+      at_horizon:
+        under_investigation: 1.0
+  uncertainty:
+    method: none
+    note: assumes no change; unresolved fields stay unresolved
 - model: three_point
+  provides:
+  - expected_outcome
+  - range
+  - risk
+  - uncertainty
   expected_outcome:
     deliveryDelayDays: 2.333
     escapedDefects: 1.167
@@ -56,8 +39,12 @@ results:
   uncertainty:
     method: three_point
     distribution: PERT mean of low, mode, high
-  predicted_transition: {}
 - model: monte_carlo
+  provides:
+  - expected_outcome
+  - range
+  - risk
+  - uncertainty
   expected_outcome:
     deliveryDelayDays: 2.673
     escapedDefects: 1.319
@@ -76,16 +63,10 @@ results:
     distribution: triangular(low, mode, high)
     runs: 2000
     seed: 20261003
-  predicted_transition: {}
 - model: markov
-  expected_outcome: {}
-  range: {}
-  risk: null
-  uncertainty:
-    method: markov_chain
-    step: P1D
-    steps: 14
-    matrix: assumption prior (strength 10) updated with observed daily transitions
+  provides:
+  - uncertainty
+  - predicted_transition
   predicted_transition:
     quality_incident.status:
       from:
@@ -113,3 +94,41 @@ results:
         implemented: 0.401
         verified: 0.449
       observed_transitions: 0
+  uncertainty:
+    method: markov_chain
+    step: P1D
+    steps: 14
+    matrix: assumption prior (strength 10) updated with observed daily transitions
+evaluation:
+  outcome: '2026-09-19T00:00:00Z'
+  scores:
+    persistence:
+      claim.status:
+        probability_of_observed_state: 0.0
+      quality_incident.status:
+        probability_of_observed_state: 0.0
+    three_point:
+      deliveryDelayDays:
+        expected_outcome_error: 0.667
+        beats_base_case: true
+        range_contains_observed_outcome: true
+      escapedDefects:
+        expected_outcome_error: 0.167
+        beats_base_case: false
+        range_contains_observed_outcome: true
+    monte_carlo:
+      deliveryDelayDays:
+        expected_outcome_error: 0.327
+        beats_base_case: true
+        range_contains_observed_outcome: true
+      escapedDefects:
+        expected_outcome_error: 0.319
+        beats_base_case: false
+        range_contains_observed_outcome: true
+    markov:
+      capa.status:
+        probability_of_observed_state: 0.401
+      claim.status:
+        probability_of_observed_state: 0.786
+      quality_incident.status:
+        probability_of_observed_state: 0.182

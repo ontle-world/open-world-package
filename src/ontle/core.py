@@ -766,18 +766,18 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 def package_files(root: Path) -> list[Path]:
     """The files a package consists of: what discovery reads and ontle pack archives.
 
-    Build and tooling directories, operating-system metadata, archives, and paths that .owpignore excludes
-    are not package files. owp.yaml always is.
+    Paths with a component that starts with "." (.env, .git, .owpignore, ...), build and tooling directories,
+    operating-system metadata, archives, and paths that .owpignore excludes are not package files, the same
+    rule discovery follows (spec section 5). owp.yaml always is.
     """
     rules = load_ignore(root)
-    ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "node_modules",
-                     "dist", "build", ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
+    ignored_parts = {"__pycache__", "venv", "node_modules", "dist", "build", "Thumbs.db"}
     files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():
             continue
         rel = p.relative_to(root)
-        if any(part in ignored_parts for part in rel.parts):
+        if any(part in ignored_parts or part.startswith(".") for part in rel.parts):
             continue
         if p.name.endswith(".owp.zip"):
             continue

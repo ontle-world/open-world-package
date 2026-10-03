@@ -19,3 +19,4 @@ node_modules/
 # Internal design notes (not canon, not published)
 /internal/
 _site/
+.coverage

@@ -5,3 +5,6 @@ l:plate-7 a l:Plate ; l:campaign "C-1" ; l:hasWell l:A1 , l:A2 , l:B1 .
 l:A1 l:control "positive" ; l:reagentLot "R-11" .
 l:A2 l:control "negative" ; l:reagentLot "R-11" .
 l:B1 l:control "sample" ; l:reagentLot "R-12" .
+l:A1 a l:Well .
+l:A2 a l:Well .
+l:B1 a l:Well .

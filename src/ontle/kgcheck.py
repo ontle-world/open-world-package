@@ -80,12 +80,20 @@ def _enum_types(root: Path, manifest: dict[str, Any]) -> set[str]:
     return out
 
 
+# Vocabularies an ontology may declare a prefix for but does not define (RDF, RDFS, OWL, XSD, SKOS, SHACL, DC, PROV, schema.org).
+STANDARD_NAMESPACES = {
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "http://www.w3.org/2000/01/rdf-schema#", "http://www.w3.org/2002/07/owl#",
+    "http://www.w3.org/2001/XMLSchema#", "http://www.w3.org/2004/02/skos/core#", "http://www.w3.org/ns/shacl#",
+    "http://purl.org/dc/terms/", "http://purl.org/dc/elements/1.1/", "http://www.w3.org/ns/prov#", "https://schema.org/", "http://schema.org/",
+}
+
+
 def _namespaces(manifest: dict[str, Any]) -> set[str]:
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
     out = {v for v in (ontology.get("prefixes") or {}).values() if isinstance(v, str)}
     if isinstance(ontology.get("iri"), str):
         out.add(ontology["iri"])
-    return out
+    return out - STANDARD_NAMESPACES
 
 
 def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None) -> KgReport:
@@ -144,7 +152,7 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
         def ours(term) -> bool:
             return isinstance(term, rdflib.URIRef) and any(str(term).startswith(ns) for ns in namespaces)
 
-        graph = rdflib.Dataset() if fmt == "nquads" else rdflib.Graph()
+        graph = rdflib.Dataset(default_union=True) if fmt == "nquads" else rdflib.Graph()  # named graphs count too
         graph.parse(root / content, format=fmt)
         types: dict[Any, set[Any]] = {}
         for s, o in graph.subject_objects(RDF.type):
@@ -161,20 +169,23 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
             if p not in properties:
                 found[("kg.unknown-property", f"property {name} is not defined by the ontology")] += 1
                 continue
-            for dom in tbox.objects(p, RDFS.domain):
-                if s not in types:
-                    found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {graph.namespace_manager.normalizeUri(dom)} cannot be checked")] += 1
-                elif dom not in types[s]:
-                    found[("kg.domain", f"subject of {name} is not a {graph.namespace_manager.normalizeUri(dom)}")] += 1
-            for rng in tbox.objects(p, RDFS.range):
-                if rng not in classes or rng in enums:
-                    continue  # a datatype or an enumeration type: values are not checked here
-                if isinstance(o, rdflib.Literal):
-                    found[("kg.range", f"object of {name} is a literal, not a {graph.namespace_manager.normalizeUri(rng)}")] += 1
-                elif o not in types:
-                    found[("kg.untyped", f"object of {name} has no rdf:type, so range {graph.namespace_manager.normalizeUri(rng)} cannot be checked")] += 1
-                elif rng not in types[o]:
-                    found[("kg.range", f"object of {name} is not a {graph.namespace_manager.normalizeUri(rng)}")] += 1
+            # A property declared under several types has several domains; any one of them is enough.
+            domains = sorted(tbox.objects(p, RDFS.domain))
+            label = " or ".join(graph.namespace_manager.normalizeUri(d) for d in domains)
+            if domains and s not in types:
+                found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {label} cannot be checked")] += 1
+            elif domains and not any(d in types[s] for d in domains):
+                found[("kg.domain", f"subject of {name} is not a {label}")] += 1
+            ranges = sorted(r for r in tbox.objects(p, RDFS.range) if r in classes and r not in enums)  # datatypes and enumerations are not checked
+            label = " or ".join(graph.namespace_manager.normalizeUri(r) for r in ranges)
+            if not ranges:
+                continue
+            if isinstance(o, rdflib.Literal):
+                found[("kg.range", f"object of {name} is a literal, not a {label}")] += 1
+            elif o not in types:
+                found[("kg.untyped", f"object of {name} has no rdf:type, so range {label} cannot be checked")] += 1
+            elif not any(r in types[o] for r in ranges):
+                found[("kg.range", f"object of {name} is not a {label}")] += 1
         report.checked.append(rel)
         report.findings += [KgFinding(code, rel, message, n) for (code, message), n in sorted(found.items())]
     return report

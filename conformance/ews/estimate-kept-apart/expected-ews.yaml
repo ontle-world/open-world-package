@@ -1,0 +1,35 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.health:
+      press-7: ok
+    m.health_estimate:
+      press-7: degraded
+      robot-2: worn
+  unresolved: {}
+  missing: []
+  provenance:
+    m.health:
+      press-7:
+      - o1
+    m.health_estimate:
+      press-7:
+      - o2
+      robot-2:
+      - o3
+      - o4
+  derivation:
+    m.health_estimate:
+      kind: estimate
+      by:
+        press-7:
+        - acme/model@2.0.0
+        robot-2:
+        - acme/model@2.0.0
+        - tech/visual-inspection

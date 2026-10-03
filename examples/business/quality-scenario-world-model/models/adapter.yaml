@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: RepresentationAdapterProfile
+metadata:
+  name: scenario-input-adapter
+spec:
+  source: EffectiveWorldState
+  target: scenario_model_input
+  preserves: [semantic_identity, temporal_meaning, uncertainty]

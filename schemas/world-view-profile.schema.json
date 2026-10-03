@@ -36,11 +36,7 @@
       "type": "object",
       "properties": {
         "externalWorldRefs": {
-          "type": "array",
-          "description": "Other Worlds this View reads (spec section 6): exact package references, each also listed in spec.dependencies.",
-          "items": {
-            "type": "string"
-          }
+          "type": "string"
         },
         "specializes": {
           "type": "string"
@@ -55,15 +51,6 @@
               "type": "string"
             },
             "objective": {
-              "type": "string"
-            },
-            "actorRef": {
-              "type": "string"
-            },
-            "roleRef": {
-              "type": "string"
-            },
-            "taskRef": {
               "type": "string"
             },
             "extensions": {
@@ -90,6 +77,15 @@
             "principle": {
               "type": "string"
             },
+            "scale": {
+              "type": "string"
+            },
+            "resolution": {
+              "type": "string"
+            },
+            "timeScope": {
+              "type": "string"
+            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }
@@ -102,13 +98,16 @@
             "authorityScope": {
               "type": "string"
             },
-            "timeScope": {
+            "actorRef": {
               "type": "string"
             },
-            "scale": {
-              "type": "string"
+            "roleRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
-            "resolution": {
+            "taskRef": {
               "type": "string"
             },
             "extensions": {
@@ -133,7 +132,10 @@
           "$ref": "#/$defs/extensions"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": [
+        "worldRef"
+      ]
     }
   },
   "additionalProperties": false,

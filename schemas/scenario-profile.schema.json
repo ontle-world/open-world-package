@@ -43,7 +43,7 @@
         },
         "standardBindings": {
           "type": "object",
-          "description": "Binding name to {standard, ref, license, terms} (spec section 5.3); checked by validators, not by this schema."
+          "description": "Open container: keys are not checked."
         },
         "baselineStateRef": {
           "type": "string"

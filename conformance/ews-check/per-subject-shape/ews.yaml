@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context: {asOf: "2026-01-01T00:00:10Z"}
+  state:
+    m.state: down
+    m.risk: {press-7: high, robot-2: low}
+  unresolved:
+    m.state: {robot-2: [running, idle]}
+  missing: []
+  provenance:
+    m.state: {press-7: [o1], robot-2: [o2, o3]}
+    m.risk: {press-7: [o1], robot-2: [o2, o3]}
+  derivation:
+    m.risk: {kind: classify, input: m.state, criterion: {id: availability}}

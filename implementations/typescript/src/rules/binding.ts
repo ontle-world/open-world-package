@@ -76,6 +76,17 @@ export function checkSemanticBindings(ctx: Context): void {
     for (const [where, value] of bindingCuries(doc)) {
       if (!isCurie(value)) report({ rule: "binding.curie", msg: `${where} ${JSON.stringify(value)} must be a CURIE <prefix>:<local name>` });
     }
+    // Spec 14: spec.subjects maps observation types listed in observationTypes to {base} or {iri: true}.
+    if ("subjects" in spec) {
+      const types = isObj(spec.observationTypes) ? spec.observationTypes : {};
+      if (!isObj(spec.subjects)) report({ rule: "binding.subjects", msg: "spec.subjects must be a mapping of observation type to {base} or {iri: true}" });
+      else for (const [otype, r] of Object.entries(spec.subjects)) {
+        if (!(otype in types)) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} is not listed in spec.observationTypes` });
+        const ok = isObj(r) && Object.keys(r).length === 1
+          && ((typeof r.base === "string" && /^[A-Za-z][A-Za-z0-9+.-]*:/.test(r.base)) || r.iri === true);
+        if (!ok) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} must be {base: <absolute IRI prefix>} or {iri: true}` });
+      }
+    }
     // Skipped when neither the World boundary nor any View projection lists names.
     if (scope.size > 0 && isObj(spec.terms)) {
       for (const name of Object.keys(spec.terms)) {

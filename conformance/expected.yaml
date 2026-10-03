@@ -4,6 +4,21 @@
 # rule: informative; error message wording is implementation-defined.
 suite: owp-conformance/v1alpha1
 cases:
+  compiler-per-subject-unknown-field:
+    valid: false
+    errors: [compiler.per-subject-field]
+    satisfiedProfile: viewable
+    rule: outputSchema.perSubject names EWS fields of the compiler.
+  compiler-latent-binding-mismatch:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: A latent field has an estimate, aggregate, or classify binding, and only latent fields do.
+  compiler-classify-cycle:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: Classification inputs do not form a cycle.
   world-descriptive-default:
     valid: true
     satisfiedProfile: descriptive
@@ -311,6 +326,10 @@ cases:
   model-grounded:
     valid: true
     rule: "A World Model names compatible World Views and State Compilers as <worldRef>#<asset path>."
+  model-entrypoint-missing:
+    valid: false
+    errors: [model.entrypoint]
+    rule: "A ModelArtifact entrypoint <path>[#<name>] names a file in the package; models/run.py is not there."
   model-grounding-dotslash-path:
     valid: false
     errors: [worldmodel.grounding-ref]
@@ -625,6 +644,11 @@ cases:
     valid: true
     satisfiedProfile: model-ready
     rule: "A SemanticBinding binds World names, EWS fields, observation types, and actions to CURIEs."
+  binding-subjects:
+    valid: false
+    errors: [binding.subjects]
+    satisfiedProfile: model-ready
+    rule: "spec.subjects maps observation types listed in observationTypes to {base} or {iri: true}; QMS.lot is not listed."
   binding-asset-missing:
     valid: false
     errors: [binding.asset]
@@ -794,7 +818,7 @@ cases:
     valid: false
     errors: [evaluation.verifier-ref]
     satisfiedProfile: viewable
-    rule: "verifierRef is a local VerifierPackage or a pinned <name>@<version> (spec section 15.1)."
+    rule: "verifierRef is a local VerifierProfile or a pinned <name>@<version> (spec section 15.1)."
   evaluation-subject-missing:
     valid: false
     errors: [evaluation.subject]
@@ -834,6 +858,15 @@ cases:
     errors: [asset.kind]
     satisfiedProfile: descriptive
     rule: "A file with an OWP apiVersion declares its kind."
+  yaml-tab-in-flow:
+    valid: false
+    errors: [asset.yaml]
+    satisfiedProfile: descriptive
+    rule: "A tab that indents a flow-sequence item is not valid YAML (spec 5.2); implementations agree whatever parser they use."
+  yaml-directive:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "A %YAML directive with a later 1.x version is read as YAML 1.2 (spec 5.2)."
   asset-foreign-yaml:
     valid: true
     satisfiedProfile: descriptive
@@ -1026,6 +1059,36 @@ resolutionCases:
     errors: [grounding.prefix-conflict]
     rule: "Two dependency ontologies may not declare one prefix with different IRIs."
 ewsCases:
+  per-subject-latest:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: Per-subject fields group candidates by subject and apply select per group; subjects split between state and unresolved; other fields still ignore subject.
+  per-subject-missing-subject:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    error: true
+    rule: A candidate of a per-subject field without a subject makes the input invalid; compilation is refused.
+  estimate-kept-apart:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: Observation bindings ignore estimates and estimate bindings read only them; the derivation lists who estimated each subject's value.
+  aggregate-window:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: count and distinct_count over a window after asOf minus the window (exclusive) and up to asOf; observations after asOf and estimates are ignored; a count without candidates is 0.
+  aggregate-numeric:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: sum, mean, min, and max over numbers per subject; without candidates sum is 0 and mean is missing.
+  aggregate-non-numeric:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    error: true
+    rule: A numeric aggregate over a non-number value is invalid input; compilation is refused.
+  classify-criterion:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: Rules are tried in order and all conditions of a rule must hold; otherwise applies when none match, and without it the subject is missing; an unresolved input gives one label when its alternatives agree, several otherwise; numeric conditions never match a string; the derivation names the criterion.
   latest-picks-newest:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-01T00:00:10Z"
@@ -1127,6 +1190,25 @@ ewsCases:
     errors: [schema.unknown-field]
     rule: "An observation key that is neither defined nor an extensions block makes the input invalid."
 ewsCheckCases:
+  per-subject-latent-valid:
+    valid: true
+    rule: Per-subject values are mappings, a field may split its subjects between state and unresolved, and each latent field with a value has a derivation record.
+  per-subject-shape:
+    valid: false
+    errors: [ews.per-subject-shape]
+    rule: A per-subject field's value is a mapping from subject to value.
+  per-subject-overlap:
+    valid: false
+    errors: [ews.per-subject-overlap]
+    rule: No subject appears in both state and unresolved.
+  derivation-missing:
+    valid: false
+    errors: [ews.derivation]
+    rule: A latent field with a value needs a derivation record.
+  derivation-on-observed:
+    valid: false
+    errors: [ews.derivation]
+    rule: Only latent fields have derivation records; observed state is never presented as derived.
   valid:
     valid: true
     rule: "A complete EWS document satisfying the compiler's output contract."
@@ -1192,6 +1274,10 @@ ewsCheckCases:
     valid: true
     rule: "extensions blocks in spec and spec.context are allowed and ignored by the output contract and EWS equality."
 extractionCases:
+  subject-column:
+    parameters: {"claimId": "C-102"}
+    snapshot: "2026-09-01T00:00:00Z"
+    rule: "An entry's subject column becomes each observation's subject, written like an id part (spec 12.3)."
   basic:
     parameters: {"claimId": "C-102"}
     snapshot: "2026-09-01T00:00:00Z"

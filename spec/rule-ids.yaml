@@ -21,7 +21,7 @@ rules:
   ref.provider: {severity: error, section: "5.1", summary: "provider is neither a listed provider nor <extension>:<provider>"}
   asset.path-form: {severity: error, section: "3", summary: "local path is not a relative POSIX path, or starts with ./"}
   manifest.dependency: {severity: error, section: "2", summary: "spec.dependencies entry is not an exact package reference"}
-  eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierPackage assets share metadata.name"}
+  eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierProfile assets share metadata.name"}
   asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
   asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist or is excluded by .owpignore"}
@@ -33,6 +33,7 @@ rules:
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
   profile.descriptive: {severity: error, section: "6.1", summary: "no spec.world.definition"}
+  model.entrypoint: {severity: error, section: "8", summary: "a ModelArtifact entrypoint that does not name a file in the package"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
   view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile in a package that is not a WorldPackage"}
   view.external-world: {severity: error, section: "6", summary: "externalWorldRefs not a list, an entry not in spec.dependencies, a <world ref>#<name> include whose World it does not list, or (under resolution) an external World that is not a WorldPackage"}
@@ -42,7 +43,9 @@ rules:
   profile.stateful.output-contract: {severity: error, section: "6.1", summary: "a compiler's outputContract is not EffectiveWorldState"}
   profile.model-ready.output-schema: {severity: error, section: "6.1", summary: "a compiler has no EWS fields: neither outputSchema.fields nor a resolvable outputSchemaRef"}
   profile.action-ready: {severity: error, section: "6.1", summary: "missing action, commit, or effect-verification asset"}
-  compiler.binding: {severity: error, section: "12.2", summary: "malformed declarative binding, or binding a field that is not an EWS field of the compiler"}
+  compiler.binding: {severity: error, section: "12.2, 12.4", summary: "malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match latent, or a classification cycle"}
+  compiler.per-subject-field: {severity: error, section: "12.3", summary: "outputSchema.perSubject is not a list of EWS fields of the compiler"}
+  compiler.latent-field: {severity: error, section: "12.4", summary: "outputSchema.latent is not a list of EWS fields of the compiler"}
   compiler.output-schema-ref: {severity: error, section: "12.1", summary: "outputSchemaRef is not a package-relative path to a JSON Schema with a non-empty top-level properties object"}
   compiler.output-schema-mismatch: {severity: error, section: "12.1", summary: "outputSchema.fields and the properties of outputSchemaRef list different fields"}
   worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
@@ -68,7 +71,7 @@ rules:
   profile.ontology.schema: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
   profile.ontology.constrained: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
   profile.ontology.mapped: {severity: error, section: "3.1", summary: "declared ontology profile not satisfied"}
-  eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierPackage metadata.version not SemVer"}
+  eval.version: {severity: error, section: "9", summary: "EvaluationProfile/VerifierProfile metadata.version not SemVer"}
   eval.supersedes: {severity: error, section: "9", summary: "supersedes not pinned"}
   evidence.subject: {severity: error, section: "9", summary: "subject missing or not the package identity"}
   evidence.required: {severity: error, section: "9", summary: "missing evaluationProfile, result, or scope.worldRef/scope.worldView"}
@@ -93,7 +96,7 @@ rules:
   grounding.compiler-view: {severity: error, section: "11", summary: "a compatible compiler compiles a View outside compatibleWorldViews"}
   evaluation.assessment-kind: {severity: error, section: "15.1", summary: "assessmentKind outside its value set"}
   evaluation.subject: {severity: error, section: "15.1", summary: "subject.kind outside its value set, or subject.ref names nothing"}
-  evaluation.verifier-ref: {severity: error, section: "15.1", summary: "verifierRef is neither a local VerifierPackage nor a pinned reference"}
+  evaluation.verifier-ref: {severity: error, section: "15.1", summary: "verifierRef is neither a local VerifierProfile nor a pinned reference"}
   evaluation.result-schema: {severity: error, section: "15.1", summary: "resultSchemaRef is not a file in the package"}
   scenario.engine-kind: {severity: error, section: "15.2", summary: "engine.kind outside its value set"}
   scenario.baseline-ref: {severity: error, section: "15.2", summary: "baselineStateRef is neither a file in the package nor a URI"}
@@ -112,8 +115,12 @@ rules:
   ews.unresolved-alternatives: {severity: error, section: "12.1", summary: "unresolved field with fewer than two alternatives"}
   ews.provenance-orphan: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
   ews.provenance-required: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
+  ews.per-subject-shape: {severity: error, section: "12.1, 12.3", summary: "a per-subject field whose value or provenance is not a mapping from subject"}
+  ews.per-subject-overlap: {severity: error, section: "12.1, 12.3", summary: "a subject in both state and unresolved"}
+  ews.derivation: {severity: error, section: "12.1, 12.4", summary: "a latent field with a value but no derivation record, a record for another field, or a record without a valid kind"}
   binding.asset: {severity: error, section: "14", summary: "spec.world.semanticBinding is not a local SemanticBinding asset"}
   binding.curie: {severity: error, section: "14", summary: "binding value or section is not a CURIE or a mapping as required"}
+  binding.subjects: {severity: error, section: "14", summary: "subjects entry for an unlisted observation type, or not {base} / {iri: true}"}
   binding.field-unknown: {severity: error, section: "14", summary: "bound field is not an EWS field of any local State Compiler"}
   grounding.prefix-unknown: {severity: error, section: "14", summary: "binding CURIE uses a prefix no dependency OntologyPackage declares"}
   grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}
@@ -128,7 +135,7 @@ rules:
   world.undescribed: {severity: warning, section: "8", summary: "spec.world without definition or description"}
   worldmodel.model-artifact-missing: {severity: warning, section: "8", summary: "WorldModelPackage without a ModelArtifact asset"}
   worldmodel.evaluation-profile-missing: {severity: warning, section: "8", summary: "WorldModelPackage without an EvaluationProfile asset"}
-  eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierPackage without metadata.version"}
+  eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierProfile without metadata.version"}
   asset.kind-unknown: {severity: warning, section: "8", summary: "external spec.assets entry kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
   asset.kind-reserved: {severity: warning, section: "8", summary: "vocabulary kind marked reserved"}

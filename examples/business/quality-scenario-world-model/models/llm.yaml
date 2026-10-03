@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: llm
+spec:
+  description: Claude predicts the outcome from the EWS, the scenario, and the baselines' answers, with a rationale and assumptions. The minimum bar a production World Model must clear.
+  implementationStatus: reference_minimum
+  bundled: true
+  entrypoint: models/run.py#llm
+  supportedProviders: [anthropic]

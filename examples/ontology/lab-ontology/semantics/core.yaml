@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata:
+  name: lab-core
+spec:
+  types:
+  - id: l:Plate
+    label: {en: Assay plate}
+    properties:
+    - {id: l:campaign}
+  - id: l:Well
+    label: {en: Well}
+    properties:
+    - {id: l:control}
+    - {id: l:reagentLot}
+  relations:
+  - {id: l:hasWell, domain: l:Plate, range: l:Well}

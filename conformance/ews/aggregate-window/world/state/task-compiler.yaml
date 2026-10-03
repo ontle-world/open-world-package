@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.alarms_24h, m.alarm_kinds, plant.alarms_24h, plant.stops_24h]
+    perSubject: [m.alarms_24h, m.alarm_kinds]
+    latent: [m.alarms_24h, m.alarm_kinds, plant.alarms_24h, plant.stops_24h]
+  bindings:
+    m.alarms_24h: {aggregate: {from: ot.alarm, value: code, function: count, window: PT24H}}
+    m.alarm_kinds: {aggregate: {from: ot.alarm, value: code, function: distinct_count}}
+    plant.alarms_24h: {aggregate: {from: ot.alarm, value: code, function: count, window: P1D}}
+    plant.stops_24h: {aggregate: {from: ot.stop, value: code, function: count, window: PT24H}}

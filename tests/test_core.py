@@ -237,7 +237,7 @@ class OntleTests(unittest.TestCase):
     def test_add_eval_and_verifier_are_versioned(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo-model", "test", "worldmodel", Path(td) / "demo-model")
-            for kind in ["EvaluationProfile", "VerifierPackage"]:
+            for kind in ["EvaluationProfile", "VerifierProfile"]:
                 target = new_asset(p, kind, f"eval/{kind.lower()}.yaml")
                 self.assertEqual(yaml.safe_load(target.read_text(encoding="utf-8"))["metadata"]["version"], "0.1.0")
             result = validate_package(p)

@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: markov
+spec:
+  description: Status distributions at the scenario horizon from a daily transition matrix; the matrix is an assumed prior (models/markov-transitions.yaml) updated with the transitions observed in the World.
+  implementationStatus: reference_baseline
+  bundled: true
+  entrypoint: models/run.py#markov

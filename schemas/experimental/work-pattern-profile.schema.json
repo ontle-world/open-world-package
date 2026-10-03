@@ -243,9 +243,6 @@
           },
           "additionalProperties": false
         },
-        "worldRef": {
-          "type": "string"
-        },
         "worldViewRef": {
           "type": "string"
         },

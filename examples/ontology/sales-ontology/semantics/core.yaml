@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata:
+  name: sales-core
+spec:
+  types:
+  - id: s:Account
+    label: {en: Customer account}
+    properties:
+    - {id: s:region}
+  - id: s:Contact
+    label: {en: Contact person}
+    properties:
+    - {id: s:title}
+  relations:
+  - {id: s:hasContact, domain: s:Account, range: s:Contact}

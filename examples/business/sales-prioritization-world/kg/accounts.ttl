@@ -6,3 +6,6 @@ s:globex a s:Account ; s:region "south" ; s:hasContact s:contact-3 .
 s:contact-1 s:title "VP Operations" .
 s:contact-2 s:title "Procurement Lead" .
 s:contact-3 s:title "CTO" .
+s:contact-1 a s:Contact .
+s:contact-2 a s:Contact .
+s:contact-3 a s:Contact .

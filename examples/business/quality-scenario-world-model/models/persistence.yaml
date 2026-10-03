@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: persistence
+spec:
+  description: Nothing changes over the horizon. The floor every model must beat.
+  implementationStatus: reference_baseline
+  bundled: true
+  entrypoint: models/run.py#persistence

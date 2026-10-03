@@ -1,0 +1,31 @@
+apiVersion: openworld/v1alpha1
+kind: WorldModelPackage
+metadata:
+  namespace: openworld-examples
+  name: quality-scenario-world-model
+  version: 0.1.0
+  title: Quality Scenario World Model
+  description: Reference World Models for the quality-hold scenario, from a persistence baseline to an LLM minimum bar.
+  license: Apache-2.0
+spec:
+  domains: [manufacturing, quality]
+  dependencies:
+  - openworld-examples/manufacturing-quality-world@0.1.0
+  worldModel:
+    description: WORLDMODEL.md
+    roles: [dynamics_prediction, outcome_prediction, decision_support]
+    semanticGrounding:
+      worldRef: openworld-examples/manufacturing-quality-world@0.1.0
+      compatibleWorldViews:
+      - openworld-examples/manufacturing-quality-world@0.1.0#views/quality-incident-task.yaml
+      compatibleStateCompilers:
+      - openworld-examples/manufacturing-quality-world@0.1.0#state/quality-incident-compiler.yaml
+    inputs:
+      contract: EffectiveWorldState
+    outputs: [predicted_transition, expected_outcome, risk, uncertainty]
+    representation:
+      input: structured_state
+      adapterRef: models/adapter.yaml
+  assets:
+  - kind: PackageExample
+    path: examples/baseline-outputs.yaml

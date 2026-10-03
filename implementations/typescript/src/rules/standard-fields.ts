@@ -49,8 +49,8 @@ export function checkStandardFields(ctx: Context, a: LocalAsset): void {
     const v = s.verifierRef;
     if (present(v)) {
       const pinned = typeof v === "string" && v.includes("@") && PINNED_RE.test(v);
-      if (!pinned && !(typeof v === "string" && kindOf(v) === "VerifierPackage")) {
-        err("evaluation.verifier-ref", "spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>");
+      if (!pinned && !(typeof v === "string" && kindOf(v) === "VerifierProfile")) {
+        err("evaluation.verifier-ref", "spec.verifierRef must be a local VerifierProfile or a pinned <name>@<version>");
       }
     }
     if (present(s.resultSchemaRef) && !packageFile(ctx, s.resultSchemaRef)) {

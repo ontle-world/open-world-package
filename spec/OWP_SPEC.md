@@ -203,6 +203,8 @@ Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS d
 - `<<` is an ordinary key; there are no merge keys.
 - Mapping keys are strings, as in the JSON data model: a key that reads as null, a boolean, or a number (`1:`, `true:`), or a key that is a sequence or mapping, does not parse. Quote such keys (`"1":`).
 - A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
+- A `%YAML` directive does not change these rules: the document is read as YAML 1.2 whatever version it names.
+- Tabs are not indentation: a line indented with a tab inside a block or flow collection does not parse.
 
 Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.
 
@@ -254,7 +256,7 @@ spec:
     - acme/supplier-world@1.2.0#supplier              # a name of an external World
 ```
 
-Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `purpose.taskRef`, `actorRef`, or `roleRef` (Appendix C.4) records the task or actor it is conditioned on.
+Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `conditioning.taskRef`, `actorRef`, or `roleRefs` (Appendix C.4) records the task, actor, or roles it is conditioned on.
 
 An EWS is the runtime materialization of a View (section 12). A runtime that acts combines it with other runtime context (the acting actor's current roles, assignments, and resources, the task, and the dynamics and constraints that apply). Those combinations are runtime objects, like EWS, and are not packaged assets.
 
@@ -337,10 +339,10 @@ Precise meaning of the checks above:
 - **Legacy manifests:** `package.yaml` or `world.yaml` at the package root makes the package invalid.
 - **Listed PackageExample paths** are package-relative; a path that resolves outside the package root (for example `../x.yaml` or an absolute path) is invalid; the file must exist; the same path may be listed once.
 - **Dependencies:** every `spec.dependencies` entry is `<namespace>/<name>@<semver>` or a mapping whose `ref` is; otherwise the package is invalid.
-- **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
+- **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierProfile) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **YAML files:** every `.yaml`/`.yml` file that discovery reads, and every listed `PackageExample`, MUST parse. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not checked.
 - **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed. A kind marked `stability: reserved` is a name kept for a future definition: it has no schema or rules yet, and using it is a warning; a kind containing `:` is an extension kind and follows section 13.
-- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract, Dataset, AgentProfile, EnvironmentProfile, ModelArtifact, SourceSystemSchemaProfile, ObservationAcquisitionProfile, ActionBindingProfile, CommitContract, EffectVerificationProfile, and VerifierProfile assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. A ModelArtifact MAY name the code that runs the model with `spec.entrypoint`, `<package-relative path>[#<name>]`; the path MUST name a file in the package (`model.entrypoint`). Running it is outside this specification. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
@@ -478,7 +480,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ref.provider` | 5.1 | `provider` is neither a listed provider nor `<extension>:<provider>` |
 | `asset.path-form` | 3 | local path is not a relative POSIX path, or starts with `./` |
 | `manifest.dependency` | 2 | `spec.dependencies` entry is not an exact package reference |
-| `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierPackage assets share `metadata.name` |
+| `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierProfile assets share `metadata.name` |
 | `asset.duplicate-path` | 8 | same `PackageExample` path listed twice |
 | `asset.path-escape` | 8 | listed `PackageExample` path resolves outside the package root |
 | `asset.missing-file` | 8 | listed `PackageExample` path does not exist or is excluded by `.owpignore` |
@@ -490,6 +492,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
 | `profile.descriptive` | 6.1 | no `spec.world.definition` |
+| `model.entrypoint` | 8 | a ModelArtifact `entrypoint` that does not name a file in the package |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
 | `view.world-ref` | 6 | a WorldViewProfile in a package that is not a WorldPackage |
 | `view.external-world` | 6 | `externalWorldRefs` not a list, an entry not in `spec.dependencies`, a `<world ref>#<name>` include whose World it does not list, or (under resolution) an external World that is not a WorldPackage |
@@ -499,7 +502,9 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.stateful.output-contract` | 6.1 | a compiler's `outputContract` is not `EffectiveWorldState` |
 | `profile.model-ready.output-schema` | 6.1 | a compiler has no EWS fields: neither `outputSchema.fields` nor a resolvable `outputSchemaRef` |
 | `profile.action-ready` | 6.1 | missing action, commit, or effect-verification asset |
-| `compiler.binding` | 12.2 | malformed declarative binding, or binding a field that is not an EWS field of the compiler |
+| `compiler.binding` | 12.2, 12.4 | malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match `latent`, or a classification cycle |
+| `compiler.per-subject-field` | 12.3 | `outputSchema.perSubject` is not a list of EWS fields of the compiler |
+| `compiler.latent-field` | 12.4 | `outputSchema.latent` is not a list of EWS fields of the compiler |
 | `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
 | `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
 | `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |
@@ -519,7 +524,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ontology.term-index` | 3.1 | `termIndex` missing, not an OntologyTermIndex, or a malformed term |
 | `ontology.external-import` | 3.1 | `externalImports` entry without an absolute `iri` or a `ref` |
 | `profile.ontology.vocabulary`, `profile.ontology.schema`, `profile.ontology.constrained`, `profile.ontology.mapped` | 3.1 | declared ontology profile not satisfied |
-| `eval.version` | 9 | EvaluationProfile/VerifierPackage `metadata.version` not SemVer |
+| `eval.version` | 9 | EvaluationProfile/VerifierProfile `metadata.version` not SemVer |
 | `eval.supersedes` | 9 | `supersedes` not pinned |
 | `evidence.subject` | 9 | `subject` missing or not the package identity |
 | `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `evaluationProfile`, `result`, or `scope.worldRef`/`scope.worldView` |
@@ -539,7 +544,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `grounding.compiler-view` | 11 | a compatible compiler compiles a View outside `compatibleWorldViews` |
 | `evaluation.assessment-kind` | 15.1 | `assessmentKind` outside its value set |
 | `evaluation.subject` | 15.1 | `subject.kind` outside its value set, or `subject.ref` names nothing |
-| `evaluation.verifier-ref` | 15.1 | `verifierRef` is neither a local VerifierPackage nor a pinned reference |
+| `evaluation.verifier-ref` | 15.1 | `verifierRef` is neither a local VerifierProfile nor a pinned reference |
 | `evaluation.result-schema` | 15.1 | `resultSchemaRef` is not a file in the package |
 | `scenario.engine-kind` | 15.2 | `engine.kind` outside its value set |
 | `scenario.baseline-ref` | 15.2 | `baselineStateRef` is neither a file in the package nor a URI |
@@ -555,8 +560,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.field-unknown` | 12.1 | field that is not an EWS field of the compiler |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
+| `ews.per-subject-shape` | 12.1, 12.3 | a per-subject field whose value or provenance is not a mapping from subject |
+| `ews.per-subject-overlap` | 12.1, 12.3 | a subject in both `state` and `unresolved` |
+| `ews.derivation` | 12.1, 12.4 | a latent field with a value but no derivation record, a record for another field, or a record without a valid kind |
 | `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
 | `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
+| `binding.subjects` | 14 | `subjects` entry for an unlisted observation type, or not `{base}` / `{iri: true}` |
 | `binding.field-unknown` | 14 | bound field is not an EWS field of any local State Compiler |
 | `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |
@@ -576,7 +585,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `world.undescribed` | 8 | `spec.world` without definition or description |
 | `worldmodel.model-artifact-missing` | 8 | WorldModelPackage without a `ModelArtifact` asset |
 | `worldmodel.evaluation-profile-missing` | 8 | WorldModelPackage without an `EvaluationProfile` asset |
-| `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
+| `eval.version-missing` | 9 | EvaluationProfile or VerifierProfile without `metadata.version` |
 | `asset.kind-unknown` | 8 | external `spec.assets` entry kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
 | `asset.kind-reserved` | 8 | vocabulary kind marked `reserved` |

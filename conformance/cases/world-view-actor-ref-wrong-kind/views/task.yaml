@@ -3,8 +3,8 @@ kind: WorldViewProfile
 metadata:
   name: task
 spec:
-  purpose: {task: claim_rca, objective: resolve_claim, actorRef: roles/manager.yaml, roleRef: roles/manager.yaml}
-  projection: {include: [claim, lot], principle: minimal_sufficient_representation}
-  conditioning: {authorityScope: plant, timeScope: last_quarter, resolution: lot}
+  purpose: {task: claim_rca, objective: resolve_claim}
+  projection: {include: [claim, lot], principle: minimal_sufficient_representation, timeScope: last_quarter, resolution: lot}
+  conditioning: {authorityScope: plant, actorRef: roles/manager.yaml, roleRefs: [roles/manager.yaml]}
   constraints: [no_customer_personal_data]
   evidenceRefs: []

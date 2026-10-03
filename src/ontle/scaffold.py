@@ -200,7 +200,7 @@ def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None 
         raise OWPError(f"file already exists: {target}")
     manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
     metadata = {"name": target.stem}
-    if kind in {"EvaluationProfile", "VerifierPackage"}:
+    if kind in {"EvaluationProfile", "VerifierProfile"}:
         metadata["version"] = "0.1.0"
     skeleton = _skeleton_spec(kind, manifest)
     if specializes is not None:

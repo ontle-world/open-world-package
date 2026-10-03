@@ -11,6 +11,9 @@ kind: AssetKindVocabulary
 #                 warning (asset.kind-reserved)
 #
 # Group names are informative and do not affect validation.
+#
+# Name suffixes: ...Package is reserved for package kinds (spec section 3); ...Contract is a promise
+# another party may rely on; ...Profile describes something (a View, an actor, a verifier, a model input).
 groups:
   semanticWorld:
     SemanticProfile: {stability: standard}
@@ -48,7 +51,7 @@ groups:
     BenchmarkCase: {stability: reserved}
     AcceptanceCase: {stability: reserved}
     EvaluationProfile: {stability: standard}
-    VerifierPackage: {stability: standard}
+    VerifierProfile: {stability: standard}
     CompatibilityEvidence: {stability: standard}
   governancePublication:
     Attestation: {stability: reserved}

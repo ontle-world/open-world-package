@@ -35,7 +35,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
       events: list(closed(leaves("id", "triggers", "description"))),
       loops: list(closed(leaves("nodes", "maxIterations", "until"))),
     }),
-    ...leaves("worldRef", "worldViewRef", "governanceRefs", "evaluationRefs"),
+    ...leaves("worldViewRef", "governanceRefs", "evaluationRefs"),
   }),
   ArtifactContract: doc({
     artifact: closed(leaves("type", "representation")),
@@ -58,7 +58,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     system: closed({ ...leaves("interfaceRefs", "deliveryMode"), serviceLevel: OPEN }),
   }),
   KnowledgeAsset: doc({
-    ...leaves("roles", "representation", "format", "worldRef", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
+    ...leaves("roles", "representation", "format", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
     conformsTo: closed(leaves("ontology", "shapes")),
     snapshot: closed(leaves("asOf")),
     content: CONTENT,
@@ -68,7 +68,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     source: ANY,
     parameters: OPEN,
     query: closed(leaves("language", "text")),
-    observations: list(closed({ ...leaves("type", "id", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
+    observations: list(closed({ ...leaves("type", "id", "subject", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
   ActorProfile: doc(leaves("actorType", "roleRefs", "capabilityRefs", "agentRef", "memberOf")),
   RoleProfile: doc({
@@ -405,10 +405,11 @@ export function checkStandardKindFields(ctx: Context, a: LocalAsset): void {
   const c = new Checker(ctx, a.rawPath, localKinds(ctx), localDocs(ctx));
   const s = isObj(a.doc.spec) ? a.doc.spec : {};
   if (a.kind === "WorldViewProfile") {
-    for (const [f, kind] of [["actorRef", "ActorProfile"], ["roleRef", "RoleProfile"], ["taskRef", "TaskSetProfile"]]) {
-      const v = sub(s, "purpose")[f];
-      if (present(v)) c.localRef(v, [kind], `spec.purpose.${f}`);
+    for (const [f, kind] of [["actorRef", "ActorProfile"], ["taskRef", "TaskSetProfile"]]) {
+      const v = sub(s, "conditioning")[f];
+      if (present(v)) c.localRef(v, [kind], `spec.conditioning.${f}`);
     }
+    for (const r of values(sub(s, "conditioning").roleRefs)) c.localRef(r, ["RoleProfile"], "spec.conditioning.roleRefs");
   } else if (a.kind === "EvaluationProfile") {
     if (present(s.evaluatorRef)) c.localRef(s.evaluatorRef, ["ActorProfile"], "spec.evaluatorRef");
   }

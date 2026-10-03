@@ -7,6 +7,8 @@ spec:
   roles: [graph]
   representation: graph
   format: turtle
+  conformsTo:
+    ontology: openworld-examples/sales-ontology@0.1.0
   snapshot: {asOf: "2026-10-01T00:00:00Z"}
   content: {path: kg/accounts.ttl}
   access: private

@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: t1, type: ot.temp, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {c: 61}}
+  - {id: t2, type: ot.temp, subject: press-7, observedAt: "2026-01-01T00:00:02Z", values: {c: 64}}
+  - {id: t3, type: ot.temp, subject: press-7, observedAt: "2026-01-01T00:00:03Z", values: {c: 59.5}}
+  - {id: t4, type: ot.temp, subject: robot-2, observedAt: "2026-01-01T00:00:01Z", values: {c: -2}}

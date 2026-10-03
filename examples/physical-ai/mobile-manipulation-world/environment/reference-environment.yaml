@@ -15,7 +15,7 @@ spec:
         provider: huggingface
         uri: hf://datasets/nvidia/PhysicalAI-SimReady-Warehouse-01
         revision: c7fe115cb79c7ddbd0532630d7768b5736b0ecc4
-  note: >-
+  description: >-
     Environment is an interaction surface for a World, not the World itself. The scene is NVIDIA's
     Physical AI SimReady Warehouse 01 (CC-BY-4.0, by NVIDIA Corporation), a warehouse with graspable
     objects for pick and place. Its entry layer is physical_ai_simready_warehouse_01.usd

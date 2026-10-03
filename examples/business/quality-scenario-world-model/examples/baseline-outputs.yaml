@@ -1,0 +1,115 @@
+scenario: openworld-examples/manufacturing-quality-world@0.1.0#scenarios/quality-hold.yaml
+asOf: '2026-09-05T00:00:00Z'
+results:
+- model: persistence
+  expected_outcome: {}
+  range: {}
+  risk: null
+  uncertainty:
+    method: none
+    note: assumes no change; unresolved fields stay unresolved
+  predicted_transition:
+    claim.status:
+      from: open
+      to: open
+      p: 1.0
+    equipment.condition_events:
+      from:
+      - vibration_warning
+      - vibration_cleared
+      to:
+      - vibration_warning
+      - vibration_cleared
+      p: 1.0
+    inspection.results:
+      from:
+      - seal_leak_detected
+      to:
+      - seal_leak_detected
+      p: 1.0
+    lot.genealogy:
+      from:
+      - RM-778
+      - RM-779
+      to:
+      - RM-778
+      - RM-779
+      p: 1.0
+    quality_incident.status:
+      from: under_investigation
+      to: under_investigation
+      p: 1.0
+- model: three_point
+  expected_outcome:
+    deliveryDelayDays: 2.333
+    escapedDefects: 1.167
+  range:
+    deliveryDelayDays:
+      best: 1.0
+      base: 2.0
+      worst: 5.0
+    escapedDefects:
+      best: 0.0
+      base: 1.0
+      worst: 3.0
+  risk: medium
+  uncertainty:
+    method: three_point
+    distribution: PERT mean of low, mode, high
+  predicted_transition: {}
+- model: monte_carlo
+  expected_outcome:
+    deliveryDelayDays: 2.673
+    escapedDefects: 1.319
+  range:
+    deliveryDelayDays:
+      p10: 1.649
+      p50: 2.58
+      p90: 3.864
+    escapedDefects:
+      p10: 0.502
+      p50: 1.258
+      p90: 2.21
+  risk: medium
+  uncertainty:
+    method: monte_carlo
+    distribution: triangular(low, mode, high)
+    runs: 2000
+    seed: 20261003
+  predicted_transition: {}
+- model: markov
+  expected_outcome: {}
+  range: {}
+  risk: null
+  uncertainty:
+    method: markov_chain
+    step: P1D
+    steps: 14
+    matrix: assumption prior (strength 10) updated with observed daily transitions
+  predicted_transition:
+    quality_incident.status:
+      from:
+        under_investigation: 1.0
+      at_horizon:
+        under_investigation: 0.06
+        contained: 0.182
+        closed: 0.757
+      observed_transitions: 1
+    claim.status:
+      from:
+        open: 1.0
+      at_horizon:
+        open: 0.012
+        under_review: 0.203
+        closed: 0.786
+      observed_transitions: 1
+    capa.status:
+      from:
+        proposed: 0.5
+        approved: 0.5
+      at_horizon:
+        proposed: 0.003
+        approved: 0.147
+        implemented: 0.401
+        verified: 0.449
+      observed_transitions: 0

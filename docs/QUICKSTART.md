@@ -45,7 +45,6 @@ kind: WorldViewProfile
 metadata:
   name: sales-manager
 spec:
-  worldRef: self
   purpose: {task: qualify_opportunities, objective: focus_on_likely_wins}
   projection: {include: [account, opportunity, activity]}
 ```

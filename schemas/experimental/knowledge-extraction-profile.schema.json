@@ -71,6 +71,9 @@
                   "type": "string"
                 }
               },
+              "subject": {
+                "type": "string"
+              },
               "values": {
                 "type": "object",
                 "description": "Observation values key -> result column."

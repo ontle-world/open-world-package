@@ -65,7 +65,7 @@ const withEvidence = (ev, extraFiles = {}) => ({
     { kind: "RepresentationAdapterProfile", path: "models/adapter.yaml" },
     { kind: "EvaluationProfile", path: "eval/profile.yaml" },
     { kind: "CompatibilityEvidence", path: "eval/evidence.yaml" },
-    ...Object.keys(extraFiles).filter((f) => f.startsWith("eval/verifier")).map((p) => ({ kind: "VerifierPackage", path: p })),
+    ...Object.keys(extraFiles).filter((f) => f.startsWith("eval/verifier")).map((p) => ({ kind: "VerifierProfile", path: p })),
   ]),
   ...modelFiles(),
   "eval/evidence.yaml": ev,
@@ -186,8 +186,8 @@ probe("p-evidence-missing-profile", withEvidence((() => { const e = evidence(); 
 probe("p-evidence-unpinned-goldenset", withEvidence(evidence({ goldenSet: "gold@~1.0.0" })), { valid: false, rule: "goldenSet pinned" });
 probe("p-evidence-unpinned-dataset", withEvidence(evidence({ dataset: "episodes@latest" })), { valid: false, rule: "dataset pinned" });
 probe("p-evidence-verifier-version-mismatch", withEvidence(evidence({ verifier: "vf@0.2.0" }),
-  { "eval/verifier.yaml": { apiVersion: AV, kind: "VerifierPackage", metadata: { name: "vf", version: "0.1.0" }, spec: {} } }),
-  { valid: false, rule: "local VerifierPackage version must match" });
+  { "eval/verifier.yaml": { apiVersion: AV, kind: "VerifierProfile", metadata: { name: "vf", version: "0.1.0" }, spec: {} } }),
+  { valid: false, rule: "local VerifierProfile version must match" });
 probe("p-evidence-profile-not-local", withEvidence(evidence({ evaluationProfile: "external-eval@3.0.0" })), { valid: true, rule: "version match only when packaged locally" });
 probe("p-evidence-local-profile-unversioned", { ...withEvidence(evidence()), "eval/profile.yaml": evalProfile(null) },
   { valid: false, rule: "local EvaluationProfile without metadata.version cannot match a pinned reference (unspecified)" });

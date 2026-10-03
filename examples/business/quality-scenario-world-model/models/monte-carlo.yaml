@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ModelArtifact
+metadata:
+  name: monte-carlo
+spec:
+  description: Seeded triangular draws within the scenario's ranges; mean and P10/P50/P90.
+  implementationStatus: reference_baseline
+  bundled: true
+  entrypoint: models/run.py#monte_carlo

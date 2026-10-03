@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.a, m.b]
+    latent: [m.a, m.b]
+  bindings:
+    m.a: {classify: {input: m.b, criterion: {id: x, rules: [{when: {eq: 1}, label: one}]}}}
+    m.b: {classify: {input: m.a, criterion: {id: y, rules: [{when: {eq: one}, label: 1}]}}}

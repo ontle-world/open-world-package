@@ -63,6 +63,8 @@ spec:
     QMS.claim: q:Claim
   actions:                                 # action name -> term
     propose-capa: q:ProposeCapa
+  subjects:                                # observation type -> how its subjects become IRIs (section 12.3)
+    QMS.claim: {base: "https://w3id.org/acme/plant#claim-"}
 ```
 
 A WorldPackage names its binding with `spec.world.semanticBinding`, the path of a local `SemanticBinding` asset. The binding declares no prefixes: they come from the OntologyPackages in `spec.dependencies` (section 3.1).
@@ -72,6 +74,7 @@ Single-package rules:
 - `spec.world.semanticBinding`, when present, is a local SemanticBinding asset.
 - Every value in `terms`, `observationTypes`, and `actions`, and every `class` and `path` entry in `fields`, is a CURIE `<prefix>:<local name>`.
 - Every key of `fields` is an EWS field (section 12.1) of some local State Compiler.
+- Every key of `subjects` is listed in `observationTypes`, and its value is `{base: <absolute IRI prefix>}` (the subject is appended) or `{iri: true}` (the subject already is an IRI) (`binding.subjects`). With it, a per-subject EWS field becomes statements about individuals: the reference CLI's `ontle ews compile --jsonld` adds an `@graph` with one node per subject, typed with the observation type's class, and `ontle kg check` can compare those individuals with a knowledge graph.
 - A `terms` key that is neither in `spec.world.boundary.included` nor in the resolved `projection.include` of a local World View is a warning. When neither list exists, the check is skipped.
 - SemanticBinding documents contain only the fields of `schemas/semantic-binding.schema.json` and `extensions` blocks.
 

@@ -486,7 +486,9 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   // Spec 6: a View's external Worlds resolve to WorldPackages; names taken from them are in their boundary.
   for (const n of nodes.values()) {
     if (n.kind !== "WorldPackage") continue;
-    for (const d of packageDocuments(n.dir)) {
+    // Discovered Views only: listed PackageExample files are not assets (spec 5).
+    const examples = new Set([...localAssetKinds(n.dir, n.manifest)].filter(([, k]) => k === "PackageExample").map(([p]) => p));
+    for (const d of packageDocuments(n.dir, examples)) {
       if (!d.ok || !isObj(d.value) || d.value.kind !== "WorldViewProfile") continue;
       const refs = get(d.value, "spec", "externalWorldRefs");
       for (const r of Array.isArray(refs) ? refs : []) {

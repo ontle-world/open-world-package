@@ -51,6 +51,14 @@
               "subject": {
                 "type": "string"
               },
+              "estimatedBy": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Producer of an estimate (spec section 12.4). Observation bindings ignore estimates."
+              },
+              "uncertainty": {
+                "description": "Uncertainty of an estimate, any JSON value (spec section 12.4)."
+              },
               "extensions": {
                 "$ref": "#/$defs/extensions"
               }

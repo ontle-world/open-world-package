@@ -219,7 +219,7 @@ def satisfied_world_profile(spec: dict[str, Any], asset_kinds: set[str],
 def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str, local_asset_kinds: dict[str, str],
                                  local_asset_docs: dict[str, dict[str, Any]], errors: list[str], warnings: list[str]) -> None:
     """Evaluation lineage and evidence binding. OWP records which exact evaluation produced a result; it does not run or evolve evaluations."""
-    local_versions: dict[str, dict[str, str | None]] = {"EvaluationProfile": {}, "VerifierPackage": {}}
+    local_versions: dict[str, dict[str, str | None]] = {"EvaluationProfile": {}, "VerifierProfile": {}}
     for rel, asset_kind in sorted(local_asset_kinds.items()):
         if asset_kind not in local_versions or rel not in local_asset_docs:
             continue
@@ -251,7 +251,7 @@ def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str,
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} must declare spec.subject")
         elif kind == "WorldModelPackage" and espec["subject"] != identity:
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} spec.subject must be this package's identity {identity}")
-        for field, bound_kind, required in (("evaluationProfile", "EvaluationProfile", True), ("verifier", "VerifierPackage", False)):
+        for field, bound_kind, required in (("evaluationProfile", "EvaluationProfile", True), ("verifier", "VerifierProfile", False)):
             ref = espec.get(field)
             if ref is None:
                 if required:
@@ -343,7 +343,7 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
         names = includes.get(view) if isinstance(view, str) else None
         for field in ews_fields.get(rel) or [] if names else []:
             entity = field.split(".", 1)[0]
-            if "." in field and entity not in names:
+            if field.find(".") > 0 and entity not in names:
                 warnings.append(f"compiler.field-outside-view: {rel}: field {field!r} names {entity!r}, which {view}'s projection.include does not list")
     return warnings
 
@@ -607,6 +607,11 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.append(f"view.world-ref: {rel}: a WorldViewProfile belongs to a WorldPackage, not a {kind}")
             continue
         errors.extend(_external_world_errors(rel, _spec_of(local_asset_docs.get(rel)), spec))
+
+    for rel, k in sorted(local_asset_kinds.items()):
+        entry = _spec_of(local_asset_docs.get(rel)).get("entrypoint") if k == "ModelArtifact" else None
+        if entry is not None and not (isinstance(entry, str) and ontology_module.inside_package(root, entry.partition("#")[0])):
+            errors.append(f"model.entrypoint: {rel}: spec.entrypoint {entry!r} must name a file in the package (<path>[#<name>])")
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:

@@ -20,8 +20,8 @@ spec:
     - action_space
     - task_outcome
     principle: minimal_sufficient_representation
-  conditioning:
-    authorityScope: task_declared
     timeScope: task_declared
     scale: task_declared
     resolution: task_declared
+  conditioning:
+    authorityScope: task_declared

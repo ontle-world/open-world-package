@@ -6,4 +6,6 @@ spec:
   projection:
     include: [assay, plate, reagent, instrument, experiment_run, measurement, protocol]
     principle: minimal_sufficient_representation
-  conditioning: {authorityScope: read_only, timeScope: current_campaign, resolution: well}
+    timeScope: current_campaign
+    resolution: well
+  conditioning: {authorityScope: read_only}

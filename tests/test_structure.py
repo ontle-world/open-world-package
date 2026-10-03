@@ -57,6 +57,16 @@ class StructureMatchesJsonSchema(unittest.TestCase):
             ("scenario-profile", structure.SCENARIO_PROFILE),
             ("capability-contract", structure.CAPABILITY_CONTRACT),
             ("semantic-binding", binding.SEMANTIC_BINDING),
+            ("dataset", structure.DATASET),
+            ("agent-profile", structure.AGENT_PROFILE),
+            ("environment-profile", structure.ENVIRONMENT_PROFILE),
+            ("model-artifact", structure.MODEL_ARTIFACT),
+            ("source-system-schema-profile", structure.SOURCE_SYSTEM_SCHEMA_PROFILE),
+            ("observation-acquisition-profile", structure.OBSERVATION_ACQUISITION_PROFILE),
+            ("action-binding-profile", structure.ACTION_BINDING_PROFILE),
+            ("commit-contract", structure.COMMIT_CONTRACT),
+            ("effect-verification-profile", structure.EFFECT_VERIFICATION_PROFILE),
+            ("verifier-profile", structure.VERIFIER_PROFILE),
         ):
             with self.subTest(schema=name):
                 schema = json.loads((SCHEMAS / f"{name}.schema.json").read_text(encoding="utf-8"))

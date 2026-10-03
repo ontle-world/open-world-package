@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: a0, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:00Z", values: {code: jam}}
+  - {id: a1, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T12:00:00Z", values: {code: jam}}
+  - {id: a2, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T13:00:00Z", values: {code: overtemp}}
+  - {id: a3, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T14:00:00Z", values: {code: estop}}
+  - {id: a4, type: ot.alarm, subject: robot-2, observedAt: "2026-01-02T01:00:00Z", values: {code: estop}}
+  - {id: a5, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T15:00:00Z", values: {code: jam}, estimatedBy: acme/predictor}

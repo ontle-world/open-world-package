@@ -1,0 +1,8 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: o1, type: m.health, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {v: ok}}
+  - {id: o2, type: m.health, subject: press-7, observedAt: "2026-01-01T00:00:05Z", values: {v: degraded}, estimatedBy: acme/model@2.0.0, uncertainty: {p: 0.8}}
+  - {id: o3, type: m.health, subject: robot-2, observedAt: "2026-01-01T00:00:05Z", values: {v: worn}, estimatedBy: acme/model@2.0.0}
+  - {id: o4, type: m.health, subject: robot-2, observedAt: "2026-01-01T00:00:05Z", values: {v: worn}, estimatedBy: tech/visual-inspection}

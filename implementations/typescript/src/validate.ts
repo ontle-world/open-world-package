@@ -9,7 +9,7 @@ import { checkEvaluation } from "./rules/evaluation.js";
 import { checkOntologyPackage } from "./rules/ontology.js";
 import { checkDependencies } from "./rules/dependencies.js";
 import { checkAssetStructure, checkExtensionDeclarations, checkExtensionDefinition, checkManifestStructure } from "./rules/extensions.js";
-import { isObj, loadYamlFile } from "./util.js";
+import { get, isObj, loadYamlFile, packageFile } from "./util.js";
 import { LEGACY_MANIFEST_NAMES } from "./vocab.js";
 
 export type { Issue, Profile } from "./context.js";
@@ -89,6 +89,13 @@ export function validatePackage(dir: string): ValidationResult {
   checkCompilerSchemas(ctx);
 
   checkViewOwnership(ctx);
+  // Spec 8: a ModelArtifact's entrypoint names a file in the package, optionally followed by #<name>.
+  for (const a of ctx.localAssets.filter((x) => x.kind === "ModelArtifact")) {
+    const entry = get(a.doc, "spec", "entrypoint");
+    if (entry !== undefined && entry !== null && !(typeof entry === "string" && packageFile(ctx.root, entry.split("#")[0]))) {
+      error(ctx, "model.entrypoint", `${a.rawPath}: spec.entrypoint ${JSON.stringify(entry)} must name a file in the package (<path>[#<name>])`, a.rawPath);
+    }
+  }
 
   let grounding: Grounding | undefined;
   switch (ctx.packageKind) {

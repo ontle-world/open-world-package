@@ -9,7 +9,7 @@ spec:
   projection:
     include: [account, opportunity, activity, quota, priority, global_pipeline]
     principle: minimal_sufficient_representation
-  conditioning:
-    authorityScope: read_only
     timeScope: current_quarter
     resolution: account
+  conditioning:
+    authorityScope: read_only

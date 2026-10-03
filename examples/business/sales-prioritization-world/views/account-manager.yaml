@@ -6,11 +6,11 @@ spec:
   specializes: views/account-base.yaml
   purpose:
     actorScope: regional_sales_manager
-    actorRef: actors/sales-manager.yaml
-    roleRef: roles/regional-sales-manager.yaml
-    taskRef: tasks/account-priority.yaml
   projection:
     include: [territory, territory_assignment]
     exclude: [global_pipeline]
   conditioning:
     authorityScope: assign_within_region
+    actorRef: actors/sales-manager.yaml
+    roleRefs: [roles/regional-sales-manager.yaml]
+    taskRef: tasks/account-priority.yaml

@@ -1,5 +1,5 @@
 apiVersion: openworld/v1alpha1
-kind: VerifierPackage
+kind: VerifierProfile
 metadata:
   name: effect-verifier
   version: 1.4.0

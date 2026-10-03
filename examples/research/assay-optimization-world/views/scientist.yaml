@@ -5,8 +5,5 @@ spec:
   specializes: views/assay-base.yaml
   purpose:
     actorScope: principal_investigator
-    actorRef: actors/scientist.yaml
-    roleRef: roles/principal-investigator.yaml
-    taskRef: tasks/optimize-assay.yaml
-  conditioning: {authorityScope: approve_protocols}
+  conditioning: {authorityScope: approve_protocols, actorRef: actors/scientist.yaml, roleRefs: [roles/principal-investigator.yaml], taskRef: tasks/optimize-assay.yaml}
   constraints: [biosafety_level_2, reagent_budget]

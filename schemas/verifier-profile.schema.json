@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:verifier-profile:v1alpha1",
+  "title": "VerifierProfile",
+  "description": "VerifierProfile (spec section 8): defined fields only; other keys are errors.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spec"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "openworld/v1alpha1"
+    },
+    "kind": {
+      "const": "VerifierProfile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "spec": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "standardBindings": {
+          "type": "object",
+          "description": "Open container: keys are not checked (spec section 5.3)."
+        },
+        "verifies": {
+          "type": "array"
+        },
+        "basis": {
+          "type": "string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "extensions": {
+      "description": "Extension data (spec section 13): declared extension name -> mapping.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{0,62}$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    }
+  }
+}

@@ -88,7 +88,7 @@ function transform(profile: unknown, rows: unknown, parameters: Obj, snapshot: s
   const seen = new Set<string>();
   (templates as unknown[]).forEach((t, ti) => {
     if (!isExtractionTemplate(t)) refuse(`spec.observations[${ti}] needs type, a non-empty id column list, and a values mapping`);
-    const template = t as { type: string; id: unknown[]; values: Obj; observedAt?: unknown };
+    const template = t as { type: string; id: unknown[]; values: Obj; observedAt?: unknown; subject?: unknown };
     const observed = template.observedAt ?? {};
     if (!isObj(observed)) refuse(`spec.observations[${ti}].observedAt must be a mapping`);
     const at0 = observed as Obj;
@@ -109,7 +109,11 @@ function transform(profile: unknown, rows: unknown, parameters: Obj, snapshot: s
         at = def === "snapshot" ? snapshot : def;
       }
       if (!isUtcTimestamp(at)) refuse(`observation time ${JSON.stringify(at ?? null)} for ${template.type} must be UTC YYYY-MM-DDTHH:MM:SSZ`);
-      produced.push({ id: `${template.type}:${ids.map(idPart).join("|")}`, type: template.type, observedAt: at, values });
+      const obs: Obj = { id: `${template.type}:${ids.map(idPart).join("|")}`, type: template.type, observedAt: at, values };
+      // Spec 12.3: the subject column names what the observation is about.
+      const subject = typeof template.subject === "string" ? row[template.subject] : undefined;
+      if (subject !== undefined && subject !== null) obs.subject = idPart(subject);
+      produced.push(obs);
     }
 
     // Rule 4: order by id; identical repeats collapse; conflicts and cross-entry repeats are errors.

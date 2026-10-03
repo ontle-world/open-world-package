@@ -1,0 +1,99 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.alarms:
+      press-7: 3
+      robot-2: 2
+      cell-9: 1
+    m.risk:
+      press-7: high
+      robot-2: elevated
+      cell-9: normal
+    m.state:
+      press-7: down
+      cell-9: idle
+    m.state_class:
+      press-7: unavailable
+      belt-1: unavailable
+    m.code: '500'
+  unresolved:
+    m.state:
+      robot-2:
+      - running
+      - blocked
+      belt-1:
+      - down
+      - blocked
+    m.state_class:
+      robot-2:
+      - available
+      - unavailable
+  missing:
+  - m.code_class
+  provenance:
+    m.alarms:
+      press-7:
+      - a1
+      - a2
+      - a3
+      robot-2:
+      - a4
+      - a5
+      cell-9:
+      - a6
+    m.risk:
+      press-7:
+      - a1
+      - a2
+      - a3
+      robot-2:
+      - a4
+      - a5
+      cell-9:
+      - a6
+    m.state:
+      press-7:
+      - s1
+      robot-2:
+      - s2
+      - s3
+      cell-9:
+      - s4
+      belt-1:
+      - s5
+      - s6
+    m.state_class:
+      press-7:
+      - s1
+      robot-2:
+      - s2
+      - s3
+      belt-1:
+      - s5
+      - s6
+    m.code:
+    - c1
+  derivation:
+    m.alarms:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+    m.risk:
+      kind: classify
+      input: m.alarms
+      criterion:
+        id: alarm-escalation
+        version: 1.2.0
+        basis: docs/alarm-escalation-sop.md
+    m.state_class:
+      kind: classify
+      input: m.state
+      criterion:
+        id: availability

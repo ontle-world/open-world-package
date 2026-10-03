@@ -9,7 +9,7 @@ Representative asset kinds (`vocab/asset-kinds.yaml` lists them all with their s
 - Integration: SourceSystemSchemaProfile, ObservationAcquisitionProfile, ActionBindingProfile, CommitContract, EffectVerificationProfile
 - Scenarios and environments: ScenarioProfile, EnvironmentProfile
 - Models: the manifest's `spec.worldModel`, ModelArtifact, RepresentationAdapterProfile
-- Evaluation: Dataset, EvaluationProfile, VerifierPackage, CompatibilityEvidence
+- Evaluation: Dataset, EvaluationProfile, VerifierProfile, CompatibilityEvidence
 - Reserved names without a definition yet: SkillProfile, ToolProfile, WorkflowProfile, OperationalAsset, fixtures, benchmark and acceptance cases, Attestation, and others
 
 Important distinction:

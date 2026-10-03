@@ -9,6 +9,6 @@ spec:
   engine: {kind: world_model}
   timeHorizon: P14D
   constraints: [delivery_commitments]
-  uncertainty: {escapedDefects: {low: 0, high: 3}}
+  uncertainty: {escapedDefects: {low: 0, mode: 1, high: 3}, deliveryDelayDays: {low: 1, mode: 2, high: 5}}
   confidence: 0.7
   expectedOutcome: {escapedDefects: 0, deliveryDelayDays: 2}

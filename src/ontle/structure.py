@@ -112,7 +112,8 @@ OBSERVATION_SET = closed({
     "kind": VALUE,
     "spec": closed({
         "provenance": closed({"extraction": VALUE, "parameters": OPEN, "snapshot": VALUE}),
-        "observations": array(closed({"id": VALUE, "type": VALUE, "observedAt": VALUE, "subject": VALUE, "values": OPEN})),
+        "observations": array(closed({"id": VALUE, "type": VALUE, "observedAt": VALUE, "subject": VALUE, "values": OPEN,
+                                       "estimatedBy": VALUE, "uncertainty": OPEN})),
     }),
 }, extensions=False)
 
@@ -122,7 +123,7 @@ EFFECTIVE_WORLD_STATE = closed({
     "spec": closed({
         "worldRef": VALUE, "worldView": VALUE, "stateCompiler": VALUE,
         "context": closed({"asOf": VALUE}),
-        "state": OPEN, "unresolved": OPEN, "missing": VALUE, "provenance": OPEN,
+        "state": OPEN, "unresolved": OPEN, "missing": VALUE, "provenance": OPEN, "derivation": OPEN,
     }),
 }, extensions=False)
 
@@ -135,10 +136,11 @@ def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
 WORLD_VIEW_PROFILE = _standard({
     "externalWorldRefs": VALUE,
     "specializes": VALUE,                                  # experimental
-    "purpose": closed({"task": VALUE, "actorScope": VALUE, "objective": VALUE,
-                       "actorRef": VALUE, "roleRef": VALUE, "taskRef": VALUE}),   # *Ref: experimental
-    "projection": closed({"include": VALUE, "exclude": VALUE, "principle": VALUE}),
-    "conditioning": closed({"authorityScope": VALUE, "timeScope": VALUE, "scale": VALUE, "resolution": VALUE}),
+    "purpose": closed({"task": VALUE, "actorScope": VALUE, "objective": VALUE}),
+    "projection": closed({"include": VALUE, "exclude": VALUE, "principle": VALUE,
+                          "scale": VALUE, "resolution": VALUE, "timeScope": VALUE}),
+    "conditioning": closed({"authorityScope": VALUE,
+                            "actorRef": VALUE, "roleRefs": VALUE, "taskRef": VALUE}),   # *Ref*: experimental
     "constraints": VALUE,
     "evidenceRefs": VALUE,
 })
@@ -183,6 +185,19 @@ CAPABILITY_CONTRACT = _standard({
 
 # Asset kinds whose document fields are defined; other kinds are checked only for
 # top-level metadata/spec extension blocks.
+
+# Standard kinds that had a name but no schema (spec section 8): description, standard bindings, and the fields in use.
+DATASET = _standard({"description": VALUE, "standardBindings": OPEN, "worldViewRef": VALUE, "structure": VALUE})
+AGENT_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN})
+ENVIRONMENT_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "exposes": OPEN, "runtimeBinding": VALUE})
+MODEL_ARTIFACT = _standard({"description": VALUE, "standardBindings": OPEN, "implementationStatus": VALUE, "bundled": VALUE, "artifactRef": EXTERNAL_REF, "supportedProviders": VALUE, "entrypoint": VALUE})
+SOURCE_SYSTEM_SCHEMA_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "systems": OPEN})
+OBSERVATION_ACQUISITION_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "inputs": VALUE, "rule": VALUE, "modalities": VALUE})
+ACTION_BINDING_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "actions": VALUE, "execution": VALUE, "actionSpace": OPEN})
+COMMIT_CONTRACT = _standard({"description": VALUE, "standardBindings": OPEN, "approvalRequired": VALUE, "commitExamples": VALUE, "rule": VALUE, "commitSemantics": OPEN})
+EFFECT_VERIFICATION_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "verifies": VALUE, "rule": VALUE, "observationSources": VALUE})
+VERIFIER_PROFILE = _standard({"description": VALUE, "standardBindings": OPEN, "verifies": VALUE, "basis": VALUE})
+
 ASSET_STRUCTURES = {
     "CompatibilityEvidence": COMPATIBILITY_EVIDENCE,
     "SemanticProfile": SEMANTIC_PROFILE,
@@ -191,6 +206,16 @@ ASSET_STRUCTURES = {
     "EvaluationProfile": EVALUATION_PROFILE,
     "ScenarioProfile": SCENARIO_PROFILE,
     "CapabilityContract": CAPABILITY_CONTRACT,
+    "Dataset": DATASET,
+    "AgentProfile": AGENT_PROFILE,
+    "EnvironmentProfile": ENVIRONMENT_PROFILE,
+    "ModelArtifact": MODEL_ARTIFACT,
+    "SourceSystemSchemaProfile": SOURCE_SYSTEM_SCHEMA_PROFILE,
+    "ObservationAcquisitionProfile": OBSERVATION_ACQUISITION_PROFILE,
+    "ActionBindingProfile": ACTION_BINDING_PROFILE,
+    "CommitContract": COMMIT_CONTRACT,
+    "EffectVerificationProfile": EFFECT_VERIFICATION_PROFILE,
+    "VerifierProfile": VERIFIER_PROFILE,
 }
 
 

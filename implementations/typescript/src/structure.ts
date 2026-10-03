@@ -97,7 +97,7 @@ export const TERM_INDEX: Shape = closed(
 
 /** schemas/semantic-binding.schema.json (spec 14): sections are maps; `fields` entries are checked with FIELD_BINDING. */
 export const SEMANTIC_BINDING: Shape = closed(
-  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN }) },
+  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: OPEN, fields: OPEN, observationTypes: OPEN, actions: OPEN, subjects: OPEN }) },
   false,
 );
 export const FIELD_BINDING: Shape = closed(leaves("class", "path"));
@@ -121,7 +121,7 @@ export const OBSERVATION_SET: Shape = closed(
   {
     ...leaves("apiVersion", "kind"),
     spec: closed({
-      observations: list(closed({ ...leaves("id", "type", "observedAt", "subject"), values: OPEN })),
+      observations: list(closed({ ...leaves("id", "type", "observedAt", "subject", "estimatedBy"), values: OPEN, uncertainty: OPEN })),
       // Spec 12 / Appendix C.1: where the observations came from; compilation ignores it.
       provenance: closed({ ...leaves("extraction", "snapshot"), parameters: OPEN }),
     }),
@@ -139,6 +139,7 @@ export const EFFECTIVE_WORLD_STATE: Shape = closed(
       state: OPEN,
       unresolved: OPEN,
       provenance: OPEN,
+      derivation: OPEN,
     }),
   },
   false,
@@ -153,9 +154,9 @@ const standard = (spec: Record<string, Shape>): Shape => closed({ ...leaves("api
 /** schemas/world-view-profile.schema.json */
 export const WORLD_VIEW_PROFILE: Shape = standard({
   ...leaves("externalWorldRefs", "specializes", "constraints", "evidenceRefs"), // specializes, constraints, evidenceRefs: experimental
-  purpose: closed(leaves("task", "actorScope", "objective", "actorRef", "roleRef", "taskRef")), // *Ref: experimental
-  projection: closed(leaves("include", "exclude", "principle")),
-  conditioning: closed(leaves("authorityScope", "timeScope", "scale", "resolution")),
+  purpose: closed(leaves("task", "actorScope", "objective")),
+  projection: closed(leaves("include", "exclude", "principle", "scale", "resolution", "timeScope")),
+  conditioning: closed(leaves("authorityScope", "actorRef", "roleRefs", "taskRef")), // *Ref*: experimental
 });
 
 /** schemas/evaluation-profile.schema.json */
@@ -191,6 +192,19 @@ export const CAPABILITY_CONTRACT: Shape = standard({
 });
 
 /** Asset kinds whose documents have a JSON Schema; other kinds are checked only for top-level extension blocks. */
+
+// Standard kinds that had a name but no schema (spec section 8): description, standard bindings, and the fields in use.
+export const DATASET: Shape = standard({ ...leaves("description", "worldViewRef", "structure"), standardBindings: OPEN });
+export const AGENT_PROFILE: Shape = standard({ ...leaves("description"), standardBindings: OPEN });
+export const ENVIRONMENT_PROFILE: Shape = standard({ ...leaves("description", "runtimeBinding"), standardBindings: OPEN, exposes: OPEN });
+export const MODEL_ARTIFACT: Shape = standard({ ...leaves("description", "implementationStatus", "bundled", "supportedProviders", "entrypoint"), standardBindings: OPEN, artifactRef: EXTERNAL_REF });
+export const SOURCE_SYSTEM_SCHEMA_PROFILE: Shape = standard({ ...leaves("description"), standardBindings: OPEN, systems: OPEN });
+export const OBSERVATION_ACQUISITION_PROFILE: Shape = standard({ ...leaves("description", "inputs", "rule", "modalities"), standardBindings: OPEN });
+export const ACTION_BINDING_PROFILE: Shape = standard({ ...leaves("description", "actions", "execution"), standardBindings: OPEN, actionSpace: OPEN });
+export const COMMIT_CONTRACT: Shape = standard({ ...leaves("description", "approvalRequired", "commitExamples", "rule"), standardBindings: OPEN, commitSemantics: OPEN });
+export const EFFECT_VERIFICATION_PROFILE: Shape = standard({ ...leaves("description", "verifies", "rule", "observationSources"), standardBindings: OPEN });
+export const VERIFIER_PROFILE: Shape = standard({ ...leaves("description", "verifies", "basis"), standardBindings: OPEN });
+
 export const ASSET_STRUCTURES: Record<string, Shape> = {
   CompatibilityEvidence: COMPATIBILITY_EVIDENCE,
   SemanticProfile: SEMANTIC_PROFILE,
@@ -199,6 +213,16 @@ export const ASSET_STRUCTURES: Record<string, Shape> = {
   EvaluationProfile: EVALUATION_PROFILE,
   ScenarioProfile: SCENARIO_PROFILE,
   CapabilityContract: CAPABILITY_CONTRACT,
+  Dataset: DATASET,
+  AgentProfile: AGENT_PROFILE,
+  EnvironmentProfile: ENVIRONMENT_PROFILE,
+  ModelArtifact: MODEL_ARTIFACT,
+  SourceSystemSchemaProfile: SOURCE_SYSTEM_SCHEMA_PROFILE,
+  ObservationAcquisitionProfile: OBSERVATION_ACQUISITION_PROFILE,
+  ActionBindingProfile: ACTION_BINDING_PROFILE,
+  CommitContract: COMMIT_CONTRACT,
+  EffectVerificationProfile: EFFECT_VERIFICATION_PROFILE,
+  VerifierProfile: VERIFIER_PROFILE,
 };
 
 export interface Problem {

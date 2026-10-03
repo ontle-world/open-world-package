@@ -31,6 +31,8 @@ A packaged `StateCompilerProfile` defines how a compatible World View is reconci
 
 A runtime-ready materialization of a World View for one execution/evaluation context. EWS is not a new World and is not automatically a registry asset.
 
+A field can hold one value for the whole View or, when the compiler declares it per subject, one value per thing observed (each machine, lot, or work item). EWS keeps observed state apart from latent state, which is not observed directly: an estimate (from a model, estimator, or person), an aggregate (computed from measurements over a time window), or a classification (a label assigned by a declared criterion with an id, a version, and its basis). Each latent value carries a derivation record saying which of the three produced it and how, so a measured `down` is never confused with an estimated health index or a `high` risk judged by a rule (spec sections 12.3 and 12.4).
+
 ## World Model
 
 A World Model is semantically grounded in a World, MUST name one or more compatible World View contracts and State Compiler contracts, and consumes the resulting EWS through a declared Representation Adapter at runtime.

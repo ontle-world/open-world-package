@@ -59,7 +59,7 @@ Errors and warnings carry the rule ids of spec Appendix A (`spec/rule-ids.yaml`)
 
 | Warning id | Condition |
 |---|---|
-| `owp-ts:eval-name` | EvaluationProfile or VerifierPackage without `metadata.name` |
+| `owp-ts:eval-name` | EvaluationProfile or VerifierProfile without `metadata.name` |
 | `owp-ts:eval-supersedes-name` | `supersedes` names a different asset than `metadata.name` |
 | `owp-ts:eval-supersedes-order` | `metadata.version` is not greater than the superseded version |
 

@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [t.sum, t.mean, t.min, t.max, empty.mean, empty.sum]
+    perSubject: [t.sum, t.mean, t.min, t.max]
+    latent: [t.sum, t.mean, t.min, t.max, empty.mean, empty.sum]
+  bindings:
+    t.sum: {aggregate: {from: ot.temp, value: c, function: sum}}
+    t.mean: {aggregate: {from: ot.temp, value: c, function: mean}}
+    t.min: {aggregate: {from: ot.temp, value: c, function: min}}
+    t.max: {aggregate: {from: ot.temp, value: c, function: max}}
+    empty.mean: {aggregate: {from: ot.none, value: c, function: mean}}
+    empty.sum: {aggregate: {from: ot.none, value: c, function: sum}}

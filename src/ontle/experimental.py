@@ -49,7 +49,6 @@ TABLES: dict[str, dict[str, Any]] = {
             "events": array(closed({"id": VALUE, "triggers": VALUE, "description": VALUE})),
             "loops": array(closed({"nodes": VALUE, "maxIterations": VALUE, "until": VALUE})),
         }),
-        "worldRef": VALUE,
         "worldViewRef": VALUE,
         "governanceRefs": VALUE,
         "evaluationRefs": VALUE,
@@ -94,7 +93,6 @@ TABLES: dict[str, dict[str, Any]] = {
         "representation": VALUE,
         "format": VALUE,
         "conformsTo": closed({"ontology": VALUE, "shapes": VALUE}),
-        "worldRef": VALUE,
         "snapshot": closed({"asOf": VALUE}),
         "content": CONTENT,
         "delta": closed({"base": VALUE, "format": VALUE}),
@@ -109,7 +107,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "parameters": OPEN,
         "query": closed({"language": VALUE, "text": VALUE}),
         "observations": array(closed({
-            "type": VALUE, "id": VALUE, "values": OPEN, "multi": VALUE,
+            "type": VALUE, "id": VALUE, "subject": VALUE, "values": OPEN, "multi": VALUE,
             "observedAt": closed({"column": VALUE, "default": VALUE}),
         })),
     }),
@@ -456,9 +454,11 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
         return value if isinstance(value, dict) else {}
 
     if kind == "WorldViewProfile":
-        for field, kinds in (("actorRef", ("ActorProfile",)), ("roleRef", ("RoleProfile",)), ("taskRef", ("TaskSetProfile",))):
-            if sub("purpose").get(field) is not None:
-                _check_local_ref(sub("purpose")[field], kinds, f"spec.purpose.{field}", rel, local_kinds, warnings)
+        for field, kinds in (("actorRef", ("ActorProfile",)), ("taskRef", ("TaskSetProfile",))):
+            if sub("conditioning").get(field) is not None:
+                _check_local_ref(sub("conditioning")[field], kinds, f"spec.conditioning.{field}", rel, local_kinds, warnings)
+        for ref in _values(sub("conditioning").get("roleRefs")):
+            _check_local_ref(ref, ("RoleProfile",), "spec.conditioning.roleRefs", rel, local_kinds, warnings)
     elif kind == "EvaluationProfile":
         # Standard fields (spec section 15.1): errors.
         if "assessmentKind" in spec:
@@ -471,8 +471,8 @@ def standard_kind_checks(doc: dict[str, Any], kind: str, rel: str, root: Path, l
         verifier = spec.get("verifierRef")
         if verifier is not None:
             from .core import PINNED_REF_RE  # local import: core imports this module
-            if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierPackage")):
-                errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierPackage or a pinned <name>@<version>")
+            if not (isinstance(verifier, str) and ("@" in verifier and PINNED_REF_RE.match(verifier) or local_kinds.get(verifier) == "VerifierProfile")):
+                errors.append(f"evaluation.verifier-ref: {rel}: spec.verifierRef must be a local VerifierProfile or a pinned <name>@<version>")
         if spec.get("resultSchemaRef") is not None and not _file_in_package(root, spec["resultSchemaRef"]):
             errors.append(f"evaluation.result-schema: {rel}: spec.resultSchemaRef {spec['resultSchemaRef']!r} must be a file in the package")
         # Experimental field (Appendix C.4): warning.
@@ -517,14 +517,19 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
     return warnings
 
 
+def _names(value: Any) -> list[str]:
+    """A list of names; anything that is not a list of strings counts as empty (TypeScript reads it the same way)."""
+    return [x for x in value if isinstance(x, str)] if isinstance(value, list) else []
+
+
 def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[str, str], _seen: tuple[str, ...] = ()) -> dict[str, Any]:
     """The View's spec with `specializes` applied: include = base ∪ include − exclude; purpose and conditioning override key by key."""
     spec = dict((docs.get(rel) or {}).get("spec") or {})
     base = spec.pop("specializes", None)
     if base is None or local_kinds.get(base) != "WorldViewProfile" or base in _seen + (rel,):
-        projection = dict(spec.get("projection") or {})
-        exclude = set(projection.pop("exclude", []) or [])
-        projection["include"] = [x for x in projection.get("include", []) or [] if x not in exclude]
+        projection = dict(spec.get("projection") or {}) if isinstance(spec.get("projection"), dict) else {}
+        exclude = set(_names(projection.pop("exclude", [])))
+        projection["include"] = [x for x in _names(projection.get("include")) if x not in exclude]
         spec["projection"] = projection
         return spec
     parent = resolve_view(base, docs, local_kinds, _seen + (rel,))
@@ -534,9 +539,9 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
             merged[key] = {**(parent.get(key) or {}), **value}
         elif key == "projection" and isinstance(value, dict):
             projection = {**(parent.get("projection") or {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
-            include = list(parent.get("projection", {}).get("include", []) or [])
-            include += [x for x in value.get("include", []) or [] if x not in include]
-            exclude = set(value.get("exclude", []) or [])
+            include = _names(parent.get("projection", {}).get("include"))
+            include += [x for x in _names(value.get("include")) if x not in include]
+            exclude = set(_names(value.get("exclude")))
             projection["include"] = [x for x in include if x not in exclude]
             merged["projection"] = projection
         else:
@@ -571,10 +576,11 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "compiles_view", s.get("worldViewRef"))
         elif kind == "WorldViewProfile":
             edge(rel, "specializes", s.get("specializes"))
-            purpose = s.get("purpose") or {}
-            edge(rel, "for_actor", purpose.get("actorRef"))
-            edge(rel, "for_role", purpose.get("roleRef"))
-            edge(rel, "for_task", purpose.get("taskRef"))
+            conditioning = s.get("conditioning") or {}
+            edge(rel, "for_actor", conditioning.get("actorRef"))
+            for v in _values(conditioning.get("roleRefs")):
+                edge(rel, "for_role", v)
+            edge(rel, "for_task", conditioning.get("taskRef"))
         elif kind == "ActorProfile":
             for v in _values(s.get("roleRefs")):
                 edge(rel, "occupies_role", v)
@@ -642,7 +648,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
 
 
 EXPERIMENTAL_FIELDS = {  # spec Appendix C.4
-    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("purpose", "actorRef"), ("purpose", "roleRef"), ("purpose", "taskRef")],
+    "WorldViewProfile": [("specializes",), ("projection", "exclude"), ("conditioning", "actorRef"), ("conditioning", "roleRefs"), ("conditioning", "taskRef")],
     "EvaluationProfile": [("evaluatorRef",)],
     "CapabilityContract": [("outcomeRefs",)],
 }

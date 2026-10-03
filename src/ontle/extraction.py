@@ -86,7 +86,11 @@ def transform(profile: dict[str, Any], rows: list[dict[str, Any]], parameters: d
             if not _valid_timestamp(at):
                 raise OWPError(f"extraction.input: observation time {at!r} for {template['type']} must be UTC YYYY-MM-DDTHH:MM:SSZ")
             obs_id = f"{template['type']}:" + "|".join(_id_part(v) for v in id_values)
-            produced.append({"id": obs_id, "type": template["type"], "observedAt": at, "values": values})
+            obs = {"id": obs_id, "type": template["type"], "observedAt": at, "values": values}
+            subject = row.get(template["subject"]) if isinstance(template.get("subject"), str) else None
+            if subject is not None:
+                obs["subject"] = _id_part(subject)  # section 12.3: what the observation is about
+            produced.append(obs)
         produced.sort(key=lambda o: o["id"])
         unique: list[dict[str, Any]] = []
         for obs in produced:
@@ -146,7 +150,7 @@ def _run_sparql(root: Path, asset: dict[str, Any], spec: dict[str, Any], paramet
     except ImportError as exc:
         raise OWPError("running SPARQL needs rdflib: pip install 'ontle-open-world[rdf]'") from exc
     fmt = {"turtle": "turtle", "nquads": "nquads", "jsonld": "json-ld", "ntriples": "nt"}.get(asset.get("format", "turtle"), "turtle")
-    graph = rdflib.Dataset() if fmt == "nquads" else rdflib.Graph()
+    graph = rdflib.Dataset(default_union=True) if fmt == "nquads" else rdflib.Graph()  # query named graphs too
     graph.parse(root / content, format=fmt)
     bindings = {name: rdflib.Literal(value) for name, value in parameters.items()}
     rows = []

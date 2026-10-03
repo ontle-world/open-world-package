@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
 import { API_VERSION } from "./vocab.js";
-import { bindingProblems, outputSchemaFields } from "./rules/world.js";
+import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields } from "./rules/world.js";
 import { localAssetKinds } from "./discovery.js";
 import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
@@ -103,12 +103,16 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   if (!Array.isArray(missing) || !missing.every((x) => typeof x === "string")) e("ews.shape", "spec.missing must be a list of strings");
   else if (new Set(missing).size !== missing.length) e("ews.shape", "spec.missing has duplicate entries");
   const provenance = s.provenance ?? {};
+  const idList = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === "string");
   if (!isObj(provenance)) e("ews.shape", "spec.provenance must be a mapping");
   else for (const [k, v] of Object.entries(provenance)) {
-    if (!Array.isArray(v) || !v.every((x) => typeof x === "string")) e("ews.shape", `provenance.${k} must be a list of observation ids`);
+    // A per-subject field maps subjects to id lists (spec 12.3); its shape is checked against the compiler below.
+    if (!idList(v) && !(isObj(v) && Object.values(v).every(idList))) e("ews.shape", `provenance.${k} must be a list of observation ids`);
   }
+  const derivation = s.derivation ?? {};
+  if (!isObj(derivation)) e("ews.shape", "spec.derivation must be a mapping");
   const structural = new Set(["ews.as-of", "schema.unknown-field", "extension.block"]);
-  if (errors.some((x) => !structural.has(x.code)) || !isObj(state) || !isObj(unresolved) || !Array.isArray(missing) || !isObj(provenance)) {
+  if (errors.some((x) => !structural.has(x.code)) || !isObj(state) || !isObj(unresolved) || !Array.isArray(missing) || !isObj(provenance) || !isObj(derivation)) {
     return { valid: false, errors };
   }
 
@@ -138,16 +142,39 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   Object.keys(state).forEach((f) => note(f, "state"));
   Object.keys(unresolved).forEach((f) => note(f, "unresolved"));
   (missing as string[]).forEach((f) => note(f, "missing"));
+  const { perSubject, latent } = outputLists(comp.spec);
   for (const f of comp.fields ?? []) {
     const p = places.get(f) ?? [];
+    if (perSubject.includes(f) && p.length === 2 && p.includes("state") && p.includes("unresolved")) continue; // subjects split (spec 12.3)
     if (p.length === 0) e("ews.field-placement", `schema field ${f} appears in none of state/unresolved/missing`);
     else if (p.length > 1) e("ews.field-placement", `schema field ${f} appears in more than one place (${p.join(", ")})`);
+  }
+  for (const f of (comp.fields ?? []).filter((x) => perSubject.includes(x))) {
+    for (const [name, sec] of [["state", state], ["unresolved", unresolved], ["provenance", provenance]] as const) {
+      if (f in sec && !isObj(sec[f])) e("ews.per-subject-shape", `per-subject field ${f} in ${name} must be a mapping from subject to value`);
+    }
+    if (isObj(state[f]) && isObj(unresolved[f])) {
+      for (const subject of Object.keys(state[f] as Obj).filter((k) => k in (unresolved[f] as Obj)).sort()) {
+        e("ews.per-subject-overlap", `subject ${subject} of ${f} is in both state and unresolved`);
+      }
+    }
+  }
+  for (const f of latent) {
+    if ((f in state || f in unresolved) && !(f in derivation)) e("ews.derivation", `latent field ${f} has a value but no spec.derivation entry`);
+  }
+  for (const [f, rec] of Object.entries(derivation)) {
+    if (!latent.includes(f)) e("ews.derivation", `${f} is not a latent field of the State Compiler`);
+    else if (!isObj(rec) || !["estimate", "aggregate", "classify"].includes(rec.kind as string)) e("ews.derivation", `derivation of ${f} must have kind estimate, aggregate, or classify`);
+    else if (!(f in state) && !(f in unresolved)) e("ews.derivation", `derivation for ${f}, which has no value`);
   }
   if (hasFields) for (const f of places.keys()) if (!fieldSet.has(f)) e("ews.field-unknown", `field ${f} is not an EWS field of the compiler`);
 
   // Unresolved alternatives.
   for (const [f, alts] of Object.entries(unresolved)) {
-    if (!Array.isArray(alts) || new Set(alts.map(canon)).size < 2) e("ews.unresolved-alternatives", `unresolved.${f} must retain at least two distinct alternatives`);
+    const groups: Array<[string | null, unknown]> = perSubject.includes(f) && isObj(alts) ? Object.entries(alts) : [[null, alts]];
+    for (const [subject, a] of groups) {
+      if (!Array.isArray(a) || new Set(a.map(canon)).size < 2) e("ews.unresolved-alternatives", `unresolved.${f}${subject === null ? "" : ` subject ${subject}`} must retain at least two distinct alternatives`);
+    }
   }
 
   // Provenance.
@@ -156,7 +183,15 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   if (comp.spec.traceRequired === true) {
     for (const f of present) {
       const p = provenance[f];
-      if (!Array.isArray(p) || p.length === 0) e("ews.provenance-required", `traceRequired: field ${f} has no provenance`);
+      // An aggregate over no observations (a count of 0) has an empty provenance list (spec 12.4).
+      const emptyOk = isObj(derivation[f]) && (derivation[f] as Obj).kind === "aggregate";
+      const traced = (ids: unknown) => Array.isArray(ids) && (ids.length > 0 || emptyOk);
+      if (perSubject.includes(f) && isObj(p)) {
+        const subjects = new Set([...Object.keys(isObj(state[f]) ? (state[f] as Obj) : {}), ...Object.keys(isObj(unresolved[f]) ? (unresolved[f] as Obj) : {})]);
+        for (const subject of [...subjects].sort()) {
+          if (!traced(p[subject])) e("ews.provenance-required", `traceRequired: field ${f} subject ${subject} has no provenance`);
+        }
+      } else if (!traced(p)) e("ews.provenance-required", `traceRequired: field ${f} has no provenance`);
     }
   }
   return { valid: errors.length === 0, errors };
@@ -169,6 +204,8 @@ export interface Observation {
   type: string;
   observedAt: string;
   values: Obj;
+  subject?: string;
+  estimatedBy?: string;
 }
 
 export type CompileResult = { ok: true; ews: Obj } | { ok: false; errors: string[] };
@@ -196,6 +233,8 @@ export function parseObservationSet(doc: unknown): { observations: Observation[]
     if (!isNonEmptyString(o.type)) input(`observations[${i}] is missing type`);
     if (!isUtcTimestamp(o.observedAt)) input(`observations[${i}].observedAt ${JSON.stringify(o.observedAt)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`);
     if (!isObj(o.values)) input(`observations[${i}] is missing a values mapping`);
+    if ("subject" in o && typeof o.subject !== "string") input(`observations[${i}].subject must be a string`);
+    if ("estimatedBy" in o && !isNonEmptyString(o.estimatedBy)) input(`observations[${i}].estimatedBy must be a non-empty string`);
     if (errors.length === 0) observations.push(o as unknown as Observation);
   });
   return { observations, errors };
@@ -214,72 +253,195 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   if (comp.spec.bindings === undefined) {
     return { ok: false, errors: [refusal("ews.opaque-compiler", `State Compiler ${compilerPath} declares no bindings; it is opaque and cannot be compiled declaratively`)] };
   }
-  const bp = [...comp.fieldProblems.map((p) => refusal(p.rule, p.msg)), ...bindingProblems(comp.spec, comp.fields).map((m) => refusal("compiler.binding", m))];
+  const bp = [
+    ...comp.fieldProblems.map((p) => refusal(p.rule, p.msg)),
+    ...outputListProblems(comp.spec, comp.fields).map((p) => refusal(p.rule, p.msg)),
+    ...bindingProblems(comp.spec, comp.fields).map((m) => refusal("compiler.binding", m)),
+  ];
   if (bp.length) return { ok: false, errors: bp };
   // Spec 12: an unknown field makes the ObservationSet invalid input, so compilation is refused.
   const { observations, errors } = parseObservationSet(observationDoc);
   if (errors.length) return { ok: false, errors };
-
+  const byId = new Map(observations.map((o) => [o.id, o]));
+  const { perSubject, latent } = outputLists(comp.spec);
   const bindings = comp.spec.bindings as Record<string, Obj>;
-  const state: Obj = {};
-  const unresolved: Obj = {};
-  const missing: string[] = [];
-  const provenance: Record<string, string[]> = {};
+  const order = (a: Observation, b: Observation) => (a.observedAt < b.observedAt ? -1 : a.observedAt > b.observedAt ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const candidates = (src: Obj, estimates: boolean, since?: string) =>
+    observations
+      .filter((o) => o.type === src.from && o.observedAt <= asOf && Object.prototype.hasOwnProperty.call(o.values, src.value as string)
+        && ("estimatedBy" in o) === estimates && (since === undefined || o.observedAt > since))
+      .sort(order);
+  const grouped = (field: string, cands: Observation[]): Map<string | null, Observation[]> => {
+    if (!perSubject.includes(field)) return new Map([[null, cands]]);
+    const m = new Map<string | null, Observation[]>();
+    for (const o of cands) {
+      if (typeof o.subject !== "string") throw new Error(refusal("ews.input", `observation ${o.id} has no subject, but "${field}" is a per-subject field`));
+      m.set(o.subject, [...(m.get(o.subject) ?? []), o]);
+    }
+    return m;
+  };
 
-  for (const field of comp.fields ?? []) {
-    const b = bindings[field];
-    if (!b) {
-      missing.push(field);
-      continue;
+  // results.get(field) = subject (or null) -> result; an absent field is missing.
+  const results = new Map<string, Map<string | null, Result>>();
+  try {
+    for (const field of comp.fields ?? []) {
+      const b = bindings[field];
+      const form = b === undefined ? null : bindingForm(b);
+      const out = new Map<string | null, Result>();
+      if (form === "observe" || form === "estimate") {
+        const src = (form === "observe" ? b : b.estimate) as Obj;
+        for (const [k, g] of grouped(field, candidates(src, form === "estimate"))) if (g.length) out.set(k, resolve(g, src.value as string, (src.select as string | undefined) ?? "latest"));
+      } else if (form === "aggregate") {
+        const a = b.aggregate as Obj;
+        const since = "window" in a ? shift(asOf, durationSeconds(a.window)!) : undefined;
+        for (const [k, g] of grouped(field, candidates(a, false, since))) {
+          const r = aggregate(g, a.value as string, a.function as string);
+          if (r) out.set(k, r);
+        }
+      } else continue;
+      if (out.size) results.set(field, out);
     }
-    const from = b.from as string;
-    const key = b.value as string;
-    const select = (b.select as string | undefined) ?? "latest";
-    const cands = observations
-      .filter((o) => o.type === from && o.observedAt <= asOf && Object.prototype.hasOwnProperty.call(o.values, key))
-      .sort((a, b2) => (a.observedAt < b2.observedAt ? -1 : a.observedAt > b2.observedAt ? 1 : a.id < b2.id ? -1 : a.id > b2.id ? 1 : 0));
-    if (cands.length === 0) {
-      missing.push(field);
-      continue;
-    }
-    if (select === "all") {
-      state[field] = cands.map((o) => o.values[key]);
-      provenance[field] = cands.map((o) => o.id);
-      continue;
-    }
-    const newest = cands[cands.length - 1].observedAt;
-    const top = cands.filter((o) => o.observedAt === newest);
-    const distinct: unknown[] = [];
-    const seen = new Set<string>();
-    for (const o of top) {
-      const c = canon(o.values[key]);
-      if (!seen.has(c)) {
-        seen.add(c);
-        distinct.push(o.values[key]);
+  } catch (err) {
+    return { ok: false, errors: [(err as Error).message] };
+  }
+  const pending = (comp.fields ?? []).filter((f) => bindingForm(bindings[f]) === "classify");
+  while (pending.length) {
+    for (const field of [...pending]) {
+      const c = bindings[field].classify as Obj;
+      if (pending.includes(c.input as string)) continue;
+      pending.splice(pending.indexOf(field), 1);
+      const out = new Map<string | null, Result>();
+      for (const [k, r] of results.get(c.input as string) ?? []) {
+        const labelled = classify(r, c.criterion as Obj);
+        if (labelled) out.set(k, labelled);
       }
+      if (out.size) results.set(field, out);
     }
-    if (distinct.length === 1) state[field] = distinct[0];
-    else unresolved[field] = distinct;
-    provenance[field] = top.map((o) => o.id);
   }
 
-  return {
-    ok: true,
-    ews: {
-      apiVersion: API_VERSION,
-      kind: "EffectiveWorldState",
-      spec: {
-        worldRef: world.identity,
-        worldView: `${world.identity}#${String(comp.spec.worldViewRef)}`,
-        stateCompiler: `${world.identity}#${compilerPath}`,
-        context: { asOf },
-        state,
-        unresolved,
-        missing,
-        provenance,
-      },
-    },
+  const state: Obj = {};
+  const unresolved: Obj = {};
+  const provenance: Obj = {};
+  const derivation: Obj = {};
+  const missing = (comp.fields ?? []).filter((f) => !results.has(f));
+  for (const field of comp.fields ?? []) {
+    const res = results.get(field);
+    if (!res) continue;
+    for (const [subject, r] of res) {
+      const target = r.placement === "state" ? state : unresolved;
+      if (subject === null) {
+        target[field] = r.value;
+        provenance[field] = r.ids;
+      } else {
+        ((target[field] ??= {}) as Obj)[subject] = r.value;
+        ((provenance[field] ??= {}) as Obj)[subject] = r.ids;
+      }
+    }
+    if (latent.includes(field)) derivation[field] = derive(bindings[field], res, byId);
+  }
+  const spec: Obj = {
+    worldRef: world.identity,
+    worldView: `${world.identity}#${String(comp.spec.worldViewRef)}`,
+    stateCompiler: `${world.identity}#${compilerPath}`,
+    context: { asOf },
+    state,
+    unresolved,
+    missing,
+    provenance,
   };
+  if (Object.keys(derivation).length) spec.derivation = derivation;
+  return { ok: true, ews: { apiVersion: API_VERSION, kind: "EffectiveWorldState", spec } };
+}
+
+interface Result {
+  placement: "state" | "unresolved";
+  value: unknown;
+  ids: string[];
+}
+
+function distinctValues(values: unknown[]): unknown[] {
+  const out: unknown[] = [];
+  const seen = new Set<string>();
+  for (const v of values) {
+    const c = canon(v);
+    if (!seen.has(c)) {
+      seen.add(c);
+      out.push(v);
+    }
+  }
+  return out;
+}
+
+const sortedIds = (os: Observation[]) => os.map((o) => o.id).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+
+/** Spec 12.2 rules 3 and 4 over candidates in (observedAt, id) order. */
+function resolve(cands: Observation[], key: string, select: string): Result {
+  if (select === "all") return { placement: "state", value: cands.map((o) => o.values[key]), ids: sortedIds(cands) };
+  const newest = cands[cands.length - 1].observedAt;
+  const tied = cands.filter((o) => o.observedAt === newest);
+  const distinct = distinctValues(tied.map((o) => o.values[key]));
+  return distinct.length === 1 ? { placement: "state", value: distinct[0], ids: sortedIds(tied) } : { placement: "unresolved", value: distinct, ids: sortedIds(tied) };
+}
+
+const isNumber = (v: unknown): v is number => typeof v === "number";
+
+/** Spec 12.4 aggregates; null when the result is missing. */
+function aggregate(cands: Observation[], key: string, fn: string): Result | null {
+  const values = cands.map((o) => o.values[key]);
+  const ids = sortedIds(cands);
+  if (fn === "count") return { placement: "state", value: values.length, ids };
+  if (fn === "distinct_count") return { placement: "state", value: distinctValues(values).length, ids };
+  if (!values.every(isNumber)) throw new Error(refusal("ews.input", `aggregate ${fn} needs numeric values`));
+  const nums = values as number[];
+  let total = 0;
+  for (const v of nums) total += v;
+  if (fn === "sum") return { placement: "state", value: total, ids };
+  if (nums.length === 0) return null;
+  if (fn === "mean") return { placement: "state", value: total / nums.length, ids };
+  return { placement: "state", value: fn === "min" ? Math.min(...nums) : Math.max(...nums), ids };
+}
+
+function holds(op: string, v: unknown, x: unknown): boolean {
+  if (op === "eq") return canon(v) === canon(x);
+  if (op === "in") return Array.isArray(x) && x.some((y) => canon(v) === canon(y));
+  if (!isNumber(v) || !isNumber(x)) return false;
+  return op === "gt" ? v > x : op === "gte" ? v >= x : op === "lt" ? v < x : v <= x;
+}
+
+/** The label a criterion gives a value, or undefined when no rule matches and there is no `otherwise`. */
+export function classifyValue(criterion: Obj, v: unknown): unknown {
+  for (const rule of (criterion.rules as Obj[]) ?? []) {
+    if (Object.entries(rule.when as Obj).every(([op, x]) => holds(op, v, x))) return rule.label;
+  }
+  return criterion.otherwise;
+}
+
+function classify(r: Result, criterion: Obj): Result | null {
+  const alternatives = r.placement === "state" ? [r.value] : (r.value as unknown[]);
+  const labels = distinctValues(alternatives.map((a) => classifyValue(criterion, a)).filter((l) => l !== undefined && l !== null));
+  if (labels.length === 0) return null;
+  return labels.length === 1 ? { placement: "state", value: labels[0], ids: r.ids } : { placement: "unresolved", value: labels, ids: r.ids };
+}
+
+function shift(ts: string, seconds: number): string {
+  return new Date(Date.parse(ts) - seconds * 1000).toISOString().replace(".000Z", "Z");
+}
+
+/** Spec 12.4 derivation record of one latent field. */
+function derive(b: Obj, res: Map<string | null, Result>, byId: Map<string, Observation>): Obj {
+  const form = bindingForm(b);
+  if (form === "estimate") {
+    const by = (ids: string[]) => [...new Set(ids.map((i) => String(byId.get(i)!.estimatedBy)))].sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+    if (res.has(null)) return { kind: "estimate", by: by(res.get(null)!.ids) };
+    return { kind: "estimate", by: Object.fromEntries([...res].map(([k, r]) => [k, by(r.ids)])) };
+  }
+  if (form === "aggregate") {
+    const a = b.aggregate as Obj;
+    return { kind: "aggregate", ...Object.fromEntries(["from", "value", "function", "window"].filter((k) => k in a).map((k) => [k, a[k]])) };
+  }
+  const c = b.classify as Obj;
+  const crit = c.criterion as Obj;
+  return { kind: "classify", input: c.input, criterion: Object.fromEntries(["id", "version", "basis"].filter((k) => k in crit).map((k) => [k, crit[k]])) };
 }
 
 // ---------------------------------------------------------------- 12.2 equality
@@ -296,8 +458,10 @@ export function ewsEqual(a: unknown, b: unknown): { equal: boolean; diffs: strin
   if (setOf(sa.missing) !== setOf(sb.missing)) diffs.push(`missing: ${canon(sa.missing)} != ${canon(sb.missing)} (as sets)`);
   const pa = (isObj(sa.provenance) ? sa.provenance : {}) as Obj;
   const pb = (isObj(sb.provenance) ? sb.provenance : {}) as Obj;
+  const provSets = (v: unknown) => (isObj(v) ? canon(Object.fromEntries(Object.entries(v).map(([s, ids]) => [s, setOf(ids)]))) : setOf(v));
   for (const k of new Set([...Object.keys(pa), ...Object.keys(pb)])) {
-    if (setOf(pa[k]) !== setOf(pb[k])) diffs.push(`provenance.${k}: ${canon(pa[k])} != ${canon(pb[k])} (as sets)`);
+    if (provSets(pa[k]) !== provSets(pb[k])) diffs.push(`provenance.${k}: ${canon(pa[k])} != ${canon(pb[k])} (as sets)`);
   }
+  if (canon(sa.derivation ?? {}) !== canon(sb.derivation ?? {})) diffs.push(`derivation: ${canon(sa.derivation ?? {})} != ${canon(sb.derivation ?? {})}`);
   return { equal: diffs.length === 0, diffs };
 }

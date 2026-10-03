@@ -55,7 +55,7 @@ WorldModelPackage
 
 Human card: `WORLD.md`.
 
-A World package describes an explicit, intentionally incomplete representation. It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
+A World is the target reality itself (a plant, a supply chain, a physical system). A World package is a persistent representation of it: explicit and intentionally incomplete. Its boundary, profiles, and bindings are the contract for representing that World, not claims about what the World is. A World need not contain actors or tasks; an enterprise World usually does, as content it represents (spec Appendix C). It may reference World View and State Compiler profiles, semantic profiles, interfaces, models, scenarios, datasets, tests, and operational assets. Business and Physical AI use the same package contract; domain differences are expressed through typed assets.
 
 A World is useful without a World Model. Reference and taxonomy Worlds (organizations, material taxonomies, regulatory concepts) need not compile state. A WorldPackage therefore declares a conformance profile (section 6.1) that states how far along the World -> View -> EWS chain it goes. Starter templates generate a default View and State Compiler and declare `stateful`.
 
@@ -127,13 +127,21 @@ metadata:
 spec: {}
 ```
 
-Discovery reads every `.yaml`/`.yml` file of the package except `owp.yaml` and the listed `PackageExample` files. It skips path components that start with `.` or are named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, files that resolve outside the package root, and subdirectories that contain their own `owp.yaml` (a nested package). For each file read:
+Discovery reads every `.yaml`/`.yml` file of the package except `owp.yaml` and the listed `PackageExample` files. It skips path components that start with `.` or are named `dist`, `build`, `venv`, `node_modules`, or `__pycache__`, files that resolve outside the package root, subdirectories that contain their own `owp.yaml` (a nested package), and paths that `.owpignore` excludes. For each file read:
 
 - Every file MUST parse (`asset.yaml`, section 5.2).
 - A file whose top-level `apiVersion` is not a string starting with `openworld/` is an ordinary package file, not an asset. Configuration of other tools (for example a Kubernetes manifest) can sit in a package.
 - A file with an OWP `apiVersion` is an OWP document. Its `apiVersion` MUST equal the manifest's (`asset.api-version`), and it MUST declare `kind` (`asset.kind`).
 - `ObservationSet` and `EffectiveWorldState` documents are package files, not assets.
 - Any other `kind` MUST be a vocabulary kind or an extension kind `<extension>:<Kind>` (section 13); otherwise `asset.kind`. The file is then a local asset of that kind at its package-relative path.
+
+An optional `.owpignore` file at the package root excludes paths from the package. A path it excludes is not a package file: discovery does not read it, an archive does not contain it (section 7), and a listed `PackageExample` there is missing (`asset.missing-file`). `owp.yaml` cannot be excluded. The syntax is a subset of gitignore:
+
+- One pattern per line. Blank lines and lines starting with `#` are skipped; `\#` and `\!` start a pattern with a literal `#` or `!`.
+- A pattern starting with `!` re-includes a path that an earlier pattern excluded. A path inside an excluded directory cannot be re-included.
+- A trailing `/` matches directories only. A pattern that contains another `/` is anchored at the package root (a leading `/` only anchors); any other pattern matches a file or directory name at any depth.
+- `*` matches any characters except `/`, `?` one character except `/`, and `[...]` one character of a class (`[!...]` negates). `**/` at the start or `/**/` inside matches zero or more directories; a trailing `/**` matches everything inside.
+- For each directory on a file's path and then the file itself, the last matching pattern decides whether it is excluded.
 
 `spec.assets` lists what discovery cannot find: external artifacts (`ref`) and `PackageExample` files (`path`), whose content may be any document. An entry has `kind`, exactly one of `path` and `ref`, and optionally an `extensions` block. A `path` entry of any other kind is an error (`asset.path-or-ref`).
 
@@ -235,6 +243,23 @@ World(schema)
 -> World Model
 ```
 
+A World View is a projection of a World chosen for a purpose: `WorldView = Project(World, ViewSpec)`. The View's selection (`projection`) is what makes it a View. Its conditioning on an actor, role, task, objective, or authority is optional: a plant-state View has none of them, a quality-manager View has a role, a root-cause View has a task, and an operator recovery View has both. These are informative labels, not kinds. A View belongs to the World package that contains it, so it does not name that World: a WorldViewProfile is an asset of a WorldPackage (`view.world-ref`). A View that also reads other Worlds names them explicitly:
+
+```yaml
+spec:
+  externalWorldRefs: [acme/supplier-world@1.2.0]     # other Worlds this View reads
+  projection:
+    include:
+    - lot                                             # a name of this World
+    - acme/supplier-world@1.2.0#supplier              # a name of an external World
+```
+
+Each `externalWorldRefs` entry MUST also be listed in `spec.dependencies`, and an `include` entry of the form `<world ref>#<name>` MUST use a World listed there (`view.external-world`). Under resolution (section 11), each external World MUST resolve to a WorldPackage (`view.external-world`), and a name taken from it SHOULD be in its declared `spec.world.boundary.included` (`view.outside-world`). The boundary check of this World's own names skips qualified names. One View may serve several tasks, and one task may require several Views; `TaskSetProfile.spec.requires.worldViews` records the use, while a View's `purpose.taskRef`, `actorRef`, or `roleRef` (Appendix C.4) records the task or actor it is conditioned on.
+
+An EWS is the runtime materialization of a View (section 12). A runtime that acts combines it with other runtime context (the acting actor's current roles, assignments, and resources, the task, and the dynamics and constraints that apply). Those combinations are runtime objects, like EWS, and are not packaged assets.
+
+Each step narrows the one before it. A View selects names from the World: when `spec.world.boundary.included` is declared, every name in a View's resolved `projection.include` SHOULD be in it (warning `view.outside-world`). A State Compiler's fields describe what its View selects: a field `<entity>.<property>` SHOULD name an entity in its View's resolved `projection.include` when that list is not empty (warning `compiler.field-outside-view`). Fields without a `.` are not checked.
+
 A World Model must not imply that it models every entity/state known to a World package. `worldRef` alone is insufficient: a valid WorldModelPackage MUST name the World View(s) and State Compiler(s) for which its input semantics are valid.
 
 The model runtime path is explicit:
@@ -261,8 +286,8 @@ spec:
 
 | Profile | Adds |
 |---|---|
-| `descriptive` | `spec.world` (always required for a WorldPackage) with `spec.world.definition`, or a `WorldDefinition` asset |
-| `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset whose `spec.worldRef` is `self` or this package's identity |
+| `descriptive` | `spec.world` (always required for a WorldPackage) with `spec.world.definition` |
+| `viewable` | at least one `WorldViewProfile`; `spec.world.defaultView` is the path of a local `WorldViewProfile` asset |
 | `stateful` | at least one `StateCompilerProfile`; `spec.world.defaultStateCompiler` is the path of a local `StateCompilerProfile` whose `spec.worldViewRef` equals `spec.world.defaultView`; every local `StateCompilerProfile` has a `spec.worldViewRef` naming a local `WorldViewProfile` path and `spec.outputContract: EffectiveWorldState` |
 | `stateful` (bindings) | a State Compiler's `spec.bindings`, when present, is well formed (section 12.2); a malformed binding fails `stateful` for both the declared and the satisfied profile |
 | `model-ready` | every local `StateCompilerProfile` declares a concrete EWS schema: a non-empty `spec.outputSchema.fields` list, or a `spec.outputSchemaRef` that resolves to EWS fields (section 12.1) |
@@ -274,7 +299,7 @@ Every WorldModelPackage requires compatible View and State Compiler references r
 
 ## 7. Integrity
 
-`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files and one `owp.lock.json`:
+`ontle pack` creates a deterministic ZIP-compatible OWP archive (`.owp.zip`). The package root is the archive root. The archive contains the package files (without the paths `.owpignore` excludes, section 5) and one `owp.lock.json`:
 
 ```json
 {
@@ -314,7 +339,7 @@ Precise meaning of the checks above:
 - **Dependencies:** every `spec.dependencies` entry is `<namespace>/<name>@<semver>` or a mapping whose `ref` is; otherwise the package is invalid.
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierPackage) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **YAML files:** every `.yaml`/`.yml` file that discovery reads, and every listed `PackageExample`, MUST parse. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not checked.
-- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed; a kind containing `:` is an extension kind and follows section 13.
+- **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed. A kind marked `stability: reserved` is a name kept for a future definition: it has no schema or rules yet, and using it is a warning; a kind containing `:` is an extension kind and follows section 13.
 - **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
@@ -331,6 +356,8 @@ OWP is a glue contract, not a replacement for existing standards. Scene descript
 ## 11. Dependency resolution
 
 `spec.dependencies` lists exact package references `<namespace>/<name>@<version>` (strings), or mappings `{ref, source}` where `source` is a package source used for that dependency before the global sources. Version ranges are not allowed.
+
+Dependencies point down the hierarchy Ontology ← World ← World Model: an OntologyPackage depends on OntologyPackages; a WorldPackage on OntologyPackages and WorldPackages; a WorldModelPackage on any of the three. A resolved dependency of another kind is the warning `resolve.dependency-direction`. Dependencies declared with `as` are extensions (section 13) and are not checked.
 
 A resolver finds each reference in an ordered list of package sources. This alpha defines three source types; a registry or OCI transport is another source type and does not change these rules:
 
@@ -454,7 +481,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierPackage assets share `metadata.name` |
 | `asset.duplicate-path` | 8 | same `PackageExample` path listed twice |
 | `asset.path-escape` | 8 | listed `PackageExample` path resolves outside the package root |
-| `asset.missing-file` | 8 | listed `PackageExample` path does not exist |
+| `asset.missing-file` | 8 | listed `PackageExample` path does not exist or is excluded by `.owpignore` |
 | `standard.binding` | 5.3 | malformed `spec.standardBindings`: not a mapping, an entry without `standard`, `terms` not a mapping of strings, an empty `license`, or neither `ref` nor `terms` |
 | `standard.unpinned` | 5.3 | a bound `ref` in a standard binding is not pinned |
 | `standard.license` | 5.3 | a standard binding binds an artifact without `license` |
@@ -462,9 +489,10 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.api-version` | 5 | a discovered OWP document's `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
-| `profile.descriptive` | 6.1 | no definition and no WorldDefinition asset |
+| `profile.descriptive` | 6.1 | no `spec.world.definition` |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
-| `profile.viewable.world-ref` | 6.1 | default View `worldRef` is not `self` or the package identity |
+| `view.world-ref` | 6 | a WorldViewProfile in a package that is not a WorldPackage |
+| `view.external-world` | 6 | `externalWorldRefs` not a list, an entry not in `spec.dependencies`, a `<world ref>#<name>` include whose World it does not list, or (under resolution) an external World that is not a WorldPackage |
 | `profile.stateful` | 6.1 | no State Compiler, no `defaultStateCompiler`, or it is not a local compiler |
 | `profile.stateful.default-compiler-view` | 6.1 | default compiler does not compile `defaultView` |
 | `profile.stateful.compiler-view` | 6.1 | a compiler's `worldViewRef` is not a local View |
@@ -551,6 +579,10 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `eval.version-missing` | 9 | EvaluationProfile or VerifierPackage without `metadata.version` |
 | `asset.kind-unknown` | 8 | external `spec.assets` entry kind without `:` outside the vocabulary |
 | `asset.kind-experimental` | 8 | vocabulary kind marked `experimental` |
+| `asset.kind-reserved` | 8 | vocabulary kind marked `reserved` |
+| `view.outside-world` | 6 | View `projection.include` name outside the declared `spec.world.boundary.included` of its World, or (under resolution) of the external World it names |
+| `compiler.field-outside-view` | 6 | State Compiler field `<entity>.<property>` whose entity its View does not include |
+| `resolve.dependency-direction` | 11 | dependency on a package kind above the dependent's place in the hierarchy |
 | `manifest.conformance-ignored` | 3.1, 6.1 | `spec.conformance` on a WorldModelPackage |
 | `compiler.multi-latest` | C.1 | State Compiler binding reads a multi-valued extracted type with `select: latest` |
 | `experimental.delegation-exceeds-authority` | C.3 | a delegation grants actions or decisions the delegator's roles do not hold |
@@ -559,6 +591,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside an experimental value set |
 | `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
+| `experimental.graph-ontology` | C | graph KnowledgeAsset without `spec.conformsTo.ontology` |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 

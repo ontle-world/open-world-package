@@ -364,6 +364,9 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
         if "representation" in spec:
             _check_value(spec["representation"], "knowledgeRepresentations", "spec.representation", rel, declared, errors, warnings)
         ontology = sub("conformsTo").get("ontology")
+        if ontology is None and spec.get("representation") == "graph":
+            warnings.append(f"experimental.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
+                            "that is its T-box in spec.conformsTo.ontology")
         if ontology is not None:
             dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in spec_manifest.get("dependencies") or []}
             if ontology not in dependency_refs:

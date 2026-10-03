@@ -1,8 +1,0 @@
-apiVersion: openworld/v1alpha1
-kind: WorldViewProfile
-metadata:
-  name: task-view
-spec:
-  worldRef: self
-  purpose:
-    task: fixture_task

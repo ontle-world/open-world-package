@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import { Context, error, hasAssetOfKind, LocalAsset, localAssetsOfKind, Profile, PROFILES, warn } from "../context.js";
 import { Problem } from "../structure.js";
 import { get, isNonEmptyString, isObj, Obj, packageFile } from "../util.js";
+import { localKinds, resolvedInclude } from "./experimental.js";
 
 /**
  * Spec section 6.1: WorldPackage conformance profiles.
@@ -30,8 +31,7 @@ function assetSpec(a: LocalAsset): Record<string, unknown> | undefined {
 
 const descriptive: ProfileCheck = (ctx, w) => {
   if (isNonEmptyString(w.world?.definition)) return [];
-  if (hasAssetOfKind(ctx, "WorldDefinition")) return [];
-  return [{ rule: "profile.descriptive", msg: "requires spec.world.definition or a WorldDefinition asset" }];
+  return [{ rule: "profile.descriptive", msg: "requires spec.world.definition" }];
 };
 
 const viewable: ProfileCheck = (ctx, w) => {
@@ -47,11 +47,6 @@ const viewable: ProfileCheck = (ctx, w) => {
     out.push({ rule: r, msg: `spec.world.defaultView ${JSON.stringify(w.defaultView)} is not the path of a local WorldViewProfile asset` });
   } else if (!v.exists || !isObj(v.doc)) {
     out.push({ rule: r, msg: `default WorldViewProfile ${v.rawPath} is missing or unreadable` });
-  } else {
-    const ref = assetSpec(v)?.worldRef;
-    if (ref !== "self" && ref !== ctx.rawIdentity) {
-      out.push({ rule: "profile.viewable.world-ref", msg: `default WorldViewProfile ${v.rawPath} spec.worldRef ${JSON.stringify(ref)} must be "self" or ${ctx.rawIdentity ?? "the package identity"}` });
-    }
   }
   return out;
 };
@@ -239,4 +234,75 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
     }
   }
   return out;
+}
+
+/**
+ * Spec section 6: a View selects from the World's boundary, and a State Compiler's fields name entities its
+ * View selects. Warnings: `view.outside-world` when spec.world.boundary.included is declared, and
+ * `compiler.field-outside-view` for a field `<entity>.<property>` whose entity the View does not include.
+ */
+export function checkContainment(ctx: Context): void {
+  const included = get(ctx.manifest, "spec", "world", "boundary", "included");
+  const boundary = new Set(Array.isArray(included) ? included.filter((x): x is string => typeof x === "string") : []);
+  const kinds = localKinds(ctx);
+  const docs = new Map<string, unknown>();
+  for (const a of ctx.localAssets) if (!docs.has(a.rawPath)) docs.set(a.rawPath, a.doc);
+  const includes = new Map<string, Set<string>>();
+  for (const [p, k] of [...kinds].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    if (k !== "WorldViewProfile") continue;
+    const all = resolvedInclude(p, docs, kinds);
+    const own = all.filter((x) => !x.includes("#"));
+    // A compiler field may describe an entity of an external World the View selects.
+    includes.set(p, new Set([...own, ...all.filter((x) => x.includes("#")).map((x) => x.slice(x.indexOf("#") + 1))]));
+    if (boundary.size === 0) continue;
+    for (const name of [...own].sort()) {
+      if (!boundary.has(name)) warn(ctx, "view.outside-world", `${p}: projection.include "${name}" is not in spec.world.boundary.included`, p);
+    }
+  }
+  for (const c of localAssetsOfKind(ctx, "StateCompilerProfile")) {
+    const view = get(c.doc, "spec", "worldViewRef");
+    const names = typeof view === "string" ? includes.get(view) : undefined;
+    if (!names || names.size === 0) continue;
+    for (const field of compilerFields(ctx, c).fields ?? []) {
+      const dot = field.indexOf(".");
+      if (dot > 0 && !names.has(field.slice(0, dot))) {
+        warn(ctx, "compiler.field-outside-view", `${c.rawPath}: field "${field}" names "${field.slice(0, dot)}", which ${view}'s projection.include does not list`, c.rawPath);
+      }
+    }
+  }
+}
+
+/** Spec 6: a World View belongs to the WorldPackage that contains it (`view.world-ref`). */
+export function checkViewOwnership(ctx: Context): void {
+  const views = [...localAssetsOfKind(ctx, "WorldViewProfile")].sort((a, b) => (a.rawPath < b.rawPath ? -1 : a.rawPath > b.rawPath ? 1 : 0));
+  for (const v of views) {
+    if (ctx.packageKind !== "WorldPackage") {
+      error(ctx, "view.world-ref", `${v.rawPath}: a WorldViewProfile belongs to a WorldPackage, not a ${ctx.packageKind}`, v.rawPath);
+      continue;
+    }
+    // Other Worlds the View reads are named in spec.externalWorldRefs and listed in spec.dependencies.
+    const refs = get(v.doc, "spec", "externalWorldRefs");
+    if (refs !== undefined && refs !== null && !(Array.isArray(refs) && refs.every((r) => typeof r === "string"))) {
+      error(ctx, "view.external-world", `${v.rawPath}: spec.externalWorldRefs must be a list of package references`, v.rawPath);
+      continue;
+    }
+    const declared = new Set((refs ?? []) as string[]);
+    const depsRaw = get(ctx.manifest, "spec", "dependencies");
+    const deps = new Set((Array.isArray(depsRaw) ? depsRaw : []).map((d) => (isObj(d) ? d.ref : d)));
+    for (const r of declared) {
+      if (!deps.has(r)) error(ctx, "view.external-world", `${v.rawPath}: external World ${r} must also be listed in spec.dependencies`, v.rawPath);
+    }
+    for (const [r, name] of viewExternalNames(v.doc)) {
+      if (!declared.has(r)) error(ctx, "view.external-world", `${v.rawPath}: projection.include '${r}#${name}' names a World that spec.externalWorldRefs does not list`, v.rawPath);
+    }
+  }
+}
+
+/** [world ref, name] for each projection.include entry written as <world ref>#<name>. */
+export function viewExternalNames(doc: unknown): Array<[string, string]> {
+  const include = get(doc, "spec", "projection", "include");
+  if (!Array.isArray(include)) return [];
+  return include
+    .filter((x): x is string => typeof x === "string" && x.includes("#"))
+    .map((x) => [x.slice(0, x.indexOf("#")), x.slice(x.indexOf("#") + 1)]);
 }

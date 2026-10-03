@@ -7,12 +7,14 @@ import hashlib
 import json
 import posixpath
 import re
+import tempfile
 import zipfile
 from typing import Any, Iterator
 
 from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
+from .ignore import IGNORE_FILE, is_ignored, load_ignore
 from .yamlio import dump_yaml, load_yaml
 
 MANIFEST = "owp.yaml"
@@ -157,8 +159,8 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
     level = WORLD_PROFILES.index(profile)
     errors: list[str] = []
     world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
-    if not world.get("definition") and "WorldDefinition" not in asset_kinds:
-        errors.append("profile.descriptive: requires spec.world.definition or a WorldDefinition asset")
+    if not world.get("definition"):
+        errors.append("profile.descriptive: requires spec.world.definition")
     if level < 1:
         return errors
 
@@ -169,8 +171,6 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
         errors.append("profile.viewable: requires spec.world.defaultView")
     elif local_asset_kinds.get(default_view) != "WorldViewProfile":
         errors.append("profile.viewable: spec.world.defaultView must point to a local WorldViewProfile asset")
-    elif _spec_of(local_asset_docs.get(default_view)).get("worldRef") not in {"self", identity}:
-        errors.append(f"profile.viewable.world-ref: default WorldViewProfile spec.worldRef must be 'self' or this package's identity {identity}")
     if level < 2:
         return errors
 
@@ -296,6 +296,58 @@ def _asset_structure_errors(doc: dict[str, Any], asset_kind: Any, rel: str, exte
     return errors
 
 
+def view_external_names(vspec: dict[str, Any]) -> list[tuple[str, str]]:
+    """(world ref, name) for each projection.include entry written as <world ref>#<name>."""
+    include = (vspec.get("projection") or {}).get("include") if isinstance(vspec.get("projection"), dict) else None
+    return [tuple(x.split("#", 1)) for x in include if isinstance(x, str) and "#" in x] if isinstance(include, list) else []  # type: ignore[misc]
+
+
+def _external_world_errors(rel: str, vspec: dict[str, Any], spec: dict[str, Any]) -> list[str]:
+    """Section 6: a View names the other Worlds it reads in spec.externalWorldRefs, and each is a dependency."""
+    errors: list[str] = []
+    refs = vspec.get("externalWorldRefs")
+    if refs is not None and not (isinstance(refs, list) and all(isinstance(r, str) for r in refs)):
+        return [f"view.external-world: {rel}: spec.externalWorldRefs must be a list of package references"]
+    declared = set(refs or [])
+    deps = {d if isinstance(d, str) else d.get("ref") for d in spec.get("dependencies") or [] if isinstance(d, (str, dict))}
+    for ref in refs or []:
+        if ref not in deps:
+            errors.append(f"view.external-world: {rel}: external World {ref} must also be listed in spec.dependencies")
+    for ref, name in view_external_names(vspec):
+        if ref not in declared:
+            errors.append(f"view.external-world: {rel}: projection.include '{ref}#{name}' names a World that spec.externalWorldRefs does not list")
+    return errors
+
+
+def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
+                          ews_fields: dict[str, list[str] | None]) -> list[str]:
+    """Section 6: a View selects from the World's boundary, and a State Compiler's fields belong to its View's names."""
+    warnings: list[str] = []
+    world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
+    boundary = world.get("boundary") if isinstance(world.get("boundary"), dict) else {}
+    included = {x for x in boundary.get("included") or [] if isinstance(x, str)} if isinstance(boundary.get("included"), list) else set()
+    includes: dict[str, set[str]] = {}
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "WorldViewProfile":
+            continue
+        names = (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include")
+        own = {x for x in names if isinstance(x, str) and "#" not in x} if isinstance(names, list) else set()
+        external = {x.split("#", 1)[1] for x in names if isinstance(x, str) and "#" in x} if isinstance(names, list) else set()
+        includes[rel] = own | external  # a compiler field may describe an entity of an external World the View selects
+        for name in sorted(own - included) if included else []:
+            warnings.append(f"view.outside-world: {rel}: projection.include {name!r} is not in spec.world.boundary.included")
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "StateCompilerProfile":
+            continue
+        view = _spec_of(local_asset_docs.get(rel)).get("worldViewRef")
+        names = includes.get(view) if isinstance(view, str) else None
+        for field in ews_fields.get(rel) or [] if names else []:
+            entity = field.split(".", 1)[0]
+            if "." in field and entity not in names:
+                warnings.append(f"compiler.field-outside-view: {rel}: field {field!r} names {entity!r}, which {view}'s projection.include does not list")
+    return warnings
+
+
 def validate_package(path: str | Path) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
@@ -408,6 +460,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         assets = []
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
     experimental_kind_counts: dict[str, int] = {}
+    reserved_kind_counts: dict[str, int] = {}
     standard_docs: list[tuple[str, str, dict[str, Any]]] = []
     local_asset_kinds: dict[str, str] = {}
     local_asset_docs: dict[str, dict[str, Any]] = {}
@@ -427,12 +480,14 @@ def validate_package(path: str | Path) -> ValidationResult:
                 errors.append(f"asset.kind: {where} {asset_kind!r} is not an asset kind of the vocabulary or an extension kind")
                 return False
             warnings.append(f"asset.kind-unknown: unrecognized unqualified asset kind: {asset_kind}")
-        elif ASSET_KIND_STABILITY[asset_kind] == "experimental":
-            experimental_kind_counts[asset_kind] = experimental_kind_counts.get(asset_kind, 0) + 1
+        elif ASSET_KIND_STABILITY[asset_kind] in ("experimental", "reserved"):
+            counts = experimental_kind_counts if ASSET_KIND_STABILITY[asset_kind] == "experimental" else reserved_kind_counts
+            counts[asset_kind] = counts.get(asset_kind, 0) + 1
         return True
 
     # The manifest lists external assets (ref) and PackageExample files; other local assets are discovered.
     example_paths: set[str] = set()
+    ignore_rules = load_ignore(root)
     for idx, item in enumerate(assets):
         if not isinstance(item, dict):
             errors.append(f"asset.entry: spec.assets[{idx}] must be a mapping")
@@ -474,6 +529,9 @@ def validate_package(path: str | Path) -> ValidationResult:
             continue
         if not target.exists():
             errors.append(f"asset.missing-file: local asset path does not exist: {rel}")
+            continue
+        if is_ignored(ignore_rules, rel):
+            errors.append(f"asset.missing-file: local asset path {rel} is excluded by {IGNORE_FILE}, so it is not a package file")
             continue
         if target.suffix.lower() in {".yaml", ".yml"}:
             try:
@@ -519,6 +577,8 @@ def validate_package(path: str | Path) -> ValidationResult:
 
     for asset_kind, count in experimental_kind_counts.items():
         warnings.append(f"asset.kind-experimental: asset kind {asset_kind} is experimental and may change ({count} asset{'s' if count > 1 else ''})")
+    for asset_kind, count in reserved_kind_counts.items():
+        warnings.append(f"asset.kind-reserved: asset kind {asset_kind} is reserved: it has no schema or rules yet ({count} asset{'s' if count > 1 else ''})")
     for rel, asset_kind, adata in experimental_docs:
         exp_errors, exp_warnings = experimental.experimental_issues(adata, asset_kind, rel, root, spec, local_asset_kinds, extension_names, local_asset_docs)
         errors.extend(exp_errors)
@@ -538,6 +598,15 @@ def validate_package(path: str | Path) -> ValidationResult:
     bind_errors, bind_warnings = binding_module.binding_issues(spec, local_asset_kinds, local_asset_docs, ews_fields, view_includes, extension_names)
     errors.extend(bind_errors)
     warnings.extend(bind_warnings)
+    if kind == "WorldPackage":
+        warnings.extend(_containment_warnings(spec, local_asset_kinds, local_asset_docs, ews_fields))
+    for rel, k in sorted(local_asset_kinds.items()):
+        if k != "WorldViewProfile":
+            continue
+        if kind != "WorldPackage":
+            errors.append(f"view.world-ref: {rel}: a WorldViewProfile belongs to a WorldPackage, not a {kind}")
+            continue
+        errors.extend(_external_world_errors(rel, _spec_of(local_asset_docs.get(rel)), spec))
 
     if kind == "WorldModelPackage":
         if "ModelArtifact" not in asset_kinds:
@@ -643,8 +712,8 @@ def is_owp_document(doc: Any) -> bool:
 def package_documents(root: Path, skip: set[str] = frozenset()) -> Iterator[tuple[str, Any]]:
     """Every YAML file that asset discovery reads (spec section 5), with its parsed content or the parse error.
 
-    Discovery skips owp.yaml, the paths in skip, path components that start with '.', the directories that
-    packing ignores, and subdirectories that hold their own owp.yaml (a nested package).
+    Discovery skips owp.yaml, the paths in skip, path components that start with '.', files that are not
+    package files (see package_files), and subdirectories that hold their own owp.yaml (a nested package).
     """
     nested = [p.parent.relative_to(root).parts for p in root.rglob(MANIFEST) if p.parent != root]
     for path in package_files(root):
@@ -690,6 +759,12 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 
 
 def package_files(root: Path) -> list[Path]:
+    """The files a package consists of: what discovery reads and ontle pack archives.
+
+    Build and tooling directories, operating-system metadata, archives, and paths that .owpignore excludes
+    are not package files. owp.yaml always is.
+    """
+    rules = load_ignore(root)
     ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "node_modules",
                      "dist", "build", ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
     files: list[Path] = []
@@ -700,6 +775,8 @@ def package_files(root: Path) -> list[Path]:
         if any(part in ignored_parts for part in rel.parts):
             continue
         if p.name.endswith(".owp.zip"):
+            continue
+        if rel.as_posix() != MANIFEST and is_ignored(rules, rel.as_posix()):
             continue
         files.append(p)
     return sorted(files, key=lambda p: p.relative_to(root).as_posix())
@@ -752,6 +829,8 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None, vendo
     output.parent.mkdir(parents=True, exist_ok=True)
 
     files = package_files(root)
+    if load_ignore(root):
+        _check_packed_files(root, files)
     extra: dict[str, bytes] = {}
     vendored: dict[str, str] = {}
     if vendor:
@@ -780,6 +859,18 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None, vendo
         zi.external_attr = (0o644 & 0xFFFF) << 16
         zf.writestr(zi, lock_bytes)
     return output
+
+
+def _check_packed_files(root: Path, files: list[Path]) -> None:
+    """The package as archived, without the files .owpignore excludes, must still be valid (a manifest or asset may refer to one)."""
+    with tempfile.TemporaryDirectory() as td:
+        for p in files:
+            dest = Path(td) / p.relative_to(root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(p.read_bytes())
+        result = validate_package(td)
+    if not result.valid:
+        raise OWPError(f"package is invalid without the files {IGNORE_FILE} excludes: " + "; ".join(result.errors))
 
 
 def _ensure_term_index(root: Path, manifest: dict[str, Any]) -> None:

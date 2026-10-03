@@ -152,7 +152,7 @@ const standard = (spec: Record<string, Shape>): Shape => closed({ ...leaves("api
 
 /** schemas/world-view-profile.schema.json */
 export const WORLD_VIEW_PROFILE: Shape = standard({
-  ...leaves("worldRef", "specializes", "constraints", "evidenceRefs"), // specializes, constraints, evidenceRefs: experimental
+  ...leaves("externalWorldRefs", "specializes", "constraints", "evidenceRefs"), // specializes, constraints, evidenceRefs: experimental
   purpose: closed(leaves("task", "actorScope", "objective", "actorRef", "roleRef", "taskRef")), // *Ref: experimental
   projection: closed(leaves("include", "exclude", "principle")),
   conditioning: closed(leaves("authorityScope", "timeScope", "scale", "resolution")),

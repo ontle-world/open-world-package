@@ -11,7 +11,7 @@ fs.rmSync(out, { recursive: true, force: true });
 const expected = {};
 
 const AV = "openworld/v1alpha1";
-const view = (worldRef = "probe/w@0.1.0") => ({ apiVersion: AV, kind: "WorldViewProfile", metadata: { name: "v" }, spec: { worldRef } });
+const view = () => ({ apiVersion: AV, kind: "WorldViewProfile", metadata: { name: "v" }, spec: {} });
 const compiler = (worldViewRef = "views/task.yaml", extra = {}) => ({
   apiVersion: AV, kind: "StateCompilerProfile", metadata: { name: "c" },
   spec: { worldViewRef, outputContract: "EffectiveWorldState", outputSchema: { fields: ["e.s"] }, ...extra },
@@ -113,8 +113,8 @@ probe("p-baseline-stateful", { "owp.yaml": worldManifest(), ...worldFiles() }, {
 probe("p-legacy-package-yaml", { "owp.yaml": worldManifest(), ...worldFiles(), "package.yaml": "name: legacy\n" }, { valid: false, satisfiedProfile: "model-ready", rule: "legacy manifest name next to owp.yaml (spec 8; names not listed)" });
 probe("p-second-manifest-owp-yml", { "owp.yaml": worldManifest(), ...worldFiles(), "owp.yml": stringify(worldManifest()) }, { valid: false, satisfiedProfile: "model-ready", rule: "owp.yml is not a manifest; with an OWP apiVersion and a package kind it is a document of no asset kind (asset.kind, spec 5)" });
 probe("p-missing-human-card", { "owp.yaml": worldManifest(), "views/task.yaml": view(), "state/task.yaml": compiler() }, { valid: false, satisfiedProfile: "model-ready", rule: "required human card (spec 8)" });
-probe("p-namespace-with-slash", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "a/b", name: "w", version: "0.1.0" } }, ...worldFiles(), "views/task.yaml": view("self") }, { valid: false, satisfiedProfile: "model-ready", rule: "identity <namespace>/<name>@<version> must be unambiguous (not stated in spec)" });
-probe("p-version-not-semver", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "1.0" } }, ...worldFiles(), "views/task.yaml": view("self") }, { valid: false, satisfiedProfile: "model-ready", rule: "Version uses SemVer (spec 2)" });
+probe("p-namespace-with-slash", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "a/b", name: "w", version: "0.1.0" } }, ...worldFiles(), "views/task.yaml": view() }, { valid: false, satisfiedProfile: "model-ready", rule: "identity <namespace>/<name>@<version> must be unambiguous (not stated in spec)" });
+probe("p-version-not-semver", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "1.0" } }, ...worldFiles(), "views/task.yaml": view() }, { valid: false, satisfiedProfile: "model-ready", rule: "Version uses SemVer (spec 2)" });
 probe("p-ontology-minimal", { "owp.yaml": { apiVersion: AV, kind: "OntologyPackage", metadata: { namespace: "probe", name: "o", version: "0.1.0" }, spec: {} }, "ONTOLOGY.md": "# O\n" }, { valid: false, rule: "Appendix A ontology.spec: OntologyPackage requires spec.ontology (round 3)" });
 
 // --- Section 5/8: assets ---
@@ -137,18 +137,10 @@ probe("p-unknown-asset-kind", { "owp.yaml": worldManifest({}, {}, [
 probe("p-asset-path-and-ref", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "ModelArtifact", path: "views/task.yaml", ref: { provider: "hf" } }]), ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "asset has exactly one of path/ref (schema oneOf)" });
-probe("p-untyped-view-file", { "owp.yaml": worldManifest(), ...worldFiles(), "views/task.yaml": { spec: { worldRef: "probe/w@0.1.0" } } },
+probe("p-untyped-view-file", { "owp.yaml": worldManifest(), ...worldFiles(), "views/task.yaml": { spec: {} } },
   { valid: false, satisfiedProfile: "descriptive", rule: "a file without an OWP apiVersion is not an asset, so defaultView names no View (spec 5)" });
 
 // --- Section 6.1: profiles ---
-probe("p-descriptive-worlddefinition-asset", { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: "probe", name: "w", version: "0.1.0" },
-  spec: { world: { description: "WORLD.md" }, assets: [{ kind: "WorldDefinition", path: "semantics/def.yaml" }] } }, "WORLD.md": "# W\n",
-  "semantics/def.yaml": { apiVersion: AV, kind: "WorldDefinition", metadata: { name: "d" }, spec: {} } },
-  { valid: true, satisfiedProfile: "descriptive", rule: "descriptive via WorldDefinition asset" });
-probe("p-descriptive-no-world-key", { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: "probe", name: "w", version: "0.1.0" },
-  spec: { assets: [{ kind: "WorldDefinition", path: "semantics/def.yaml" }] } }, "WORLD.md": "# W\n",
-  "semantics/def.yaml": { apiVersion: AV, kind: "WorldDefinition", metadata: { name: "d" }, spec: {} } },
-  { valid: false, satisfiedProfile: "descriptive", rule: "spec.world required by schema even when WorldDefinition asset satisfies descriptive (conflict)" });
 probe("p-conformance-without-profile", { "owp.yaml": worldManifest({ conformance: {} }), ...worldFiles() }, { valid: true, satisfiedProfile: "model-ready", rule: "conformance: {} treated as descriptive (unspecified)" });
 probe("p-descriptive-with-broken-default-view", { "owp.yaml": worldManifest({ conformance: { profile: "descriptive" } }, { defaultView: "views/missing.yaml" }), ...worldFiles() },
   { valid: true, satisfiedProfile: "descriptive", rule: "requirements of higher profiles are not checked when not declared" });
@@ -156,8 +148,6 @@ probe("p-default-view-not-listed", { "owp.yaml": worldManifest({ conformance: { 
   { valid: true, satisfiedProfile: "viewable", rule: "a View file is an asset without being listed (spec 5)" });
 probe("p-default-view-dotslash", { "owp.yaml": worldManifest({}, { defaultView: "./views/task.yaml" }), ...worldFiles() },
   { valid: false, satisfiedProfile: "descriptive", rule: "paths are exact strings, no leading ./ (spec 3, round 3)" });
-probe("p-view-worldref-not-a-ref", { "owp.yaml": worldManifest(), ...worldFiles(), "views/task.yaml": view("anything") },
-  { valid: false, satisfiedProfile: "descriptive", rule: "View worldRef must be self or the package identity (spec 6.1 revised)" });
 probe("p-second-compiler-unknown-view", { "owp.yaml": worldManifest({}, {}, [
   { kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }, { kind: "StateCompilerProfile", path: "state/other.yaml" }]),
   ...worldFiles(), "state/other.yaml": compiler("views/missing.yaml") },
@@ -224,7 +214,7 @@ const ewsWorld = (compilerSpecOver = {}, id = "probe/ews@0.1.0") => {
         conformance: { profile: "model-ready" },
         assets: [{ kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task-compiler.yaml" }] } },
     "WORLD.md": "# EWS probe\n",
-    "views/task.yaml": { apiVersion: AV, kind: "WorldViewProfile", metadata: { name: "v" }, spec: { worldRef: "self" } },
+    "views/task.yaml": { apiVersion: AV, kind: "WorldViewProfile", metadata: { name: "v" }, spec: {} },
     "state/task-compiler.yaml": { apiVersion: AV, kind: "StateCompilerProfile", metadata: { name: "c" },
       spec: { worldViewRef: "views/task.yaml", outputContract: "EffectiveWorldState", outputSchema: { fields: wfFields },
         bindings: { "a.latest": { from: "sensor.a", value: "v", select: "latest" }, "b.all": { from: "sensor.b", value: "v", select: "all" } },
@@ -255,8 +245,8 @@ probe("p2-package-example-unparseable", { "owp.yaml": worldManifest({}, {}, [
   { valid: false, satisfiedProfile: "model-ready", rule: "PackageExample YAML must parse (spec 8; was: not parsed)" });
 probe("p2-dependency-range", { "owp.yaml": { ...worldManifest(), spec: { ...worldManifest().spec, dependencies: ["probe/base@^1.0.0"] } }, ...worldFiles() },
   { valid: false, satisfiedProfile: "model-ready", rule: "ranges are not allowed in spec.dependencies (checked without --resolve in this impl)" });
-probe("p2-identity-invalid-but-view-matches", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "0.1" } }, ...worldFiles(), "views/task.yaml": view("probe/w@0.1") },
-  { valid: false, satisfiedProfile: "model-ready", rule: "View worldRef compared with the raw identity even when version is not SemVer (unspecified)" });
+probe("p2-identity-invalid-but-view-matches", { "owp.yaml": { ...worldManifest(), metadata: { namespace: "probe", name: "w", version: "0.1" } }, ...worldFiles(), "views/task.yaml": view() },
+  { valid: false, satisfiedProfile: "model-ready", rule: "an invalid version does not stop the profile checks (unspecified)" });
 
 // ---- resolution probes
 const resWorld = (id, extraSpec = {}) => {
@@ -264,7 +254,7 @@ const resWorld = (id, extraSpec = {}) => {
   return { "owp.yaml": { apiVersion: AV, kind: "WorldPackage", metadata: { namespace: ns, name, version },
       spec: { world: { description: "WORLD.md", definition: "d", defaultView: "views/task.yaml", defaultStateCompiler: "state/task.yaml" },
         conformance: { profile: "stateful" }, assets: [{ kind: "WorldViewProfile", path: "views/task.yaml" }, { kind: "StateCompilerProfile", path: "state/task.yaml" }], ...extraSpec } },
-    "WORLD.md": "# w\n", "views/task.yaml": view("self"), "state/task.yaml": compiler() };
+    "WORLD.md": "# w\n", "views/task.yaml": view(), "state/task.yaml": compiler() };
 };
 const resModel = (deps, sgOver = {}) => {
   const m = modelManifest({}, undefined, sgOver);
@@ -294,7 +284,7 @@ rprobe("r-root-other-version", resModel([G, "probe/m@0.2.0"]), {
   { valid: false, rule: "the root's own name at another version is a conflict (is the root part of the closure?)" });
 rprobe("r-deep-three-levels", resModel([G]), prefixed("a/b/c/world", resWorld(G)), { valid: false, rule: "directory sources scan at most two levels below" });
 rprobe("r-two-levels", resModel([G]), prefixed("a/world", resWorld(G)), { valid: true, rule: "packages two levels below the source are found" });
-rprobe("r-mapping-source", (() => { const r = resModel([{ ref: G, source: "../elsewhere" }]); r["../elsewhere/world/owp.yaml"] = resWorld(G)["owp.yaml"]; r["../elsewhere/world/WORLD.md"] = "# w\n"; r["../elsewhere/world/views/task.yaml"] = view("self"); r["../elsewhere/world/state/task.yaml"] = compiler(); return r; })(), {},
+rprobe("r-mapping-source", (() => { const r = resModel([{ ref: G, source: "../elsewhere" }]); r["../elsewhere/world/owp.yaml"] = resWorld(G)["owp.yaml"]; r["../elsewhere/world/WORLD.md"] = "# w\n"; r["../elsewhere/world/views/task.yaml"] = view(); r["../elsewhere/world/state/task.yaml"] = compiler(); return r; })(), {},
   { valid: true, rule: "{ref, source} relative source resolved against the declaring package directory (unspecified)" });
 rprobe("r-transitive-model-bad", resModel([G, "probe/m2@0.1.0"]), {
   ...prefixed("world", resWorld(G)),

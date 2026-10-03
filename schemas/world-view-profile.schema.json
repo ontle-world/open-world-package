@@ -35,8 +35,12 @@
     "spec": {
       "type": "object",
       "properties": {
-        "worldRef": {
-          "type": "string"
+        "externalWorldRefs": {
+          "type": "array",
+          "description": "Other Worlds this View reads (spec section 6): exact package references, each also listed in spec.dependencies.",
+          "items": {
+            "type": "string"
+          }
         },
         "specializes": {
           "type": "string"
@@ -129,10 +133,7 @@
           "$ref": "#/$defs/extensions"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "worldRef"
-      ]
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

@@ -239,6 +239,9 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
       for (const v of values(s.roles)) c.value(v, "knowledgeRoles", "spec.roles");
       if ("representation" in s) c.value(s.representation, "knowledgeRepresentations", "spec.representation");
       const ontology = sub(s, "conformsTo").ontology;
+      if ((ontology === undefined || ontology === null) && s.representation === "graph") {
+        c.warn("experimental.graph-ontology", "a graph KnowledgeAsset is an A-box; declare the OntologyPackage that is its T-box in spec.conformsTo.ontology");
+      }
       if (ontology !== undefined && ontology !== null) {
         const deps = Array.isArray(manifestSpec.dependencies) ? manifestSpec.dependencies : [];
         if (!deps.some((d) => (isObj(d) ? d.ref : d) === ontology)) {
@@ -375,7 +378,7 @@ function localDocs(ctx: Context): Map<string, unknown> {
   return m;
 }
 
-function localKinds(ctx: Context): Map<string, string> {
+export function localKinds(ctx: Context): Map<string, string> {
   const m = new Map<string, string>();
   for (const a of ctx.localAssets) if (!m.has(a.rawPath)) m.set(a.rawPath, a.kind);
   return m;

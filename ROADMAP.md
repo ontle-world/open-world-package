@@ -12,7 +12,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 190 validation, 27 resolution, 21 EWS compile, 17 EWS check, 12 extraction cases.
+- Conformance suite: 195 validation, 29 resolution, 21 EWS compile, 17 EWS check, 12 extraction cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
 ## 1. Release 0.2.0a3
@@ -69,4 +69,5 @@ Namespace ownership, search, evidence aggregation, and certification scopes need
 
 - Evaluation execution, failure triage, evaluation generation, and promotion workflows (runtime and registry concerns; their outputs re-enter OWP as new versions and evidence).
 - Runtime execution, connectors, and transactional commit handling.
+- Runtime contexts built from EWS (an actor's current context, the operational or decision context) and the product surfaces that present them, such as a WorldView board.
 - Model weight or checkpoint formats.

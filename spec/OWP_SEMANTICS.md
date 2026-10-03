@@ -30,6 +30,8 @@ spec:
 - `termIndex` names an `OntologyTermIndex` document inside the package (`schemas/ontology-term-index.schema.json`) listing term IRIs with a type (`class`, `property`, `individual`, `datatype`, `concept`). The reference CLI writes it with `ontle ontology index`, and `ontle pack` writes it when it is required and missing and the optional RDF tooling is installed.
 - Validation reads only the manifest, OWP YAML documents, and file existence. RDF, LinkML, and SSSOM content is not parsed for validity, so every implementation reaches the same verdict. Tooling may check that content and report it separately.
 
+**T-box and A-box.** An OntologyPackage holds the T-box: classes, properties, relations, and the constraints on them. Facts about individual things (this lot, that machine) are an A-box and belong in a World package, as a graph KnowledgeAsset that names its OntologyPackage in `spec.conformsTo.ontology` (Appendix C), or as observations. A term index MAY list `individual` terms only for fixed members of the vocabulary itself, such as enumeration values.
+
 The terms an ontology defines are the expanded identifiers of its `owp-yaml` schema entrypoints (types, their properties, and relations) together with the terms in its `termIndex`.
 
 **Ontology conformance profiles.** An OntologyPackage MAY declare `spec.conformance`; when present, its `profile` MUST be one of the profiles below. Profiles are cumulative; when `spec.conformance` is absent, no profile is required, and a validator SHOULD still report the highest satisfied profile.

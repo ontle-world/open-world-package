@@ -24,7 +24,7 @@ rules:
   eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierPackage assets share metadata.name"}
   asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
-  asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist"}
+  asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist or is excluded by .owpignore"}
   standard.binding: {severity: error, section: "5.3", summary: "malformed spec.standardBindings: not a mapping, an entry without standard, terms not a mapping of strings, an empty license, or neither ref nor terms"}
   standard.unpinned: {severity: error, section: "5.3", summary: "a bound ref in a standard binding is not pinned"}
   standard.license: {severity: error, section: "5.3", summary: "a standard binding binds an artifact without license"}
@@ -32,9 +32,10 @@ rules:
   asset.api-version: {severity: error, section: "5", summary: "a discovered OWP document's apiVersion differs from the manifest's"}
   world.spec: {severity: error, section: "6.1", summary: "WorldPackage without spec.world"}
   profile.unknown: {severity: error, section: "3.1, 6.1", summary: "undefined spec.conformance.profile for the package kind"}
-  profile.descriptive: {severity: error, section: "6.1", summary: "no definition and no WorldDefinition asset"}
+  profile.descriptive: {severity: error, section: "6.1", summary: "no spec.world.definition"}
   profile.viewable: {severity: error, section: "6.1", summary: "no View, no defaultView, or defaultView not a local View"}
-  profile.viewable.world-ref: {severity: error, section: "6.1", summary: "default View worldRef is not self or the package identity"}
+  view.world-ref: {severity: error, section: "6", summary: "a WorldViewProfile in a package that is not a WorldPackage"}
+  view.external-world: {severity: error, section: "6", summary: "externalWorldRefs not a list, an entry not in spec.dependencies, a <world ref>#<name> include whose World it does not list, or (under resolution) an external World that is not a WorldPackage"}
   profile.stateful: {severity: error, section: "6.1", summary: "no State Compiler, no defaultStateCompiler, or it is not a local compiler"}
   profile.stateful.default-compiler-view: {severity: error, section: "6.1", summary: "default compiler does not compile defaultView"}
   profile.stateful.compiler-view: {severity: error, section: "6.1", summary: "a compiler's worldViewRef is not a local View"}
@@ -130,6 +131,10 @@ rules:
   eval.version-missing: {severity: warning, section: "9", summary: "EvaluationProfile or VerifierPackage without metadata.version"}
   asset.kind-unknown: {severity: warning, section: "8", summary: "external spec.assets entry kind without : outside the vocabulary"}
   asset.kind-experimental: {severity: warning, section: "8", summary: "vocabulary kind marked experimental"}
+  asset.kind-reserved: {severity: warning, section: "8", summary: "vocabulary kind marked reserved"}
+  view.outside-world: {severity: warning, section: "6", summary: "View projection.include name outside the declared spec.world.boundary.included of its World, or (under resolution) of the external World it names"}
+  compiler.field-outside-view: {severity: warning, section: "6", summary: "State Compiler field <entity>.<property> whose entity its View does not include"}
+  resolve.dependency-direction: {severity: warning, section: "11", summary: "dependency on a package kind above the dependent's place in the hierarchy"}
   manifest.conformance-ignored: {severity: warning, section: "3.1, 6.1", summary: "spec.conformance on a WorldModelPackage"}
   compiler.multi-latest: {severity: warning, section: "C.1", summary: "State Compiler binding reads a multi-valued extracted type with select: latest"}
   experimental.delegation-exceeds-authority: {severity: warning, section: "C.3", summary: "a delegation grants actions or decisions the delegator's roles do not hold"}
@@ -138,3 +143,4 @@ rules:
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
   experimental.value: {severity: warning, section: "C", summary: "value outside an experimental value set"}
   experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes cycle"}
+  experimental.graph-ontology: {severity: warning, section: "C", summary: "graph KnowledgeAsset without spec.conformsTo.ontology"}

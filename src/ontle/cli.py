@@ -118,6 +118,20 @@ def cmd_kg_extract(args):
     return 0
 
 
+def cmd_kg_check(args):
+    from .kgcheck import check_knowledge_graphs
+    report = check_knowledge_graphs(args.package, args.source)
+    for f in report.findings:
+        print(("WARN: " if f.code == "kg.untyped" else "ERROR: ") + f.line(), file=sys.stderr if f.code != "kg.untyped" else sys.stdout)
+    for rel in report.skipped:
+        print(f"SKIP: {rel}: not a local RDF graph with spec.conformsTo.ontology")
+    if not report.checked:
+        print("no knowledge graph to check")
+    elif report.ok:
+        print("OK: " + ", ".join(report.checked))
+    return 0 if report.ok else 1
+
+
 def cmd_fetch(args):
     from .distribution import fetch_package
     for path in fetch_package(args.path, args.into):
@@ -276,6 +290,11 @@ def build_parser():
     y.add_argument("--param", action="append", default=[], help="parameter value name=value (repeatable)")
     y.add_argument("--results", help="JSON file of query result rows; skips running the query")
     y.set_defaults(func=cmd_kg_extract)
+
+    y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges (needs the rdf extra)")
+    y.add_argument("package", nargs="?", default=".", help="package directory")
+    y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
+    y.set_defaults(func=cmd_kg_check)
 
     x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
     x.add_argument("path", nargs="?", default=".")

@@ -373,6 +373,55 @@ def cross_package_errors(resolution: Resolution) -> list[str]:
     return errors
 
 
+# Package kinds each kind may depend on: the hierarchy Ontology <- World <- World Model (spec section 11).
+DEPENDENCY_DIRECTIONS = {
+    "OntologyPackage": ("OntologyPackage",),
+    "WorldPackage": ("OntologyPackage", "WorldPackage"),
+    "WorldModelPackage": ("OntologyPackage", "WorldPackage", "WorldModelPackage"),
+}
+
+
+def external_world_issues(resolution: Resolution) -> tuple[list[str], list[str]]:
+    """Section 6: a View's external Worlds resolve to WorldPackages; names it takes from them are in their boundary."""
+    from .core import view_external_names
+    errors: list[str] = []
+    warnings: list[str] = []
+    for pkg in resolution.packages.values():
+        if pkg.kind != "WorldPackage":
+            continue
+        kinds, docs = pkg.local_assets()
+        for rel in sorted(r for r, k in kinds.items() if k == "WorldViewProfile"):
+            vspec = (docs.get(rel) or {}).get("spec") or {}
+            refs = vspec.get("externalWorldRefs") if isinstance(vspec.get("externalWorldRefs"), list) else []
+            for ref in refs:
+                target = resolution.packages.get(ref) if isinstance(ref, str) else None
+                if target is not None and target.kind != "WorldPackage":
+                    errors.append(f"view.external-world: {pkg.identity}: {rel}: external World {ref} resolves to a {target.kind}, not a WorldPackage")
+            for ref, name in view_external_names(vspec):
+                target = resolution.packages.get(ref)
+                world = ((target.manifest.get("spec") or {}).get("world") or {}) if target is not None and target.kind == "WorldPackage" else {}
+                included = (world.get("boundary") or {}).get("included") if isinstance(world.get("boundary"), dict) else None
+                if isinstance(included, list) and included and name not in included:
+                    warnings.append(f"view.outside-world: {pkg.identity}: {rel}: projection.include '{ref}#{name}' is not in that World's spec.world.boundary.included")
+    return errors, warnings
+
+
+def dependency_direction_warnings(resolution: Resolution) -> list[str]:
+    """Dependencies that point up the hierarchy. Extension dependencies (declared with `as`) are exempt."""
+    warnings: list[str] = []
+    for pkg in resolution.packages.values():
+        allowed = DEPENDENCY_DIRECTIONS.get(pkg.kind or "")
+        for dep in (pkg.manifest.get("spec") or {}).get("dependencies") or []:
+            if allowed is None or (isinstance(dep, dict) and "as" in dep):
+                continue
+            ref = dep if isinstance(dep, str) else dep.get("ref") if isinstance(dep, dict) else None
+            target = resolution.packages.get(ref) if isinstance(ref, str) else None
+            if target is not None and target.kind not in allowed:
+                warnings.append(f"resolve.dependency-direction: {pkg.identity} ({pkg.kind}) depends on {ref} ({target.kind}); "
+                                f"allowed for {pkg.kind}: {', '.join(allowed)}")
+    return warnings
+
+
 def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tuple[ValidationResult, Resolution]:
     """Validate a package, its resolved dependency closure, and the cross-package grounding rules."""
     result = validate_package(path)
@@ -386,6 +435,10 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
         if pkg is not resolution.root:
             errors += [f"resolve.dependency-invalid: {ident}: {e}" for e in validate_package(pkg.root).errors]
     errors += cross_package_errors(resolution)
+    warnings += dependency_direction_warnings(resolution)
+    ext_errors, ext_warnings = external_world_issues(resolution)
+    errors += ext_errors
+    warnings += ext_warnings
     return ValidationResult(not errors, errors, warnings, result.manifest), resolution
 
 

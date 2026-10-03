@@ -142,7 +142,7 @@ def init_project(name: str, namespace: str, template: str = "minimal", destinati
 def _skeleton_spec(kind: str, manifest: dict) -> dict:
     world = ((manifest or {}).get("spec") or {}).get("world") or {}
     if kind == "WorldViewProfile":
-        return {"worldRef": "self", "purpose": {"task": None, "actorScope": None, "objective": None},
+        return {"purpose": {"task": None, "actorScope": None, "objective": None},
                 "projection": {"include": [], "principle": "minimal_sufficient_representation"}}
     if kind == "StateCompilerProfile":
         return {"worldViewRef": world.get("defaultView"), "outputContract": "EffectiveWorldState",
@@ -208,7 +208,7 @@ def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None 
             raise OWPError("--specializes applies to WorldViewProfile only")
         if local_assets(root, manifest.get("spec") or {})[0].get(specializes) != "WorldViewProfile":
             raise OWPError(f"--specializes must name a local WorldViewProfile asset: {specializes}")
-        skeleton = {"worldRef": "self", "specializes": specializes, "purpose": {"actorScope": None},
+        skeleton = {"specializes": specializes, "purpose": {"actorScope": None},
                     "projection": {"include": [], "exclude": []}, "conditioning": {}}
 
     def blank(value):  # editors validate against the schemas: placeholders are empty strings, not null

@@ -85,7 +85,8 @@ More commands:
 ontle inspect . --graph --resolved-views
 ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension in owp.yaml
 
-# knowledge extraction (experimental; SPARQL needs the rdf extra)
+# knowledge graphs (experimental; needs the rdf extra)
+ontle kg check . --source ../ontologies      # does the graph (A-box) use only its ontology's (T-box) classes and properties?
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
 ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
 

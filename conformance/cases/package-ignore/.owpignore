@@ -1,0 +1,6 @@
+# Work in progress is not part of the package.
+drafts/
+*.wip.yaml
+/notes.yaml
+# A file inside an excluded directory cannot be re-included.
+!drafts/keep.yaml

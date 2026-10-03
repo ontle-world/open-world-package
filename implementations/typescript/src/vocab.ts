@@ -1,55 +1,56 @@
-export type Stability = "standard" | "experimental";
+export type Stability = "standard" | "experimental" | "reserved";
 
 /**
  * Asset kind vocabulary, copied from vocab/asset-kinds.yaml (public alpha): group -> kind -> stability.
  * scripts/check-vocab.mjs (run by `npm test`) checks that this table equals the YAML file.
  * Spec 8: the vocabulary is open. An unqualified kind outside it is a warning, a kind marked
- * experimental is a warning, and a kind containing ':' is an extension kind (spec 13).
+ * experimental or reserved is a warning, and a kind containing ':' is an extension kind (spec 13).
  * Group names are informative.
  */
 const S: Stability = "standard";
 const X: Stability = "experimental";
+const R: Stability = "reserved";
 export const ASSET_KINDS: Record<string, Record<string, Stability>> = {
-  semanticWorld: { SemanticProfile: S, OntologyTermIndex: S, WorldDefinition: S, WorldViewProfile: S, StateCompilerProfile: S },
+  semanticWorld: {
+    SemanticProfile: S,
+    OntologyTermIndex: S,
+    WorldViewProfile: S,
+    StateCompilerProfile: S,
+    SemanticBinding: S,
+  },
   interfaceIntegration: {
     SourceSystemSchemaProfile: S,
-    SourceAdapterProfile: S,
-    MappingSpec: S,
-    IdentityResolutionProfile: S,
+    SourceAdapterProfile: R,
+    IdentityResolutionProfile: R,
     ObservationAcquisitionProfile: S,
     ActionBindingProfile: S,
     CommitContract: S,
     EffectVerificationProfile: S,
   },
-  referenceProfiles: { ReferenceEnterpriseProfile: S, ReferenceIndustryProfile: S, ScenarioProfile: S, EnvironmentProfile: S },
+  referenceProfiles: { ReferenceEnterpriseProfile: R, ReferenceIndustryProfile: R, ScenarioProfile: S, EnvironmentProfile: S },
   modelRepresentation: {
-    WorldModelContract: S,
     ModelArtifact: S,
     RepresentationAdapterProfile: S,
-    ResolutionProfile: S,
-    AggregationCoarseGrainingProfile: S,
   },
   capabilityOperational: {
     CapabilityContract: S,
-    SkillProfile: S,
-    ToolProfile: S,
+    SkillProfile: R,
+    ToolProfile: R,
     AgentProfile: S,
-    WorkflowProfile: S,
-    OperationalAsset: S,
-    SemanticBinding: S,
+    WorkflowProfile: R,
+    OperationalAsset: R,
   },
   evaluationTestEvidence: {
     Dataset: S,
-    ReferenceFixture: S,
-    NegativeFixture: S,
-    BenchmarkCase: S,
-    AcceptanceCase: S,
-    Validator: S,
+    ReferenceFixture: R,
+    NegativeFixture: R,
+    BenchmarkCase: R,
+    AcceptanceCase: R,
     EvaluationProfile: S,
     VerifierPackage: S,
     CompatibilityEvidence: S,
   },
-  governancePublication: { Attestation: S },
+  governancePublication: { Attestation: R },
   taskWork: { TaskSetProfile: X, WorkPatternProfile: X },
   knowledge: { KnowledgeAsset: X, KnowledgeExtractionProfile: X },
   artifactRepresentation: { ArtifactContract: X, ArtifactTemplate: X, ConsumerRepresentationProfile: X },

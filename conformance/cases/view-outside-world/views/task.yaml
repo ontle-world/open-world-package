@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata:
+  name: task-view
+spec:
+  purpose:
+    task: fixture_task
+  projection:
+    include: [entity, gadget]

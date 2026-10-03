@@ -4,6 +4,7 @@ import { fileExists, isNonEmptyString, isObj, isYamlPath, loadYamlFile, normaliz
 import { EXTENSION_KIND_RE } from "../structure.js";
 import { externalRefProblems } from "./externalref.js";
 import { ASSET_KIND_STABILITY } from "../vocab.js";
+import { IGNORE_FILE, isIgnored, loadIgnore } from "../ignore.js";
 import { DOCUMENT_KINDS, isOwpDocument, packageDocuments } from "../discovery.js";
 
 /**
@@ -13,6 +14,7 @@ import { DOCUMENT_KINDS, isOwpDocument, packageDocuments } from "../discovery.js
 export function collectAssets(ctx: Context): void {
   const spec = ctx.manifest.spec;
   const experimentalKinds = new Map<string, number>();
+  const reservedKinds = new Map<string, number>();
   /** Kind rules shared by manifest entries and discovered files; false when the kind cannot be used. */
   const kindOk = (kind: string, where: string, file: string, discovered: boolean): boolean => {
     // A kind containing ':' is an extension kind (spec 13.3).
@@ -32,8 +34,9 @@ export function collectAssets(ctx: Context): void {
         return false;
       }
       warn(ctx, "asset.kind-unknown", `${where} "${kind}" is not in the asset-kind vocabulary`, file);
-    } else if (ASSET_KIND_STABILITY.get(kind) === "experimental") {
-      experimentalKinds.set(kind, (experimentalKinds.get(kind) ?? 0) + 1);
+    } else if (ASSET_KIND_STABILITY.get(kind) !== "standard") {
+      const counts = ASSET_KIND_STABILITY.get(kind) === "experimental" ? experimentalKinds : reservedKinds;
+      counts.set(kind, (counts.get(kind) ?? 0) + 1);
     }
     return true;
   };
@@ -41,6 +44,7 @@ export function collectAssets(ctx: Context): void {
   const assets = isObj(spec) ? spec.assets : undefined;
   if (assets !== undefined && !Array.isArray(assets)) error(ctx, "asset.list", "spec.assets must be a list", "owp.yaml");
   const seen = new Map<string, number>();
+  const ignoreRules = loadIgnore(ctx.root);
   (Array.isArray(assets) ? assets : []).forEach((a, i) => {
     const where = `spec.assets[${i}]`;
     if (!isObj(a)) {
@@ -115,6 +119,10 @@ export function collectAssets(ctx: Context): void {
       error(ctx, "asset.missing-file", `${where}.path "${raw}" does not exist as a file in the package`, raw);
       return;
     }
+    if (isIgnored(ignoreRules, norm)) {
+      error(ctx, "asset.missing-file", `${where}.path "${raw}" is excluded by ${IGNORE_FILE}, so it is not a package file`, raw);
+      return;
+    }
     asset.exists = true;
     // Spec 8: a listed PackageExample must parse; it may hold any document, so its kind is not compared.
     if (!isYamlPath(raw)) return;
@@ -149,9 +157,12 @@ export function collectAssets(ctx: Context): void {
     ctx.localAssets.push({ index: -1, kind, rawPath: d.rel, path: d.rel, exists: true, doc });
   }
 
-  // One warning per experimental kind, with the number of assets that use it.
+  // One warning per experimental or reserved kind, with the number of assets that use it.
   for (const [kind, n] of experimentalKinds) {
     warn(ctx, "asset.kind-experimental", `asset kind ${kind} is experimental and may change or be removed (${n} asset${n > 1 ? "s" : ""})`, "owp.yaml");
+  }
+  for (const [kind, n] of reservedKinds) {
+    warn(ctx, "asset.kind-reserved", `asset kind ${kind} is reserved: it has no schema or rules yet (${n} asset${n > 1 ? "s" : ""})`, "owp.yaml");
   }
 }
 

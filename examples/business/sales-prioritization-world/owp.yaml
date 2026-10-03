@@ -13,7 +13,7 @@ spec:
     description: WORLD.md
     definition: Accounts, opportunities, sales activity, territories, quotas, and the priorities assigned to accounts.
     boundary:
-      included: [account, opportunity, activity, territory, quota, priority]
+      included: [account, opportunity, activity, territory, territory_assignment, quota, priority, global_pipeline]
       excluded: [complete_crm_implementation, pricing_engine]
     defaultView: views/account-manager.yaml
     defaultStateCompiler: state/account-priority-compiler.yaml

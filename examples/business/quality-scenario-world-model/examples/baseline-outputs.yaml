@@ -1,4 +1,8 @@
-scenario: openworld-examples/manufacturing-quality-world@0.1.0#scenarios/quality-hold.yaml
+inputs:
+  scenario: openworld-examples/manufacturing-quality-world@0.1.0#scenarios/quality-hold.yaml
+  ews: openworld-examples/manufacturing-quality-world@0.1.0#examples/expected-ews.yaml
+  observations: openworld-examples/manufacturing-quality-world@0.1.0#examples/observations.yaml
+  stateCompiler: openworld-examples/manufacturing-quality-world@0.1.0#state/quality-incident-compiler.yaml
 asOf: '2026-09-05T00:00:00Z'
 results:
 - model: persistence

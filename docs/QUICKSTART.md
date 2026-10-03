@@ -78,7 +78,7 @@ ontle new StateCompilerProfile state/sales-manager.yaml
 ontle pack .
 ```
 
-The default artifact is written under `dist/` as `*.owp.zip` and includes an `owp.lock.json` with content hashes. `ontle pack . --list` prints the archived paths. Paths that start with `.` (`.env`, `.git`, `.ontle`) and `dist/` are never packed; exclude anything else with `.owpignore`.
+The default artifact is written under `dist/` as `*.owp.zip` and includes an `owp.lock.json` with content hashes. `ontle pack . --list` previews the files an archive would contain, without writing it. Paths that start with `.` (`.env`, `.git`, `.ontle`) and `dist/` are never packed; exclude anything else with `.owpignore`.
 
 Verify it:
 
@@ -87,7 +87,7 @@ ontle verify dist/<artifact>.owp.zip
 ```
 
 
-## 6. Create an Ontology or World Model package
+## 6. Create an Ontology package
 
 ```bash
 ontle init enterprise-core --template ontology --namespace example

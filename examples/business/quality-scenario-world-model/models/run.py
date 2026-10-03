@@ -47,8 +47,8 @@ def load(path: Path) -> dict[str, Any]:
 
 
 def inputs(world: Path | None, scenario_path: Path | None, ews_path: Path | None,
-           observations_path: Path | None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any] | None, str]:
-    """(EWS spec, scenario spec, observations, State Compiler spec or None, scenario label)."""
+           observations_path: Path | None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any] | None, dict[str, Any]]:
+    """(EWS spec, scenario spec, observations, State Compiler spec or None, the files used)."""
     if world is None and not (scenario_path and ews_path):
         world = DEFAULT_WORLD
     scenario_file = scenario_path or world / SCENARIO
@@ -56,13 +56,28 @@ def inputs(world: Path | None, scenario_path: Path | None, ews_path: Path | None
     if ews_path is None and world is None:
         raise SystemExit("give --ews, or --world so the scenario's baselineStateRef can be read")
     ews = load(ews_path or world / scenario["baselineStateRef"])["spec"]
-    compiler = None
+    compiler, compiler_file = None, None
     if world is not None and (world / ews["stateCompiler"].partition("#")[2]).is_file():
-        compiler = load(world / ews["stateCompiler"].partition("#")[2])["spec"]
+        compiler_file = world / ews["stateCompiler"].partition("#")[2]
+        compiler = load(compiler_file)["spec"]
     obs_file = observations_path or (world / OBSERVATIONS if world is not None else None)
-    observations = load(obs_file) if obs_file is not None and obs_file.is_file() else {}
-    label = f"{DEFAULT_WORLD_REF}#{SCENARIO}" if scenario_path is None and world == DEFAULT_WORLD else str(scenario_file)
-    return ews, scenario, observations, compiler, label
+    if obs_file is not None and not obs_file.is_file():
+        obs_file = None
+    observations = load(obs_file) if obs_file is not None else {}
+    default = world == DEFAULT_WORLD
+
+    def shown(p: Path | None) -> str | None:
+        if p is None:
+            return None
+        return f"{DEFAULT_WORLD_REF}#{p.relative_to(DEFAULT_WORLD).as_posix()}" if default and p.is_relative_to(DEFAULT_WORLD) else str(p)
+
+    used = {"scenario": shown(scenario_file), "ews": shown(ews_path or world / scenario["baselineStateRef"]),
+            "observations": shown(obs_file), "stateCompiler": shown(compiler_file)}
+    bound = {(b or {}).get("from") for b in ((compiler or {}).get("bindings") or {}).values() if isinstance(b, dict)}
+    types = {o.get("type") for o in (observations.get("spec") or {}).get("observations") or []}
+    if compiler is not None and types and not types & bound:
+        print(f"warning: no observation in {obs_file} has a type the State Compiler binds", file=sys.stderr)
+    return ews, scenario, observations, compiler, used
 
 
 def ranges(scenario: dict[str, Any]) -> dict[str, dict[str, float]]:
@@ -168,7 +183,12 @@ def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str
             "at_horizon": {s: round(p, 3) for s, p in zip(states, dist) if round(p, 3)},
             "observed_transitions": sum(map(sum, counts)),
         }
-    return answer("markov", predicted_transition=result,
+    note = None
+    if steps == 0:
+        note = f"the scenario horizon is shorter than one step ({params['step']}); nothing to predict"
+    elif not result:
+        note = "markov-transitions.yaml names none of this EWS's fields; give it a matrix per status field"
+    return answer("markov", predicted_transition=result, note=note,
                   uncertainty={"method": "markov_chain", "step": params["step"], "steps": steps,
                                "matrix": f"{params['source']} prior (strength {params['strength']}) updated with observed daily transitions"})
 
@@ -371,12 +391,12 @@ def main() -> int:
     names = (list(BASELINES) if args.baselines else []) + [m for m in args.model if not (args.baselines and m in BASELINES)]
     if not names and not args.entrypoint:
         ap.error("give --baselines, --model, or --entrypoint")
-    ews, scenario, observations, compiler, label = inputs(args.world, args.scenario, args.ews, args.observations)
+    ews, scenario, observations, compiler, used = inputs(args.world, args.scenario, args.ews, args.observations)
     results = [MODELS[n](ews, scenario, observations, compiler) for n in names]
     for spec in args.entrypoint:
         raw = load_entrypoint(spec)(ews, scenario, observations, compiler)
         results.append(answer(spec, **{k: v for k, v in (raw or {}).items() if k not in ("model", "provides")}))
-    out: dict[str, Any] = {"scenario": label, "asOf": (ews.get("context") or {}).get("asOf"), "results": results}
+    out: dict[str, Any] = {"inputs": used, "asOf": (ews.get("context") or {}).get("asOf"), "results": results}
     if args.evaluate:
         out["evaluation"] = evaluate(results, scenario, load(args.evaluate).get("spec") or {})
     sys.stdout.write(yaml.dump(out, Dumper=NoAliases, sort_keys=False, allow_unicode=True, width=120))

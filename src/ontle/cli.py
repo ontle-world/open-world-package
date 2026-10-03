@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 from . import __version__
-from .core import OWPError, deterministic_pack, inspect_package, load_manifest, validate_package, verify_archive
+from .core import OWPError, deterministic_pack, inspect_package, load_manifest, package_files, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
 from .resolve import ews_jsonld, resolve_package, validate_resolved
@@ -33,7 +33,10 @@ def cmd_validate(args):
             # Check the cross-package rules too when every dependency can be found; otherwise say what was skipped.
             full, resolution = validate_resolved(args.path, args.source + project_sources(args.path))
             missing = [e.split("cannot resolve ", 1)[-1] for e in full.errors if e.startswith(("resolve.unresolved", "resolve.reference"))]
-            if missing:
+            if any("the version differs" in m for m in missing):  # the package is there; spec.dependencies names another version
+                notes.append(f"WARN: dependencies not resolved: {'; '.join(missing)}. Fix the version in spec.dependencies "
+                             "(and semanticGrounding); grounding was not checked.")
+            elif missing:
                 notes.append(f"NOTE: checked this package only; dependencies not found: {', '.join(missing)}. "
                              "Grounding and other cross-package rules were not checked: pass --source <dir|zip> or set ONTLE_PATH.")
             else:
@@ -234,12 +237,14 @@ def cmd_inspect(args):
 
 
 def cmd_pack(args):
+    if args.list:  # preview only: nothing is written
+        root = load_manifest(args.path)[0]
+        for f in package_files(root):
+            print(f.relative_to(root).as_posix())
+        return 0
     out = deterministic_pack(args.path, args.output, vendor=args.vendor)
     with zipfile.ZipFile(out) as z:
         names = z.namelist()
-    if args.list:
-        for name in names:
-            print(f"  {name}", file=sys.stderr)
     print(f"{len(names)} files", file=sys.stderr)
     print(out)  # stdout is the archive path alone, for scripts
     return 0
@@ -349,7 +354,7 @@ def build_parser():
     x.add_argument("path", nargs="?", default=".")
     x.add_argument("--output")
     x.add_argument("--vendor", action="store_true", help="include pinned https external content in the archive (spec section 7)")
-    x.add_argument("--list", action="store_true", help="print the archived file paths")
+    x.add_argument("--list", action="store_true", help="print the files the archive would contain, without writing it")
     x.set_defaults(func=cmd_pack)
 
     x = sp.add_parser("verify", help="verify hashes inside an .owp.zip archive")

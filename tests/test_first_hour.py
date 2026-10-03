@@ -59,6 +59,24 @@ class FirstHourTests(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertIn("NOTE: checked this package only; dependencies not found: acme/w@0.1.0", r.stdout)
 
+    def test_validate_names_a_version_mismatch(self):
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            init_project("w", "acme", "minimal", d / "w")
+            init_project("m", "acme", "worldmodel", d / "m", world=str(d / "w"))
+            manifest = d / "m" / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("acme/w@0.1.0", "acme/w@0.2.0"), encoding="utf-8")
+            r = cli("validate", "m", cwd=d)
+            self.assertIn("WARN: dependencies not resolved: acme/w@0.2.0 (found acme/w@0.1.0: the version differs)", r.stdout)
+
+    def test_pack_list_previews_without_writing(self):
+        with tempfile.TemporaryDirectory() as td:
+            init_project("w", "acme", "minimal", Path(td) / "w")
+            r = cli("pack", "w", "--list", cwd=Path(td))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("examples/observations.yaml", r.stdout.split())
+            self.assertFalse((Path(td) / "w" / "dist").exists())
+
     def test_init_grounds_a_world_model_in_a_chosen_view(self):
         with tempfile.TemporaryDirectory() as td:
             d = Path(td)

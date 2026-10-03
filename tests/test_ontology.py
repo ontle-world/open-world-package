@@ -50,6 +50,16 @@ class OntologyTests(unittest.TestCase):
             self.assertEqual(len(a), len(b))
             self.assertGreater(len(a), 0)
 
+    def test_export_keeps_subclasses(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "onto"
+            shutil.copytree(EXAMPLE, root)
+            core = root / "semantics" / "core.yaml"
+            core.write_text(core.read_text(encoding="utf-8").replace("  relations:", "  - {id: q:CustomerClaim, subClassOf: [q:Claim]}\n  relations:"), encoding="utf-8")
+            manifest = yaml.safe_load((root / "owp.yaml").read_text(encoding="utf-8"))
+            turtle = export_rdf(root, manifest, "turtle")
+        self.assertIn("<https://w3id.org/openworld-examples/quality#CustomerClaim> rdfs:subClassOf <https://w3id.org/openworld-examples/quality#Claim> .", turtle)
+
     @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
     def test_pack_generates_missing_term_index_for_rdf_schema(self):
         with tempfile.TemporaryDirectory() as td:
@@ -95,6 +105,35 @@ class KnowledgeExtractionTests(unittest.TestCase):
         other = run_extraction(world, "extraction/claim-context.yaml", {"claimId": "C-207"})
         self.assertEqual([o["values"] for o in other["spec"]["observations"] if o["type"] == "KG.equipment_part"],
                          [{"part": "https://w3id.org/openworld-examples/plant#die-8"}])
+
+
+class KnowledgeGraphCheckTests(unittest.TestCase):
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_example_graph_follows_its_ontology(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        report = check_knowledge_graphs(ROOT / "examples" / "business" / "manufacturing-quality-world", [str(ROOT / "examples")])
+        self.assertEqual(report.checked, ["knowledge/plant-kg.yaml"])
+        self.assertEqual(report.findings, [])
+
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_graph_outside_its_ontology(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        with tempfile.TemporaryDirectory() as td:
+            world = Path(td) / "world"
+            shutil.copytree(ROOT / "examples" / "business" / "manufacturing-quality-world", world)
+            with (world / "kg" / "plant.ttl").open("a", encoding="utf-8") as f:
+                f.write("ex:x a q:Widget .\n"                       # class the ontology does not define
+                        "ex:lot-L-1 q:color \"red\" .\n"            # property the ontology does not define
+                        "ex:lot-L-1 q:affectsLot ex:lot-L-2 .\n"    # domain is q:Claim
+                        "ex:claim-102 q:affectsLot \"L-1\" .\n"     # range is q:Lot, not a literal
+                        "ex:claim-207 q:affectsLot ex:orphan .\n"   # object without a type
+                        "ex:claim-207 rdfs:seeAlso ex:x .\n")       # other vocabularies are not checked
+            text = (world / "kg" / "plant.ttl").read_text(encoding="utf-8")
+            (world / "kg" / "plant.ttl").write_text("@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n" + text, encoding="utf-8")
+            report = check_knowledge_graphs(world, [str(ROOT / "examples")])
+        self.assertEqual(sorted(f.code for f in report.findings),
+                         ["kg.domain", "kg.range", "kg.unknown-class", "kg.unknown-property", "kg.untyped"])
+        self.assertFalse(report.ok)
 
 
 if __name__ == "__main__":

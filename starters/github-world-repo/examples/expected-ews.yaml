@@ -1,0 +1,51 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: example/my-world@0.1.0
+  worldView: example/my-world@0.1.0#views/default.yaml
+  stateCompiler: example/my-world@0.1.0#state/default-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    item.status:
+      item-1: active
+      item-2: blocked
+    item.events_24h:
+      item-2: 2
+      item-1: 1
+    item.attention:
+      item-2: needs_attention
+      item-1: normal
+  unresolved: {}
+  missing: []
+  provenance:
+    item.status:
+      item-1:
+      - s1
+      item-2:
+      - s3
+    item.events_24h:
+      item-2:
+      - e1
+      - e2
+      item-1:
+      - e3
+    item.attention:
+      item-2:
+      - e1
+      - e2
+      item-1:
+      - e3
+  derivation:
+    item.events_24h:
+      kind: aggregate
+      from: source.item_event
+      value: code
+      function: count
+      window: PT24H
+    item.attention:
+      kind: classify
+      input: item.events_24h
+      criterion:
+        id: attention-threshold
+        version: 0.1.0

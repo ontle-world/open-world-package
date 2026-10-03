@@ -9,13 +9,7 @@ spec:
     objective: task_defined
   projection:
     include:
-    - task_relevant_entities
-    - relations
-    - state
-    - observations
-    - constraints
-    - actions
-    - outcomes
+    - item
     principle: minimal_sufficient_representation
     timeScope: task_declared
     scale: task_declared

@@ -12,7 +12,7 @@ import { API_VERSION } from "./vocab.js";
 const USAGE = `usage:
   owp-validate [--json] [--resolve] [--source <src>]... <package-dir> [...]
   owp-validate ews check <ews.yaml> --world <world-dir> [--json]
-  owp-validate ews compile <world-dir> --compiler <path> --observations <file> [--observations <file> ...] --as-of <timestamp>
+  owp-validate ews compile <world-dir> [--compiler <path>] --observations <file> [--observations <file> ...] --as-of <timestamp>
   owp-validate evidence check <evidence.yaml> --package <archive.owp.zip> [--json]
 
 Package sources for --resolve: each --source (directory, *.owp.zip, git+<url>@<rev>[#subdir=<p>], index:<local PackageIndex>),
@@ -63,10 +63,12 @@ function ewsMain(args: string[], json: boolean): number {
     return r.valid ? 0 : 1;
   }
   if (sub === "compile") {
-    const compiler = takeOpt(args, "--compiler")[0];
     const obsFiles = takeOpt(args, "--observations", true);
     const asOf = takeOpt(args, "--as-of")[0];
     const world = args[0];
+    // Without --compiler, the World's default State Compiler (spec.world.defaultStateCompiler).
+    const manifest = world ? loadYamlFile(path.join(world, "owp.yaml")) : undefined;
+    const compiler = takeOpt(args, "--compiler")[0] ?? (manifest?.ok ? (get(manifest.value, "spec", "world", "defaultStateCompiler") as string | undefined) : undefined);
     if (!compiler || obsFiles.length === 0 || !asOf || !world) return usage();
     // Repeated --observations files are merged into one ObservationSet (duplicate ids stay invalid input).
     const docs = obsFiles.map((f) => loadYamlFile(f));
@@ -126,7 +128,16 @@ function main(argv: string[]): number {
   const results = args.map((d) => ({ package: d, ...(resolve ? validateWithResolution(d, { sources }) : validatePackage(d)) }));
   for (const r of results) allValid &&= r.valid;
   if (json) process.stdout.write(JSON.stringify(results.length === 1 ? results[0] : results, null, 2) + "\n");
-  else for (const r of results) printResult(r.package, r);
+  else {
+    for (const r of results) {
+      printResult(r.package, r);
+      const manifest = loadYamlFile(path.join(r.package, "owp.yaml"));
+      const deps = manifest.ok ? get(manifest.value, "spec", "dependencies") : undefined;
+      if (!resolve && r.valid && Array.isArray(deps) && deps.length > 0) {
+        process.stdout.write("  note    this package only; cross-package rules (grounding, dependency direction) need --resolve --source <dir|zip>\n");
+      }
+    }
+  }
   return allValid ? 0 : 1;
 }
 

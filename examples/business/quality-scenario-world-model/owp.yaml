@@ -29,3 +29,5 @@ spec:
   assets:
   - kind: PackageExample
     path: examples/baseline-outputs.yaml
+  - kind: PackageExample
+    path: examples/observed-outcome.yaml

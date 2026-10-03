@@ -36,20 +36,28 @@ World -> ERP/MES/QMS/docs -> World Model/solver -> decision/action/eval
 Requires Python 3.11+ (tested on 3.11–3.14).
 
 ```bash
+python3 -m venv .venv && . .venv/bin/activate
 python -m pip install -e .
 
 ontle init my-world --namespace acme
 cd my-world
 
-# Start with WORLD.md and owp.yaml. Generated views/default.yaml and
-# state/default-compiler.yaml keep the World -> View -> EWS contract explicit.
+# The starter compiles: a View, a State Compiler, sample observations, and the EWS they give.
 ontle validate .
-ontle inspect .
-ontle pack .
-
+ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z
+ontle pack . --list
 ```
 
 The generated project contains only the authoring surface. `.ontle/` is generator-owned metadata and can be ignored by most users.
+
+### Where to go next
+
+| You want to | Read | Then try |
+|---|---|---|
+| Describe a World: what exists, what is observed, what state a task needs | [docs/QUICKSTART.md](docs/QUICKSTART.md), [docs/STATE_COMPILATION.md](docs/STATE_COMPILATION.md) | `examples/business/manufacturing-quality-world` |
+| Build or compare a World Model for a World | [docs/QUICKSTART.md §7](docs/QUICKSTART.md#7-create-a-world-model-package), [quality-scenario-world-model](examples/business/quality-scenario-world-model/WORLDMODEL.md) | `python examples/business/quality-scenario-world-model/models/run.py --baselines` |
+| Run packages in your own runtime | [docs/RUNTIME_INTEGRATION.md](docs/RUNTIME_INTEGRATION.md), [demos/](demos/) | `python demos/business-ai/run.py` |
+| Look up a term | [docs/CONCEPTS.md](docs/CONCEPTS.md), [docs/GLOSSARY.md](docs/GLOSSARY.md) | |
 
 ## Starter templates
 

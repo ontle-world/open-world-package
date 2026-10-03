@@ -4,10 +4,11 @@ import argparse
 import json
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 from . import __version__
-from .core import OWPError, deterministic_pack, inspect_package, load_manifest, validate_package, verify_archive
+from .core import OWPError, deterministic_pack, inspect_package, load_manifest, package_files, validate_package, verify_archive
 from .ews import check_ews, compile_ews, load_document
 from .ontology import export_rdf, write_term_index
 from .resolve import ews_jsonld, resolve_package, validate_resolved
@@ -16,21 +17,52 @@ from .yamlio import dump_yaml, load_yaml
 
 
 def cmd_init(args):
-    path = init_project(args.name, args.namespace, args.template, args.destination, args.world)
+    path = init_project(args.name, args.namespace, args.template, args.destination, args.world, args.view)
     print(path)
     return 0
 
 
 def cmd_validate(args):
-    result = validate_resolved(args.path, args.source)[0] if args.resolve else validate_package(args.path)
+    notes: list[str] = []
+    if args.resolve:
+        result = validate_resolved(args.path, args.source + project_sources(args.path))[0]
+    else:
+        result = validate_package(args.path)
+        deps = ((result.manifest or {}).get("spec") or {}).get("dependencies") or []
+        if result.valid and deps:
+            # Check the cross-package rules too when every dependency can be found; otherwise say what was skipped.
+            full, resolution = validate_resolved(args.path, args.source + project_sources(args.path))
+            missing = [e.split("cannot resolve ", 1)[-1] for e in full.errors if e.startswith(("resolve.unresolved", "resolve.reference"))]
+            if any("the version differs" in m for m in missing):  # the package is there; spec.dependencies names another version
+                notes.append(f"WARN: dependencies not resolved: {'; '.join(missing)}. Fix the version in spec.dependencies "
+                             "(and semanticGrounding); grounding was not checked.")
+            elif missing:
+                notes.append(f"NOTE: checked this package only; dependencies not found: {', '.join(missing)}. "
+                             "Grounding and other cross-package rules were not checked: pass --source <dir|zip> or set ONTLE_PATH.")
+            else:
+                result = full
+                n = len(resolution.packages) - 1
+                notes.append(f"NOTE: resolved {n} {'dependency' if n == 1 else 'dependencies'} and checked cross-package rules")
     for w in result.warnings:
         print(f"WARN: {w}")
     if result.valid:
+        for n in notes:
+            print(n)
         print("VALID")
         return 0
     for line in fold_errors(result.errors):
         print(line, file=sys.stderr)
     return 1
+
+
+def project_sources(path: str) -> list[str]:
+    """Package sources recorded by `ontle init --world` in .ontle/project.yaml, relative to the package root."""
+    state = Path(path) / ".ontle" / "project.yaml"
+    try:
+        data = load_yaml(state.read_text(encoding="utf-8")) or {}
+    except (OSError, ValueError):
+        return []
+    return [str((Path(path) / s).resolve()) for s in data.get("sources") or [] if isinstance(s, str)]
 
 
 def fold_errors(errors: list[str]) -> list[str]:
@@ -72,7 +104,13 @@ def cmd_ews_compile(args):
             merged = list((observations.get("spec") or {}).get("observations") or []) + list((doc.get("spec") or {}).get("observations") or [])
             observations = {**observations, "spec": {**(observations.get("spec") or {}), "observations": merged}}
             observations["spec"].pop("provenance", None)
-    ews = compile_ews(args.world, args.compiler, observations, args.as_of)
+    compiler = args.compiler
+    if compiler is None:
+        spec = (load_manifest(args.world)[1].get("spec") or {})
+        compiler = (spec.get("world") or {}).get("defaultStateCompiler")
+        if not isinstance(compiler, str):
+            raise OWPError("the World declares no spec.world.defaultStateCompiler; pass --compiler")
+    ews = compile_ews(args.world, compiler, observations, args.as_of)
     if args.jsonld:
         print(json.dumps(ews_jsonld(args.world, ews, args.source), indent=2, ensure_ascii=False))
         return 0
@@ -199,8 +237,16 @@ def cmd_inspect(args):
 
 
 def cmd_pack(args):
+    if args.list:  # preview only: nothing is written
+        root = load_manifest(args.path)[0]
+        for f in package_files(root):
+            print(f.relative_to(root).as_posix())
+        return 0
     out = deterministic_pack(args.path, args.output, vendor=args.vendor)
-    print(out)
+    with zipfile.ZipFile(out) as z:
+        names = z.namelist()
+    print(f"{len(names)} files", file=sys.stderr)
+    print(out)  # stdout is the archive path alone, for scripts
     return 0
 
 
@@ -242,11 +288,14 @@ def build_parser():
     x.add_argument("--destination")
     x.add_argument("--world", help="World Model templates: ground the model in this World (a package directory or "
                                     "<namespace>/<name>@<version>) and add it to spec.dependencies")
+    x.add_argument("--view", help="with --world: the World View to ground in (a path in the World); its State Compiler "
+                                   "is found by worldViewRef. Default: the World's defaultView")
     x.set_defaults(func=cmd_init)
 
     x = sp.add_parser("validate", help="validate an OWP project")
     x.add_argument("path", nargs="?", default=".")
-    x.add_argument("--resolve", action="store_true", help="also resolve dependencies and check cross-package grounding")
+    x.add_argument("--resolve", action="store_true", help="require dependencies to resolve (an unresolved one is an error); "
+                   "without it, cross-package rules are checked when every dependency is found, and skipped with a NOTE otherwise")
     x.add_argument("--source", action="append", default=[], help="package source: directory, .owp.zip, or git+<url>@<rev>[#subdir=<path>] (repeatable; ONTLE_PATH is also read)")
     x.set_defaults(func=cmd_validate)
 
@@ -259,8 +308,8 @@ def build_parser():
     esp = x.add_subparsers(dest="ews_command", required=True)
     y = esp.add_parser("compile", help="run a declarative State Compiler over an ObservationSet")
     y.add_argument("world", help="World package directory")
-    y.add_argument("--compiler", required=True, help="StateCompilerProfile asset path inside the World package")
-    y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file (repeatable; sets are merged)")
+    y.add_argument("--compiler", help="StateCompilerProfile path inside the World package (default: the World's defaultStateCompiler)")
+    y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file, relative to the current directory (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
@@ -305,6 +354,7 @@ def build_parser():
     x.add_argument("path", nargs="?", default=".")
     x.add_argument("--output")
     x.add_argument("--vendor", action="store_true", help="include pinned https external content in the archive (spec section 7)")
+    x.add_argument("--list", action="store_true", help="print the files the archive would contain, without writing it")
     x.set_defaults(func=cmd_pack)
 
     x = sp.add_parser("verify", help="verify hashes inside an .owp.zip archive")

@@ -10,7 +10,7 @@ Declared profile: `action-ready` — a World View, a State Compiler with a concr
 
 ## Semantics
 
-`semantics/quality-terms.yaml` binds the World's names, all seven EWS fields, the observation types, and the actions to terms of `openworld-examples/quality-ontology` (a dependency). Check it with `ontle validate --resolve --source examples`.
+`semantics/quality-terms.yaml` binds the World's names, all nine EWS fields, the observation types, and the actions to terms of `openworld-examples/quality-ontology` (a dependency). Check it with `ontle validate --resolve --source examples`.
 
 ## Knowledge graph (experimental)
 

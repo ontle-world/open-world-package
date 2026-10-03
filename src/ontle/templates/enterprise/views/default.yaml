@@ -9,6 +9,7 @@ spec:
     objective: task_defined
   projection:
     include:
+    - item
     - organization
     - work
     - decisions

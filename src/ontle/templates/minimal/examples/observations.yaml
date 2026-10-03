@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+# Sample observations for state/default-compiler.yaml. Replace them with what your sources report.
+# Compile: ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z
+spec:
+  observations:
+  - {id: s1, type: source.item_status, subject: item-1, observedAt: "2026-01-01T08:00:00Z", values: {status: active}}
+  - {id: s2, type: source.item_status, subject: item-2, observedAt: "2026-01-01T08:00:00Z", values: {status: active}}
+  - {id: s3, type: source.item_status, subject: item-2, observedAt: "2026-01-01T15:00:00Z", values: {status: blocked}}
+  - {id: e1, type: source.item_event, subject: item-2, observedAt: "2026-01-01T14:00:00Z", values: {code: delay}}
+  - {id: e2, type: source.item_event, subject: item-2, observedAt: "2026-01-01T16:00:00Z", values: {code: delay}}
+  - {id: e3, type: source.item_event, subject: item-1, observedAt: "2026-01-01T17:00:00Z", values: {code: check}}

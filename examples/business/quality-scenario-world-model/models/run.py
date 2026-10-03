@@ -1,14 +1,25 @@
-"""Reference World Models for the quality-hold scenario of openworld-examples/manufacturing-quality-world.
+"""Reference World Models for a scenario of a World, and a harness that runs and evaluates them.
 
-    python models/run.py --model <persistence|three_point|monte_carlo|markov|llm> [--world <World dir>]
-    python models/run.py --baselines > examples/baseline-outputs.yaml   # the four deterministic models
+    python models/run.py --baselines                                  # the four deterministic baselines
+    python models/run.py --baselines --evaluate examples/observed-outcome.yaml
+    python models/run.py --model llm                                  # the LLM minimum bar
+    python models/run.py --baselines --entrypoint my_model.py#predict # your model next to the baselines
+    python models/run.py --baselines --ews my-ews.yaml --scenario my-scenario.yaml
 
-Every model reads the World's EWS (the scenario's baselineStateRef), its State Compiler, and the ScenarioProfile, and answers
-in the same shape: expected_outcome, range, risk, uncertainty, predicted_transition. The four baselines
-run on the CPU with the standard library and are deterministic (Monte Carlo uses a fixed seed). The LLM
-model is the minimum bar a production World Model must clear; it needs the `anthropic` package and
-Claude credentials, and reports `skipped` without them. This is runtime code: OWP describes the models
-(models/*.yaml), it does not standardize how they run.
+Inputs. A model reads an EWS and a ScenarioProfile; history-based models also read the ObservationSet and the
+State Compiler. By default all four come from openworld-examples/manufacturing-quality-world (its quality-hold
+scenario and the EWS that scenario names). --ews and --scenario replace them with your own files; without
+--world, a model then gets no observations and no compiler.
+
+Entrypoint contract. A model is a function `fn(ews, scenario, observations, compiler) -> dict`: `ews` and
+`scenario` are the documents' `spec` mappings, `observations` is the ObservationSet document ({} when absent),
+`compiler` the State Compiler `spec` (None when absent). It returns any of `expected_outcome` {variable: number},
+`range` {variable: interval}, `risk`, `uncertainty`, `predicted_transition` {field: {at_horizon: {state: p}}};
+the harness adds `model` and `provides` (the keys it filled). A ModelArtifact names it with `spec.entrypoint`.
+
+The baselines run on a CPU with the standard library and are deterministic (Monte Carlo uses a fixed seed). The
+LLM model needs the `anthropic` package and Claude credentials, and reports `skipped` without them. This is
+runtime code: OWP describes the models (models/*.yaml), it does not standardize how they run.
 """
 from __future__ import annotations
 
@@ -25,6 +36,7 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_WORLD = HERE.parents[1] / "manufacturing-quality-world"
+DEFAULT_WORLD_REF = "openworld-examples/manufacturing-quality-world@0.1.0"
 SCENARIO = "scenarios/quality-hold.yaml"
 OBSERVATIONS = "examples/observations.yaml"
 LLM_MODEL = "claude-opus-5-5"
@@ -34,12 +46,38 @@ def load(path: Path) -> dict[str, Any]:
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def inputs(world: Path) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """(EWS spec, scenario spec, observations, State Compiler spec) from the World package."""
-    scenario = load(world / SCENARIO)["spec"]
-    ews = load(world / scenario["baselineStateRef"])["spec"]
-    compiler = load(world / ews["stateCompiler"].partition("#")[2])["spec"]
-    return ews, scenario, load(world / OBSERVATIONS), compiler
+def inputs(world: Path | None, scenario_path: Path | None, ews_path: Path | None,
+           observations_path: Path | None) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any] | None, dict[str, Any]]:
+    """(EWS spec, scenario spec, observations, State Compiler spec or None, the files used)."""
+    if world is None and not (scenario_path and ews_path):
+        world = DEFAULT_WORLD
+    scenario_file = scenario_path or world / SCENARIO
+    scenario = load(scenario_file)["spec"]
+    if ews_path is None and world is None:
+        raise SystemExit("give --ews, or --world so the scenario's baselineStateRef can be read")
+    ews = load(ews_path or world / scenario["baselineStateRef"])["spec"]
+    compiler, compiler_file = None, None
+    if world is not None and (world / ews["stateCompiler"].partition("#")[2]).is_file():
+        compiler_file = world / ews["stateCompiler"].partition("#")[2]
+        compiler = load(compiler_file)["spec"]
+    obs_file = observations_path or (world / OBSERVATIONS if world is not None else None)
+    if obs_file is not None and not obs_file.is_file():
+        obs_file = None
+    observations = load(obs_file) if obs_file is not None else {}
+    default = world == DEFAULT_WORLD
+
+    def shown(p: Path | None) -> str | None:
+        if p is None:
+            return None
+        return f"{DEFAULT_WORLD_REF}#{p.relative_to(DEFAULT_WORLD).as_posix()}" if default and p.is_relative_to(DEFAULT_WORLD) else str(p)
+
+    used = {"scenario": shown(scenario_file), "ews": shown(ews_path or world / scenario["baselineStateRef"]),
+            "observations": shown(obs_file), "stateCompiler": shown(compiler_file)}
+    bound = {(b or {}).get("from") for b in ((compiler or {}).get("bindings") or {}).values() if isinstance(b, dict)}
+    types = {o.get("type") for o in (observations.get("spec") or {}).get("observations") or []}
+    if compiler is not None and types and not types & bound:
+        print(f"warning: no observation in {obs_file} has a type the State Compiler binds", file=sys.stderr)
+    return ews, scenario, observations, compiler, used
 
 
 def ranges(scenario: dict[str, Any]) -> dict[str, dict[str, float]]:
@@ -56,23 +94,35 @@ def risk_from(position: float) -> str:
     return "high" if position >= 0.6 else "medium" if position >= 0.3 else "low"
 
 
+OUTPUT_KEYS = ("expected_outcome", "range", "risk", "uncertainty", "predicted_transition")
+
+
 def answer(model: str, **fields: Any) -> dict[str, Any]:
-    base = {"model": model, "expected_outcome": {}, "range": {}, "risk": None, "uncertainty": None, "predicted_transition": {}}
-    base.update(fields)
-    return base
+    """A model's result: the output keys it filled, listed in `provides`, plus anything else it reports."""
+    out = {"model": model, "provides": [k for k in OUTPUT_KEYS if fields.get(k) not in (None, {}, [])]}
+    out.update({k: v for k, v in fields.items() if v not in (None, {}, [])})
+    return out
 
 
 # --- deterministic baselines -------------------------------------------------------------------------
 
-def persistence(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
-    """Nothing changes over the horizon: every resolved field keeps its value. The floor every model must beat."""
-    state = ews.get("state") or {}
+def persistence(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any] | None) -> dict[str, Any]:
+    """Nothing changes over the horizon: every resolved scalar value is kept. The floor every model must beat.
+
+    A per-subject field (spec 12.3) gives one entry per subject, keyed <field>[<subject>].
+    """
+    keep: dict[str, Any] = {}
+    for f, v in sorted((ews.get("state") or {}).items()):
+        items = sorted(v.items()) if isinstance(v, dict) else [(None, v)]
+        for subject, value in items:
+            if not isinstance(value, (list, dict)):
+                keep[f if subject is None else f"{f}[{subject}]"] = {"from": value, "at_horizon": {str(value): 1.0}}
     return answer("persistence",
-                  predicted_transition={f: {"from": v, "to": v, "p": 1.0} for f, v in sorted(state.items())},
+                  predicted_transition=keep,
                   uncertainty={"method": "none", "note": "assumes no change; unresolved fields stay unresolved"})
 
 
-def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
+def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any] | None) -> dict[str, Any]:
     """Best, base, and worst cases from the scenario's {low, mode, high}; the expectation is the PERT mean."""
     rs = ranges(scenario)
     expected = {n: round((r["low"] + 4 * r["mode"] + r["high"]) / 6, 3) for n, r in rs.items()}
@@ -84,7 +134,7 @@ def three_point(ews: dict[str, Any], scenario: dict[str, Any], observations: dic
                   uncertainty={"method": "three_point", "distribution": "PERT mean of low, mode, high"})
 
 
-def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any],
+def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any] | None,
                 runs: int = 2000, seed: int = 20261003) -> dict[str, Any]:
     """Seeded draws from a triangular distribution per variable; reports mean and P10/P50/P90."""
     rng = random.Random(seed)
@@ -104,7 +154,7 @@ def monte_carlo(ews: dict[str, Any], scenario: dict[str, Any], observations: dic
                   uncertainty={"method": "monte_carlo", "distribution": "triangular(low, mode, high)", "runs": runs, "seed": seed})
 
 
-def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
+def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any] | None) -> dict[str, Any]:
     """Status distributions at the horizon from a daily transition matrix.
 
     The matrix is the assumed prior in models/markov-transitions.yaml, updated with the daily transitions
@@ -115,7 +165,7 @@ def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str
     step = duration_days(params["step"])
     steps = round(duration_days(scenario.get("timeHorizon") or params["step"]) / step)
     as_of = parse_time((ews.get("context") or {}).get("asOf"))
-    bindings = compiler.get("bindings") or {}
+    bindings = (compiler or {}).get("bindings") or {}
     result = {}
     for field, spec in params["fields"].items():
         states = spec["states"]
@@ -133,7 +183,12 @@ def markov(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str
             "at_horizon": {s: round(p, 3) for s, p in zip(states, dist) if round(p, 3)},
             "observed_transitions": sum(map(sum, counts)),
         }
-    return answer("markov", predicted_transition=result,
+    note = None
+    if steps == 0:
+        note = f"the scenario horizon is shorter than one step ({params['step']}); nothing to predict"
+    elif not result:
+        note = "markov-transitions.yaml names none of this EWS's fields; give it a matrix per status field"
+    return answer("markov", predicted_transition=result, note=note,
                   uncertainty={"method": "markov_chain", "step": params["step"], "steps": steps,
                                "matrix": f"{params['source']} prior (strength {params['strength']}) updated with observed daily transitions"})
 
@@ -223,7 +278,7 @@ SYSTEM = (
 )
 
 
-def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any]) -> dict[str, Any]:
+def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, Any], compiler: dict[str, Any] | None) -> dict[str, Any]:
     """Claude predicts the scenario outcome from the EWS, the scenario, and the baselines' answers."""
     try:
         import anthropic
@@ -262,6 +317,59 @@ def llm(ews: dict[str, Any], scenario: dict[str, Any], observations: dict[str, A
 MODELS = {**BASELINES, "llm": llm}
 
 
+def load_entrypoint(spec: str):
+    """A model function named as <file.py>#<function>."""
+    import importlib.util
+    file, _, name = spec.partition("#")
+    module_spec = importlib.util.spec_from_file_location(Path(file).stem, file)
+    if module_spec is None or not name:
+        raise SystemExit(f"--entrypoint must be <file.py>#<function>, not {spec!r}")
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)  # type: ignore[union-attr]
+    fn = getattr(module, name, None)
+    if not callable(fn):
+        raise SystemExit(f"{file} defines no function {name!r}")
+    return fn
+
+
+def interval(r: dict[str, float]) -> tuple[float, float] | None:
+    """The outer interval of a range, whatever its keys: best/worst, p10/p90, or low/high."""
+    for lo, hi in (("best", "worst"), ("p10", "p90"), ("low", "high")):
+        if lo in r and hi in r:
+            return float(r[lo]), float(r[hi])
+    return None
+
+
+def evaluate(results: list[dict[str, Any]], scenario: dict[str, Any], outcome: dict[str, Any]) -> dict[str, Any]:
+    """Score each result against an outcome recorded after the horizon (checks of eval/scenario-outcome.yaml)."""
+    observed = outcome.get("outcome") or {}
+    status = outcome.get("state") or {}
+    base = {n: r["mode"] for n, r in ranges(scenario).items()}
+    scores = {}
+    for res in results:
+        if "skipped" in res:
+            continue
+        s: dict[str, Any] = {}
+        for var, actual in sorted(observed.items()):
+            entry: dict[str, Any] = {}
+            expected = (res.get("expected_outcome") or {}).get(var)
+            if expected is not None:
+                entry["expected_outcome_error"] = round(abs(float(expected) - actual), 3)
+                if var in base:
+                    entry["beats_base_case"] = abs(float(expected) - actual) < abs(base[var] - actual)
+            span = interval((res.get("range") or {}).get(var) or {})
+            if span is not None:
+                entry["range_contains_observed_outcome"] = span[0] <= actual <= span[1]
+            if entry:
+                s[var] = entry
+        for field, actual in sorted(status.items()):
+            dist = ((res.get("predicted_transition") or {}).get(field) or {}).get("at_horizon")
+            if isinstance(dist, dict):
+                s[field] = {"probability_of_observed_state": dist.get(str(actual), 0.0)}
+        scores[res["model"]] = s
+    return {"outcome": outcome.get("observedAt"), "scores": scores}
+
+
 class NoAliases(yaml.SafeDumper):
     """Write repeated values in full instead of YAML anchors."""
 
@@ -271,17 +379,26 @@ class NoAliases(yaml.SafeDumper):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--model", choices=sorted(MODELS))
-    ap.add_argument("--baselines", action="store_true", help="run the four deterministic baselines")
-    ap.add_argument("--world", type=Path, default=DEFAULT_WORLD, help="the manufacturing-quality-world package")
+    ap.add_argument("--model", action="append", default=[], choices=sorted(MODELS), help="a reference model (repeatable)")
+    ap.add_argument("--baselines", action="store_true", help="the four deterministic baselines")
+    ap.add_argument("--entrypoint", action="append", default=[], help="your model as <file.py>#<function> (repeatable)")
+    ap.add_argument("--world", type=Path, help="World package directory (default: manufacturing-quality-world)")
+    ap.add_argument("--scenario", type=Path, help="ScenarioProfile file (default: the World's scenarios/quality-hold.yaml)")
+    ap.add_argument("--ews", type=Path, help="EWS file (default: the scenario's baselineStateRef in the World)")
+    ap.add_argument("--observations", type=Path, help="ObservationSet file (default: the World's examples/observations.yaml)")
+    ap.add_argument("--evaluate", type=Path, help="an outcome recorded after the horizon; adds per-model scores")
     args = ap.parse_args()
-    if not args.model and not args.baselines:
-        ap.error("give --model or --baselines")
-    ews, scenario, observations, compiler = inputs(args.world)
-    names = list(BASELINES) if args.baselines else [args.model]
-    out = {"scenario": "openworld-examples/manufacturing-quality-world@0.1.0#" + SCENARIO,
-           "asOf": (ews.get("context") or {}).get("asOf"),
-           "results": [MODELS[n](ews, scenario, observations, compiler) for n in names]}
+    names = (list(BASELINES) if args.baselines else []) + [m for m in args.model if not (args.baselines and m in BASELINES)]
+    if not names and not args.entrypoint:
+        ap.error("give --baselines, --model, or --entrypoint")
+    ews, scenario, observations, compiler, used = inputs(args.world, args.scenario, args.ews, args.observations)
+    results = [MODELS[n](ews, scenario, observations, compiler) for n in names]
+    for spec in args.entrypoint:
+        raw = load_entrypoint(spec)(ews, scenario, observations, compiler)
+        results.append(answer(spec, **{k: v for k, v in (raw or {}).items() if k not in ("model", "provides")}))
+    out: dict[str, Any] = {"inputs": used, "asOf": (ews.get("context") or {}).get("asOf"), "results": results}
+    if args.evaluate:
+        out["evaluation"] = evaluate(results, scenario, load(args.evaluate).get("spec") or {})
     sys.stdout.write(yaml.dump(out, Dumper=NoAliases, sort_keys=False, allow_unicode=True, width=120))
     return 0
 

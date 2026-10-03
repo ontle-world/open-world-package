@@ -2,7 +2,10 @@
 
 ## 1. Install
 
+From a clone of this repository, in a virtual environment (Python 3.11+):
+
 ```bash
+python3 -m venv .venv && . .venv/bin/activate
 python -m pip install -e .
 ontle --version
 ```
@@ -21,18 +24,23 @@ WORLD.md
 owp.yaml
 views/default.yaml
 state/default-compiler.yaml
-examples/basic.yaml
+examples/observations.yaml
+examples/expected-ews.yaml
 .ontle/project.yaml
 ```
 
 Start with `WORLD.md` and `owp.yaml`. The generated project declares `conformance.profile: stateful`; the default View and State Compiler make `World -> View -> EWS` explicit and can stay unchanged until your task requires specialization. A reference or taxonomy World that never compiles state can remove them and declare `descriptive`. `ontle inspect` shows the declared and the actually satisfied profile.
 
-## 3. Validate and inspect
+## 3. Validate, compile state, inspect
 
 ```bash
 ontle validate .
+ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z > ews.yaml
+ontle ews check ews.yaml --world .
 ontle inspect .
 ```
+
+The starter compiles as generated: its State Compiler has one observed field, one aggregate, and one classification, each with a value per item, and `examples/expected-ews.yaml` is what the sample observations compile to. Replace the `item` fields and observations with your own; [STATE_COMPILATION.md](STATE_COMPILATION.md) shows how to write fields and bindings.
 
 ## 4. Add only what you need
 
@@ -70,7 +78,7 @@ ontle new StateCompilerProfile state/sales-manager.yaml
 ontle pack .
 ```
 
-The default artifact is written under `dist/` as `*.owp.zip` and includes an `owp.lock.json` with content hashes.
+The default artifact is written under `dist/` as `*.owp.zip` and includes an `owp.lock.json` with content hashes. `ontle pack . --list` previews the files an archive would contain, without writing it. Paths that start with `.` (`.env`, `.git`, `.ontle`) and `dist/` are never packed; exclude anything else with `.owpignore`.
 
 Verify it:
 
@@ -79,7 +87,7 @@ ontle verify dist/<artifact>.owp.zip
 ```
 
 
-## 6. Create an Ontology or World Model package
+## 6. Create an Ontology package
 
 ```bash
 ontle init enterprise-core --template ontology --namespace example
@@ -92,7 +100,11 @@ ontle init quality-model --template worldmodel --namespace example --world ./my-
 ontle init embodied-model --template worldmodel-multimodal --namespace example --world example/robot-world@0.1.0
 ```
 
-`--world` grounds the model in a World and adds it to `spec.dependencies`: a World directory supplies its identity, default View, and default State Compiler; a `<namespace>/<name>@<version>` reference assumes the starter's `views/default.yaml` and `state/default-compiler.yaml`. Without it, replace the `replace-with-...` placeholders yourself.
+`--world` grounds the model in a World and adds it to `spec.dependencies`: a World directory supplies its identity, default View, and default State Compiler (`--view views/<file>.yaml` picks another View and the State Compiler that compiles it); a `<namespace>/<name>@<version>` reference assumes the starter's `views/default.yaml` and `state/default-compiler.yaml`. Without it, replace the `replace-with-...` placeholders yourself.
+
+Grounding is checked against the World itself, so `ontle validate` needs to find it. `init --world <dir>` records the World's parent directory in `.ontle/project.yaml`, and `validate` looks there, in `--source`, and in `ONTLE_PATH`. When a dependency is not found, `validate` checks the package alone and says so in a `NOTE:` line; `--resolve` turns a missing dependency into an error.
+
+To run and compare models, see `examples/business/quality-scenario-world-model/WORLDMODEL.md`: a model is a function over an EWS and a scenario, and `models/run.py` runs yours next to reference baselines and scores them against a recorded outcome.
 
 Both templates expose the same `ModelArtifact + RepresentationAdapter + EvaluationProfile` skeleton. Every World Model must also declare its compatible World View(s) and State Compiler(s) as `<worldRef>#<asset path>`; the multimodal variant additionally declares modality and temporal contracts.
 

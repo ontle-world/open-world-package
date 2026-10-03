@@ -516,15 +516,32 @@ def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] |
             prefixes.update(ontology_terms(dep.root, dep.manifest)[0])
     binding = _load_asset(world, binding_rel)
     out = {"@context": jsonld_context(binding, prefixes), **ews}
-    graph = _subject_nodes(world, binding, ews)
+    graph = _subject_nodes(world, binding, ews, prefixes)
     if graph:
         out["@graph"] = graph
     return out
 
 
-def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[str, Any]) -> list[dict[str, Any]]:
-    """Section 12.3/14: per-subject state as individuals, when the SemanticBinding maps the field's subjects to IRIs."""
-    from .binding import subject_iri
+def _concepts(field: str, value: Any, bspec: dict[str, Any], prefixes: dict[str, str], value_iri: Any) -> Any:
+    """A coded value (or each element of a list) as {"@id": concept IRI} when the field's binding declares `values`."""
+    fb = (bspec.get("fields") or {}).get(field) if isinstance(bspec.get("fields"), dict) else None
+    values = fb.get("values") if isinstance(fb, dict) and isinstance(fb.get("values"), dict) else None
+    if values is None:
+        return value
+    out = []
+    for v in value if isinstance(value, list) else [value]:
+        iri = value_iri(values, v, prefixes)
+        if iri is None:
+            raise OWPError(f"binding.values: {field}: value {v!r} has no map entry and cannot be appended to base as an IRI")
+        out.append({"@id": iri})
+    return out if isinstance(value, list) else out[0]
+
+
+def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[str, Any],
+                   prefixes: dict[str, str] | None = None) -> list[dict[str, Any]]:
+    """Section 12.3/14: per-subject state as individuals, when the SemanticBinding maps the field's subjects to IRIs.
+    A field whose binding declares `values` gives concept IRIs instead of codes."""
+    from .binding import subject_iri, value_iri
     from .ews import binding_form, output_lists
     bspec = binding.get("spec") or {}
     subjects = bspec.get("subjects") if isinstance(bspec.get("subjects"), dict) else {}
@@ -558,5 +575,5 @@ def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[st
             node = nodes.setdefault(subject_iri(rule, subject), {"@id": subject_iri(rule, subject)})
             if isinstance(types.get(otype), str):
                 node["@type"] = types[otype]
-            node[field] = value
+            node[field] = _concepts(field, value, bspec, prefixes or {}, value_iri)
     return [nodes[k] for k in sorted(nodes)]

@@ -32,6 +32,11 @@ Cross-standard links that are not subclass axioms use SKOS match predicates, nev
 
 `scripts/check_alignments.sh` reasons over the vocabulary and each alignment with HermiT, through ROBOT. It uses the upstream ontologies pinned by digest in each package's `externalImports`. Each check is run with the sample data and against deliberately wrong inputs. CI runs it.
 
+## Coded values and dictionary identifiers
+
+- **Coded values.** A field whose values are codes (`down`, `bearing_wear`) can tie them to concepts in the SemanticBinding with `values: {scheme, base, map}`. The EWS keeps the codes. RDF and JSON-LD output give the concept IRIs, so a value can be joined with a SKOS concept scheme (its `broader` hierarchy) or any other concept model in a knowledge graph.
+- **Dictionary identifiers.** An industrial dictionary identifier, such as an ECLASS or IEC CDD IRDI used as an Asset Administration Shell semanticId, attaches to a bound name with `semanticIds`. These identifiers are references only: OWP checks their syntax, not their meaning. ECLASS is licensed, so a package may cite its identifiers but must not copy its names, definitions, or value lists unless the publisher's license allows it.
+
 ## RDF output and identifiers
 
 `ontle ews compile ... --rdf` writes an EWS as Turtle 1.2 in the OWP vocabulary:

@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticBinding
+metadata: {name: terms}
+spec:
+  terms: {claim: q:Claim}
+  fields:
+    claim.status: {class: q:Claim, path: [q:claimStatus]}
+  observationTypes: {QMS.claim: q:Claim}
+  semanticIds:
+    fields:
+      claim.status: ["0173-1-02-AAO677-002", "eclass:AAO677"]

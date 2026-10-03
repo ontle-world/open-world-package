@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+    boundary:
+      included: [claim, lot]
+    defaultView: views/task.yaml
+    defaultStateCompiler: state/task-compiler.yaml
+    semanticBinding: semantics/terms.yaml
+  conformance:
+    profile: model-ready

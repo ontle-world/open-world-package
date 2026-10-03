@@ -178,6 +178,22 @@
     "view.outside-world"
    ]
   },
+  "binding-semantic-ids-syntax": {
+   "errors": [
+    "binding.semantic-ids"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-semantic-ids-unbound": {
+   "errors": [
+    "binding.semantic-ids"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
   "binding-subjects": {
    "errors": [
     "binding.subjects"
@@ -203,6 +219,20 @@
   },
   "binding-valid": {
    "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-values": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-values-malformed": {
+   "errors": [
+    "binding.values"
+   ],
    "warnings": [
     "view.outside-world"
    ]
@@ -1236,6 +1266,14 @@
    ]
   },
   "binding-term-unknown": {
+   "errors": [
+    "grounding.ontology-term"
+   ],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-values-concept-unknown": {
    "errors": [
     "grounding.ontology-term"
    ],

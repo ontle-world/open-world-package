@@ -7,13 +7,13 @@ from typing import Any
 from .ontology import CURIE_RE, expand
 from .structure import OPEN, VALUE, closed, structure_errors
 
-FIELD_BINDING = closed({"class": VALUE, "path": VALUE, "unit": VALUE})
+FIELD_BINDING = closed({"class": VALUE, "path": VALUE, "unit": VALUE, "values": closed({"scheme": VALUE, "base": VALUE, "map": OPEN})})
 
 SEMANTIC_BINDING = closed({
     "apiVersion": VALUE,
     "kind": VALUE,
     "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}),
-    "spec": closed({"terms": OPEN, "fields": OPEN, "observationTypes": OPEN, "actions": OPEN, "subjects": OPEN}),
+    "spec": closed({"terms": OPEN, "fields": OPEN, "observationTypes": OPEN, "actions": OPEN, "subjects": OPEN, "semanticIds": OPEN}),
 }, extensions=False)
 
 
@@ -35,6 +35,11 @@ def binding_curies(doc: dict[str, Any]) -> list[tuple[str, str]]:
                 out.append((f"spec.fields.{field}.path[{i}]", step))
             if "unit" in value:  # a unit term, such as a QUDT unit, of a dependency ontology (section 14)
                 out.append((f"spec.fields.{field}.unit", value["unit"]))
+            values = value.get("values") if isinstance(value.get("values"), dict) else {}
+            if "scheme" in values:  # the concept scheme of coded values
+                out.append((f"spec.fields.{field}.values.scheme", values["scheme"]))
+            for code, concept in (values.get("map") or {}).items() if isinstance(values.get("map"), dict) else []:
+                out.append((f"spec.fields.{field}.values.map.{code}", concept))
     return out
 
 
@@ -72,11 +77,77 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
             if not _is_curie(value):
                 errors.append(f"binding.curie: {rel}: {where} {value!r} must be a CURIE <prefix>:<local name>")
         errors.extend(subjects_errors(rel, bspec))
+        errors.extend(values_errors(rel, bspec))
+        errors.extend(semantic_ids_errors(rel, bspec))
         if scope:
             for name in (bspec.get("terms") or {}) if isinstance(bspec.get("terms"), dict) else []:
                 if name not in scope:
                     warnings.append(f"binding.term-unscoped: {rel}: spec.terms.{name} is neither in spec.world.boundary.included nor in any local View's projection.include")
     return errors, warnings
+
+
+IRI_SAFE_CODE = re.compile(r"^[A-Za-z0-9._~-]+$")  # a code that can be appended to `base` as is
+IRDI_RE = re.compile(r"^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}$")  # ISO 29002-5, e.g. 0173-1#02-AAO677#002
+
+
+def _absolute_iri(value: Any) -> bool:
+    return isinstance(value, str) and " " not in value and ("://" in value or value.startswith("urn:"))
+
+
+def values_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
+    """Section 14: a field's coded values tied to concepts: {scheme?, base?, map?} with base or map."""
+    errors: list[str] = []
+    for field, value in (bspec.get("fields") or {}).items() if isinstance(bspec.get("fields"), dict) else []:
+        if not isinstance(value, dict) or "values" not in value:
+            continue
+        v = value["values"]
+        where = f"binding.values: {rel}: spec.fields.{field}.values"
+        if not isinstance(v, dict) or not ({"base", "map"} & set(v)):
+            errors.append(f"{where} must be a mapping with base, map, or both (and optionally scheme)")
+            continue
+        if "base" in v and not _absolute_iri(v["base"]):
+            errors.append(f"{where}.base must be an absolute IRI prefix")
+        if "map" in v and not (isinstance(v["map"], dict) and v["map"] and all(isinstance(k, str) and k for k in v["map"])):
+            errors.append(f"{where}.map must be a non-empty mapping from code to concept CURIE")
+    return errors
+
+
+def semantic_ids_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
+    """Section 14: external dictionary identifiers (IRDIs or IRIs) attached to bound names, by section."""
+    ids = bspec.get("semanticIds")
+    if ids is None:
+        return []
+    where = f"binding.semantic-ids: {rel}: spec.semanticIds"
+    if not isinstance(ids, dict):
+        return [f"{where} must be a mapping of section (terms, fields, observationTypes, actions) to name to identifiers"]
+    errors: list[str] = []
+    for section, names in ids.items():
+        if section not in ("terms", "fields", "observationTypes", "actions") or not isinstance(names, dict):
+            errors.append(f"{where}.{section} must be terms, fields, observationTypes, or actions, mapping names to identifier lists")
+            continue
+        bound = bspec.get(section) if isinstance(bspec.get(section), dict) else {}
+        for name, values in names.items():
+            if name not in bound:
+                errors.append(f"{where}.{section}.{name} is not bound in spec.{section}")
+            if not (isinstance(values, list) and values):
+                errors.append(f"{where}.{section}.{name} must be a non-empty list of IRDIs or absolute IRIs")
+                continue
+            for x in values:
+                if not (isinstance(x, str) and (IRDI_RE.match(x) or _absolute_iri(x))):
+                    errors.append(f"{where}.{section}.{name}: {x!r} is neither an IRDI (ISO 29002-5, such as 0173-1#02-AAO677#002) nor an absolute IRI")
+    return errors
+
+
+def value_iri(values: dict[str, Any], code: Any, prefixes: dict[str, str]) -> str | None:
+    """The concept IRI of a coded value: its `map` entry, else `base` + code when the code is IRI-safe; None otherwise."""
+    if not isinstance(code, str):
+        return None
+    mapped = (values.get("map") or {}).get(code) if isinstance(values.get("map"), dict) else None
+    if isinstance(mapped, str):
+        return expand(mapped, prefixes)
+    if isinstance(values.get("base"), str) and IRI_SAFE_CODE.match(code):
+        return values["base"] + code
+    return None
 
 
 def subjects_errors(rel: str, bspec: dict[str, Any]) -> list[str]:

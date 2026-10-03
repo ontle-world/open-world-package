@@ -56,5 +56,18 @@ class EwsTurtleTests(unittest.TestCase):
             self.assertEqual(sorted(str(r[0]) for r in rows), ['"active"', '"blocked"'])
 
 
+    def test_coded_values_become_concept_iris(self):
+        from ontle.core import OWPError
+        world, manifest, ews, observations = self.compiled()
+        binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"],
+                                                       "values": {"base": "https://example.org/status/", "map": {"blocked": "ex:Blocked"}}}},
+                            "subjects": {"source.item_status": {"base": "https://example.org/item/"}}}}
+        ttl = ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+        self.assertIn("<https://example.org/item/item-2> <https://example.org/ns#status> <https://example.org/ns#Blocked>", ttl)  # map
+        self.assertIn("<https://example.org/item/item-1> <https://example.org/ns#status> <https://example.org/status/active>", ttl)  # base + code
+        binding["spec"]["fields"]["item.status"]["values"] = {"map": {"blocked": "ex:Blocked"}}  # "active" has no IRI now
+        with self.assertRaises(OWPError):
+            ews_turtle(world, manifest, ews, observations, binding, {"ex": "https://example.org/ns#"})
+
 if __name__ == "__main__":
     unittest.main()

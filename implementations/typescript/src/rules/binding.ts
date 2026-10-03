@@ -15,6 +15,10 @@ const isCurie = (v: unknown): v is string => typeof v === "string" && CURIE_RE.t
 const SECTIONS = ["terms", "fields", "observationTypes", "actions"];
 
 /** [where, value] for every ontology reference in a SemanticBinding document. */
+/** ISO 29002-5 IRDI, such as 0173-1#02-AAO677#002 (ECLASS) or 0112/2///61360_4#AAE530#002 (IEC CDD). */
+const IRDI_RE = /^[0-9]{4}[-/][^#\s]+#(?:[0-9A-Z]{2}-)?[0-9A-Z]{3,}#[0-9]{1,3}$/;
+const absoluteIri = (v: unknown): boolean => typeof v === "string" && !v.includes(" ") && (v.includes("://") || v.startsWith("urn:"));
+
 export function bindingCuries(doc: unknown): Array<[string, unknown]> {
   const spec = get(doc, "spec");
   const s = isObj(spec) ? spec : {};
@@ -29,6 +33,9 @@ export function bindingCuries(doc: unknown): Array<[string, unknown]> {
       out.push([`spec.fields.${field}.class`, v.class]);
       (Array.isArray(v.path) ? v.path : []).forEach((step, i) => out.push([`spec.fields.${field}.path[${i}]`, step]));
       if ("unit" in v) out.push([`spec.fields.${field}.unit`, v.unit]); // a unit term (e.g. QUDT) of a dependency ontology (spec 14)
+      const values = isObj(v.values) ? v.values : {};
+      if ("scheme" in values) out.push([`spec.fields.${field}.values.scheme`, values.scheme]); // the concept scheme of coded values
+      if (isObj(values.map)) for (const [code, concept] of Object.entries(values.map)) out.push([`spec.fields.${field}.values.map.${code}`, concept]);
     }
   }
   return out;
@@ -86,6 +93,46 @@ export function checkSemanticBindings(ctx: Context): void {
         const ok = isObj(r) && Object.keys(r).length === 1
           && ((typeof r.base === "string" && /^[A-Za-z][A-Za-z0-9+.-]*:/.test(r.base)) || r.iri === true);
         if (!ok) report({ rule: "binding.subjects", msg: `spec.subjects.${otype} must be {base: <absolute IRI prefix>} or {iri: true}` });
+      }
+    }
+    // Spec 14: coded values tied to concepts, {scheme?, base?, map?} with base or map.
+    if (isObj(spec.fields)) {
+      for (const [field, v] of Object.entries(spec.fields)) {
+        if (!isObj(v) || !("values" in v)) continue;
+        const at = `spec.fields.${field}.values`;
+        const vals = v.values;
+        if (!isObj(vals) || !("base" in vals || "map" in vals)) {
+          report({ rule: "binding.values", msg: `${at} must be a mapping with base, map, or both (and optionally scheme)` });
+          continue;
+        }
+        if ("base" in vals && !absoluteIri(vals.base)) report({ rule: "binding.values", msg: `${at}.base must be an absolute IRI prefix` });
+        if ("map" in vals && !(isObj(vals.map) && Object.keys(vals.map).length > 0 && Object.keys(vals.map).every((k) => k.length > 0))) {
+          report({ rule: "binding.values", msg: `${at}.map must be a non-empty mapping from code to concept CURIE` });
+        }
+      }
+    }
+    // Spec 14: external dictionary identifiers (IRDIs or IRIs) attached to bound names, by section.
+    if ("semanticIds" in spec) {
+      const ids = spec.semanticIds;
+      if (!isObj(ids)) report({ rule: "binding.semantic-ids", msg: "spec.semanticIds must be a mapping of section (terms, fields, observationTypes, actions) to name to identifiers" });
+      else for (const [section, names] of Object.entries(ids)) {
+        if (!SECTIONS.includes(section) || !isObj(names)) {
+          report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section} must be terms, fields, observationTypes, or actions, mapping names to identifier lists` });
+          continue;
+        }
+        const bound = isObj(spec[section]) ? (spec[section] as Obj) : {};
+        for (const [name, list] of Object.entries(names)) {
+          if (!(name in bound)) report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name} is not bound in spec.${section}` });
+          if (!Array.isArray(list) || list.length === 0) {
+            report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name} must be a non-empty list of IRDIs or absolute IRIs` });
+            continue;
+          }
+          for (const x of list) {
+            if (!(typeof x === "string" && (IRDI_RE.test(x) || absoluteIri(x)))) {
+              report({ rule: "binding.semantic-ids", msg: `spec.semanticIds.${section}.${name}: ${JSON.stringify(x)} is neither an IRDI (ISO 29002-5, such as 0173-1#02-AAO677#002) nor an absolute IRI` });
+            }
+          }
+        }
       }
     }
     // Skipped when neither the World boundary nor any View projection lists names.

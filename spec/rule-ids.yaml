@@ -24,7 +24,7 @@ rules:
   eval.duplicate-name: {severity: error, section: "8", summary: "two local EvaluationProfile or VerifierPackage assets share metadata.name"}
   asset.duplicate-path: {severity: error, section: "8", summary: "same PackageExample path listed twice"}
   asset.path-escape: {severity: error, section: "8", summary: "listed PackageExample path resolves outside the package root"}
-  asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist"}
+  asset.missing-file: {severity: error, section: "8", summary: "listed PackageExample path does not exist or is excluded by .owpignore"}
   standard.binding: {severity: error, section: "5.3", summary: "malformed spec.standardBindings: not a mapping, an entry without standard, terms not a mapping of strings, an empty license, or neither ref nor terms"}
   standard.unpinned: {severity: error, section: "5.3", summary: "a bound ref in a standard binding is not pinned"}
   standard.license: {severity: error, section: "5.3", summary: "a standard binding binds an artifact without license"}

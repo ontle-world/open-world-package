@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from ontle.core import deterministic_pack, validate_package
+from ontle.core import deterministic_pack, package_files, validate_package
 from ontle.yamlio import dump_yaml, load_yaml
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -48,7 +48,7 @@ class RoundTripTests(unittest.TestCase):
             with self.subTest(package=str(pkg.relative_to(ROOT))), tempfile.TemporaryDirectory() as td:
                 copy = Path(td) / "pkg"
                 shutil.copytree(pkg, copy)
-                for f in list(copy.rglob("*.yaml")) + list(copy.rglob("*.yml")):
+                for f in [f for f in package_files(copy) if f.suffix in (".yaml", ".yml")]:
                     doc = load_yaml(f.read_text(encoding="utf-8"))  # YAML 1.2 core schema (spec section 5.2)
                     f.write_text(dump_yaml(doc, default_flow_style=True, sort_keys=True, width=1000), encoding="utf-8")
                 self.assertEqual(outcome(copy), outcome(pkg))

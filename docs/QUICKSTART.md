@@ -52,6 +52,13 @@ spec:
 
 `ontle validate .` picks it up. YAML files without an OWP `apiVersion` (CI configuration, for example) are ordinary files and are not checked as assets. Sample data that is not an asset (an `ObservationSet`, an expected EWS) is listed in `spec.assets` as a `PackageExample`.
 
+To keep files out of the package, such as drafts or local notes, list them in `.owpignore` at the package root. It uses gitignore patterns. Excluded files are not read as assets and are left out of `ontle pack`:
+
+```text
+drafts/
+*.wip.yaml
+```
+
 `ontle new <Kind> <path>` writes the same kind of file as a skeleton. It starts with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete it:
 
 ```bash

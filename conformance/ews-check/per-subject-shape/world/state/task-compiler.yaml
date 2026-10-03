@@ -1,0 +1,22 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.state, m.risk]
+    perSubject: [m.state, m.risk]
+    latent: [m.risk]
+  bindings:
+    m.state: {from: ot.state, value: v, select: latest}
+    m.risk:
+      classify:
+        input: m.state
+        criterion:
+          id: availability
+          rules:
+          - {when: {eq: down}, label: high}
+          otherwise: low
+  traceRequired: true

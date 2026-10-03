@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [t.mean]
+    latent: [t.mean]
+  bindings:
+    t.mean: {aggregate: {from: ot.temp, value: c, function: mean}}

@@ -1,6 +1,7 @@
 """SemanticBinding: World names, EWS fields, observation types, and actions bound to ontology terms (spec section 14)."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .ontology import CURIE_RE, expand
@@ -12,7 +13,7 @@ SEMANTIC_BINDING = closed({
     "apiVersion": VALUE,
     "kind": VALUE,
     "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}),
-    "spec": closed({"terms": OPEN, "fields": OPEN, "observationTypes": OPEN, "actions": OPEN}),
+    "spec": closed({"terms": OPEN, "fields": OPEN, "observationTypes": OPEN, "actions": OPEN, "subjects": OPEN}),
 }, extensions=False)
 
 
@@ -68,11 +69,35 @@ def binding_issues(spec: dict[str, Any], local_kinds: dict[str, str], docs: dict
         for where, value in binding_curies(doc):
             if not _is_curie(value):
                 errors.append(f"binding.curie: {rel}: {where} {value!r} must be a CURIE <prefix>:<local name>")
+        errors.extend(subjects_errors(rel, bspec))
         if scope:
             for name in (bspec.get("terms") or {}) if isinstance(bspec.get("terms"), dict) else []:
                 if name not in scope:
                     warnings.append(f"binding.term-unscoped: {rel}: spec.terms.{name} is neither in spec.world.boundary.included nor in any local View's projection.include")
     return errors, warnings
+
+
+def subjects_errors(rel: str, bspec: dict[str, Any]) -> list[str]:
+    """Section 14: spec.subjects maps observation types listed in observationTypes to {base: <IRI>} or {iri: true}."""
+    subjects = bspec.get("subjects")
+    if subjects is None:
+        return []
+    if not isinstance(subjects, dict):
+        return [f"binding.subjects: {rel}: spec.subjects must be a mapping of observation type to {{base}} or {{iri: true}}"]
+    types = bspec.get("observationTypes") if isinstance(bspec.get("observationTypes"), dict) else {}
+    errors: list[str] = []
+    for otype, rule in subjects.items():
+        if otype not in types:
+            errors.append(f"binding.subjects: {rel}: spec.subjects.{otype} is not listed in spec.observationTypes")
+        ok = isinstance(rule, dict) and len(rule) == 1 and (
+            (isinstance(rule.get("base"), str) and re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", rule["base"])) or rule.get("iri") is True)
+        if not ok:
+            errors.append(f"binding.subjects: {rel}: spec.subjects.{otype} must be {{base: <absolute IRI prefix>}} or {{iri: true}}")
+    return errors
+
+
+def subject_iri(rule: dict[str, Any], subject: str) -> str:
+    return subject if rule.get("iri") is True else f"{rule['base']}{subject}"
 
 
 def grounding_issues(package_identity: str, binding_docs: dict[str, dict[str, Any]],

@@ -49,7 +49,6 @@ TABLES: dict[str, dict[str, Any]] = {
             "events": array(closed({"id": VALUE, "triggers": VALUE, "description": VALUE})),
             "loops": array(closed({"nodes": VALUE, "maxIterations": VALUE, "until": VALUE})),
         }),
-        "worldRef": VALUE,
         "worldViewRef": VALUE,
         "governanceRefs": VALUE,
         "evaluationRefs": VALUE,
@@ -94,7 +93,6 @@ TABLES: dict[str, dict[str, Any]] = {
         "representation": VALUE,
         "format": VALUE,
         "conformsTo": closed({"ontology": VALUE, "shapes": VALUE}),
-        "worldRef": VALUE,
         "snapshot": closed({"asOf": VALUE}),
         "content": CONTENT,
         "delta": closed({"base": VALUE, "format": VALUE}),
@@ -109,7 +107,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "parameters": OPEN,
         "query": closed({"language": VALUE, "text": VALUE}),
         "observations": array(closed({
-            "type": VALUE, "id": VALUE, "values": OPEN, "multi": VALUE,
+            "type": VALUE, "id": VALUE, "subject": VALUE, "values": OPEN, "multi": VALUE,
             "observedAt": closed({"column": VALUE, "default": VALUE}),
         })),
     }),
@@ -519,14 +517,19 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
     return warnings
 
 
+def _names(value: Any) -> list[str]:
+    """A list of names; anything that is not a list of strings counts as empty (TypeScript reads it the same way)."""
+    return [x for x in value if isinstance(x, str)] if isinstance(value, list) else []
+
+
 def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[str, str], _seen: tuple[str, ...] = ()) -> dict[str, Any]:
     """The View's spec with `specializes` applied: include = base ∪ include − exclude; purpose and conditioning override key by key."""
     spec = dict((docs.get(rel) or {}).get("spec") or {})
     base = spec.pop("specializes", None)
     if base is None or local_kinds.get(base) != "WorldViewProfile" or base in _seen + (rel,):
-        projection = dict(spec.get("projection") or {})
-        exclude = set(projection.pop("exclude", []) or [])
-        projection["include"] = [x for x in projection.get("include", []) or [] if x not in exclude]
+        projection = dict(spec.get("projection") or {}) if isinstance(spec.get("projection"), dict) else {}
+        exclude = set(_names(projection.pop("exclude", [])))
+        projection["include"] = [x for x in _names(projection.get("include")) if x not in exclude]
         spec["projection"] = projection
         return spec
     parent = resolve_view(base, docs, local_kinds, _seen + (rel,))
@@ -536,9 +539,9 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
             merged[key] = {**(parent.get(key) or {}), **value}
         elif key == "projection" and isinstance(value, dict):
             projection = {**(parent.get("projection") or {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
-            include = list(parent.get("projection", {}).get("include", []) or [])
-            include += [x for x in value.get("include", []) or [] if x not in include]
-            exclude = set(value.get("exclude", []) or [])
+            include = _names(parent.get("projection", {}).get("include"))
+            include += [x for x in _names(value.get("include")) if x not in include]
+            exclude = set(_names(value.get("exclude")))
             projection["include"] = [x for x in include if x not in exclude]
             merged["projection"] = projection
         else:

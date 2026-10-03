@@ -72,7 +72,6 @@ kind: WorldViewProfile
 metadata:
   name: manager
 spec:
-  worldRef: self
   purpose: {task: assign_accounts, objective: balance_territories}
   projection: {include: [account, territory]}
 ```

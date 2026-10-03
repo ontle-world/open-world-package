@@ -20,10 +20,13 @@ export interface IgnoreRule {
 
 const escapeRe = (c: string): string => c.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 
-/** Index of the "]" that closes the character class opened at `start`, or -1. */
-function classEnd(glob: string, start: number): number {
-  const negated = glob[start + 1] === "!" || glob[start + 1] === "^";
-  return glob.indexOf("]", start + (negated ? 2 : 1));
+/** [body start, closing index, negated] of a character class opened at i; a "]" first in the class is literal. */
+function classSpan(glob: string, i: number): [number, number, boolean] | null {
+  let j = i + 1;
+  const negated = glob[j] === "!" || glob[j] === "^";
+  if (negated) j += 1;
+  const end = glob.indexOf("]", glob[j] === "]" ? j + 1 : j);
+  return end === -1 ? null : [j, end, negated];
 }
 
 function globRegex(glob: string): string {
@@ -52,11 +55,10 @@ function globRegex(glob: string): string {
     } else if (c === "?") {
       out += "[^/]";
       i += 1;
-    } else if (c === "[" && classEnd(glob, i) !== -1) {
-      const end = classEnd(glob, i);
-      let body = glob.slice(i + 1, end);
-      if (body.startsWith("!") || body.startsWith("^")) body = "^" + body.slice(1);
-      out += "[" + body.replace(/\\/g, "\\\\") + "]";
+    } else if (c === "[" && classSpan(glob, i) !== null) {
+      const [start, end, negated] = classSpan(glob, i)!;
+      const body = [...glob.slice(start, end)].map((ch) => ("\\]^[".includes(ch) ? "\\" + ch : ch)).join("");
+      out += "[" + (negated ? "^" : "") + body + "]";
       i = end + 1;
     } else if (c === "\\" && i + 1 < glob.length) {
       out += escapeRe(glob[i + 1]);
@@ -71,7 +73,7 @@ function globRegex(glob: string): string {
 
 export function parseIgnore(text: string): IgnoreRule[] {
   const rules: IgnoreRule[] = [];
-  for (let line of text.split(/\r?\n/)) {
+  for (let line of text.split(/\r\n|\r|\n/)) {
     line = line.trimEnd();
     if (!line || line.startsWith("#")) continue;
     const negate = line.startsWith("!");
@@ -82,7 +84,13 @@ export function parseIgnore(text: string): IgnoreRule[] {
     if (!line) continue;
     const anchored = line.includes("/");
     line = line.replace(/^\/+/, "");
-    rules.push({ regex: new RegExp("^" + globRegex(line) + "$"), negate, dirOnly, anchored });
+    let regex: RegExp;
+    try {
+      regex = new RegExp("^" + globRegex(line) + "$", "u");
+    } catch {
+      continue; // a pattern that is not valid (for example the range [z-a]) excludes nothing
+    }
+    rules.push({ regex, negate, dirOnly, anchored });
   }
   return rules;
 }

@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: o1, type: ot.state, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {v: running}}
+  - {id: o2, type: ot.state, observedAt: "2026-01-01T00:00:02Z", values: {v: down}}

@@ -35,7 +35,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
       events: list(closed(leaves("id", "triggers", "description"))),
       loops: list(closed(leaves("nodes", "maxIterations", "until"))),
     }),
-    ...leaves("worldRef", "worldViewRef", "governanceRefs", "evaluationRefs"),
+    ...leaves("worldViewRef", "governanceRefs", "evaluationRefs"),
   }),
   ArtifactContract: doc({
     artifact: closed(leaves("type", "representation")),
@@ -58,7 +58,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     system: closed({ ...leaves("interfaceRefs", "deliveryMode"), serviceLevel: OPEN }),
   }),
   KnowledgeAsset: doc({
-    ...leaves("roles", "representation", "format", "worldRef", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
+    ...leaves("roles", "representation", "format", "provenance", "license", "access", "sensitivity", "evaluationRefs"),
     conformsTo: closed(leaves("ontology", "shapes")),
     snapshot: closed(leaves("asOf")),
     content: CONTENT,
@@ -68,7 +68,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
     source: ANY,
     parameters: OPEN,
     query: closed(leaves("language", "text")),
-    observations: list(closed({ ...leaves("type", "id", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
+    observations: list(closed({ ...leaves("type", "id", "subject", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
   ActorProfile: doc(leaves("actorType", "roleRefs", "capabilityRefs", "agentRef", "memberOf")),
   RoleProfile: doc({

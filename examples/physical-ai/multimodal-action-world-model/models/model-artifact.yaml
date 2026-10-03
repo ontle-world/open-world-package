@@ -8,4 +8,4 @@ spec:
   artifactRef:
     status: unbound
   supportedProviders: [huggingface, oci, s3, local_content_addressed_store]
-  note: Bind an immutable external model revision when publishing a concrete implementation.
+  description: Bind an immutable external model revision when publishing a concrete implementation.

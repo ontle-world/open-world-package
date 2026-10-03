@@ -135,6 +135,25 @@ class KnowledgeGraphCheckTests(unittest.TestCase):
                          ["kg.domain", "kg.range", "kg.unknown-class", "kg.unknown-property", "kg.untyped"])
         self.assertFalse(report.ok)
 
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    def test_shared_property_and_standard_prefixes(self):
+        from ontle.kgcheck import check_knowledge_graphs
+        with tempfile.TemporaryDirectory() as td:
+            onto, world = Path(td) / "onto", Path(td) / "world"
+            shutil.copytree(EXAMPLE, onto)
+            shutil.copytree(ROOT / "examples" / "business" / "manufacturing-quality-world", world)
+            core = onto / "semantics" / "core.yaml"
+            # q:claimStatus is now also a property of q:Lot (two domains), and the ontology declares an rdfs prefix
+            core.write_text(core.read_text(encoding="utf-8").replace("    - {id: q:derivedFrom, range: q:Lot}\n", "    - {id: q:derivedFrom, range: q:Lot}\n    - {id: q:claimStatus}\n", 1), encoding="utf-8")
+            manifest = onto / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("      q: https://w3id.org/openworld-examples/quality#",
+                                "      q: https://w3id.org/openworld-examples/quality#\n      rdfs: http://www.w3.org/2000/01/rdf-schema#"), encoding="utf-8")
+            kg = world / "kg" / "plant.ttl"
+            kg.write_text("@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n" + kg.read_text(encoding="utf-8")
+                          + 'ex:lot-L-1 q:claimStatus "open" ; rdfs:label "lot 1" .\nex:claim-102 q:claimStatus "open" .\n', encoding="utf-8")
+            report = check_knowledge_graphs(world, [str(onto)])
+        self.assertEqual(report.findings, [])
+
 
 if __name__ == "__main__":
     unittest.main()

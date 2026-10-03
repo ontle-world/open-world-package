@@ -343,7 +343,7 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
         names = includes.get(view) if isinstance(view, str) else None
         for field in ews_fields.get(rel) or [] if names else []:
             entity = field.split(".", 1)[0]
-            if "." in field and entity not in names:
+            if field.find(".") > 0 and entity not in names:
                 warnings.append(f"compiler.field-outside-view: {rel}: field {field!r} names {entity!r}, which {view}'s projection.include does not list")
     return warnings
 

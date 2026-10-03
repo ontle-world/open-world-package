@@ -80,6 +80,25 @@
             }
           }
         },
+        "derivation": {
+          "type": "object",
+          "description": "How each latent field's value was produced (spec section 12.4).",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "estimate",
+                  "aggregate",
+                  "classify"
+                ]
+              }
+            }
+          }
+        },
         "extensions": {
           "$ref": "#/$defs/extensions"
         }

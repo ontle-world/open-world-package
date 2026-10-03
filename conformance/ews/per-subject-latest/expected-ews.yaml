@@ -1,0 +1,27 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.state:
+      press-7: down
+    plant.mode: night
+  unresolved:
+    m.state:
+      robot-2:
+      - running
+      - idle
+  missing: []
+  provenance:
+    m.state:
+      press-7:
+      - o2
+      robot-2:
+      - o3
+      - o4
+    plant.mode:
+    - o6

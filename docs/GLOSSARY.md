@@ -10,6 +10,9 @@ Terms that OWP keeps apart. Each entry says which asset or field carries the con
 | World | An explicit, intentionally incomplete representation of a target. | `WorldPackage`, `spec.world` |
 | World View | A projection of a World for a purpose, at a scale, resolution, and time scope. Actor, role, task, objective, and authority are optional conditioning. | `WorldViewProfile` |
 | Effective World State (EWS) | The state a State Compiler materializes for one View and moment. Runtime-derived. | spec section 12 |
+| Per-subject field | An EWS field with one value per observed subject (a machine, a lot, a work item), keyed by the observation's `subject`. | spec section 12.3 |
+| Latent state | State not observed directly: an estimate, an aggregate over a window, or a classification by a declared criterion. Kept apart from observed state, with a derivation record. | spec section 12.4 |
+| Criterion | The declared basis of a classification: id, version, rules, and a pointer to its source (an SOP, a standard). | spec section 12.4 |
 | Operational context | EWS combined at run time with the acting actor's context, the task, available resources, and the dynamics and constraints that apply. Runtime-derived, not packaged. | — |
 | World Model | A model grounded in a World through named Views and State Compilers. | `WorldModelPackage` |
 

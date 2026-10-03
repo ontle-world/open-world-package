@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: o1, type: ot.state, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {v: running}}
+  - {id: o2, type: ot.state, subject: press-7, observedAt: "2026-01-01T00:00:02Z", values: {v: down}}
+  - {id: o3, type: ot.state, subject: robot-2, observedAt: "2026-01-01T00:00:03Z", values: {v: running}}
+  - {id: o4, type: ot.state, subject: robot-2, observedAt: "2026-01-01T00:00:03Z", values: {v: idle}}
+  - {id: o5, type: ot.mode, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {v: day}}
+  - {id: o6, type: ot.mode, observedAt: "2026-01-01T00:00:02Z", values: {v: night}}

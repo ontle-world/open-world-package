@@ -1,0 +1,81 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    t.sum:
+      press-7: 184.5
+      robot-2: -2
+    t.mean:
+      press-7: 61.5
+      robot-2: -2.0
+    t.min:
+      press-7: 59.5
+      robot-2: -2
+    t.max:
+      press-7: 64
+      robot-2: -2
+    empty.sum: 0
+  unresolved: {}
+  missing:
+  - empty.mean
+  provenance:
+    t.sum:
+      press-7:
+      - t1
+      - t2
+      - t3
+      robot-2:
+      - t4
+    t.mean:
+      press-7:
+      - t1
+      - t2
+      - t3
+      robot-2:
+      - t4
+    t.min:
+      press-7:
+      - t1
+      - t2
+      - t3
+      robot-2:
+      - t4
+    t.max:
+      press-7:
+      - t1
+      - t2
+      - t3
+      robot-2:
+      - t4
+    empty.sum: []
+  derivation:
+    t.sum:
+      kind: aggregate
+      from: ot.temp
+      value: c
+      function: sum
+    t.mean:
+      kind: aggregate
+      from: ot.temp
+      value: c
+      function: mean
+    t.min:
+      kind: aggregate
+      from: ot.temp
+      value: c
+      function: min
+    t.max:
+      kind: aggregate
+      from: ot.temp
+      value: c
+      function: max
+    empty.sum:
+      kind: aggregate
+      from: ot.none
+      value: c
+      function: sum

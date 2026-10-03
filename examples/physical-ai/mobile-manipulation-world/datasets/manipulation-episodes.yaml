@@ -13,7 +13,7 @@ spec:
         provider: huggingface
         uri: hf://datasets/k-chan-l/lekiwi_pick_and_place2
         revision: de33a7ae7c1769d042e1303894df3b7ea804de21
-  note: >-
+  description: >-
     LeRobot v3.0 episodes of a LeKiwi mobile manipulator (50 episodes, 30 fps): front and wrist cameras,
     five arm joints, a gripper, and measured base velocities (x, y, theta) in observation.state, the
     teleoperation command for the same in action, and the instruction

@@ -7,4 +7,4 @@ spec:
   bundled: false
   artifactRef:
     status: unbound
-  note: Bind a rule, statistical, learned, solver, or external model implementation here.
+  description: Bind a rule, statistical, learned, solver, or external model implementation here.

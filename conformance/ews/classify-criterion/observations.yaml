@@ -1,0 +1,17 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: a1, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {code: jam}}
+  - {id: a2, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:02Z", values: {code: jam}}
+  - {id: a3, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:03Z", values: {code: jam}}
+  - {id: a4, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T00:00:01Z", values: {code: estop}}
+  - {id: a5, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T00:00:02Z", values: {code: jam}}
+  - {id: a6, type: ot.alarm, subject: cell-9, observedAt: "2026-01-01T00:00:02Z", values: {code: jam}}
+  - {id: s1, type: ot.state, subject: press-7, observedAt: "2026-01-01T00:00:01Z", values: {v: down}}
+  - {id: s2, type: ot.state, subject: robot-2, observedAt: "2026-01-01T00:00:01Z", values: {v: running}}
+  - {id: s3, type: ot.state, subject: robot-2, observedAt: "2026-01-01T00:00:01Z", values: {v: blocked}}
+  - {id: s4, type: ot.state, subject: cell-9, observedAt: "2026-01-01T00:00:01Z", values: {v: idle}}
+  - {id: s5, type: ot.state, subject: belt-1, observedAt: "2026-01-01T00:00:01Z", values: {v: down}}
+  - {id: s6, type: ot.state, subject: belt-1, observedAt: "2026-01-01T00:00:01Z", values: {v: blocked}}
+  - {id: c1, type: ot.code, observedAt: "2026-01-01T00:00:01Z", values: {v: "500"}}

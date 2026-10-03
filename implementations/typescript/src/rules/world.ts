@@ -82,6 +82,7 @@ const stateful: ProfileCheck = (ctx, w) => {
       out.push({ rule: "profile.stateful.output-contract", msg: `StateCompilerProfile ${c.rawPath} must declare spec.outputContract: EffectiveWorldState` });
     }
     // Spec 6.1 (round 3): malformed bindings fail stateful for declared and satisfied profile.
+    for (const p of outputListProblems(s, compilerFields(ctx, c).fields)) out.push({ rule: p.rule, msg: `StateCompilerProfile ${c.rawPath}: ${p.msg}` });
     for (const m of bindingProblems(s, compilerFields(ctx, c).fields)) out.push({ rule: "compiler.binding", msg: `StateCompilerProfile ${c.rawPath}: ${m}` });
   }
   return out;
@@ -213,6 +214,52 @@ export function checkCompilerSchemas(ctx: Context): void {
 }
 
 /** Spec 12.2: binding keys are EWS fields of the compiler; from/value strings; select latest|all. */
+export const AGGREGATE_FUNCTIONS = ["count", "distinct_count", "sum", "mean", "min", "max"];
+const CONDITIONS = ["eq", "in", "gt", "gte", "lt", "lte"];
+const DURATION_RE = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
+const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+
+/** Seconds in an ISO 8601 duration of days, hours, minutes, and seconds (spec 12.4); null if malformed. */
+export function durationSeconds(v: unknown): number | null {
+  if (typeof v !== "string" || v === "P" || v === "PT" || v.endsWith("T")) return null;
+  const m = DURATION_RE.exec(v);
+  if (!m) return null;
+  const [d, h, mi, s] = m.slice(1).map((x) => (x ? Number(x) : 0));
+  return ((d * 24 + h) * 60 + mi) * 60 + s;
+}
+
+/** `outputSchema.perSubject` and `outputSchema.latent` (spec 12.3, 12.4); malformed lists count as empty. */
+export function outputLists(spec: Record<string, unknown> | undefined): { perSubject: string[]; latent: string[] } {
+  const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
+  const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  return { perSubject: list(schema.perSubject), latent: list(schema.latent) };
+}
+
+/** observe, estimate, aggregate, or classify; null when the binding has none or several forms. */
+export function bindingForm(b: unknown): "observe" | "estimate" | "aggregate" | "classify" | null {
+  if (!isObj(b)) return null;
+  const forms = (["estimate", "aggregate", "classify"] as const).filter((k) => k in b);
+  if (forms.length) return forms.length === 1 && Object.keys(b).length === 1 ? forms[0] : null;
+  return "observe";
+}
+
+/** Spec 12.3/12.4: perSubject and latent name EWS fields of the compiler. */
+export function outputListProblems(spec: Record<string, unknown> | undefined, ewsFields: string[] | null): Problem[] {
+  const out: Problem[] = [];
+  const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
+  const unknown = ewsFields === null && spec?.outputSchemaRef !== undefined && spec?.outputSchemaRef !== null;
+  for (const [key, rule] of [["perSubject", "compiler.per-subject-field"], ["latent", "compiler.latent-field"]] as const) {
+    if (!(key in schema)) continue;
+    const v = schema[key];
+    if (!Array.isArray(v) || !v.every((x) => typeof x === "string")) {
+      out.push({ rule, msg: `spec.outputSchema.${key} must be a list of EWS field names` });
+      continue;
+    }
+    if (!unknown) for (const n of v) if (!(ewsFields ?? []).includes(n)) out.push({ rule, msg: `spec.outputSchema.${key} names "${n}", which is not one of its EWS fields` });
+  }
+  return out;
+}
+
 export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFields: string[] | null): string[] {
   const out: string[] = [];
   if (!spec || spec.bindings === undefined) return out;
@@ -221,18 +268,70 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
   const fields = new Set(ewsFields ?? []);
   // An outputSchemaRef that does not resolve is already an error; its fields are unknown, so keys are not checked.
   const unknown = ewsFields === null && spec.outputSchemaRef !== undefined && spec.outputSchemaRef !== null;
+  const { perSubject, latent } = outputLists(spec);
+  const source = (key: string, v: unknown) => {
+    if (!isObj(v) || typeof v.from !== "string" || typeof v.value !== "string") out.push(`binding "${key}" must declare string from and value`);
+  };
   for (const [key, v] of Object.entries(b)) {
     if (!unknown && !fields.has(key)) out.push(`binding "${key}" is not an EWS field of the compiler`);
-    if (!isObj(v)) {
-      out.push(`binding "${key}" must be a mapping {from, value, select}`);
+    const form = bindingForm(v);
+    if (form === null) {
+      out.push(`binding "${key}" must be an observation binding or exactly one of estimate, aggregate, classify`);
       continue;
     }
-    if (typeof v.from !== "string") out.push(`binding "${key}".from must be a string`);
-    if (typeof v.value !== "string") out.push(`binding "${key}".value must be a string`);
-    if (v.select !== undefined && v.select !== "latest" && v.select !== "all") {
-      out.push(`binding "${key}".select must be "latest" or "all" (got ${JSON.stringify(v.select)})`);
+    if (form !== "observe" && !latent.includes(key)) out.push(`binding "${key}" is a ${form} binding, so the field must be listed in spec.outputSchema.latent`);
+    if (form === "observe" && latent.includes(key)) out.push(`binding "${key}": a latent field needs an estimate, aggregate, or classify binding`);
+    const vv = v as Obj;
+    if (form === "observe" || form === "estimate") {
+      const inner = form === "observe" ? vv : vv.estimate;
+      source(key, inner);
+      if (isObj(inner) && inner.select !== undefined && inner.select !== "latest" && inner.select !== "all") {
+        out.push(`binding "${key}".select must be "latest" or "all" (got ${JSON.stringify(inner.select)})`);
+      }
+    } else if (form === "aggregate") {
+      const a = vv.aggregate;
+      source(key, a);
+      if (isObj(a)) {
+        if (!AGGREGATE_FUNCTIONS.includes(a.function as string)) out.push(`binding "${key}" aggregate.function must be one of ${AGGREGATE_FUNCTIONS.join(", ")}`);
+        if ("window" in a && durationSeconds(a.window) === null) out.push(`binding "${key}" aggregate.window must be an ISO 8601 duration such as PT24H or P7D`);
+      }
+    } else {
+      out.push(...classifyProblems(key, vv.classify, ewsFields, perSubject, unknown));
     }
   }
+  // Classification inputs must not form a cycle.
+  const graph = new Map<string, unknown>();
+  for (const [k, v] of Object.entries(b)) if (bindingForm(v) === "classify" && isObj((v as Obj).classify)) graph.set(k, ((v as Obj).classify as Obj).input);
+  for (const start of graph.keys()) {
+    const seen = new Set<string>();
+    let cur: unknown = start;
+    while (typeof cur === "string" && graph.has(cur) && !seen.has(cur)) {
+      seen.add(cur);
+      cur = graph.get(cur);
+    }
+    if (cur === start) out.push(`classification inputs form a cycle through "${start}"`);
+  }
+  return out;
+}
+
+function classifyProblems(key: string, c: unknown, ewsFields: string[] | null, perSubject: string[], unknown: boolean): string[] {
+  if (!isObj(c) || typeof c.input !== "string") return [`binding "${key}" classify.input must name an EWS field`];
+  const out: string[] = [];
+  const input = c.input;
+  if (input === key || (!unknown && !(ewsFields ?? []).includes(input))) out.push(`binding "${key}" classify.input "${input}" must be another EWS field of the compiler`);
+  if (perSubject.includes(key) !== perSubject.includes(input)) out.push(`binding "${key}" is per-subject exactly when its input "${input}" is`);
+  const crit = c.criterion;
+  if (!isObj(crit) || typeof crit.id !== "string" || crit.id === "") return [...out, `binding "${key}" classify.criterion must be a mapping with an id`];
+  if ("version" in crit && !(typeof crit.version === "string" && SEMVER_RE.test(crit.version))) out.push(`binding "${key}" classify.criterion.version must be SemVer`);
+  if ("basis" in crit && typeof crit.basis !== "string") out.push(`binding "${key}" classify.criterion.basis must be a string`);
+  const rules = crit.rules;
+  if (!Array.isArray(rules) || rules.length === 0) return [...out, `binding "${key}" classify.criterion.rules must be a non-empty list`];
+  rules.forEach((r, i) => {
+    const when = isObj(r) ? r.when : undefined;
+    if (!isObj(when) || Object.keys(when).length === 0 || !Object.keys(when).every((k) => CONDITIONS.includes(k)) || !("label" in (r as Obj))) {
+      out.push(`binding "${key}" classify.criterion.rules[${i}] needs when (one or more of ${CONDITIONS.join(", ")}) and label`);
+    } else if ("in" in when && !Array.isArray(when.in)) out.push(`binding "${key}" classify.criterion.rules[${i}].when.in must be a list`);
+  });
   return out;
 }
 

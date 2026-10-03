@@ -89,6 +89,22 @@
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*:[^\\s/][^\\s]*$"
           }
         },
+        "subjects": {
+          "type": "object",
+          "description": "Observation type -> how its subjects become IRIs (spec sections 12.3, 14): {base: <IRI prefix>} or {iri: true}.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "string"
+              },
+              "iri": {
+                "const": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
         "extensions": {
           "$ref": "#/$defs/extensions"
         }

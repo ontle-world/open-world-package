@@ -90,7 +90,13 @@ class CoreDumper(yaml.SafeDumper):
 
 def load_yaml(text: str | bytes) -> Any:
     """Parse one YAML document with the YAML 1.2 core schema."""
-    return yaml.load(text, Loader=FastCoreLoader)
+    if isinstance(text, bytes):
+        text = text.decode("utf-8")
+    # libyaml and the pure-Python parser disagree on tabs (for example a tab before a flow-sequence item)
+    # and on %YAML directives; such documents take the pure-Python path, so a verdict never depends on
+    # whether PyYAML was built with libyaml.
+    loader = CoreLoader if "\t" in text or text.startswith("%") or "\n%" in text else FastCoreLoader
+    return yaml.load(text, Loader=loader)
 
 
 def dump_yaml(data: Any, **kwargs: Any) -> str:

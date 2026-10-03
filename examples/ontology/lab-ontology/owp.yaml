@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld-examples
+  name: lab-ontology
+  version: 0.1.0
+  title: Laboratory Assay Ontology
+  license: Apache-2.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/openworld-examples/lab#
+    prefixes:
+      l: https://w3id.org/openworld-examples/lab#
+    entrypoints:
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+  conformance:
+    profile: schema

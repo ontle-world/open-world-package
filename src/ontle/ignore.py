@@ -22,6 +22,16 @@ class _Rule:
     anchored: bool
 
 
+def _class_span(glob: str, i: int) -> tuple[int, int, bool] | None:
+    """(body start, closing index, negated) of a character class opened at i; a ']' first in the class is literal."""
+    j = i + 1
+    negated = glob[j:j + 1] in ("!", "^")
+    if negated:
+        j += 1
+    end = glob.find("]", j + 1 if glob[j:j + 1] == "]" else j)
+    return None if end == -1 else (j, end, negated)
+
+
 def _glob_regex(glob: str) -> str:
     out: list[str] = []
     i, n = 0, len(glob)
@@ -46,11 +56,10 @@ def _glob_regex(glob: str) -> str:
         elif c == "?":
             out.append("[^/]")
             i += 1
-        elif c == "[" and (end := glob.find("]", i + 2 if glob[i + 1:i + 2] in ("!", "^") else i + 1)) != -1:
-            body = glob[i + 1:end]
-            if body[:1] in ("!", "^"):
-                body = "^" + body[1:]
-            out.append("[" + body.replace("\\", "\\\\") + "]")
+        elif c == "[" and (span := _class_span(glob, i)) is not None:
+            start, end, negated = span
+            body = "".join("\\" + ch if ch in "\\]^[" else ch for ch in glob[start:end])
+            out.append("[" + ("^" if negated else "") + body + "]")
             i = end + 1
         elif c == "\\" and i + 1 < n:
             out.append(re.escape(glob[i + 1]))
@@ -63,7 +72,7 @@ def _glob_regex(glob: str) -> str:
 
 def parse_ignore(text: str) -> list[_Rule]:
     rules: list[_Rule] = []
-    for line in text.splitlines():
+    for line in re.split(r"\r\n|\r|\n", text):
         line = line.rstrip()
         if not line or line.startswith("#"):
             continue
@@ -78,7 +87,11 @@ def parse_ignore(text: str) -> list[_Rule]:
             continue
         anchored = "/" in line
         line = line.lstrip("/")
-        rules.append(_Rule(re.compile(_glob_regex(line) + r"\Z"), negate, dir_only, anchored))
+        try:
+            regex = re.compile(_glob_regex(line) + r"\Z")
+        except re.error:
+            continue  # a pattern that is not valid (for example the range [z-a]) excludes nothing
+        rules.append(_Rule(regex, negate, dir_only, anchored))
     return rules
 
 

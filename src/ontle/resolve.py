@@ -458,4 +458,49 @@ def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] |
         dep = resolution.packages.get(ref)
         if dep is not None and dep.kind == "OntologyPackage":
             prefixes.update(ontology_terms(dep.root, dep.manifest)[0])
-    return {"@context": jsonld_context(_load_asset(world, binding_rel), prefixes), **ews}
+    binding = _load_asset(world, binding_rel)
+    out = {"@context": jsonld_context(binding, prefixes), **ews}
+    graph = _subject_nodes(world, binding, ews)
+    if graph:
+        out["@graph"] = graph
+    return out
+
+
+def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[str, Any]) -> list[dict[str, Any]]:
+    """Section 12.3/14: per-subject state as individuals, when the SemanticBinding maps the field's subjects to IRIs."""
+    from .binding import subject_iri
+    from .ews import binding_form, output_lists
+    bspec = binding.get("spec") or {}
+    subjects = bspec.get("subjects") if isinstance(bspec.get("subjects"), dict) else {}
+    types = bspec.get("observationTypes") if isinstance(bspec.get("observationTypes"), dict) else {}
+    compiler_ref = ((ews.get("spec") or {}).get("stateCompiler") or "").partition("#")[2]
+    if not subjects or not compiler_ref:
+        return []
+    compiler = (_load_asset(world, compiler_ref).get("spec") or {})
+    bindings = compiler.get("bindings") if isinstance(compiler.get("bindings"), dict) else {}
+    per_subject, _ = output_lists(compiler)
+
+    def source_type(field: str, seen: tuple[str, ...] = ()) -> str | None:
+        b = bindings.get(field)
+        form = binding_form(b)
+        if form == "observe":
+            return b.get("from")
+        if form in ("estimate", "aggregate"):
+            return b[form].get("from")
+        if form == "classify" and field not in seen:
+            return source_type(b["classify"].get("input"), seen + (field,))
+        return None
+
+    nodes: dict[str, dict[str, Any]] = {}
+    state = (ews.get("spec") or {}).get("state") or {}
+    for field in per_subject:
+        otype = source_type(field)
+        rule = subjects.get(otype) if otype else None
+        if not isinstance(rule, dict) or not isinstance(state.get(field), dict):
+            continue
+        for subject, value in state[field].items():
+            node = nodes.setdefault(subject_iri(rule, subject), {"@id": subject_iri(rule, subject)})
+            if isinstance(types.get(otype), str):
+                node["@type"] = types[otype]
+            node[field] = value
+    return [nodes[k] for k in sorted(nodes)]

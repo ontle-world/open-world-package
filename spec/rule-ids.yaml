@@ -42,7 +42,9 @@ rules:
   profile.stateful.output-contract: {severity: error, section: "6.1", summary: "a compiler's outputContract is not EffectiveWorldState"}
   profile.model-ready.output-schema: {severity: error, section: "6.1", summary: "a compiler has no EWS fields: neither outputSchema.fields nor a resolvable outputSchemaRef"}
   profile.action-ready: {severity: error, section: "6.1", summary: "missing action, commit, or effect-verification asset"}
-  compiler.binding: {severity: error, section: "12.2", summary: "malformed declarative binding, or binding a field that is not an EWS field of the compiler"}
+  compiler.binding: {severity: error, section: "12.2, 12.4", summary: "malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match latent, or a classification cycle"}
+  compiler.per-subject-field: {severity: error, section: "12.3", summary: "outputSchema.perSubject is not a list of EWS fields of the compiler"}
+  compiler.latent-field: {severity: error, section: "12.4", summary: "outputSchema.latent is not a list of EWS fields of the compiler"}
   compiler.output-schema-ref: {severity: error, section: "12.1", summary: "outputSchemaRef is not a package-relative path to a JSON Schema with a non-empty top-level properties object"}
   compiler.output-schema-mismatch: {severity: error, section: "12.1", summary: "outputSchema.fields and the properties of outputSchemaRef list different fields"}
   worldmodel.spec: {severity: error, section: "3", summary: "missing spec.worldModel or roles"}
@@ -112,8 +114,12 @@ rules:
   ews.unresolved-alternatives: {severity: error, section: "12.1", summary: "unresolved field with fewer than two alternatives"}
   ews.provenance-orphan: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
   ews.provenance-required: {severity: error, section: "12.1", summary: "provenance for a field without value, or missing under traceRequired"}
+  ews.per-subject-shape: {severity: error, section: "12.1, 12.3", summary: "a per-subject field whose value or provenance is not a mapping from subject"}
+  ews.per-subject-overlap: {severity: error, section: "12.1, 12.3", summary: "a subject in both state and unresolved"}
+  ews.derivation: {severity: error, section: "12.1, 12.4", summary: "a latent field with a value but no derivation record, a record for another field, or a record without a valid kind"}
   binding.asset: {severity: error, section: "14", summary: "spec.world.semanticBinding is not a local SemanticBinding asset"}
   binding.curie: {severity: error, section: "14", summary: "binding value or section is not a CURIE or a mapping as required"}
+  binding.subjects: {severity: error, section: "14", summary: "subjects entry for an unlisted observation type, or not {base} / {iri: true}"}
   binding.field-unknown: {severity: error, section: "14", summary: "bound field is not an EWS field of any local State Compiler"}
   grounding.prefix-unknown: {severity: error, section: "14", summary: "binding CURIE uses a prefix no dependency OntologyPackage declares"}
   grounding.prefix-conflict: {severity: error, section: "14", summary: "two dependency OntologyPackages declare one prefix with different IRIs"}

@@ -1,0 +1,18 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld-examples
+  name: sales-ontology
+  version: 0.1.0
+  title: Sales Account Ontology
+  license: Apache-2.0
+spec:
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/openworld-examples/sales#
+    prefixes:
+      s: https://w3id.org/openworld-examples/sales#
+    entrypoints:
+    - {path: semantics/core.yaml, format: owp-yaml, role: schema}
+  conformance:
+    profile: schema

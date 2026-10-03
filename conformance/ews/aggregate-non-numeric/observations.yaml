@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: t1, type: ot.temp, observedAt: "2026-01-01T00:00:01Z", values: {c: 61}}
+  - {id: t2, type: ot.temp, observedAt: "2026-01-01T00:00:02Z", values: {c: "64"}}

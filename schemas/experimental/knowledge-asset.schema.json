@@ -62,9 +62,6 @@
           },
           "additionalProperties": false
         },
-        "worldRef": {
-          "type": "string"
-        },
         "snapshot": {
           "type": "object",
           "properties": {

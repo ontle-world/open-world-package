@@ -98,6 +98,8 @@ An EWS document conforms to its State Compiler when:
 - Each `unresolved` field retains at least two distinct alternatives.
 - Absent `unresolved`, `missing`, or `provenance` sections are empty. Checking an EWS does not require the World package to be valid; it requires the named State Compiler to be a local asset.
 - `provenance` has entries only for fields in `state` or `unresolved`; when the compiler declares `traceRequired: true`, every such field has non-empty provenance.
+- Per-subject fields (section 12.3) have a mapping from subject to value in `state` and `unresolved`, and to observation ids in `provenance` (`ews.per-subject-shape`). Such a field MAY appear in both `state` and `unresolved`, but no subject appears in both (`ews.per-subject-overlap`); each subject in `unresolved` retains at least two distinct alternatives; with `traceRequired: true`, each subject has non-empty provenance. A per-subject field in `missing` appears nowhere else.
+- Latent fields (section 12.4) that have a value have a `derivation` entry, and no other field has one (`ews.derivation`).
 
 Reference CLI: `ontle ews check <ews.yaml> --world <world package>`.
 
@@ -140,9 +142,65 @@ Preconditions: the compiler is a local `StateCompilerProfile` asset of the World
 
 Invalid input (duplicate ids, a missing `id`/`type`/`values`, a non-UTC timestamp, an undefined field) MUST be rejected rather than compiled.
 
-Two EWS documents are equal when `worldRef`, `worldView`, `stateCompiler`, `asOf`, `state`, and `unresolved` are equal, `missing` is equal as a set, and each `provenance` entry is equal as a set.
+Two EWS documents are equal when `worldRef`, `worldView`, `stateCompiler`, `asOf`, `state`, `unresolved`, and `derivation` are equal, `missing` is equal as a set, and each `provenance` entry (for a per-subject field, each subject's entry) is equal as a set.
 
 Reference CLI: `ontle ews compile <world> --compiler <path> --observations <file> --as-of <timestamp>`.
+
+### 12.3 Per-subject fields
+
+An observation MAY name its `subject`: the thing it is about (a machine, a lot, a work item). A field the compiler lists in `spec.outputSchema.perSubject` holds one value per subject instead of one value for the whole View. `perSubject` names EWS fields of the compiler (`compiler.per-subject-field`); it MAY accompany `outputSchemaRef`, in which case `outputSchema.fields` may be omitted.
+
+```yaml
+outputSchema:
+  fields: [equipment.state, plant.alert_level]
+  perSubject: [equipment.state]
+```
+
+Compilation of a per-subject field: every candidate MUST have a string `subject`, or the input is rejected. Candidates are grouped by `subject`, and rules 3 and 4 of section 12.2 apply to each group. `state[field]`, `unresolved[field]`, and `provenance[field]` are mappings keyed by subject; subjects without candidates do not appear, and a field with no candidates at all is `missing`. In the EWS above, two observations of `press-7` (08:00 `running`, 09:00 `down`) and two of `robot-2` at 09:30 (`running`, `idle`) give `state: {equipment.state: {press-7: down}}` and `unresolved: {equipment.state: {robot-2: [running, idle]}}`.
+
+Subjects are the observation's `subject` strings, compared exactly. A SemanticBinding MAY map them to IRIs (section 14), which links per-subject state to the individuals of a knowledge graph.
+
+### 12.4 Latent fields
+
+State that is not observed directly is latent. OWP distinguishes three ways a latent value is produced and keeps them apart from observed state: an **estimate** (a model, estimator, or person's estimate of a value), an **aggregate** (a value computed from measurements over a time window), and a **classification** (a label assigned by a declared criterion). A compiler lists its latent fields in `spec.outputSchema.latent` (`compiler.latent-field`); each of them has a binding of one of the three forms below, and every other bound field has the observation binding of section 12.2 (`compiler.binding`).
+
+```yaml
+outputSchema:
+  fields: [equipment.state, equipment.alarms_24h, equipment.risk, equipment.health]
+  perSubject: [equipment.state, equipment.alarms_24h, equipment.risk, equipment.health]
+  latent: [equipment.alarms_24h, equipment.risk, equipment.health]
+bindings:
+  equipment.state: {from: OT.equipment_state, value: state, select: latest}
+  equipment.health: {estimate: {from: WM.health, value: index, select: latest}}
+  equipment.alarms_24h: {aggregate: {from: OT.alarm, value: code, function: count, window: PT24H}}
+  equipment.risk:
+    classify:
+      input: equipment.alarms_24h
+      criterion:
+        id: alarm-escalation
+        version: 1.2.0
+        basis: docs/alarm-escalation-sop.md
+        rules:
+        - {when: {gte: 5}, label: high}
+        - {when: {gte: 2}, label: elevated}
+        otherwise: normal
+```
+
+**Estimates.** An observation that is an estimate names its producer in `estimatedBy` (a package reference, an asset path, or another identifier) and MAY carry `uncertainty` (any JSON value). An observation binding of section 12.2 ignores observations with `estimatedBy`, so an estimate never becomes observed state; an `estimate` binding (`from`, `value`, `select`) considers only them and otherwise compiles as in section 12.2.
+
+**Aggregates.** An `aggregate` binding has `from`, `value`, `function` (`count`, `distinct_count`, `sum`, `mean`, `min`, `max`), and optionally `window`, an ISO 8601 duration of days, hours, minutes, and seconds (`P7D`, `PT24H`, `P1DT12H`). Candidates are the observations of section 12.2 rule 1 without `estimatedBy`, further limited to `observedAt` after `asOf` minus `window` when a window is given. `count` is the number of candidates and `distinct_count` the number of distinct values; both are 0 when there are none. `sum`, `mean`, `min`, and `max` need every candidate value to be a number, or the input is rejected; `sum` is 0 without candidates, and `mean`, `min`, and `max` are then `missing`. Values are combined in candidate order. Provenance is every candidate id; an aggregate over no candidates has an empty provenance list, which satisfies `traceRequired`.
+
+**Classifications.** A `classify` binding has `input`, another EWS field of the same compiler, and `criterion`: the declared basis of the judgement. `criterion.id` names it, `criterion.version` (SemVer) versions it, and `criterion.basis` MAY point at its source (a package file or a URI such as a standard or SOP). `criterion.rules` is a list of `{when, label}` tried in order; `when` holds one or more of `eq`, `in` (JSON value equality), `gt`, `gte`, `lt`, `lte` (numbers only; any other operand never matches), all of which must hold. The first matching rule gives the label; with no match, `otherwise` gives it, or the field is `missing` when `otherwise` is absent. A classification is per-subject exactly when its input is; it uses the input's value for each subject, applies the criterion to each alternative of an unresolved input (one distinct label resolves, several are `unresolved`), is `missing` where the input is, and takes the input's provenance. Inputs MUST NOT form a cycle (`compiler.binding`).
+
+**Derivation record.** For each latent field with a value the EWS has an entry in `spec.derivation`:
+
+| Form | Entry |
+|---|---|
+| estimate | `{kind: estimate, by: [<estimatedBy values of the provenance observations, distinct, sorted>]}`; per subject, `by` is a mapping from subject to that list |
+| aggregate | `{kind: aggregate, from, value, function}` and `window` when declared |
+| classification | `{kind: classify, input, criterion: {id}}` with `version` and `basis` when declared |
+
+The record states how a latent value was produced, so a consumer can tell a measured `down` from an estimated health index or a `high` risk judged by `alarm-escalation@1.2.0`. An opaque compiler declares `latent` the same way and its EWS carries the same records.
 
 ## 15. Evaluation, scenario, capability, and view fields
 

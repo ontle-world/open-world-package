@@ -6,12 +6,13 @@ import { validatePackage, ValidationResult } from "./validate.js";
 import { validateWithResolution } from "./resolve.js";
 import { checkEws, compileEws } from "./ews.js";
 import { checkDetachedEvidence } from "./evidence.js";
-import { loadYamlFile } from "./util.js";
+import { get, loadYamlFile } from "./util.js";
+import { API_VERSION } from "./vocab.js";
 
 const USAGE = `usage:
   owp-validate [--json] [--resolve] [--source <src>]... <package-dir> [...]
   owp-validate ews check <ews.yaml> --world <world-dir> [--json]
-  owp-validate ews compile <world-dir> --compiler <path> --observations <file> --as-of <timestamp>
+  owp-validate ews compile <world-dir> --compiler <path> --observations <file> [--observations <file> ...] --as-of <timestamp>
   owp-validate evidence check <evidence.yaml> --package <archive.owp.zip> [--json]
 
 Package sources for --resolve: each --source (directory, *.owp.zip, git+<url>@<rev>[#subdir=<p>], index:<local PackageIndex>),
@@ -63,12 +64,19 @@ function ewsMain(args: string[], json: boolean): number {
   }
   if (sub === "compile") {
     const compiler = takeOpt(args, "--compiler")[0];
-    const obs = takeOpt(args, "--observations")[0];
+    const obsFiles = takeOpt(args, "--observations", true);
     const asOf = takeOpt(args, "--as-of")[0];
     const world = args[0];
-    if (!compiler || !obs || !asOf || !world) return usage();
-    const doc = loadYamlFile(obs);
-    const r = doc.ok ? compileEws(world, compiler, doc.value, asOf) : { ok: false as const, errors: [`ews.input: ${doc.error}`] };
+    if (!compiler || obsFiles.length === 0 || !asOf || !world) return usage();
+    // Repeated --observations files are merged into one ObservationSet (duplicate ids stay invalid input).
+    const docs = obsFiles.map((f) => loadYamlFile(f));
+    const bad = docs.find((d) => !d.ok);
+    const merged = docs.length === 1 && docs[0].ok ? docs[0].value : {
+      apiVersion: API_VERSION,
+      kind: "ObservationSet",
+      spec: { observations: docs.flatMap((d) => (d.ok && Array.isArray(get(d.value, "spec", "observations")) ? (get(d.value, "spec", "observations") as unknown[]) : [])) },
+    };
+    const r = bad && !bad.ok ? { ok: false as const, errors: [`ews.input: ${bad.error}`] } : compileEws(world, compiler, merged, asOf);
     if (!r.ok) {
       process.stderr.write(`refused: ${r.errors.join("; ")}\n`);
       return 1;

@@ -7,6 +7,8 @@ metadata:
   title: Assay Optimization World
   license: Apache-2.0
 spec:
+  dependencies:
+  - openworld-examples/lab-ontology@0.1.0
   domains:
   - scientific_research
   - laboratory

@@ -203,6 +203,8 @@ Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS d
 - `<<` is an ordinary key; there are no merge keys.
 - Mapping keys are strings, as in the JSON data model: a key that reads as null, a boolean, or a number (`1:`, `true:`), or a key that is a sequence or mapping, does not parse. Quote such keys (`"1":`).
 - A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
+- A `%YAML` directive does not change these rules: the document is read as YAML 1.2 whatever version it names.
+- Tabs are not indentation: a line indented with a tab inside a block or flow collection does not parse.
 
 Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.
 
@@ -340,7 +342,7 @@ Precise meaning of the checks above:
 - **Evaluation asset names:** two local assets of the same kind (EvaluationProfile or VerifierProfile) MUST NOT share `metadata.name`. A non-SemVer `metadata.version` on them is an error; a missing one is a warning.
 - **YAML files:** every `.yaml`/`.yml` file that discovery reads, and every listed `PackageExample`, MUST parse. `PackageExample` files may contain any document (for example an `ObservationSet`), so their `kind` is not checked.
 - **Asset-kind vocabulary** (`vocab/asset-kinds.yaml`): a discovered OWP document MUST name a vocabulary kind or an extension kind (`asset.kind`). The `kind` of an external `spec.assets` entry is open: one without `:` outside the vocabulary is a warning. A vocabulary kind marked `stability: experimental` is a warning, because it may change or be removed. A kind marked `stability: reserved` is a name kept for a future definition: it has no schema or rules yet, and using it is a warning; a kind containing `:` is an extension kind and follows section 13.
-- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, and CapabilityContract assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
+- **Defined fields:** the manifest, CompatibilityEvidence, SemanticProfile, OntologyTermIndex, SemanticBinding, WorldViewProfile, EvaluationProfile, ScenarioProfile, CapabilityContract, Dataset, AgentProfile, EnvironmentProfile, ModelArtifact, SourceSystemSchemaProfile, ObservationAcquisitionProfile, ActionBindingProfile, CommitContract, EffectVerificationProfile, and VerifierProfile assets, ObservationSet documents, and EWS documents contain only the fields defined by their JSON Schemas under `schemas/` and `extensions` blocks (section 13). Any other key, including a misspelt field or a field named `<extension>:<field>`, is an error. Objects the schemas mark as open containers (for example `spec.validity`) are not checked inside. Asset kinds without a JSON Schema are checked only for `extensions` blocks in their top-level `metadata` and `spec`. `PackageExample` files are not checked, because they may hold any document.
 - **Severity:** MUST/required rules are errors and make the package invalid. Warnings never invalidate; Appendix A lists them.
 - **Satisfied profile** is computed even when the declared profile is invalid or unknown.
 - **Experimental kinds and fields** (Appendix C) produce warnings only; they never make a package invalid, except that extension rules (section 13) still apply.
@@ -499,7 +501,9 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `profile.stateful.output-contract` | 6.1 | a compiler's `outputContract` is not `EffectiveWorldState` |
 | `profile.model-ready.output-schema` | 6.1 | a compiler has no EWS fields: neither `outputSchema.fields` nor a resolvable `outputSchemaRef` |
 | `profile.action-ready` | 6.1 | missing action, commit, or effect-verification asset |
-| `compiler.binding` | 12.2 | malformed declarative binding, or binding a field that is not an EWS field of the compiler |
+| `compiler.binding` | 12.2, 12.4 | malformed declarative binding, binding a field that is not an EWS field of the compiler, a binding form that does not match `latent`, or a classification cycle |
+| `compiler.per-subject-field` | 12.3 | `outputSchema.perSubject` is not a list of EWS fields of the compiler |
+| `compiler.latent-field` | 12.4 | `outputSchema.latent` is not a list of EWS fields of the compiler |
 | `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
 | `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
 | `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |
@@ -555,8 +559,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `ews.field-unknown` | 12.1 | field that is not an EWS field of the compiler |
 | `ews.unresolved-alternatives` | 12.1 | unresolved field with fewer than two alternatives |
 | `ews.provenance-orphan`, `ews.provenance-required` | 12.1 | provenance for a field without value, or missing under `traceRequired` |
+| `ews.per-subject-shape` | 12.1, 12.3 | a per-subject field whose value or provenance is not a mapping from subject |
+| `ews.per-subject-overlap` | 12.1, 12.3 | a subject in both `state` and `unresolved` |
+| `ews.derivation` | 12.1, 12.4 | a latent field with a value but no derivation record, a record for another field, or a record without a valid kind |
 | `binding.asset` | 14 | `spec.world.semanticBinding` is not a local SemanticBinding asset |
 | `binding.curie` | 14 | binding value or section is not a CURIE or a mapping as required |
+| `binding.subjects` | 14 | `subjects` entry for an unlisted observation type, or not `{base}` / `{iri: true}` |
 | `binding.field-unknown` | 14 | bound field is not an EWS field of any local State Compiler |
 | `grounding.prefix-unknown` | 14 | binding CURIE uses a prefix no dependency OntologyPackage declares |
 | `grounding.prefix-conflict` | 14 | two dependency OntologyPackages declare one prefix with different IRIs |

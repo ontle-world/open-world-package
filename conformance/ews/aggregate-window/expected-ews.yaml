@@ -1,0 +1,62 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.alarms_24h:
+      press-7: 2
+      robot-2: 1
+    m.alarm_kinds:
+      press-7: 2
+      robot-2: 1
+    plant.alarms_24h: 3
+    plant.stops_24h: 0
+  unresolved: {}
+  missing: []
+  provenance:
+    m.alarms_24h:
+      press-7:
+      - a1
+      - a2
+      robot-2:
+      - a3
+    m.alarm_kinds:
+      press-7:
+      - a0
+      - a1
+      - a2
+      robot-2:
+      - a3
+    plant.alarms_24h:
+    - a1
+    - a2
+    - a3
+    plant.stops_24h: []
+  derivation:
+    m.alarms_24h:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+      window: PT24H
+    m.alarm_kinds:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: distinct_count
+    plant.alarms_24h:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+      window: P1D
+    plant.stops_24h:
+      kind: aggregate
+      from: ot.stop
+      value: code
+      function: count
+      window: PT24H

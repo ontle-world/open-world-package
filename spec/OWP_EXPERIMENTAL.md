@@ -50,6 +50,7 @@ spec:
     values: {equipment: equipment}          # values key -> result column
     observedAt: {column: recordedAt, default: snapshot}
     multi: true                              # several values per subject are expected
+    subject: lot                             # optional: the column naming what each observation is about
 ```
 
 Running the query is outside this specification. Given the result rows (each a mapping from column to JSON value), the parameter values, and the source's `snapshot.asOf`, a conforming implementation builds the ObservationSet as follows:
@@ -58,7 +59,8 @@ Running the query is outside this specification. Given the result rows (each a m
 2. For each entry of `observations`, in order, and each row: if any `id` column is absent or null, the row yields nothing for that entry. `values` copies each mapped column that is present and not null; if none is, the row yields nothing. `observedAt` is the `observedAt.column` value when present and not null, otherwise `default`, where `snapshot` (the default) means the source's `snapshot.asOf`; it MUST be a valid UTC timestamp (section 12).
 3. The observation `id` is `<type>:` followed by the `id` column values joined with `|`. A string is used as is, a boolean as `true` or `false`, and a number in its shortest decimal form, without a fraction when the value is integral (`10.0` gives `10`). An array or mapping id value is invalid input.
 4. The observations of one entry are ordered by `id` (Unicode code points); entries keep their order. Rows that repeat an observation (same `id`, `values`, and `observedAt`, as joins often do) yield it once; the same `id` with different content, or from two entries, is an error.
-5. `spec.provenance` records `extraction` (`<name>@<version>`, or the name when unversioned), `parameters` when any were given, and `snapshot` when known.
+5. When the entry names a `subject` column whose value in the row is present and not null, the observation's `subject` is that value, written as for `id` (rule 3). Per-subject State Compiler fields (section 12.3) need it.
+6. `spec.provenance` records `extraction` (`<name>@<version>`, or the name when unversioned), `parameters` when any were given, and `snapshot` when known.
 
 Invalid input is `extraction.input` and nothing is produced. A State Compiler binding with `select: latest` that reads a type an extraction marks `multi: true` is the warning `compiler.multi-latest`; such types are read with `select: all`.
 

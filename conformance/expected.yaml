@@ -860,6 +860,20 @@ cases:
     valid: true
     satisfiedProfile: descriptive
     rule: "Discovery does not enter a subdirectory with its own owp.yaml; that package's assets are not this package's."
+  package-ignore:
+    valid: true
+    satisfiedProfile: descriptive
+    rule: "Files that .owpignore excludes (a directory, a name at any depth, a root-anchored path) are not package files, so discovery does not read them; a file inside an excluded directory cannot be re-included."
+  package-ignore-negation:
+    valid: false
+    errors: [asset.kind]
+    satisfiedProfile: descriptive
+    rule: "A later !pattern in .owpignore re-includes a file that an earlier pattern excluded; discovery reads it again."
+  package-ignore-listed-example:
+    valid: false
+    errors: [asset.missing-file]
+    satisfiedProfile: descriptive
+    rule: "A listed PackageExample that .owpignore excludes is not a package file."
   asset-api-version-mismatch:
     valid: false
     errors: [asset.api-version]

@@ -2,11 +2,12 @@
  * Spec section 5: local assets are found by their own apiVersion and kind, not listed in owp.yaml.
  *
  * Discovery reads every .yaml/.yml file of the package except owp.yaml and the listed PackageExample files.
- * It skips path components that start with "." or name a build/tooling directory, files that resolve outside
- * the package, and subdirectories that hold their own owp.yaml (a nested package).
+ * It skips path components that start with "." or name a build/tooling directory, paths that .owpignore excludes,
+ * files that resolve outside the package, and subdirectories that hold their own owp.yaml (a nested package).
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { IgnoreRule, isIgnored, loadIgnore } from "./ignore.js";
 import { get, isObj, isYamlPath, loadYamlFile, Obj, staysInside } from "./util.js";
 
 const IGNORED = new Set(["__pycache__", "venv", "node_modules", "dist", "build"]);
@@ -26,7 +27,7 @@ export function isOwpDocument(doc: unknown): doc is Obj {
   return isObj(doc) && typeof doc.apiVersion === "string" && doc.apiVersion.startsWith("openworld/");
 }
 
-function walk(root: string, dir: string, out: string[]): void {
+function walk(root: string, dir: string, rules: IgnoreRule[], out: string[]): void {
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     if (entry.name.startsWith(".") || IGNORED.has(entry.name)) continue;
     const rel = dir ? `${dir}/${entry.name}` : entry.name;
@@ -38,8 +39,8 @@ function walk(root: string, dir: string, out: string[]): void {
       continue;
     }
     if (stat.isDirectory()) {
-      if (!fs.existsSync(path.join(abs, "owp.yaml"))) walk(root, rel, out); // a nested package is not entered
-    } else if (stat.isFile() && isYamlPath(rel) && rel !== "owp.yaml" && staysInside(root, abs)) {
+      if (!fs.existsSync(path.join(abs, "owp.yaml"))) walk(root, rel, rules, out); // a nested package is not entered
+    } else if (stat.isFile() && isYamlPath(rel) && rel !== "owp.yaml" && !isIgnored(rules, rel) && staysInside(root, abs)) {
       out.push(rel);
     }
   }
@@ -47,7 +48,7 @@ function walk(root: string, dir: string, out: string[]): void {
 
 export function packageDocuments(root: string, skip: Set<string> = new Set()): PackageDocument[] {
   const rels: string[] = [];
-  walk(root, "", rels);
+  walk(root, "", loadIgnore(root), rels);
   return rels
     .filter((rel) => !skip.has(rel))
     .sort()

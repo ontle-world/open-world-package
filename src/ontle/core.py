@@ -7,12 +7,14 @@ import hashlib
 import json
 import posixpath
 import re
+import tempfile
 import zipfile
 from typing import Any, Iterator
 
 from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
+from .ignore import IGNORE_FILE, is_ignored, load_ignore
 from .yamlio import dump_yaml, load_yaml
 
 MANIFEST = "owp.yaml"
@@ -433,6 +435,7 @@ def validate_package(path: str | Path) -> ValidationResult:
 
     # The manifest lists external assets (ref) and PackageExample files; other local assets are discovered.
     example_paths: set[str] = set()
+    ignore_rules = load_ignore(root)
     for idx, item in enumerate(assets):
         if not isinstance(item, dict):
             errors.append(f"asset.entry: spec.assets[{idx}] must be a mapping")
@@ -474,6 +477,9 @@ def validate_package(path: str | Path) -> ValidationResult:
             continue
         if not target.exists():
             errors.append(f"asset.missing-file: local asset path does not exist: {rel}")
+            continue
+        if is_ignored(ignore_rules, rel):
+            errors.append(f"asset.missing-file: local asset path {rel} is excluded by {IGNORE_FILE}, so it is not a package file")
             continue
         if target.suffix.lower() in {".yaml", ".yml"}:
             try:
@@ -643,8 +649,8 @@ def is_owp_document(doc: Any) -> bool:
 def package_documents(root: Path, skip: set[str] = frozenset()) -> Iterator[tuple[str, Any]]:
     """Every YAML file that asset discovery reads (spec section 5), with its parsed content or the parse error.
 
-    Discovery skips owp.yaml, the paths in skip, path components that start with '.', the directories that
-    packing ignores, and subdirectories that hold their own owp.yaml (a nested package).
+    Discovery skips owp.yaml, the paths in skip, path components that start with '.', files that are not
+    package files (see package_files), and subdirectories that hold their own owp.yaml (a nested package).
     """
     nested = [p.parent.relative_to(root).parts for p in root.rglob(MANIFEST) if p.parent != root]
     for path in package_files(root):
@@ -690,6 +696,12 @@ def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
 
 
 def package_files(root: Path) -> list[Path]:
+    """The files a package consists of: what discovery reads and ontle pack archives.
+
+    Build and tooling directories, operating-system metadata, archives, and paths that .owpignore excludes
+    are not package files. owp.yaml always is.
+    """
+    rules = load_ignore(root)
     ignored_parts = {".git", ".ontle", "__pycache__", ".pytest_cache", ".mypy_cache", ".venv", "venv", "node_modules",
                      "dist", "build", ".DS_Store", "Thumbs.db"}  # also operating-system metadata files
     files: list[Path] = []
@@ -700,6 +712,8 @@ def package_files(root: Path) -> list[Path]:
         if any(part in ignored_parts for part in rel.parts):
             continue
         if p.name.endswith(".owp.zip"):
+            continue
+        if rel.as_posix() != MANIFEST and is_ignored(rules, rel.as_posix()):
             continue
         files.append(p)
     return sorted(files, key=lambda p: p.relative_to(root).as_posix())
@@ -752,6 +766,8 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None, vendo
     output.parent.mkdir(parents=True, exist_ok=True)
 
     files = package_files(root)
+    if load_ignore(root):
+        _check_packed_files(root, files)
     extra: dict[str, bytes] = {}
     vendored: dict[str, str] = {}
     if vendor:
@@ -780,6 +796,18 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None, vendo
         zi.external_attr = (0o644 & 0xFFFF) << 16
         zf.writestr(zi, lock_bytes)
     return output
+
+
+def _check_packed_files(root: Path, files: list[Path]) -> None:
+    """The package as archived, without the files .owpignore excludes, must still be valid (a manifest or asset may refer to one)."""
+    with tempfile.TemporaryDirectory() as td:
+        for p in files:
+            dest = Path(td) / p.relative_to(root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(p.read_bytes())
+        result = validate_package(td)
+    if not result.valid:
+        raise OWPError(f"package is invalid without the files {IGNORE_FILE} excludes: " + "; ".join(result.errors))
 
 
 def _ensure_term_index(root: Path, manifest: dict[str, Any]) -> None:

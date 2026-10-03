@@ -381,11 +381,27 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
     turtle = "\n".join(lines) + "\n"
     if fmt != "jsonld":
         return turtle
-    import importlib.util
-    if importlib.util.find_spec("rdflib") is None:
-        from .core import OWPError
-        raise OWPError("JSON-LD export needs rdflib: pip install 'ontle-open-world[rdf]'")
-    import rdflib
-    graph = rdflib.Graph()
-    graph.parse(data=turtle, format="turtle")
-    return graph.serialize(format="json-ld", context={**std, **prefixes}, indent=2) + "\n"
+    # JSON-LD of the same graph, built directly (no RDF library needed).
+    def node_ref(o: str) -> dict[str, Any]:
+        return {"@id": f"_:u{o[2:]}"} if o.startswith("_:") else {"@id": o}
+
+    nodes: dict[str, dict[str, Any]] = {}
+    if isinstance(ontology.get("iri"), str):
+        nodes[ontology["iri"].rstrip("#/")] = {"@id": ontology["iri"].rstrip("#/"), "@type": ["owl:Ontology"]}
+    for s, p, o, lit in triples:
+        node = nodes.setdefault(s, {"@id": s})
+        if p == "rdf:type":
+            node.setdefault("@type", []).append(o)
+        elif lit:
+            text, _, lang = o.rpartition("@")
+            node.setdefault(p, []).append({"@value": text, "@language": lang})
+        else:
+            node.setdefault(p, []).append(node_ref(o))
+    for i, (subject, members, literals) in enumerate(unions):
+        if literals:
+            values = [{"@value": json.loads(m)} for m in members]
+            nodes.setdefault(subject, {"@id": subject}).setdefault("owl:equivalentClass", []).append(
+                {"@type": "rdfs:Datatype", "owl:oneOf": {"@list": values}})
+        else:
+            nodes[f"_:u{i}"] = {"@id": f"_:u{i}", "@type": ["owl:Class"], "owl:unionOf": {"@list": [{"@id": m} for m in members]}}
+    return json.dumps({"@context": {**std, **prefixes}, "@graph": list(nodes.values())}, indent=2, ensure_ascii=False) + "\n"

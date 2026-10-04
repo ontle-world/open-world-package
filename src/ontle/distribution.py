@@ -33,15 +33,20 @@ INDEX_KIND = "PackageIndex"
 
 # --- external references ----------------------------------------------------
 
+def is_bound(ref: Any) -> bool:
+    """A bound ExternalRef: status bound, absent, or null (null counts as absent, spec section 5.1)."""
+    return isinstance(ref, dict) and ref.get("status") in (None, "bound")
+
+
 def external_refs(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     """Bound ExternalRefs the manifest declares, with where they are (JSON Pointer into owp.yaml)."""
     spec = manifest.get("spec") or {}
     out: list[dict[str, Any]] = []
     for i, item in enumerate(spec.get("assets") or []):
-        if isinstance(item, dict) and isinstance(item.get("ref"), dict) and item["ref"].get("status", "bound") == "bound":
+        if isinstance(item, dict) and is_bound(item.get("ref")):
             out.append({"pointer": f"/spec/assets/{i}/ref", "ref": item["ref"]})
     for i, imp in enumerate(((spec.get("ontology") or {}).get("externalImports") or []) if isinstance(spec.get("ontology"), dict) else []):
-        if isinstance(imp, dict) and isinstance(imp.get("ref"), dict) and imp["ref"].get("status", "bound") == "bound":
+        if isinstance(imp, dict) and is_bound(imp.get("ref")):
             out.append({"pointer": f"/spec/ontology/externalImports/{i}/ref", "ref": imp["ref"]})
     return out
 
@@ -404,7 +409,7 @@ def catalog(package: str | Path, fmt: str) -> str:
     for rel, kind in sorted(kinds.items()):  # content refs of local KnowledgeAsset and Dataset descriptions
         if kind in {"KnowledgeAsset", "Dataset"}:
             ref = (((docs.get(rel) or {}).get("spec") or {}).get("content") or {}).get("ref")
-            if isinstance(ref, dict) and ref.get("status", "bound") == "bound":
+            if is_bound(ref):
                 refs.append({"pointer": rel, "ref": ref})
     if fmt == "dcat":
         distributions = [{"@type": "dcat:Distribution", "dcat:downloadURL": r["ref"].get("uri"),

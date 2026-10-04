@@ -105,6 +105,13 @@ class ExternalContentTests(unittest.TestCase):
             path = lock["externals"][0]["vendoredPath"]
             self.assertEqual(zf.read(path), self.blob)
 
+    def test_lock_records_refs_with_null_status(self):
+        from ontle.distribution import lock_externals
+        manifest = {"spec": {"assets": [
+            {"kind": "Dataset", "ref": {"provider": "https", "uri": "https://example.org/a", "status": None}},
+            {"kind": "Dataset", "ref": {"provider": "https", "uri": "https://example.org/b", "status": "unbound"}}]}}
+        self.assertEqual([e["uri"] for e in lock_externals(manifest)], ["https://example.org/a"])  # null counts as absent: bound
+
     def test_tampered_externals_fail_verification(self):
         p = world_with_ref(self.td, {"provider": "https", "uri": f"{self.server.url}/data.bin", "digest": sha(self.blob)})
         archive = deterministic_pack(p, self.td / "a.owp.zip")

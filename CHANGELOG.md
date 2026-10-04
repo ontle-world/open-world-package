@@ -17,6 +17,9 @@
   - `ontle pack` warns when an archive is over 50 MB.
   - The template cards start with the recommended sections `Scope`, `Sources`, `Use it for`, `Limitations`, and `Versions`, and the template manifests have a `metadata.description` placeholder. The example cards follow the same sections.
   - `docs/QUICKSTART.md` opens with a five-minute path.
+- The TypeScript implementation has the `PackageReport` too (`owp-validate report <dir|zip>`). `scripts/report_parity.py`, run in CI, checks that both implementations give the same report for every package in the repository (265).
+- `ontle new WorldViewProfile <path> --composes <view> [--composes <view> ...]` writes a composed View skeleton.
+- Fix: an ExternalRef with `status: null` counts as bound (spec section 5.1), so the lock's `externals` record it. Both implementations left it out.
 - World View composition (experimental, Appendix C): a WorldViewProfile may declare `spec.composes`, a list of local Views. Its include is the union of theirs, in order, plus its own include, minus its own exclude; conditioning and the other projection keys come from the composed Views and are overridden by its own; purpose is its own. Missing entries and cycles are `experimental.reference`; a missing purpose, `composes` with `specializes`, and composed Views that disagree on a key the View does not set are `experimental.field`. Both implementations; 8 new conformance cases.
 
 ## 0.2.0-alpha.3 — Semantic Worlds, Work and Actors, Standards

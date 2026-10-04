@@ -17,7 +17,7 @@ from . import __version__
 from . import ontology as ontology_module
 from .core import (DEFAULT_WORLD_PROFILE, OWPError, _list, _ref_asset_kinds, compiler_fields, load_manifest, local_assets,
                    satisfied_world_profile, sha256_bytes, validate_package, verify_archive)
-from .distribution import external_refs
+from .distribution import external_refs, is_bound
 from .structure import COMMIT_RE
 
 CARD_SECTIONS = ["Scope", "Sources", "Use it for", "Limitations", "Versions"]
@@ -81,7 +81,7 @@ def package_report(path: str | Path) -> dict[str, Any]:
 def _report(path: Path) -> dict[str, Any]:
     root, manifest = load_manifest(path)
     result = validate_package(root)
-    kind = manifest.get("kind")
+    kind = manifest.get("kind") if isinstance(manifest.get("kind"), str) else None
     md = _dict(manifest.get("metadata"))
     spec = _dict(manifest.get("spec"))
     identity = f"{md.get('namespace', '?')}/{md.get('name', '?')}@{md.get('version', '?')}"
@@ -97,7 +97,7 @@ def _report(path: Path) -> dict[str, Any]:
     report: dict[str, Any] = {
         "kind": "PackageReport",
         "identity": identity,
-        "packageKind": kind,
+        "packageKind": manifest.get("kind"),
         "validator": {"implementation": "ontle-python", "version": __version__},
         "valid": result.valid,
         "errors": result.errors,
@@ -111,7 +111,8 @@ def _report(path: Path) -> dict[str, Any]:
     conformance = _dict(spec.get("conformance"))
     if kind == "WorldPackage":
         ews_fields, _ = compiler_fields(root, kinds, docs)
-        report["profile"] = {"declared": conformance.get("profile", DEFAULT_WORLD_PROFILE),
+        declared = conformance.get("profile")
+        report["profile"] = {"declared": declared if isinstance(declared, str) else DEFAULT_WORLD_PROFILE,
                              "satisfied": satisfied_world_profile(spec, set(kinds.values()) | _ref_asset_kinds(spec), kinds, docs,
                                                                   ews_fields, identity)}
         fields = {f for listed in ews_fields.values() for f in listed or []}
@@ -125,18 +126,18 @@ def _report(path: Path) -> dict[str, Any]:
             semantic = set(_dict(_dict(_dict(docs.get(binding_rel)).get("spec")).get("fields")))
             report["semanticCoverage"] = {"boundFields": len(semantic & fields), "fields": len(fields)}
     elif kind == "OntologyPackage":
-        report["profile"] = {"declared": conformance.get("profile"),
+        report["profile"] = {"declared": conformance.get("profile") if isinstance(conformance.get("profile"), str) else None,
                              "satisfied": ontology_module.satisfied_ontology_profile(root, spec)}
         report["ontology"] = {"terms": len(ontology_module.terms(root, manifest)[1])}
 
-    refs = [r["ref"] for r in external_refs(manifest)]
+    refs = [r["ref"] for r in external_refs({"spec": spec})]  # spec is a mapping here, whatever the manifest holds
     standards: set[str] = set()
     licensed = bound_bindings = 0
     for rel, k in sorted(kinds.items()):
         aspec = _dict(_dict(docs.get(rel)).get("spec"))
         if k in {"KnowledgeAsset", "Dataset"}:
             content_ref = _dict(aspec.get("content")).get("ref")
-            if isinstance(content_ref, dict) and content_ref.get("status", "bound") == "bound":
+            if is_bound(content_ref):
                 refs.append(content_ref)
         for binding in _dict(aspec.get("standardBindings")).values():
             if not isinstance(binding, dict):
@@ -144,7 +145,7 @@ def _report(path: Path) -> dict[str, Any]:
             if isinstance(binding.get("standard"), str):
                 standards.add(binding["standard"])
             ref = binding.get("ref")
-            if isinstance(ref, dict) and ref.get("status", "bound") == "bound":
+            if is_bound(ref):
                 refs.append(ref)
                 bound_bindings += 1
                 licensed += isinstance(binding.get("license"), str)
@@ -166,8 +167,8 @@ def _report(path: Path) -> dict[str, Any]:
         hints.append(f"metadata.description has {len(description)} characters; catalogs show about {DESCRIPTION_LIMIT}")
     if not isinstance(md.get("license"), str):
         hints.append("metadata.license is missing")
-    card_rel = _dict(spec.get(CARD_SPEC_KEY.get(kind, ""))).get("description")
-    card_rel = card_rel if isinstance(card_rel, str) and card_rel.endswith(".md") else DEFAULT_CARDS.get(kind)
+    card_rel = _dict(spec.get(CARD_SPEC_KEY.get(kind or "", ""))).get("description")
+    card_rel = card_rel if isinstance(card_rel, str) and card_rel.endswith(".md") else DEFAULT_CARDS.get(kind or "")
     if card_rel and ontology_module.inside_package(root, card_rel) and (root / card_rel).is_file():
         present = card_sections((root / card_rel).read_text(encoding="utf-8"))
         lowered = {s.lower() for s in present}

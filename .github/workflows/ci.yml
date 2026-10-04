@@ -60,6 +60,7 @@ jobs:
       - run: npm ci && npm run build
         working-directory: implementations/typescript
       - run: python scripts/parity_fuzz.py --seeds 3 --per-case 3
+      - run: python scripts/report_parity.py
 
   alignments:
     # Reasons over the OWP vocabulary and the alignment packages with HermiT (scripts/check_alignments.sh).

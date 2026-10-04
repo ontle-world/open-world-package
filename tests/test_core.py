@@ -130,8 +130,10 @@ class OntleTests(unittest.TestCase):
                 doc = yaml.safe_load(target.read_text())
                 self.assertEqual((doc["apiVersion"], doc["kind"], doc["metadata"]["name"]), ("openworld/v1alpha1", kind, target.stem))
             new_asset(p, "WorldViewProfile", "views/regional.yaml", specializes="views/default.yaml")
+            new_asset(p, "WorldViewProfile", "views/combined.yaml", composes=["views/default.yaml", "views/regional.yaml"])
             result = validate_package(p)
             self.assertTrue(result.valid, result.errors)
+            self.assertFalse([w for w in result.warnings if w.startswith("experimental.")], result.warnings)
             self.assertEqual((p / "owp.yaml").read_text(), before)
             for kind, rel in [("NotAKind", "x.yaml"), ("WorldViewProfile", "views/operator.yaml"), ("WorldViewProfile", "../x.yaml"),
                               ("PackageExample", "examples/x.yaml")]:

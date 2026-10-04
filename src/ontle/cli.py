@@ -326,7 +326,7 @@ def cmd_add(args):
 
 
 def cmd_new(args):
-    print(new_asset(args.package, args.kind, args.path, args.specializes))
+    print(new_asset(args.package, args.kind, args.path, args.specializes, args.composes))
     return 0
 
 
@@ -485,6 +485,7 @@ def build_parser():
     x.add_argument("path", help="package-relative file, for example views/barista.yaml")
     x.add_argument("--package", default=".", help="package directory (default: current directory)")
     x.add_argument("--specializes", help="WorldViewProfile: path of the local View this View specializes (experimental)")
+    x.add_argument("--composes", action="append", help="WorldViewProfile: path of a local View this View composes (repeatable; experimental)")
     x.set_defaults(func=cmd_new)
 
     x = sp.add_parser("add", help="declare a publisher extension in spec.dependencies")

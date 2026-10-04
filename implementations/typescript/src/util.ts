@@ -34,6 +34,20 @@ export function get(o: unknown, ...keys: string[]): unknown {
   return cur;
 }
 
+/** table[key] when the table itself has that key: a document's "toString" or "constructor" is not a table entry. */
+export function own<T>(table: Record<string, T>, key: unknown): T | undefined {
+  return typeof key === "string" && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
+
+/** String(value) for a JSON value, without calling a mapping's own toString (a key a YAML document may define). */
+export function jsString(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value === undefined) return "undefined";
+  if (Array.isArray(value)) return value.map((x) => (x === null || x === undefined ? "" : jsString(x))).join(",");
+  if (isObj(value)) return "[object Object]";
+  return String(value);
+}
+
 export type YamlLoad =
   | { ok: true; value: unknown }
   | { ok: false; error: string };

@@ -11,6 +11,7 @@ cannot drift apart unnoticed. The Python tests and the TypeScript conformance ru
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -20,7 +21,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from ontle.core import validate_package  # noqa: E402
+from ontle.core import OWPError  # noqa: E402
 from ontle.distribution import check_detached_evidence  # noqa: E402
+from ontle.ews import check_ews, compile_ews, load_document  # noqa: E402
 from ontle.resolve import validate_resolved  # noqa: E402
 
 SUITE = ROOT / "conformance"
@@ -33,7 +36,7 @@ def _ids(messages: list[str]) -> list[str]:
 
 def compute() -> dict:
     expected = yaml.safe_load((SUITE / "expected.yaml").read_text(encoding="utf-8"))
-    out: dict = {"cases": {}, "resolutionCases": {}, "evidenceCases": {}}
+    out: dict = {"cases": {}, "resolutionCases": {}, "ewsCases": {}, "ewsCheckCases": {}, "evidenceCases": {}}
     for case_id in sorted(expected["cases"]):
         r = validate_package(SUITE / "cases" / case_id)
         out["cases"][case_id] = {"errors": _ids(r.errors), "warnings": _ids(r.warnings)}
@@ -41,6 +44,21 @@ def compute() -> dict:
         case = SUITE / "resolution" / case_id
         r, _ = validate_resolved(case / "root", [str(case / "packages")])
         out["resolutionCases"][case_id] = {"errors": _ids(r.errors), "warnings": _ids(r.warnings)}
+    for case_id, exp in sorted(expected["ewsCases"].items()):
+        case = SUITE / "ews" / case_id
+        try:
+            compile_ews(case / "world", exp["compiler"], load_document(case / "observations.yaml"), str(exp["asOf"]))
+            errors: list[str] = []
+        except OWPError as exc:  # a refusal: every rule id in the message
+            errors = re.findall(r"(?:^|; )([a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+):", str(exc))
+        out["ewsCases"][case_id] = {"errors": _ids(e + ":" for e in errors), "warnings": []}
+    for case_id in sorted(expected["ewsCheckCases"]):
+        case = SUITE / "ews-check" / case_id
+        try:
+            errors = check_ews(case / "world", load_document(case / "ews.yaml", rule="ews.kind"))
+        except OWPError as exc:
+            errors = [str(exc)]
+        out["ewsCheckCases"][case_id] = {"errors": _ids(errors), "warnings": []}
     for case_id in sorted(expected.get("evidenceCases") or {}):
         case = SUITE / "evidence" / case_id
         errors = check_detached_evidence(yaml.safe_load((case / "evidence.yaml").read_text(encoding="utf-8")), case / "package.owp.zip")

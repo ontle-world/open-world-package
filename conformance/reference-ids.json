@@ -1414,6 +1414,301 @@
    "warnings": []
   }
  },
+ "ewsCases": {
+  "aggregate-mixed-units": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "aggregate-non-numeric": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "aggregate-numeric": {
+   "errors": [],
+   "warnings": []
+  },
+  "aggregate-window": {
+   "errors": [],
+   "warnings": []
+  },
+  "all-ordered": {
+   "errors": [],
+   "warnings": []
+  },
+  "as-of-excludes-future": {
+   "errors": [],
+   "warnings": []
+  },
+  "classify-criterion": {
+   "errors": [],
+   "warnings": []
+  },
+  "error-duplicate-id": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "error-invalid-calendar-as-of": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "error-missing-values": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "error-non-utc-timestamp": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "error-opaque-compiler": {
+   "errors": [
+    "ews.opaque-compiler"
+   ],
+   "warnings": []
+  },
+  "error-unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "error-unquoted-non-utc-timestamp": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "error-unsafe-integer": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "estimate-kept-apart": {
+   "errors": [],
+   "warnings": []
+  },
+  "id-code-point-order": {
+   "errors": [],
+   "warnings": []
+  },
+  "json-bool-vs-number": {
+   "errors": [],
+   "warnings": []
+  },
+  "json-int-vs-float": {
+   "errors": [],
+   "warnings": []
+  },
+  "json-structured-values": {
+   "errors": [],
+   "warnings": []
+  },
+  "latest-picks-newest": {
+   "errors": [],
+   "warnings": []
+  },
+  "latest-tie-conflict": {
+   "errors": [],
+   "warnings": []
+  },
+  "latest-tie-same-value": {
+   "errors": [],
+   "warnings": []
+  },
+  "no-candidates-missing": {
+   "errors": [],
+   "warnings": []
+  },
+  "null-value": {
+   "errors": [],
+   "warnings": []
+  },
+  "observation-extensions": {
+   "errors": [],
+   "warnings": []
+  },
+  "per-subject-latest": {
+   "errors": [],
+   "warnings": []
+  },
+  "per-subject-missing-subject": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "schema-ref-fields": {
+   "errors": [],
+   "warnings": []
+  },
+  "unit-declared": {
+   "errors": [],
+   "warnings": []
+  },
+  "unit-mismatch": {
+   "errors": [
+    "ews.input"
+   ],
+   "warnings": []
+  },
+  "unquoted-utc-timestamp": {
+   "errors": [],
+   "warnings": []
+  },
+  "year-zero-timestamp": {
+   "errors": [],
+   "warnings": []
+  }
+ },
+ "ewsCheckCases": {
+  "bad-as-of": {
+   "errors": [
+    "ews.as-of"
+   ],
+   "warnings": []
+  },
+  "derivation-missing": {
+   "errors": [
+    "ews.derivation"
+   ],
+   "warnings": []
+  },
+  "derivation-on-observed": {
+   "errors": [
+    "ews.derivation"
+   ],
+   "warnings": []
+  },
+  "duplicate-alternatives": {
+   "errors": [
+    "ews.unresolved-alternatives"
+   ],
+   "warnings": []
+  },
+  "extensions": {
+   "errors": [],
+   "warnings": []
+  },
+  "field-absent": {
+   "errors": [
+    "ews.field-placement"
+   ],
+   "warnings": []
+  },
+  "field-in-two-places": {
+   "errors": [
+    "ews.field-placement"
+   ],
+   "warnings": []
+  },
+  "field-not-in-schema": {
+   "errors": [
+    "ews.field-unknown",
+    "ews.provenance-required"
+   ],
+   "warnings": []
+  },
+  "missing-provenance": {
+   "errors": [
+    "ews.provenance-required"
+   ],
+   "warnings": []
+  },
+  "per-subject-latent-valid": {
+   "errors": [],
+   "warnings": []
+  },
+  "per-subject-overlap": {
+   "errors": [
+    "ews.per-subject-overlap"
+   ],
+   "warnings": []
+  },
+  "per-subject-shape": {
+   "errors": [
+    "ews.per-subject-shape"
+   ],
+   "warnings": []
+  },
+  "provenance-orphan": {
+   "errors": [
+    "ews.provenance-orphan"
+   ],
+   "warnings": []
+  },
+  "schema-ref-field-unknown": {
+   "errors": [
+    "ews.field-unknown"
+   ],
+   "warnings": []
+  },
+  "schema-ref-valid": {
+   "errors": [],
+   "warnings": []
+  },
+  "single-alternative": {
+   "errors": [
+    "ews.unresolved-alternatives"
+   ],
+   "warnings": []
+  },
+  "state-compiler-not-asset": {
+   "errors": [
+    "ews.state-compiler"
+   ],
+   "warnings": []
+  },
+  "state-not-mapping": {
+   "errors": [
+    "ews.shape"
+   ],
+   "warnings": []
+  },
+  "trace-not-required": {
+   "errors": [],
+   "warnings": []
+  },
+  "unknown-field": {
+   "errors": [
+    "schema.unknown-field"
+   ],
+   "warnings": []
+  },
+  "valid": {
+   "errors": [],
+   "warnings": []
+  },
+  "view-mismatch": {
+   "errors": [
+    "ews.world-view"
+   ],
+   "warnings": []
+  },
+  "world-ref-mismatch": {
+   "errors": [
+    "ews.world-ref"
+   ],
+   "warnings": []
+  },
+  "wrong-kind": {
+   "errors": [
+    "ews.kind"
+   ],
+   "warnings": []
+  }
+ },
  "resolutionCases": {
   "archive-source": {
    "errors": [],

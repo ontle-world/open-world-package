@@ -2,6 +2,52 @@
 
 ## Unreleased
 
+- Second review fixes, and a parity check in CI:
+  - `scripts/parity_fuzz.py` runs mutants of every conformance fixture through both implementations. A mutant is a fixture with one value changed: a wrong type, an odd string, a removed or renamed key, or a YAML tag. Both implementations must give the same verdict, the same error and warning ids, and an equal EWS, and neither may crash. A new CI job runs 3 seeds. 15 seeds (about 49,000 mutants) agree. Before these fixes, about 1 in 9 mutants disagreed, and the Python reference crashed on 4%.
+  - `reference-ids.json` now also covers the EWS compile and EWS check sections, so both implementations report exactly the same ids there too.
+  - The Python reference no longer crashes on wrong-typed values in any package, ObservationSet, or EWS document, and reports the ids the TypeScript implementation reports.
+  - TypeScript no longer crashes on `kind: toString`, on metadata values such as `{toString: 1}`, or on table lookups by such names. Subjects and prefixes named `__proto__` or `constructor` are no longer treated as present.
+  - YAML:
+    - The core tags (`!!str`, `!!int`, `!!float`, `!!bool`, `!!null`, `!!map`, `!!seq`) are applied in both implementations.
+    - Any other tag (`!!binary`, `!!set`, `!!timestamp`, `!!omap`, `!!pairs`, a local tag such as `!note`) is a load error.
+  - Text rules:
+    - SemVer, timestamps, and durations accept ASCII digits only.
+    - "Whitespace" means the JavaScript whitespace set in both implementations.
+    - EWS timestamps cover the years 0000–9999.
+  - Field types:
+    - `spec.assets` that is present but not a list (including `null`) is `asset.list`.
+    - `worldModel.roles` must be a list of non-empty strings, and `world.definition` a non-empty string.
+    - `extensionDefinition.description` must be a string.
+    - A dependency `source` that is not a non-empty string is `manifest.dependency`.
+  - `metadata.version` that is present but not a SemVer string is `manifest.version`. A missing, null, or empty version is `manifest.identity`.
+  - CompatibilityEvidence:
+    - A missing `metadata.name` or a spec that is not a mapping is `evidence.required`.
+    - Scope fields that are not strings are `evidence.scope`.
+  - EWS compile:
+    - A World that is not a WorldPackage is `ews.state-compiler`.
+    - A malformed `spec.bindings` is `compiler.binding`.
+    - ObservationSet `apiVersion`, empty ids or types, and `.inf`, `.nan`, or integers outside ±(2^53−1) in values are `ews.input`.
+  - EWS check:
+    - A World that is not a WorldPackage is `ews.world-ref`, and checking stops at `ews.shape`.
+    - Null sections count as absent, and `traceRequired` must be `true`.
+  - Git sources:
+    - Refs are matched by exact name; before, `main` could match `feature/main`.
+    - Checkouts are keyed by the commit actually fetched.
+    - The commit each rev last resolved to is remembered, so a cached source works offline.
+  - `ontle kg check`:
+    - Within one OntologyPackage, separate domain or range statements must all hold.
+    - When several packages each state one for a property, one package's statements holding is enough, so a package can reuse a property for its own types.
+    - T-box files outside a package are never read.
+  - Output:
+    - NGSI-LD entity ids are the IRIs `--rdf` gives.
+    - A field named like a reserved NGSI-LD name (`type`, `id`, ...) gets a trailing `_`.
+    - An empty coded list as an unresolved alternative stays valid Turtle.
+    - A code `3.0` maps like `3`.
+    - Spec section 14 states the percent-encoded character set (RFC 3986 unreserved).
+  - Coverage:
+    - The coverage test no longer counts `evidence.scope` as covered by `evidence.scope.world-ref`.
+    - New cases: `evidence-scope-missing`, `manifest-kind-list`, `manifest-version-non-ascii-digit`, `asset-list-null`, `model-roles-string`, `yaml-local-tag`, and `dependency-source-not-string`; EWS cases `error-unsafe-integer` and `year-zero-timestamp`.
+    - The vocabulary term-index test regenerates the indexes and compares them with the committed files.
 - Conformance cases for the 13 error ids that had none: 16 new cases, so the known-gaps list in the coverage test is empty. (`evidence.scope` was still missing; see the next entry.)
   - New sections: a new `evidenceCases` section checks CompatibilityEvidence published outside a package against its archive (`evidence/<id>/evidence.yaml`, `package.owp.zip`; spec 9.1). Both implementations run it, and its ids are in `reference-ids.json`.
   - The cases found these disagreements, now fixed:

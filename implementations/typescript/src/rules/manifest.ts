@@ -1,11 +1,9 @@
 import * as path from "node:path";
 import { Context, error } from "../context.js";
-import { fileExists, isNonEmptyString, isObj, SEMVER_RE } from "../util.js";
+import { fileExists, isNonEmptyString, isObj, SEMVER_RE, jsString } from "../util.js";
 import { API_VERSION, HUMAN_CARDS, PACKAGE_KINDS } from "../vocab.js";
 
 /** Spec section 2 + 3: identity, apiVersion, kind, spec object, human card. */
-const text = (v: unknown): string => (typeof v === "string" ? v : JSON.stringify(v) ?? String(typeof v));
-
 export function checkManifest(ctx: Context): void {
   const m = ctx.manifest;
 
@@ -40,7 +38,7 @@ export function checkManifest(ctx: Context): void {
       ok = false;
     }
     if (md.namespace !== undefined && md.name !== undefined && md.version !== undefined) {
-      ctx.rawIdentity = `${text(md.namespace)}/${text(md.name)}@${text(md.version)}`; // any value, even {toString: 1}
+      ctx.rawIdentity = `${jsString(md.namespace)}/${jsString(md.name)}@${jsString(md.version)}`; // any value, even {toString: 1}
     }
     if (ok) ctx.identity = `${md.namespace}/${md.name}@${md.version}`;
   }

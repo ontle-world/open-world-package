@@ -5,7 +5,7 @@ import { checkSemanticBindings } from "./binding.js";
 import { standardBindingProblems } from "./externalref.js";
 import { checkStandardFields } from "./standard-fields.js";
 import { checkExperimentalAsset, checkMultiLatest, checkStandardKindFields, checkViewSpecialization, STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
-import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside } from "../util.js";
+import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside, own } from "../util.js";
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]*$/;
 
@@ -85,7 +85,7 @@ export function checkAssetStructure(ctx: Context): void {
       checkExperimentalAsset(ctx, a);
       continue;
     }
-    const shape = ASSET_STRUCTURES[a.kind];
+    const shape = own(ASSET_STRUCTURES, a.kind);
     const problems = shape
       ? structureProblems(doc, shape, ctx.extensionNames)
       : ["metadata", "spec"].flatMap((s) => {

@@ -357,7 +357,7 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
     for rel, k in sorted(local_asset_kinds.items()):
         if k != "WorldViewProfile":
             continue
-        names = (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include")
+        names = dig(experimental.resolve_view(rel, local_asset_docs, local_asset_kinds), "projection", "include")
         own = {x for x in names if isinstance(x, str) and "#" not in x} if isinstance(names, list) else set()
         external = {x.split("#", 1)[1] for x in names if isinstance(x, str) and "#" in x} if isinstance(names, list) else set()
         includes[rel] = own | external  # a compiler field may describe an entity of an external World the View selects
@@ -697,7 +697,7 @@ def validate_package(path: str | Path) -> ValidationResult:
     from .extraction import multi_latest_warnings  # local import: extraction depends on core
     warnings.extend(multi_latest_warnings(local_asset_kinds, local_asset_docs))
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
-                     for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
+                     for x in (lambda inc: inc if isinstance(inc, list) else [])(dig(experimental.resolve_view(rel, local_asset_docs, local_asset_kinds), "projection", "include"))
                      if isinstance(x, str)}
     ews_fields, field_errors = compiler_fields(root, local_asset_kinds, local_asset_docs)
     errors.extend(field_errors)

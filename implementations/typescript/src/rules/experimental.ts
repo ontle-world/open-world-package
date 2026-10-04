@@ -9,7 +9,7 @@ import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
 import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, list, OPEN, Shape, structureProblems } from "../structure.js";
 import { isUtcTimestamp } from "../ews.js";
-import { fileExists, isObj, normalizeRelPath, Obj, packageFile as packageFileAt, PINNED_RE, staysInside } from "../util.js";
+import { fileExists, isObj, normalizeRelPath, Obj, packageFile as packageFileAt, PINNED_RE, staysInside, jsString, own } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 import { externalRefProblems } from "./externalref.js";
 
@@ -331,7 +331,7 @@ function checkDocument(c: Checker, kind: string, s: Obj, manifestSpec: Obj): voi
           ...values(sub(s, "authorityCeiling").decisions).filter((d) => !(typeof d === "string" && granted.decisions.has(d))),
         ];
         if (over.length > 0) {
-          c.warn("actor.delegation-exceeds-authority", `delegates ${over.map(String).join(", ")}, which the delegator's roles do not grant`);
+          c.warn("actor.delegation-exceeds-authority", `delegates ${over.map(jsString).join(", ")}, which the delegator's roles do not grant`);
         }
       }
       break;
@@ -442,9 +442,9 @@ export function localKinds(ctx: Context): Map<string, string> {
 /** One experimental asset document; runs after all assets are collected so references to later-listed assets resolve. */
 export function checkExperimentalAsset(ctx: Context, a: LocalAsset, kinds = localKinds(ctx)): void {
   if (!isObj(a.doc)) return;
-  const c = new Checker(ctx, a.rawPath, kinds, localDocs(ctx), FAMILIES[a.kind]);
-  for (const p of structureProblems(a.doc, EXPERIMENTAL_STRUCTURES[a.kind], ctx.extensionNames)) {
-    if (p.rule === "schema.unknown-field" && !(a.kind in FAMILIES)) c.warn("experimental.field", p.msg);
+  const c = new Checker(ctx, a.rawPath, kinds, localDocs(ctx), own(FAMILIES, a.kind));
+  for (const p of structureProblems(a.doc, own(EXPERIMENTAL_STRUCTURES, a.kind)!, ctx.extensionNames)) {
+    if (p.rule === "schema.unknown-field" && own(FAMILIES, a.kind) === undefined) c.warn("experimental.field", p.msg);
     else error(ctx, p.rule, `${a.rawPath}: ${p.msg}`, a.rawPath);
   }
   const manifestSpec = isObj(ctx.manifest.spec) ? ctx.manifest.spec : {};

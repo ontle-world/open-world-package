@@ -164,8 +164,7 @@ def python_eval(out: Path, manifest: list[dict]) -> dict:
                     res = {"valid": False, "errors": sorted(set(ID.findall(str(exc)))), "warnings": []}
             else:
                 try:
-                    doc = load_document(base / "ews.yaml")
-                    errors = check_ews(base / "world", doc if isinstance(doc, dict) else {})
+                    errors = check_ews(base / "world", load_document(base / "ews.yaml", rule="ews.kind"))  # as `ontle ews check`
                     res = {"valid": not errors, "errors": _ids(errors), "warnings": []}
                 except OWPError as exc:
                     res = {"valid": False, "errors": sorted(set(ID.findall(str(exc)))), "warnings": []}

@@ -8,7 +8,7 @@
  */
 import * as path from "node:path";
 import { Issue } from "./context.js";
-import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
+import { get, isNonEmptyString, isObj, loadYamlFile, Obj, jsString } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields, outputUnits, unitProblems } from "./rules/world.js";
 import { localAssetKinds } from "./discovery.js";
@@ -50,7 +50,7 @@ function loadWorld(worldDir: string): { identity?: string; manifest?: Obj; probl
   const n = get(m, "metadata", "name");
   const v = get(m, "metadata", "version");
   if (m.kind !== "WorldPackage") return { problems: [`${worldDir} is not a WorldPackage`] };
-  return { identity: `${ns}/${n}@${v}`, manifest: m, problems: [] };
+  return { identity: `${jsString(ns)}/${jsString(n)}@${jsString(v)}`, manifest: m, problems: [] };
 }
 
 /** Load a local StateCompilerProfile asset of the World. */
@@ -134,7 +134,7 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
     return { valid: false, errors };
   }
   const wvr = comp.spec.worldViewRef;
-  if (s.worldView !== `${prefix}${wvr}`) e("ews.world-view", `spec.worldView must be ${prefix}${String(wvr)} (the compiler's worldViewRef)`);
+  if (s.worldView !== `${prefix}${jsString(wvr)}`) e("ews.world-view", `spec.worldView must be ${prefix}${jsString(wvr)} (the compiler's worldViewRef)`);
 
   comp.fieldProblems.forEach((p) => e(p.rule, p.msg));
   // Field partition (skipped when the compiler has no EWS fields; spec 12.1).
@@ -373,7 +373,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   }
   const spec: Obj = {
     worldRef: world.identity,
-    worldView: `${world.identity}#${String(comp.spec.worldViewRef)}`,
+    worldView: `${world.identity}#${jsString(comp.spec.worldViewRef)}`,
     stateCompiler: `${world.identity}#${compilerPath}`,
     context: { asOf },
     state,

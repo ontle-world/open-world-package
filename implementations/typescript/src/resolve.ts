@@ -489,7 +489,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
 
   // Spec 11: dependencies point down the hierarchy Ontology <- World <- World Model (warning).
   for (const n of nodes.values()) {
-    const allowed = DEPENDENCY_DIRECTIONS[n.kind];
+    const allowed = Object.prototype.hasOwnProperty.call(DEPENDENCY_DIRECTIONS, n.kind) ? DEPENDENCY_DIRECTIONS[n.kind] : undefined;
     for (const d of n.deps) {
       const target = d.as === undefined ? nodes.get(d.ref) : undefined;
       if (allowed && target && !allowed.includes(target.kind)) {

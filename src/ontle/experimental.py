@@ -15,7 +15,7 @@ from typing import Any
 
 from . import structure
 from .structure import EXTERNAL_REF, OPEN, VALUE, array, closed
-from .values import dig, js_equal
+from .values import dig, js_equal, hashable
 from .yamlio import load_yaml
 
 ASSET_METADATA = structure.ASSET_METADATA
@@ -474,8 +474,9 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
         granted = _delegator_grants(spec.get("delegator"), local_kinds, docs)
         if granted is not None:
             actions, decisions = granted
-            over = [a for a in _values(spec.get("permittedActions")) if a not in actions | decisions]
-            over += [d for d in _values(sub("authorityCeiling").get("decisions")) if d not in decisions]
+            granted_any = actions | decisions
+            over = [a for a in _values(spec.get("permittedActions")) if not (hashable(a) and a in granted_any)]  # a list is never granted
+            over += [d for d in _values(sub("authorityCeiling").get("decisions")) if not (hashable(d) and d in decisions)]
             if over:
                 errors.append(f"actor.delegation-exceeds-authority: {rel}: delegates {', '.join(map(str, over))}, which the delegator's roles do not grant")
     elif kind == "KnowledgeExtractionProfile":
@@ -617,7 +618,7 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
         if key in {"purpose", "conditioning"} and isinstance(value, dict):
             merged[key] = {**(parent[key] if isinstance(parent.get(key), dict) else {}), **value}
         elif key == "projection" and isinstance(value, dict):
-            projection = {**(parent.get("projection") or {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
+            projection = {**(parent["projection"] if isinstance(parent.get("projection"), dict) else {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
             include = _names(parent.get("projection", {}).get("include"))
             include += [x for x in _names(value.get("include")) if x not in include]
             exclude = set(_names(value.get("exclude")))

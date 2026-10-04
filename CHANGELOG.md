@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.2.0-alpha.3 — Semantic Worlds, Work and Actors, Standards
+
+The first tagged public alpha. Package format `openworld/v1alpha1`; Python reference CLI `ontle` 0.2.0a3; the TypeScript implementation in `implementations/typescript/` passes the same suite with the same rule ids.
+
+Highlights:
+- **Semantics.** OntologyPackages with a defined contract (prefixes, typed entrypoints, term index, pinned imports), SemanticBinding of World names, EWS fields, coded values, and dictionary identifiers (IRDI), `ontle kg check` and SPARQL knowledge extraction.
+- **State.** Per-subject and latent EWS fields (estimate, aggregate, classify with a versioned criterion), units (UCUM), and EWS output as JSON-LD, RDF 1.2, and NGSI-LD.
+- **Work and actors.** Tasks, work patterns, actors, roles, delegation, artifacts, and knowledge are standard kinds (spec sections 16–19).
+- **Distribution.** Directory, `.owp.zip`, git, OCI, and static index sources; detached evidence; lock format `owp-lock/v1alpha2`.
+- **Standards.** The OWP vocabulary at `https://w3id.org/owp/ns`, informative PROV-O, BFO 2020, and DUL alignments, and notes on MCP, NGSI-LD, and AAS.
+- **Conformance.** 240 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, and 4 detached evidence cases. Every error id has a case, and both implementations report exactly the same ids. A mutation check in CI keeps them in agreement.
+
+Changes:
 
 - Second review fixes, and a parity check in CI:
   - `scripts/parity_fuzz.py` runs mutants of every conformance fixture through both implementations. A mutant is a fixture with one value changed: a wrong type, an odd string, a removed or renamed key, or a YAML tag. Both implementations must give the same verdict, the same error and warning ids, and an equal EWS, and neither may crash. A new CI job runs 3 seeds. 15 seeds (about 49,000 mutants) agree. Before these fixes, about 1 in 9 mutants disagreed, and the Python reference crashed on 4%.

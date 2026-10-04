@@ -17,8 +17,21 @@ jobs:
         with:
           python-version: "3.14"
       - run: python -m pip install --upgrade pip build
-      - run: python -m build
       - run: python -m pip install -e .
+      # The tag is v<CHANGELOG version>, the package version matches it, and RELEASE_MANIFEST.json matches the tree.
+      - name: Check version and manifest
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python - "$version" <<'PY'
+          import re, sys
+          from packaging.version import Version
+          import ontle
+          tag = sys.argv[1]
+          assert Version(tag) == Version(ontle.__version__), f"tag {tag} != package {ontle.__version__}"
+          assert re.search(rf"^## {re.escape(tag)}( |$)", open("CHANGELOG.md", encoding="utf-8").read(), re.M), f"no CHANGELOG section {tag}"
+          PY
+          python scripts/release_manifest.py --check
+      - run: python -m build
       - run: ./scripts/golden_smoke.sh
       - uses: actions/upload-artifact@v7
         with:
@@ -27,4 +40,8 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v h="## ${version}" 'index($0, h) == 1 {f = 1; next} f && /^## / {exit} f' CHANGELOG.md > notes.md
+          prerelease=$(case "$version" in *-*) echo --prerelease;; esac)
+          gh release create "${GITHUB_REF_NAME}" dist/* RELEASE_MANIFEST.json --title "${GITHUB_REF_NAME}" --notes-file notes.md $prerelease

@@ -4,7 +4,7 @@ This file lists, in order, how this repository is expected to change. Each step 
 
 OWP stays a portable contract: World, View, State Compiler, EWS, World Model applicability, evaluation lineage, and evidence. Evaluation execution and evolution, runtime execution, and model weight formats stay out of this repository (see "Out of scope").
 
-## Current state (0.2.0-alpha.3)
+## Current state (0.2.0-alpha.4)
 
 - WorldPackage conformance profiles (`descriptive` → `action-ready`); every World Model names its compatible Views and State Compilers.
 - Evaluation lineage and pinned `CompatibilityEvidence`.
@@ -12,12 +12,13 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Standard EWS documents, output-contract checks, and optional declarative bindings.
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
-- Conformance suite: 240 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, 4 detached evidence cases.
+- Package reports, a read-only MCP server, and experimental World View composition (`specializes`, `composes`, `exclude`).
+- Conformance suite: 248 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, 4 detached evidence cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
-## 1. ~~Release 0.2.0a3~~
+## 1. ~~Release 0.2.0a4~~
 
-Done: tagged `v0.2.0-alpha.3`. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml`, `src/ontle/__init__.py`, and `implementations/typescript/package.json` (and its lock), run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version and publishes the CHANGELOG section as the release notes.
+Done: tagged `v0.2.0-alpha.4` (and `v0.2.0-alpha.3` before it). For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml`, `src/ontle/__init__.py`, and `implementations/typescript/package.json` (and its lock), run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version and publishes the CHANGELOG section as the release notes.
 
 ## 2. Close known alpha limitations in the spec and suite
 
@@ -62,7 +63,7 @@ Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detac
 
 ## 6. Hosted ONTLE Registry (separate platform)
 
-Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here.
+Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here. This repository supplies what it reads: the package report (`ontle inspect --report`, `schemas/package-report.schema.json`), the package index, the OCI profile, and the MCP tools (`ontle mcp`).
 
 ## Out of scope for this repository
 

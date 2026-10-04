@@ -1,6 +1,6 @@
 {
   "name": "owp-validator-ts",
-  "version": "0.2.0-alpha.3",
+  "version": "0.2.0-alpha.4",
   "private": true,
   "description": "Independent TypeScript implementation of the Open World Package (OWP) validator, resolver, and EWS compiler, written from the spec",
   "license": "Apache-2.0",

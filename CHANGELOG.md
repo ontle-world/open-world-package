@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.4 — Registry Readiness, View Composition
+
+Python reference CLI `ontle` 0.2.0a4; the TypeScript implementation passes the same suite with the same rule ids, and now gives the same package report.
+
+Highlights:
+- **Package reports.** `ontle inspect --report` (and `owp-validate report`) derive what a catalog or registry shows for a package: verdict, profile, asset counts, binding coverage, pinned references, evidence, and card hints. Both implementations agree on all 265 packages in the repository.
+- **Agents.** `ontle mcp` serves one package read-only over the Model Context Protocol.
+- **World View composition.** `spec.composes` (experimental) gives a View the union of other Views; with `exclude` and `specializes`, the basic operations are in place.
+- **Standards.** SKOS value sets, SHACL shapes for EWS RDF output, and schema.org mappings.
+- **Conformance.** 248 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, and 4 detached evidence cases.
+
+Changes:
+
 - Standards relations, the rest of step P3:
   - The value sets are published as SKOS concept schemes: `vocab/owp/value-sets.ttl`, at `https://w3id.org/owp/vs/<set>#<value>`. `scripts/build_value_sets.py` generates the file, and a test keeps it current.
   - `vocab/owp/shapes.ttl` holds SHACL shapes for EWS RDF output. A test validates `--rdf` output against them, including a broken document they must reject. The new `shacl` extra installs pySHACL.

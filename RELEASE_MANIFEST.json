@@ -1,10 +1,10 @@
 {
   "manifest": "ontle-public-release-manifest/v1",
   "release": "public-alpha-3",
-  "version": "0.2.0a3",
+  "version": "0.2.0a4",
   "cli": "ontle",
   "distribution": "ontle-open-world",
-  "file_count_excluding_manifest": 2006,
+  "file_count_excluding_manifest": 2060,
   "files": [
     {
       "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -23,8 +23,8 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "d39c24fe887896eee6067a937ae579b0937868b9f952e73c2f29f29d7e796943",
-      "size": 2319
+      "sha256": "681330ae933dfdbb1cfcde962d2bf22e2df7382d5d60ac120fafc046fc9e3872",
+      "size": 2398
     },
     {
       "path": ".github/workflows/pages.yml",
@@ -33,8 +33,8 @@
     },
     {
       "path": ".github/workflows/release.yml",
-      "sha256": "dc0cfea835f59ac98e87de34696f87ea0c78f9723e65d5b121bf5a1a63ee53dd",
-      "size": 1691
+      "sha256": "987c332183ca86545731438875d303358f83182a6eeb38ed3e16570e9f45d366",
+      "size": 1891
     },
     {
       "path": ".gitignore",
@@ -53,8 +53,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "0e73151bf3ac0d50d27bfa88a2d625421bef9d161a0bd888284a48f82c2491a7",
-      "size": 49055
+      "sha256": "abed778b51e491518bba3b8713d9a4a236b51ed0386334599d6eb507e9e1322a",
+      "size": 53371
     },
     {
       "path": "CODE_OF_CONDUCT.md",
@@ -93,13 +93,13 @@
     },
     {
       "path": "RELEASE_NOTES.md",
-      "sha256": "ec41ac3544c040930fa8ab1f5cce44022df571a33795225b04aceefb103dfcfa",
-      "size": 3213
+      "sha256": "4af3b9a48d48048e3bc064645cedf11058c6e2e6ecb418058949dfcb3953e80f",
+      "size": 4577
     },
     {
       "path": "ROADMAP.md",
-      "sha256": "d0ce7be8285d7b176f3d033528b2e0eb1f8cd6684ff2cae684665dccb850c1fc",
-      "size": 5556
+      "sha256": "ca5124c655aa7cf5317e2720c236a2083a19659fa264879660b990d7a83f936a",
+      "size": 5965
     },
     {
       "path": "SECURITY.md",
@@ -180,6 +180,31 @@
       "path": "alignments/owp-align-prov/semantics/terms.yaml",
       "sha256": "ef99a36e897ba4cb205f60ee7744cefbc3fb98f0d7080409d8e15dccd09520da",
       "size": 185
+    },
+    {
+      "path": "alignments/owp-align-schemaorg/ONTOLOGY.md",
+      "sha256": "21733d735390f7e9c882473f3a7b290132b58da483fb8964e98cb09be5e43bb6",
+      "size": 573
+    },
+    {
+      "path": "alignments/owp-align-schemaorg/align.ttl",
+      "sha256": "88c3b33b9bb3748c89f6130f861fa62c23686dd9929f7fd8ad73a999f85fc20e",
+      "size": 936
+    },
+    {
+      "path": "alignments/owp-align-schemaorg/mappings.sssom.tsv",
+      "sha256": "8c2e02eb0b4084a5be31cf3f712beb04b2e7eb3ef73c1a4aaf79f6b05716f635",
+      "size": 1524
+    },
+    {
+      "path": "alignments/owp-align-schemaorg/owp.yaml",
+      "sha256": "32e1ea19c1c87a24574fdbc3fc90319339c05bd3f846a943cd8c58e7ac328726",
+      "size": 599
+    },
+    {
+      "path": "alignments/owp-align-schemaorg/semantics/terms.yaml",
+      "sha256": "57a922040caaef038d4d2fd91a427ae8038318011c4d7c05b8a6b555ae3ccfc4",
+      "size": 190
     },
     {
       "path": "alignments/tests/invalid-asof-timezone.ttl",
@@ -4457,6 +4482,206 @@
       "size": 86
     },
     {
+      "path": "conformance/cases/view-composes-and-specializes/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-and-specializes/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-and-specializes/views/maintenance.yaml",
+      "sha256": "f28d435c42b7d0590d828add2f3a7ea3ecc2005136bbbfd4cd18b3a6642633af",
+      "size": 244
+    },
+    {
+      "path": "conformance/cases/view-composes-and-specializes/views/plant.yaml",
+      "sha256": "d617aaee2151636225414cab1dfbe7309853d4e29bc0675c05633437abca4522",
+      "size": 187
+    },
+    {
+      "path": "conformance/cases/view-composes-and-specializes/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/owp.yaml",
+      "sha256": "ff1c42a28cee46dcaf85fc587dc3ea6af3525a8711521f200af74d66a06296a2",
+      "size": 323
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/state/plant-compiler.yaml",
+      "sha256": "57251d8f3d17ee1086d3253932a003671ddd23fe91b7f748a46a9f9a22d38335",
+      "size": 226
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/views/maintenance.yaml",
+      "sha256": "f28d435c42b7d0590d828add2f3a7ea3ecc2005136bbbfd4cd18b3a6642633af",
+      "size": 244
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/views/plant.yaml",
+      "sha256": "8c9bf2a75854983898dfeb9d3167db1462b30d66f8f19b50c88b5d2f04a56297",
+      "size": 205
+    },
+    {
+      "path": "conformance/cases/view-composes-compiler/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict-set/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict-set/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict-set/views/maintenance.yaml",
+      "sha256": "9d07bf415d379a62c448023e908b083dbde7d249fb274eaa6a8a8c37fccd695f",
+      "size": 223
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict-set/views/plant.yaml",
+      "sha256": "d1a018f565d1b40b7167b2d375884ad6734d2e69d8b1b38a2c60ffbf528934a1",
+      "size": 217
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict-set/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict/views/maintenance.yaml",
+      "sha256": "9d07bf415d379a62c448023e908b083dbde7d249fb274eaa6a8a8c37fccd695f",
+      "size": 223
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict/views/plant.yaml",
+      "sha256": "bfe700a480a3329e45c6abc28dce6bc53297a611790616e2b02baa90e755c3b5",
+      "size": 173
+    },
+    {
+      "path": "conformance/cases/view-composes-conflict/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-cycle/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-cycle/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-cycle/views/narrow.yaml",
+      "sha256": "a5705cbed9e55388fd4dfcd13d57bd7cdc99b2b7018f8d9e78dbc042eeb3acf1",
+      "size": 150
+    },
+    {
+      "path": "conformance/cases/view-composes-cycle/views/plant.yaml",
+      "sha256": "15b8982c6d28092a94dbd5c927236f197fb6f308040f8eb97e7642d122f13c2e",
+      "size": 168
+    },
+    {
+      "path": "conformance/cases/view-composes-cycle/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-missing/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-missing/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-missing/views/plant.yaml",
+      "sha256": "d712f0f89af5068f8b8878ea240b12f5f376086a21275a967ddc6d6728b4a8d4",
+      "size": 168
+    },
+    {
+      "path": "conformance/cases/view-composes-missing/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes-no-purpose/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes-no-purpose/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes-no-purpose/views/maintenance.yaml",
+      "sha256": "f28d435c42b7d0590d828add2f3a7ea3ecc2005136bbbfd4cd18b3a6642633af",
+      "size": 244
+    },
+    {
+      "path": "conformance/cases/view-composes-no-purpose/views/plant.yaml",
+      "sha256": "ed4f5191032896a3d2e1591e0327f4364bcec3de9fbf0bb10d5291073e299dc4",
+      "size": 141
+    },
+    {
+      "path": "conformance/cases/view-composes-no-purpose/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
+      "path": "conformance/cases/view-composes/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/view-composes/owp.yaml",
+      "sha256": "044502cefb2df1c3862078982801e1dc17b23e7a243c655be584645ec88653e2",
+      "size": 271
+    },
+    {
+      "path": "conformance/cases/view-composes/views/maintenance.yaml",
+      "sha256": "f28d435c42b7d0590d828add2f3a7ea3ecc2005136bbbfd4cd18b3a6642633af",
+      "size": 244
+    },
+    {
+      "path": "conformance/cases/view-composes/views/plant.yaml",
+      "sha256": "70361df09ce9e1a2023d92a96f16d7b6a55748ef2377a1b00c2f259124a09a64",
+      "size": 206
+    },
+    {
+      "path": "conformance/cases/view-composes/views/quality.yaml",
+      "sha256": "bae830234ae89d28e44c4720e9e89b1af7420c61a2bea6ad56b0a42af77440d3",
+      "size": 240
+    },
+    {
       "path": "conformance/cases/view-external-world-not-dependency/WORLD.md",
       "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
       "size": 28
@@ -6833,8 +7058,8 @@
     },
     {
       "path": "conformance/expected.yaml",
-      "sha256": "2664f63a27438c90f1b1c92c6cb66988fdbe64bdb28ad244306acac01573e678",
-      "size": 64180
+      "sha256": "5169c6c08dc2d94205a7cb2ee47b7b6b97fc85b479307b2fc01b85626065ddf1",
+      "size": 65739
     },
     {
       "path": "conformance/extraction/bad-timestamp/profile.yaml",
@@ -6998,8 +7223,8 @@
     },
     {
       "path": "conformance/reference-ids.json",
-      "sha256": "29bace19548f875f863407ae9d479c602d24e5fe376a660138818405e476f42e",
-      "size": 32352
+      "sha256": "d1acbbe71a7984b388d8ffadee659ccccbeb54f291edc400b6c3204960bccaf0",
+      "size": 33065
     },
     {
       "path": "conformance/resolution/archive-source/packages/world-0.1.0.owp.zip",
@@ -8363,7 +8588,7 @@
     },
     {
       "path": "demos/business-ai/evidence.yaml",
-      "sha256": "b4640fc67e3aac451f7b1be05b0e852467f4fcc6060b9199322c407ccfec9688",
+      "sha256": "7269408ca2687a409b1f35a58c7bd1efde7ace625f53ae3859f958d4068aac64",
       "size": 1406
     },
     {
@@ -8383,8 +8608,8 @@
     },
     {
       "path": "demos/business-ai/quality-transition-world-model-0.1.0.owp.zip",
-      "sha256": "19cb7a55111a4a1fb009fe3a47db207bcb2658ef35b240af3afe5602a6536171",
-      "size": 2301
+      "sha256": "36f2772bdb61a28929713ba9b5be207e5dec414947f7a4ad8fa1a4e91c35462d",
+      "size": 2864
     },
     {
       "path": "demos/business-ai/records/mes_equipment_events.csv",
@@ -8423,7 +8648,7 @@
     },
     {
       "path": "demos/physical-ai/evidence.yaml",
-      "sha256": "2d41dcf830080abce95c3beed1ccba55b3fb50dd41794a76e5652e5915cdf6f2",
+      "sha256": "f41b22d9ab9725ba50769f7a587ac814c7f5ebbebce90376035bf82e469ae866",
       "size": 1288
     },
     {
@@ -8438,8 +8663,8 @@
     },
     {
       "path": "demos/physical-ai/multimodal-action-world-model-0.1.0.owp.zip",
-      "sha256": "aebcacecb063f50c784e6980b27997d4f1a61529faa709aecbb05eaf9c6c1aae",
-      "size": 4006
+      "sha256": "8bc58ae47f268ffcf905b2fb27d7bdbea4da1370ad410d345c7153a82c9f4e4a",
+      "size": 4661
     },
     {
       "path": "demos/physical-ai/observations.yaml",
@@ -8508,13 +8733,13 @@
     },
     {
       "path": "docs/PROFILE_PROMOTION.md",
-      "sha256": "32e57c7e718986bff870cff0618f8c359c046807030c68c427a6ba38dc12685b",
-      "size": 3080
+      "sha256": "bdc33178b13f948d8daf232708f67fb890843897ddd09a4367ca7d853a68d2e9",
+      "size": 3122
     },
     {
       "path": "docs/QUICKSTART.md",
-      "sha256": "fcc6efb4c3f92dd30af63fd283bf0d95099928fb72d9c8b935394bed667b3a93",
-      "size": 6971
+      "sha256": "79bc7223dd65ce42ad0ba98ede39c021f8e79ecd72fba7f92d7419a454c6c6f0",
+      "size": 8640
     },
     {
       "path": "docs/REFERENCES.md",
@@ -8533,8 +8758,8 @@
     },
     {
       "path": "docs/STANDARDS_INTEROP.md",
-      "sha256": "11630adc52faabcfcf2f65aaf1236e6343835c3bc617a06ea3982794b69a1db4",
-      "size": 7651
+      "sha256": "edf82788422fbd296dee03a6e556f7e040ad0740c674e813cc420f0112eb684d",
+      "size": 8307
     },
     {
       "path": "docs/STATE_COMPILATION.md",
@@ -8548,8 +8773,8 @@
     },
     {
       "path": "docs/interop/MCP.md",
-      "sha256": "f17165dfae5385b974ce0a7b792a8c628a7e123be15911cf771a61bf9135c7b6",
-      "size": 2366
+      "sha256": "6a514b922a0e89c2e2b00decd738dd5ac1a299e62ca755c81d7fcf3d0c5fa530",
+      "size": 3705
     },
     {
       "path": "docs/interop/NGSI-LD.md",
@@ -8563,8 +8788,8 @@
     },
     {
       "path": "examples/business/manufacturing-quality-world/WORLD.md",
-      "sha256": "a237b9a92c61c00fbb8a82a26b0dd9594db5648271ebd2a3a5d432519fd7f552",
-      "size": 2251
+      "sha256": "54e97cfd20183b38a36c922c17367d19b3b21341c20c49190b209e5ac0b03b4b",
+      "size": 3946
     },
     {
       "path": "examples/business/manufacturing-quality-world/actors/plant-director.yaml",
@@ -8688,8 +8913,8 @@
     },
     {
       "path": "examples/business/manufacturing-quality-world/owp.yaml",
-      "sha256": "f66078f2eea381289603cb5f064124c81deb5aae121ee5d5411158bc7363a3c9",
-      "size": 1457
+      "sha256": "88d9ae0da1b262cef709a4b5f23f3a2a0991806a586157d1369486dbfa08e37e",
+      "size": 1597
     },
     {
       "path": "examples/business/manufacturing-quality-world/patterns/diagnose.yaml",
@@ -8733,8 +8958,8 @@
     },
     {
       "path": "examples/business/quality-scenario-world-model/WORLDMODEL.md",
-      "sha256": "c33f63d0f5b101d665273a59c31cbaf8e60dde22964ef787e874178b66da34a1",
-      "size": 5424
+      "sha256": "e1c2fc4d37e133f69385a3b08e1393e28854833ce2a410e1eaa81dffc7e27656",
+      "size": 6876
     },
     {
       "path": "examples/business/quality-scenario-world-model/eval/scenario-outcome.yaml",
@@ -8798,8 +9023,8 @@
     },
     {
       "path": "examples/business/quality-transition-world-model/WORLDMODEL.md",
-      "sha256": "57ffeb5a579701b30f0cfb2367bf5078955945a669d8aec45a17d6709367996d",
-      "size": 371
+      "sha256": "c3580dc2e8337d5d0366171508d76d698f93b2fc69d91564e5eaa0f9b25544ca",
+      "size": 1687
     },
     {
       "path": "examples/business/quality-transition-world-model/eval/basic.yaml",
@@ -8818,13 +9043,13 @@
     },
     {
       "path": "examples/business/quality-transition-world-model/owp.yaml",
-      "sha256": "b27548757c97dce7e1574317ddf13dd8113e42f74faf8c2b321e9cd217078aef",
-      "size": 1125
+      "sha256": "8fa4c6b6b403e39c6015781a48fe4477c12c5ca5d5d2c3c7bea37e5cee7c9c6f",
+      "size": 1266
     },
     {
       "path": "examples/business/sales-prioritization-world/WORLD.md",
-      "sha256": "e1d27bbd35d1cbb2512dae6d1ff45a60819f1926d9b1418e28a4e9a6e2f2f804",
-      "size": 1039
+      "sha256": "bc300c17e1d8d18e60ca0075faf57d69e9a7e8f4ea50df071777f56e01c4f12b",
+      "size": 2508
     },
     {
       "path": "examples/business/sales-prioritization-world/actors/sales-agent.yaml",
@@ -8893,8 +9118,8 @@
     },
     {
       "path": "examples/business/sales-prioritization-world/owp.yaml",
-      "sha256": "420ffd99f349d219ea3e03236fab977501343284ed441fe98622e7ec0b48ed69",
-      "size": 1040
+      "sha256": "5d82db185167488fda53f5bbdea9d8a83b901c4dcadee37b885e1e38385bf00e",
+      "size": 1168
     },
     {
       "path": "examples/business/sales-prioritization-world/patterns/allocate.yaml",
@@ -8938,13 +9163,13 @@
     },
     {
       "path": "examples/ontology/lab-ontology/ONTOLOGY.md",
-      "sha256": "af3622451c9ac098cc56c24b9d6c4dcb03a088c55d9f057f288dabda146e92df",
-      "size": 470
+      "sha256": "d5bd9bce346042888e42922d2e4221c339d55690506cd01929a2c3c184d47730",
+      "size": 1156
     },
     {
       "path": "examples/ontology/lab-ontology/owp.yaml",
-      "sha256": "0440b1f9816c7736bf4572bbddff1e41a8b34fa082c63322262c1a58a67af5cc",
-      "size": 469
+      "sha256": "929e620b82d70967cd7ee11a7fb3ffa4424819d2d24349a134d391357335c6d0",
+      "size": 550
     },
     {
       "path": "examples/ontology/lab-ontology/semantics/core.yaml",
@@ -8953,8 +9178,8 @@
     },
     {
       "path": "examples/ontology/quality-ontology/ONTOLOGY.md",
-      "sha256": "9e23cca49112ca517e50e55d97a4496ad8b7ce71b29ab4ceeec373350bde2b08",
-      "size": 675
+      "sha256": "2bc49569a0684e504475fd151ce315754bed9ab4957ad29a9f7b0f2a1feccfb0",
+      "size": 1566
     },
     {
       "path": "examples/ontology/quality-ontology/mappings/isa95.sssom.tsv",
@@ -8963,8 +9188,8 @@
     },
     {
       "path": "examples/ontology/quality-ontology/owp.yaml",
-      "sha256": "c0a4f875de6ac88da0b77ba6108a09da57f171db2aba82ae8467a54162d76c4c",
-      "size": 625
+      "sha256": "d40165992707f0a299db9a5bed75b22cac0b391d402e6558ee8c97ff618cbd13",
+      "size": 757
     },
     {
       "path": "examples/ontology/quality-ontology/semantics/core.yaml",
@@ -8978,13 +9203,13 @@
     },
     {
       "path": "examples/ontology/sales-ontology/ONTOLOGY.md",
-      "sha256": "7b107782af8c8f7bfc5e30ab1005cf7bb28998f487b979ae2ee7ee9a4e102c29",
-      "size": 438
+      "sha256": "523034b4850afd3cd315e0f4c018fbd9f3ebf2781311dabb3ba8fc94ffa47211",
+      "size": 1087
     },
     {
       "path": "examples/ontology/sales-ontology/owp.yaml",
-      "sha256": "e4c9b1713e4b28e2f97be6193ab56b507b3f543efe509a95ac7fe733e70f665f",
-      "size": 472
+      "sha256": "7fc932b86a2272bcff9a6c177742915ee913a8fed34374b91c95e558913bc3ce",
+      "size": 552
     },
     {
       "path": "examples/ontology/sales-ontology/semantics/core.yaml",
@@ -8993,8 +9218,8 @@
     },
     {
       "path": "examples/physical-ai/mobile-manipulation-world/WORLD.md",
-      "sha256": "61d8e223ba7105b0e26ed25ed785091497793a337368237eb81b6e75639c39b2",
-      "size": 1192
+      "sha256": "7d75267771c2e4988c8bce5074d117f033a918d37ced2521c4be15f03dfd91f3",
+      "size": 2681
     },
     {
       "path": "examples/physical-ai/mobile-manipulation-world/datasets/manipulation-episodes.yaml",
@@ -9043,8 +9268,8 @@
     },
     {
       "path": "examples/physical-ai/mobile-manipulation-world/owp.yaml",
-      "sha256": "e6f4c4d6a0b2390d24174b7363ff06dabf8615f2386c8a2bec4f6b590eb8cea1",
-      "size": 1167
+      "sha256": "4b146c7a4559825d49ddb25fbe02311d4d0e43fa757657e4002f962259f2e7f9",
+      "size": 1296
     },
     {
       "path": "examples/physical-ai/mobile-manipulation-world/scenarios/pick-place.yaml",
@@ -9063,8 +9288,8 @@
     },
     {
       "path": "examples/physical-ai/multimodal-action-world-model/WORLDMODEL.md",
-      "sha256": "d8dc11a7b97c41a8847ca748e1a5a963dd751e3123384a95aca4eecb0e2b12ac",
-      "size": 870
+      "sha256": "5556d8cc2eb6d0b5699d689fba65b3ed10e03f1eb260920e8a341ff87b34222e",
+      "size": 2328
     },
     {
       "path": "examples/physical-ai/multimodal-action-world-model/eval/evidence-reference-sim.yaml",
@@ -9093,13 +9318,13 @@
     },
     {
       "path": "examples/physical-ai/multimodal-action-world-model/owp.yaml",
-      "sha256": "761ccf3d0f2feb3ffaf91c1e72adb3ad1dff5a6880ed9f18819848217f0b4136",
-      "size": 1501
+      "sha256": "0f0d9f7edd41887b2de61488fec1e63adf9dd5d048f02867336a4d10a24a3e12",
+      "size": 1648
     },
     {
       "path": "examples/research/assay-optimization-world/WORLD.md",
-      "sha256": "ea4eaa8b5be4c6b03408a6ab1e277cb642cb2232dbdf2f8799310a10ee6c6942",
-      "size": 765
+      "sha256": "730312f854509a189605d7754a62c4a3d634eddfeec7979c3a6a215890488114",
+      "size": 1970
     },
     {
       "path": "examples/research/assay-optimization-world/actors/lab-robot.yaml",
@@ -9183,8 +9408,8 @@
     },
     {
       "path": "examples/research/assay-optimization-world/owp.yaml",
-      "sha256": "5ff462525c3cad45daa344027ab17e9d5fbca40bf6952e321501f604d08e69d4",
-      "size": 928
+      "sha256": "92a14cfd9ef3b70d8f9f96ad431287804a3d864d20d7170fb0dee233029fbc77",
+      "size": 1039
     },
     {
       "path": "examples/research/assay-optimization-world/patterns/design-test-learn.yaml",
@@ -9228,18 +9453,18 @@
     },
     {
       "path": "implementations/typescript/README.md",
-      "sha256": "997eeb98968b613b1c6356834011212fc9bcdcb6291d242c5d7e19eeac95d980",
-      "size": 9327
+      "sha256": "37ce6e94b303d70520b702de5653e3529b8a99ceccc035f34731d44606347e70",
+      "size": 9491
     },
     {
       "path": "implementations/typescript/package-lock.json",
-      "sha256": "b6a8dc2b919e76b52faf2f4c2edbbf20f1d5cc9bcdc3c021d337e12bb3339acf",
-      "size": 13899
+      "sha256": "7b430fcef8be921a49b7d57f68c498856e786dc13196346890c85eb0c1e05374",
+      "size": 13915
     },
     {
       "path": "implementations/typescript/package.json",
-      "sha256": "9202b1b79e1708102d49d2ed3192bc2e3f3cabb1e5ef813deaf983c4fa4c6a1b",
-      "size": 1822
+      "sha256": "a82290d87ff09c2daf2eb0dc502d689e2401a97eac8765a599f00194ee7f016c",
+      "size": 1830
     },
     {
       "path": "implementations/typescript/scripts/check-cli.mjs",
@@ -9278,8 +9503,8 @@
     },
     {
       "path": "implementations/typescript/src/cli.ts",
-      "sha256": "192cdabc053b6138f9b56eb49f56a3b347a7a2a4dfd6c986bc9b1448cec4981e",
-      "size": 6872
+      "sha256": "f21a645e1361d94a3fb7bd9cf239cc35a7d91c4d9f93b035e96cc8e4fa026de7",
+      "size": 7285
     },
     {
       "path": "implementations/typescript/src/conformance.ts",
@@ -9317,9 +9542,14 @@
       "size": 4054
     },
     {
+      "path": "implementations/typescript/src/report.ts",
+      "sha256": "d6da527b59c445fba0c028c97a9be1e5803df33b88d658b2826d3d5e5efd8793",
+      "size": 9681
+    },
+    {
       "path": "implementations/typescript/src/resolve.ts",
-      "sha256": "657f62bef8289ec71ac494f5452d9b211045d3b95949b119630999c4811d1155",
-      "size": 28305
+      "sha256": "2dd4ee8438fa27de462daed3a322c8ad23994cf970f186f2e38a9e2c1203dc45",
+      "size": 28371
     },
     {
       "path": "implementations/typescript/src/rules/assets.ts",
@@ -9343,13 +9573,13 @@
     },
     {
       "path": "implementations/typescript/src/rules/experimental.ts",
-      "sha256": "0d05837b5243ac900302863c580358cf4dfc05d32983d931b560a5423ea97fcb",
-      "size": 30267
+      "sha256": "2ef6a65c21d90ff3acf68efded74f538083b937fc7ac5abafa174ff11dcb6d0a",
+      "size": 36141
     },
     {
       "path": "implementations/typescript/src/rules/extensions.ts",
-      "sha256": "8e8b61f32d79d88224cf2ccf425301421ce5540a3daf4c76e619a284e00cd35d",
-      "size": 6006
+      "sha256": "a31af47e70f5902fc0d5a195dffe7e4baba24a587f1c2ec797be802c9977eb9e",
+      "size": 6057
     },
     {
       "path": "implementations/typescript/src/rules/externalref.ts",
@@ -9383,8 +9613,8 @@
     },
     {
       "path": "implementations/typescript/src/structure.ts",
-      "sha256": "7750b491b77fe8893cbfd39c2abfb87f04bbd750db1f57d0e5b0fa91b2ca656b",
-      "size": 12623
+      "sha256": "7c02fd6bab9ee0027a398389faeed10e0d7a49f6f50fbe028601a49e9041bb79",
+      "size": 12645
     },
     {
       "path": "implementations/typescript/src/util.ts",
@@ -9413,8 +9643,8 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "5c6516f1d59672a1cae127f7e7cdbdd704770a3f3fcf120f5b107ca8f035accf",
-      "size": 1556
+      "sha256": "11f9d5ca2f45b98d71b3c9f4a11823d56c0236a94b567b6fa2139ee596c13c8f",
+      "size": 1647
     },
     {
       "path": "schemas/action-binding-profile.schema.json",
@@ -9537,6 +9767,11 @@
       "size": 2785
     },
     {
+      "path": "schemas/package-report.schema.json",
+      "sha256": "8f38f7d027871e4c9697203d1a5ff0be501b1b235326116a0a159918fd6a0f5b",
+      "size": 7330
+    },
+    {
       "path": "schemas/role-profile.schema.json",
       "sha256": "4f0ebf1339855883d4cc5f3112a90e0372210f5bb1fff41fe77419e13dd03088",
       "size": 4020
@@ -9578,18 +9813,23 @@
     },
     {
       "path": "schemas/world-view-profile.schema.json",
-      "sha256": "ac1b38f068c5ea55a41d55ef8177147620a978d318db1771cc9f820c8324762e",
-      "size": 3747
+      "sha256": "a5ee66cb436055b254df0c26748c25d2db4e7a341c374230e919a77d2c8629b8",
+      "size": 3998
     },
     {
       "path": "scripts/build_site.py",
-      "sha256": "4c0007d23acae539a4da2a9330ce003d6dabe64ecb0a3e9c9349515b7f62ee85",
-      "size": 8562
+      "sha256": "d9ca40f76403be16842b9deb1ef3eeaaac12d0651d8c9f579553fe7f1ec6cf3f",
+      "size": 8914
+    },
+    {
+      "path": "scripts/build_value_sets.py",
+      "sha256": "7057c44b4dbbef293be836d08b528c9c091a94843c477d02e2c531a52bd5b8e8",
+      "size": 3220
     },
     {
       "path": "scripts/check_alignments.sh",
-      "sha256": "55a29d08961a337ccf8bcf9e9f153ce9f7c7528d62925aa778573251a7afa14a",
-      "size": 4792
+      "sha256": "c581aa2d7359a0afd5b52e0fb71bf6c5a80ae7f7102a5ff292fda4d9f2d461a0",
+      "size": 4914
     },
     {
       "path": "scripts/generate_experimental_schemas.py",
@@ -9617,6 +9857,11 @@
       "size": 1874
     },
     {
+      "path": "scripts/report_parity.py",
+      "sha256": "fea6004bf8a57f6a38c415190f2c50c79e7db11bdb976eefafc8c68fd8eb65ec",
+      "size": 2562
+    },
+    {
       "path": "scripts/sync_rule_ids.py",
       "sha256": "f836510756625459f926215c9c83eb9b35b5f41a03d433080c03faee1a7a368e",
       "size": 1665
@@ -9628,8 +9873,8 @@
     },
     {
       "path": "spec/OWP_EXPERIMENTAL.md",
-      "sha256": "08db6085cf46b2c01299f640b8cfbf12b323293a7ea686e64cc8cb2efbcf38c6",
-      "size": 2919
+      "sha256": "7b5183ab46fd5bc7df25d525edae17689528488703e7db372d992e979c9b8f6c",
+      "size": 4027
     },
     {
       "path": "spec/OWP_SEMANTICS.md",
@@ -9638,8 +9883,8 @@
     },
     {
       "path": "spec/OWP_SPEC.md",
-      "sha256": "a18ea21ac1c08f347fa7ab3c14d921fca16512f4cd323593e2836950bb4320e7",
-      "size": 53911
+      "sha256": "864565ee1c74a1f0c50775a4263bc43278ff4d81b0b698d70a5c1d720f4eed9e",
+      "size": 54359
     },
     {
       "path": "spec/OWP_WORK_AND_ACTORS.md",
@@ -9648,12 +9893,12 @@
     },
     {
       "path": "spec/rule-ids.yaml",
-      "sha256": "7d1130eea4beb4c9e7133cfe40ffbdd432e3e2194c4c99cf41d48bec7306094e",
-      "size": 25020
+      "sha256": "a94dca7437dff5da5722e5d5f828a7b93768203ef8e1d4a42e05b5f6dedb1ffa",
+      "size": 25032
     },
     {
       "path": "src/ontle/__init__.py",
-      "sha256": "873aedf5cccb7ff4773af53e74fc9d0a68d43021dafeca80bfde20c864d26f3f",
+      "sha256": "d739958a01e8dfcdc9893d077fca7014118fc4874c147189d687ccb50d6d6166",
       "size": 24
     },
     {
@@ -9663,18 +9908,18 @@
     },
     {
       "path": "src/ontle/cli.py",
-      "sha256": "2e6647a7a17a0ef265381e167197e128fb7f82f8d50df3703eddd8ae7d92abdd",
-      "size": 22023
+      "sha256": "166432ef7c8d4ddfe6b823f045a59876b1dfd5d383d2462b5049487d80a107fe",
+      "size": 24503
     },
     {
       "path": "src/ontle/core.py",
-      "sha256": "6a480cbce0d458e363a27bbb744e9cc024e7142471c201e5de105e9abc33d801",
-      "size": 58524
+      "sha256": "f705c6c28e6edbd15301eb96072e705eb1a8e7a2fcc49171813c4aa3ffc3cd3a",
+      "size": 58621
     },
     {
       "path": "src/ontle/distribution.py",
-      "sha256": "af2e080706060d687c2717a95a068b6b80a8e39f53736d208a9bc3ee64025112",
-      "size": 24456
+      "sha256": "4d64df9587944b0d8025a70e9e9166b30a2383b9e937ed9c674d89281ac48f80",
+      "size": 24503
     },
     {
       "path": "src/ontle/ews.py",
@@ -9683,8 +9928,8 @@
     },
     {
       "path": "src/ontle/experimental.py",
-      "sha256": "be280c5a640165dee9c34a9b98b6f0a430443826933878c285e08f5ed193cca4",
-      "size": 42901
+      "sha256": "401bd4af4057c93dec6894315b163ababb2562207d1f4e08ab1898a6b81e3073",
+      "size": 48891
     },
     {
       "path": "src/ontle/extraction.py",
@@ -9707,6 +9952,11 @@
       "size": 12074
     },
     {
+      "path": "src/ontle/mcp.py",
+      "sha256": "aba91b7d2a69f999e3964d940a398a0b2071b37dc14e783bc9c799d01425acc0",
+      "size": 17348
+    },
+    {
       "path": "src/ontle/ontology.py",
       "sha256": "c2bfb939247bb1cd34263d5a9882d4a536fbf435e92cbb6d78cabe262f6a260c",
       "size": 24831
@@ -9717,24 +9967,29 @@
       "size": 10659
     },
     {
+      "path": "src/ontle/report.py",
+      "sha256": "c75c7bec6709fa71d9f4414a0cfc5f6a9f38c32c55279f9c3766589d0296ef9d",
+      "size": 10131
+    },
+    {
       "path": "src/ontle/resolve.py",
       "sha256": "2c0ccd3c94cc74e52da41de2314faee9e9e51995efc8bdccdad7a7f55d158e96",
       "size": 32231
     },
     {
       "path": "src/ontle/scaffold.py",
-      "sha256": "da5bba97a5df7db4d2038d6e4a2ba8c61c0a7a9fd908875931ad0c1cca2458e0",
-      "size": 17376
+      "sha256": "8ff90403b486001c97b419b448854c3869cea403c509746da831c1253467e3bc",
+      "size": 18037
     },
     {
       "path": "src/ontle/structure.py",
-      "sha256": "a1645c5d8aa2a9d21c6cf3d68c1decc52126a27ba878df5621a575f96a48fd21",
-      "size": 20374
+      "sha256": "65ddd8f873d4df1bc416c2f9ed8ba36103fb64083a8ac3336920ee0d9c016b3b",
+      "size": 20448
     },
     {
       "path": "src/ontle/templates/enterprise/WORLD.md",
-      "sha256": "5bdc6183fa38cc541d7f977af75f201d635d1a7543d85e838f64844adee4310d",
-      "size": 1363
+      "sha256": "507b1073cdb42db9386f5542feb6ce4eb1c33b3cf1ba4150037b724e134d5c40",
+      "size": 1963
     },
     {
       "path": "src/ontle/templates/enterprise/examples/observations.yaml",
@@ -9768,8 +10023,8 @@
     },
     {
       "path": "src/ontle/templates/enterprise/owp.yaml",
-      "sha256": "70a9985d01f7364ede7b4c786efbea19610edbd35eaa71e179b7ea702b05b2d9",
-      "size": 886
+      "sha256": "59832727bf3aeb710d3d7eaf1bc3894e2bd7ef86b98beb523b172a438ee7bf86",
+      "size": 963
     },
     {
       "path": "src/ontle/templates/enterprise/state/default-compiler.yaml",
@@ -9783,8 +10038,8 @@
     },
     {
       "path": "src/ontle/templates/minimal/WORLD.md",
-      "sha256": "17e4d3253510752492d62052c6176de64fd83b422cda531fef780c964bf288d0",
-      "size": 1129
+      "sha256": "34380b52f320eacd25194716e0487cadbada031fd9f1a9ce1f25c24bfb168049",
+      "size": 1457
     },
     {
       "path": "src/ontle/templates/minimal/examples/observations.yaml",
@@ -9793,8 +10048,8 @@
     },
     {
       "path": "src/ontle/templates/minimal/owp.yaml",
-      "sha256": "a8b12ab5dcdcbe8cfc43e2280946b4089ff8694230e7347d03660035a01dba09",
-      "size": 657
+      "sha256": "dce5a41ac7999bfadc30d7c2398497f9b30d865174be73920fbb54c2724d97c1",
+      "size": 726
     },
     {
       "path": "src/ontle/templates/minimal/state/default-compiler.yaml",
@@ -9808,13 +10063,13 @@
     },
     {
       "path": "src/ontle/templates/ontology/ONTOLOGY.md",
-      "sha256": "78ef3f24542ac68452f8980ec8171ca1cf7c0fe69274927639752ef539fa36bd",
-      "size": 419
+      "sha256": "614c3bdeb07acbba9a55a3e5bd8826e66af78e3eb97bf96398a8b51513a9e020",
+      "size": 871
     },
     {
       "path": "src/ontle/templates/ontology/owp.yaml",
-      "sha256": "92fbde16000d207bdd1fa440981cbe5d409d0cc61400598ddf14c7fd343c7838",
-      "size": 428
+      "sha256": "219598f43d8850f85b9368fe0f539d22ad82a4ce035004954532c87ebde08b11",
+      "size": 494
     },
     {
       "path": "src/ontle/templates/ontology/semantics/core.yaml",
@@ -9823,8 +10078,8 @@
     },
     {
       "path": "src/ontle/templates/worldmodel-multimodal/WORLDMODEL.md",
-      "sha256": "75abff813174df75b24f46677b3e430b477e28355ed82ddcb5a95cdc92c9a313",
-      "size": 567
+      "sha256": "7bc46c4c7dd66182c962f35a951e08ed3a9781b09386a4f79e404321b911d961",
+      "size": 912
     },
     {
       "path": "src/ontle/templates/worldmodel-multimodal/eval/basic.yaml",
@@ -9843,13 +10098,13 @@
     },
     {
       "path": "src/ontle/templates/worldmodel-multimodal/owp.yaml",
-      "sha256": "2ab053edf98f500d418450f1ce0beba565bef95430a3f0f9eb7b49336781ba33",
-      "size": 1227
+      "sha256": "12f4bb4dd58c339ca6799830e2c093afffeb57012a6faca108f5959dd0c12c2d",
+      "size": 1311
     },
     {
       "path": "src/ontle/templates/worldmodel/WORLDMODEL.md",
-      "sha256": "4e219d7940e90ce970bd460597c388f192b33c6fa7df1f0dee6ceab2d596280b",
-      "size": 705
+      "sha256": "70332e941c7a86a3f40147d9391997ae75f44b89e53436a1f10d4ab74cf39778",
+      "size": 900
     },
     {
       "path": "src/ontle/templates/worldmodel/eval/basic.yaml",
@@ -9868,8 +10123,8 @@
     },
     {
       "path": "src/ontle/templates/worldmodel/owp.yaml",
-      "sha256": "416329d6a06092ae7e49cc05d00e7c413d75359cf3a2cb971f33b154f13189d2",
-      "size": 870
+      "sha256": "2b2d43980bb9bf95e4298ae1e7b1aafb28f033bc9616ad037072835abb68fdaf",
+      "size": 948
     },
     {
       "path": "src/ontle/values.py",
@@ -9898,8 +10153,8 @@
     },
     {
       "path": "starters/github-world-repo/WORLD.md",
-      "sha256": "17e4d3253510752492d62052c6176de64fd83b422cda531fef780c964bf288d0",
-      "size": 1129
+      "sha256": "34380b52f320eacd25194716e0487cadbada031fd9f1a9ce1f25c24bfb168049",
+      "size": 1457
     },
     {
       "path": "starters/github-world-repo/examples/expected-ews.yaml",
@@ -9913,8 +10168,8 @@
     },
     {
       "path": "starters/github-world-repo/owp.yaml",
-      "sha256": "a8b12ab5dcdcbe8cfc43e2280946b4089ff8694230e7347d03660035a01dba09",
-      "size": 657
+      "sha256": "dce5a41ac7999bfadc30d7c2398497f9b30d865174be73920fbb54c2724d97c1",
+      "size": 726
     },
     {
       "path": "starters/github-world-repo/state/default-compiler.yaml",
@@ -9933,8 +10188,8 @@
     },
     {
       "path": "tests/test_core.py",
-      "sha256": "636f5b8b6a46a250f002e92fc790d7e4fafb5a578d654a3fe1d9860cb65c68d3",
-      "size": 20919
+      "sha256": "fc57f3aba151442c1e159b6a17cbf5b16b9721fee1ecad27515be77ccdaaef33",
+      "size": 21857
     },
     {
       "path": "tests/test_demos.py",
@@ -9943,8 +10198,8 @@
     },
     {
       "path": "tests/test_distribution.py",
-      "sha256": "5f3f11aee7f3c5b09526c2b0178a731040e3670a461eed311532e4168561aec1",
-      "size": 12127
+      "sha256": "c9b513cc4a727ba53644309f51ddd6cb724c986fb29eee7d13cb5c931785ccaf",
+      "size": 12637
     },
     {
       "path": "tests/test_ews.py",
@@ -9973,8 +10228,13 @@
     },
     {
       "path": "tests/test_rdfexport.py",
-      "sha256": "ab7f2b32e34c10cb38fc4ca66e8968f3f5ba1d1a4be47a6652cbcc4b6e0a471c",
-      "size": 7084
+      "sha256": "81cd8ae10d132f856fbb4813b813fcca215b91c533c07016019a2a38094c5bbd",
+      "size": 9540
+    },
+    {
+      "path": "tests/test_report.py",
+      "sha256": "caf5e342fdfbaba7a4aa4303ec0a243463e86ba774787fe9794a59da4a3e739a",
+      "size": 12190
     },
     {
       "path": "tests/test_resolve.py",
@@ -9988,8 +10248,8 @@
     },
     {
       "path": "tests/test_rule_ids.py",
-      "sha256": "e1cf837c204186e4c8b28c47a606dd4974880dc40120409cae32440daec1244f",
-      "size": 5577
+      "sha256": "711bf7e83845185c00c605ec14f5d17a0a25b9e6bf0ecb6fad7e4b56f7f505fa",
+      "size": 6362
     },
     {
       "path": "tests/test_structure.py",
@@ -10013,8 +10273,8 @@
     },
     {
       "path": "vocab/owp/ONTOLOGY.md",
-      "sha256": "07f625a2e0b7d666589ea755e1a1ec18bf5c459c83b0794bab68cf9902c49341",
-      "size": 1209
+      "sha256": "e57e4dfa7a8b38d710517d6e8e2e7dd966676b696d8d7976301c42613baed02a",
+      "size": 1707
     },
     {
       "path": "vocab/owp/ns.ttl",
@@ -10023,8 +10283,8 @@
     },
     {
       "path": "vocab/owp/owp.yaml",
-      "sha256": "abf85c9af676ccaeb226a3794fb7da21c61ae9c602949fe6110a29877058ed03",
-      "size": 556
+      "sha256": "1debe85bf34f44278cd02067124fe89b1f7c55d810c2b3490162baed3b4796e3",
+      "size": 686
     },
     {
       "path": "vocab/owp/semantics/terms.yaml",
@@ -10032,9 +10292,19 @@
       "size": 3102
     },
     {
+      "path": "vocab/owp/shapes.ttl",
+      "sha256": "15c2b9ae56760d1534170004406ffd3699ba2891f2dca4348aec3adf8e894b16",
+      "size": 3098
+    },
+    {
+      "path": "vocab/owp/value-sets.ttl",
+      "sha256": "3898ea20cbec302afb1eab16552493f788cbc5d7b7e7e49d11747bab6e0c1a8b",
+      "size": 37477
+    },
+    {
       "path": "vocab/value-sets.yaml",
-      "sha256": "55839968c9cf21c8ceb9cab03e802e6659185cd99aea8ef619448c55f28517b4",
-      "size": 7311
+      "sha256": "f307a34c672c46924dec52a01d64c4132ff467ed05210da7ffb638f75346780b",
+      "size": 7315
     }
   ]
 }

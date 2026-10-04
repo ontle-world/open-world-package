@@ -1,0 +1,697 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Generated from vocab/value-sets.yaml by scripts/build_value_sets.py; do not edit by hand. CC BY 4.0.
+
+<https://w3id.org/owp/vs/actorKinds> a skos:ConceptScheme ;
+  skos:prefLabel "actorKinds"@en ;
+  rdfs:comment "Used by ConsumerRepresentationProfile.spec.actor.kind. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/actorKinds#agent> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorKinds> ;
+  skos:notation "agent" ;
+  skos:prefLabel "AI agent"@en .
+<https://w3id.org/owp/vs/actorKinds#human> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorKinds> ;
+  skos:notation "human" ;
+  skos:prefLabel "Human"@en .
+<https://w3id.org/owp/vs/actorKinds#model> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorKinds> ;
+  skos:notation "model" ;
+  skos:prefLabel "Model"@en .
+<https://w3id.org/owp/vs/actorKinds#system> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorKinds> ;
+  skos:notation "system" ;
+  skos:prefLabel "System"@en .
+
+<https://w3id.org/owp/vs/actorTypes> a skos:ConceptScheme ;
+  skos:prefLabel "actorTypes"@en ;
+  rdfs:comment "Used by ActorProfile.spec.actorType. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/actorTypes#ai_agent> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "ai_agent" ;
+  skos:prefLabel "AI agent"@en .
+<https://w3id.org/owp/vs/actorTypes#automated_system> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "automated_system" ;
+  skos:prefLabel "Automated system"@en .
+<https://w3id.org/owp/vs/actorTypes#external_institution> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "external_institution" ;
+  skos:prefLabel "External institution"@en .
+<https://w3id.org/owp/vs/actorTypes#human> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "human" ;
+  skos:prefLabel "Human"@en .
+<https://w3id.org/owp/vs/actorTypes#organization> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "organization" ;
+  skos:prefLabel "Organization"@en .
+<https://w3id.org/owp/vs/actorTypes#team> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/actorTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/actorTypes> ;
+  skos:notation "team" ;
+  skos:prefLabel "Team"@en .
+
+<https://w3id.org/owp/vs/artifactOperations> a skos:ConceptScheme ;
+  skos:prefLabel "artifactOperations"@en ;
+  rdfs:comment "Used by ArtifactContract.spec.allowedOperations. Open: a value outside it is the warning value.unknown."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/artifactOperations#activate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "activate" ;
+  skos:prefLabel "Activate"@en .
+<https://w3id.org/owp/vs/artifactOperations#branch> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "branch" ;
+  skos:prefLabel "Branch"@en .
+<https://w3id.org/owp/vs/artifactOperations#commit> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "commit" ;
+  skos:prefLabel "Commit"@en .
+<https://w3id.org/owp/vs/artifactOperations#compare> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "compare" ;
+  skos:prefLabel "Compare"@en .
+<https://w3id.org/owp/vs/artifactOperations#create> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "create" ;
+  skos:prefLabel "Create"@en .
+<https://w3id.org/owp/vs/artifactOperations#deliver> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "deliver" ;
+  skos:prefLabel "Deliver"@en .
+<https://w3id.org/owp/vs/artifactOperations#deploy> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "deploy" ;
+  skos:prefLabel "Deploy"@en .
+<https://w3id.org/owp/vs/artifactOperations#edit> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "edit" ;
+  skos:prefLabel "Edit"@en .
+<https://w3id.org/owp/vs/artifactOperations#handoff> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "handoff" ;
+  skos:prefLabel "Hand off"@en .
+<https://w3id.org/owp/vs/artifactOperations#inspect> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "inspect" ;
+  skos:prefLabel "Inspect"@en .
+<https://w3id.org/owp/vs/artifactOperations#merge> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "merge" ;
+  skos:prefLabel "Merge"@en .
+<https://w3id.org/owp/vs/artifactOperations#publish> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "publish" ;
+  skos:prefLabel "Publish"@en .
+<https://w3id.org/owp/vs/artifactOperations#restore> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "restore" ;
+  skos:prefLabel "Restore"@en .
+<https://w3id.org/owp/vs/artifactOperations#share> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "share" ;
+  skos:prefLabel "Share"@en .
+<https://w3id.org/owp/vs/artifactOperations#supersede> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "supersede" ;
+  skos:prefLabel "Supersede"@en .
+<https://w3id.org/owp/vs/artifactOperations#transform> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "transform" ;
+  skos:prefLabel "Transform"@en .
+<https://w3id.org/owp/vs/artifactOperations#validate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "validate" ;
+  skos:prefLabel "Validate"@en .
+<https://w3id.org/owp/vs/artifactOperations#version> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactOperations> ;
+  skos:notation "version" ;
+  skos:prefLabel "Version"@en .
+
+<https://w3id.org/owp/vs/artifactRepresentations> a skos:ConceptScheme ;
+  skos:prefLabel "artifactRepresentations"@en ;
+  rdfs:comment "Used by ArtifactContract.spec.artifact.representation. Open: a value outside it is the warning value.unknown."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/artifactRepresentations#board> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "board" ;
+  skos:prefLabel "Board"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#code> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "code" ;
+  skos:prefLabel "Source code"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#configuration> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "configuration" ;
+  skos:prefLabel "Configuration"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#document> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "document" ;
+  skos:prefLabel "Document"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#form> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "form" ;
+  skos:prefLabel "Form"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#graph> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "graph" ;
+  skos:prefLabel "Graph"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#media> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "media" ;
+  skos:prefLabel "Image, audio, or video"@en .
+<https://w3id.org/owp/vs/artifactRepresentations#table> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactRepresentations> ;
+  skos:notation "table" ;
+  skos:prefLabel "Relational table"@en .
+
+<https://w3id.org/owp/vs/artifactTypes> a skos:ConceptScheme ;
+  skos:prefLabel "artifactTypes"@en ;
+  rdfs:comment "Used by ArtifactContract.spec.artifact.type. Open: a value outside it is the warning value.unknown."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/artifactTypes#agent_configuration> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "agent_configuration" ;
+  skos:prefLabel "Agent / prompt configuration"@en .
+<https://w3id.org/owp/vs/artifactTypes#app> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "app" ;
+  skos:prefLabel "App / Mini SaaS"@en .
+<https://w3id.org/owp/vs/artifactTypes#audio> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "audio" ;
+  skos:prefLabel "Audio"@en .
+<https://w3id.org/owp/vs/artifactTypes#code> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "code" ;
+  skos:prefLabel "Code"@en .
+<https://w3id.org/owp/vs/artifactTypes#dashboard> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "dashboard" ;
+  skos:prefLabel "Dashboard / Board"@en .
+<https://w3id.org/owp/vs/artifactTypes#database_object> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "database_object" ;
+  skos:prefLabel "Database object"@en .
+<https://w3id.org/owp/vs/artifactTypes#dataset> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "dataset" ;
+  skos:prefLabel "Dataset"@en .
+<https://w3id.org/owp/vs/artifactTypes#document> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "document" ;
+  skos:prefLabel "Document"@en .
+<https://w3id.org/owp/vs/artifactTypes#evaluation_asset> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "evaluation_asset" ;
+  skos:prefLabel "Evaluation asset"@en .
+<https://w3id.org/owp/vs/artifactTypes#form> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "form" ;
+  skos:prefLabel "Form"@en .
+<https://w3id.org/owp/vs/artifactTypes#image> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "image" ;
+  skos:prefLabel "Image"@en .
+<https://w3id.org/owp/vs/artifactTypes#knowledge_graph> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "knowledge_graph" ;
+  skos:prefLabel "Knowledge graph"@en .
+<https://w3id.org/owp/vs/artifactTypes#model_configuration> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "model_configuration" ;
+  skos:prefLabel "Model / model configuration"@en .
+<https://w3id.org/owp/vs/artifactTypes#presentation> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "presentation" ;
+  skos:prefLabel "Presentation"@en .
+<https://w3id.org/owp/vs/artifactTypes#proposal> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "proposal" ;
+  skos:prefLabel "Proposal"@en .
+<https://w3id.org/owp/vs/artifactTypes#report> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "report" ;
+  skos:prefLabel "Report"@en .
+<https://w3id.org/owp/vs/artifactTypes#spreadsheet> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "spreadsheet" ;
+  skos:prefLabel "Spreadsheet / Table"@en .
+<https://w3id.org/owp/vs/artifactTypes#template> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "template" ;
+  skos:prefLabel "Template"@en .
+<https://w3id.org/owp/vs/artifactTypes#video> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "video" ;
+  skos:prefLabel "Video"@en .
+<https://w3id.org/owp/vs/artifactTypes#workflow> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/artifactTypes> ;
+  skos:notation "workflow" ;
+  skos:prefLabel "Workflow"@en .
+
+<https://w3id.org/owp/vs/assessmentKinds> a skos:ConceptScheme ;
+  skos:prefLabel "assessmentKinds"@en ;
+  rdfs:comment "Used by EvaluationProfile.spec.assessmentKind. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/assessmentKinds#approval> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:notation "approval" ;
+  skos:prefLabel "Approval"@en ;
+  skos:definition "an authorized decision to use or execute"@en .
+<https://w3id.org/owp/vs/assessmentKinds#evaluation> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:notation "evaluation" ;
+  skos:prefLabel "Evaluation"@en ;
+  skos:definition "quality or performance judged against criteria"@en .
+<https://w3id.org/owp/vs/assessmentKinds#review> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:notation "review" ;
+  skos:prefLabel "Review"@en ;
+  skos:definition "an examination activity"@en .
+<https://w3id.org/owp/vs/assessmentKinds#validation> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:notation "validation" ;
+  skos:prefLabel "Validation"@en ;
+  skos:definition "whether the subject fits its purpose"@en .
+<https://w3id.org/owp/vs/assessmentKinds#verification> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/assessmentKinds> ;
+  skos:notation "verification" ;
+  skos:prefLabel "Verification"@en ;
+  skos:definition "whether conditions, facts, or specifications are met"@en .
+
+<https://w3id.org/owp/vs/evaluationSubjects> a skos:ConceptScheme ;
+  skos:prefLabel "evaluationSubjects"@en ;
+  rdfs:comment "Used by EvaluationProfile.spec.subject.kind. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/evaluationSubjects#agent> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "agent" ;
+  skos:prefLabel "Agent"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#artifact> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "artifact" ;
+  skos:prefLabel "Artifact"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#capability> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "capability" ;
+  skos:prefLabel "Capability"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#decision> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "decision" ;
+  skos:prefLabel "Decision"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#environment> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "environment" ;
+  skos:prefLabel "Environment"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#model> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "model" ;
+  skos:prefLabel "Model"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#process> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "process" ;
+  skos:prefLabel "Process"@en .
+<https://w3id.org/owp/vs/evaluationSubjects#workflow> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/evaluationSubjects> ;
+  skos:notation "workflow" ;
+  skos:prefLabel "Workflow"@en .
+
+<https://w3id.org/owp/vs/knowledgeRepresentations> a skos:ConceptScheme ;
+  skos:prefLabel "knowledgeRepresentations"@en ;
+  rdfs:comment "Used by KnowledgeAsset.spec.representation. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/knowledgeRepresentations#documents> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:notation "documents" ;
+  skos:prefLabel "Documents"@en .
+<https://w3id.org/owp/vs/knowledgeRepresentations#graph> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:notation "graph" ;
+  skos:prefLabel "Graph"@en .
+<https://w3id.org/owp/vs/knowledgeRepresentations#index> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:notation "index" ;
+  skos:prefLabel "Retrieval index"@en .
+<https://w3id.org/owp/vs/knowledgeRepresentations#rules> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:notation "rules" ;
+  skos:prefLabel "Rules"@en .
+<https://w3id.org/owp/vs/knowledgeRepresentations#table> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRepresentations> ;
+  skos:notation "table" ;
+  skos:prefLabel "Table"@en .
+
+<https://w3id.org/owp/vs/knowledgeRoles> a skos:ConceptScheme ;
+  skos:prefLabel "knowledgeRoles"@en ;
+  rdfs:comment "Used by KnowledgeAsset.spec.roles. Open: a value outside it is the warning value.unknown."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/knowledgeRoles#claim> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "claim" ;
+  skos:prefLabel "Claim"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#definition> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "definition" ;
+  skos:prefLabel "Definition"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#evidence> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "evidence" ;
+  skos:prefLabel "Evidence"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#glossary> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "glossary" ;
+  skos:prefLabel "Glossary"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#graph> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "graph" ;
+  skos:prefLabel "Graph"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#procedure> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "procedure" ;
+  skos:prefLabel "Procedure"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#rule> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "rule" ;
+  skos:prefLabel "Rule"@en .
+<https://w3id.org/owp/vs/knowledgeRoles#source> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/knowledgeRoles> ;
+  skos:notation "source" ;
+  skos:prefLabel "Source"@en .
+
+<https://w3id.org/owp/vs/queryLanguages> a skos:ConceptScheme ;
+  skos:prefLabel "queryLanguages"@en ;
+  rdfs:comment "Used by KnowledgeExtractionProfile.spec.query.language. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/queryLanguages#gql> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:notation "gql" ;
+  skos:prefLabel "ISO GQL"@en .
+<https://w3id.org/owp/vs/queryLanguages#opencypher> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:notation "opencypher" ;
+  skos:prefLabel "openCypher"@en .
+<https://w3id.org/owp/vs/queryLanguages#sparql> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/queryLanguages> ;
+  skos:notation "sparql" ;
+  skos:prefLabel "SPARQL 1.1"@en .
+
+<https://w3id.org/owp/vs/scenarioEngines> a skos:ConceptScheme ;
+  skos:prefLabel "scenarioEngines"@en ;
+  rdfs:comment "Used by ScenarioProfile.spec.engine.kind. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/scenarioEngines#llm_reasoning> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "llm_reasoning" ;
+  skos:prefLabel "LLM or agent reasoning"@en .
+<https://w3id.org/owp/vs/scenarioEngines#ml_prediction> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "ml_prediction" ;
+  skos:prefLabel "ML prediction"@en .
+<https://w3id.org/owp/vs/scenarioEngines#optimization> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "optimization" ;
+  skos:prefLabel "Optimization"@en .
+<https://w3id.org/owp/vs/scenarioEngines#rule> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "rule" ;
+  skos:prefLabel "Rule"@en .
+<https://w3id.org/owp/vs/scenarioEngines#score_ranking> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "score_ranking" ;
+  skos:prefLabel "Score / ranking"@en .
+<https://w3id.org/owp/vs/scenarioEngines#simulation> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "simulation" ;
+  skos:prefLabel "Simulation"@en .
+<https://w3id.org/owp/vs/scenarioEngines#world_model> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/scenarioEngines> ;
+  skos:notation "world_model" ;
+  skos:prefLabel "World model"@en .
+
+<https://w3id.org/owp/vs/workNodeFamilies> a skos:ConceptScheme ;
+  skos:prefLabel "workNodeFamilies"@en ;
+  rdfs:comment "Used by WorkPatternProfile.spec.graph.nodes[].family, WorkPatternProfile.spec.pattern.family. Closed: a value outside it is an error."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "analyze_reason" ;
+  skos:prefLabel "Analyze / Reason"@en .
+<https://w3id.org/owp/vs/workNodeFamilies#create_modify> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "create_modify" ;
+  skos:prefLabel "Create / Modify"@en .
+<https://w3id.org/owp/vs/workNodeFamilies#decide_plan> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "decide_plan" ;
+  skos:prefLabel "Decide / Plan"@en .
+<https://w3id.org/owp/vs/workNodeFamilies#evaluate_recover> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "evaluate_recover" ;
+  skos:prefLabel "Evaluate / Recover"@en .
+<https://w3id.org/owp/vs/workNodeFamilies#execute_operate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "execute_operate" ;
+  skos:prefLabel "Execute / Operate"@en .
+<https://w3id.org/owp/vs/workNodeFamilies#observe_knowledge> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workNodeFamilies> ;
+  skos:notation "observe_knowledge" ;
+  skos:prefLabel "Observe / Knowledge"@en .
+
+<https://w3id.org/owp/vs/workPatterns> a skos:ConceptScheme ;
+  skos:prefLabel "workPatterns"@en ;
+  rdfs:comment "Used by WorkPatternProfile.spec.pattern.kind, TaskSetProfile.spec.task.workPatterns. Open: a value outside it is the warning value.unknown."@en ;
+  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .
+<https://w3id.org/owp/vs/workPatterns#allocate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "allocate" ;
+  skos:prefLabel "Allocate / Assign"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#analyze> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "analyze" ;
+  skos:prefLabel "Analyze / Classify"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#approve> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "approve" ;
+  skos:prefLabel "Approve / Govern"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#compare> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "compare" ;
+  skos:prefLabel "Compare"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#create> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "create" ;
+  skos:prefLabel "Create / Generate"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#create_modify> .
+<https://w3id.org/owp/vs/workPatterns#detect> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "detect" ;
+  skos:prefLabel "Detect / Triage"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#observe_knowledge> .
+<https://w3id.org/owp/vs/workPatterns#diagnose> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "diagnose" ;
+  skos:prefLabel "Diagnose / RCA"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#evaluate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "evaluate" ;
+  skos:prefLabel "Evaluate"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#evaluate_recover> .
+<https://w3id.org/owp/vs/workPatterns#execute> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "execute" ;
+  skos:prefLabel "Execute / Coordinate"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#execute_operate> .
+<https://w3id.org/owp/vs/workPatterns#forecast> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "forecast" ;
+  skos:prefLabel "Forecast / Predict"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#learn> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "learn" ;
+  skos:prefLabel "Learn / Update"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#evaluate_recover> .
+<https://w3id.org/owp/vs/workPatterns#observe> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "observe" ;
+  skos:prefLabel "Observe / Monitor"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#observe_knowledge> .
+<https://w3id.org/owp/vs/workPatterns#optimize> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "optimize" ;
+  skos:prefLabel "Optimize"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#prioritize> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "prioritize" ;
+  skos:prefLabel "Prioritize / Rank"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#publish> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "publish" ;
+  skos:prefLabel "Publish / Deliver"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#execute_operate> .
+<https://w3id.org/owp/vs/workPatterns#recommend> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "recommend" ;
+  skos:prefLabel "Recommend / Decide"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#retrieve> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "retrieve" ;
+  skos:prefLabel "Retrieve / Research"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#observe_knowledge> .
+<https://w3id.org/owp/vs/workPatterns#review> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "review" ;
+  skos:prefLabel "Review / Verify"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#evaluate_recover> .
+<https://w3id.org/owp/vs/workPatterns#schedule> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "schedule" ;
+  skos:prefLabel "Schedule / Plan"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#decide_plan> .
+<https://w3id.org/owp/vs/workPatterns#simulate> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "simulate" ;
+  skos:prefLabel "Simulate / What-if"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#summarize> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "summarize" ;
+  skos:prefLabel "Summarize / Synthesize"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#analyze_reason> .
+<https://w3id.org/owp/vs/workPatterns#transform> a skos:Concept ;
+  skos:inScheme <https://w3id.org/owp/vs/workPatterns> ;
+  skos:topConceptOf <https://w3id.org/owp/vs/workPatterns> ;
+  skos:notation "transform" ;
+  skos:prefLabel "Transform / Adapt"@en ;
+  skos:broadMatch <https://w3id.org/owp/vs/workNodeFamilies#create_modify> .

@@ -67,7 +67,7 @@ valueSets:
       graph: {label: Graph}
       board: {label: Board}
       form: {label: Form}
-      media: {label: Image, audio, or video}
+      media: {label: "Image, audio, or video"}
       code: {label: Source code}
       configuration: {label: Configuration}
   actorKinds:
@@ -159,7 +159,7 @@ valueSets:
     stability: standard
     usedBy: EvaluationProfile.spec.assessmentKind
     values:
-      verification: {label: Verification, description: whether conditions, facts, or specifications are met}
+      verification: {label: Verification, description: "whether conditions, facts, or specifications are met"}
       validation: {label: Validation, description: whether the subject fits its purpose}
       evaluation: {label: Evaluation, description: quality or performance judged against criteria}
       review: {label: Review, description: an examination activity}

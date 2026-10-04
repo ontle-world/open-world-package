@@ -694,6 +694,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         errors.extend(std_errors)
         warnings.extend(std_warnings)
     warnings.extend(experimental.view_specialization_warnings(local_asset_kinds, local_asset_docs))
+    warnings.extend(experimental.view_composition_warnings(local_asset_kinds, local_asset_docs))
     from .extraction import multi_latest_warnings  # local import: extraction depends on core
     warnings.extend(multi_latest_warnings(local_asset_kinds, local_asset_docs))
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"

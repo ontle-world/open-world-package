@@ -5,6 +5,7 @@ metadata:
   name: quality-ontology
   version: 0.1.0
   title: Manufacturing Quality Ontology
+  description: Manufacturing quality vocabulary (incidents, lots, equipment, claims, CAPA) used by the Manufacturing Quality World.
   license: Apache-2.0
 spec:
   ontology:

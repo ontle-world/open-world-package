@@ -1,14 +1,22 @@
 # Enterprise World
 
-## Definition
+An intentionally incomplete enterprise representation designed for reusable task views and explicit source and action bindings. Put the one-line summary in `metadata.description` in `owp.yaml`; catalogs show it on the package card.
 
-An intentionally incomplete enterprise representation designed for reusable task views and explicit source/action bindings.
+## Scope
 
-## Interface boundary
+Included:
 
-Inbound sources can include ERP, MES, QMS, CRM, documents, APIs, events, and human observations.
+- Add included entities, processes, and relations (`spec.world.boundary.included`).
 
-Outbound bindings can include controlled API writes, approvals, workflows, notifications, and business commits.
+Excluded:
+
+- Add intentional exclusions (`spec.world.boundary.excluded`).
+
+## Sources
+
+Inbound sources can include ERP, MES, QMS, CRM, documents, APIs, events, and human observations (`interfaces/sources.yaml`, `interfaces/observations.yaml`).
+
+Outbound bindings can include controlled API writes, approvals, workflows, notifications, and business commits (`interfaces/actions.yaml`, `interfaces/commit.yaml`).
 
 Keep:
 
@@ -17,9 +25,17 @@ Source Record != Observation != State
 API Success != Business Commit != Realized World Change
 ```
 
-## Validity and limitations
+## Use it for
 
-This package does not require copying all enterprise data into a single graph or database.
+- Three to five questions a user or agent can answer with this World, or decisions it supports.
+
+## Limitations
+
+This package does not require copying all enterprise data into a single graph or database. State the assumptions and known blind spots, and the fields that have no binding yet.
+
+## Versions
+
+- 0.1.0: first version.
 
 ## State
 

@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:owp:schema:package-report:v1alpha1",
+  "title": "PackageReport",
+  "description": "Informative. What a catalog or registry shows for a package, derived from the package by `ontle inspect --report`. Not stored in packages; no conformance rule depends on it.",
+  "type": "object",
+  "required": [
+    "kind",
+    "identity",
+    "packageKind",
+    "validator",
+    "valid",
+    "errors",
+    "warnings",
+    "warningIds",
+    "metadata",
+    "domains",
+    "assets",
+    "externalRefs",
+    "standardBindings",
+    "evidence",
+    "hints"
+  ],
+  "properties": {
+    "kind": {
+      "const": "PackageReport"
+    },
+    "identity": {
+      "type": "string",
+      "description": "<namespace>/<name>@<version>"
+    },
+    "packageKind": {
+      "enum": [
+        "WorldPackage",
+        "WorldModelPackage",
+        "OntologyPackage"
+      ]
+    },
+    "validator": {
+      "type": "object",
+      "required": [
+        "implementation",
+        "version"
+      ],
+      "properties": {
+        "implementation": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warningIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rule ids of the warnings (spec Appendix A), sorted, each once."
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assets": {
+      "type": "object",
+      "required": [
+        "total",
+        "byKind"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byKind": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "description": "WorldPackage and OntologyPackage: the declared conformance profile and the highest one satisfied.",
+      "required": [
+        "declared",
+        "satisfied"
+      ],
+      "properties": {
+        "declared": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "satisfied": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "description": "WorldPackage: State Compilers, their EWS fields, and the fields with a declarative binding.",
+      "required": [
+        "stateCompilers",
+        "fields",
+        "boundFields"
+      ],
+      "properties": {
+        "stateCompilers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fields": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boundFields": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticCoverage": {
+      "type": "object",
+      "description": "WorldPackage with a SemanticBinding: EWS fields bound to ontology terms.",
+      "required": [
+        "boundFields",
+        "fields"
+      ],
+      "properties": {
+        "boundFields": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fields": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "ontology": {
+      "type": "object",
+      "required": [
+        "terms"
+      ],
+      "properties": {
+        "terms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "externalRefs": {
+      "type": "object",
+      "description": "Bound ExternalRefs in the manifest, standard bindings, and KnowledgeAsset or Dataset content.",
+      "required": [
+        "total",
+        "pinned"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pinned": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "standardBindings": {
+      "type": "object",
+      "required": [
+        "standards",
+        "boundRefs",
+        "licensedRefs"
+      ],
+      "properties": {
+        "standards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "boundRefs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "licensedRefs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "description": "CompatibilityEvidence inside the package.",
+      "required": [
+        "included",
+        "subjects",
+        "statuses"
+      ],
+      "properties": {
+        "included": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "card": {
+      "type": "object",
+      "required": [
+        "path",
+        "sections",
+        "missingRecommended"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missingRecommended": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "hints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Suggestions for catalog readiness. Not validation findings."
+    },
+    "integrity": {
+      "type": "object",
+      "description": "Present when the report is made from an .owp.zip archive.",
+      "required": [
+        "digest",
+        "size",
+        "files",
+        "signatureBundle"
+      ],
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "signatureBundle": {
+          "type": "boolean",
+          "description": "A <archive>.sigstore.json bundle sits next to the archive (not verified)."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

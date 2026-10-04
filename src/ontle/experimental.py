@@ -601,10 +601,50 @@ def _names(value: Any) -> list[str]:
     return [x for x in value if isinstance(x, str)] if isinstance(value, list) else []
 
 
+def _composed(spec: dict[str, Any], local_kinds: dict[str, str]) -> list[str] | None:
+    """The Views a View composes, when it composes (a list, and no specializes); None otherwise."""
+    if "specializes" in spec or not isinstance(spec.get("composes"), list):
+        return None
+    return [c for c in _names(spec["composes"]) if local_kinds.get(c) == "WorldViewProfile"]
+
+
 def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[str, str], _seen: tuple[str, ...] = ()) -> dict[str, Any]:
-    """The View's spec with `specializes` applied: include = base ∪ include − exclude; purpose and conditioning override key by key."""
+    """The View's spec with `specializes` or `composes` applied.
+
+    specializes: include = base ∪ include − exclude; purpose and conditioning override key by key.
+    composes: include = the union of the composed Views' includes, in order, ∪ include − exclude; conditioning and the
+    other projection keys come from the composed Views (the first that sets a key wins) and are overridden key by key;
+    purpose is the View's own. A View that declares both resolves by specializes.
+    """
     raw = (docs.get(rel) or {}).get("spec")
     spec = dict(raw) if isinstance(raw, dict) else {}
+    parts = _composed(spec, local_kinds)
+    spec.pop("composes", None)
+    if parts is not None:
+        parents = [resolve_view(c, docs, local_kinds, _seen + (rel,)) for c in parts if c not in _seen + (rel,)]
+        merged = {k: v for k, v in spec.items() if k not in {"projection", "conditioning"}}
+        own_p = spec.get("projection") if isinstance(spec.get("projection"), dict) else {}
+        own_c = spec.get("conditioning") if isinstance(spec.get("conditioning"), dict) else {}
+        projection: dict[str, Any] = {}
+        conditioning: dict[str, Any] = {}
+        include: list[str] = []
+        for parent in parents:
+            pp = parent.get("projection") if isinstance(parent.get("projection"), dict) else {}
+            include += [x for x in _names(pp.get("include")) if x not in include]
+            for k, v in pp.items():
+                if k not in {"include", "exclude"}:
+                    projection.setdefault(k, v)
+            for k, v in (parent.get("conditioning") if isinstance(parent.get("conditioning"), dict) else {}).items():
+                conditioning.setdefault(k, v)
+        projection.update({k: v for k, v in own_p.items() if k not in {"include", "exclude"}})
+        include += [x for x in _names(own_p.get("include")) if x not in include]
+        exclude = set(_names(own_p.get("exclude")))
+        projection["include"] = [x for x in include if x not in exclude]
+        merged["projection"] = projection
+        conditioning.update(own_c)
+        if conditioning:
+            merged["conditioning"] = conditioning
+        return merged
     base = spec.pop("specializes", None)
     if base is None or local_kinds.get(base) != "WorldViewProfile" or base in _seen + (rel,):
         projection = dict(spec.get("projection") or {}) if isinstance(spec.get("projection"), dict) else {}
@@ -613,7 +653,7 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
         spec["projection"] = projection
         return spec
     parent = resolve_view(base, docs, local_kinds, _seen + (rel,))
-    merged: dict[str, Any] = dict(parent)
+    merged = dict(parent)
     for key, value in spec.items():
         if key in {"purpose", "conditioning"} and isinstance(value, dict):
             merged[key] = {**(parent[key] if isinstance(parent.get(key), dict) else {}), **value}
@@ -627,6 +667,71 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
         else:
             merged[key] = value
     return merged
+
+
+def view_composition_warnings(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]]) -> list[str]:
+    """Appendix C: `spec.composes` lists local Views; no cycle; the composed View has its own purpose; the composed
+    Views agree on each conditioning and projection key the View does not set itself."""
+    from .ews import json_equal  # local import: ews depends on core, which imports this module
+    warnings: list[str] = []
+    views = {rel for rel, kind in local_kinds.items() if kind == "WorldViewProfile"}
+
+    def edges(view: str) -> list[str]:
+        s = _spec(docs.get(view))
+        out = [c for c in _names(s.get("composes")) if c in views] if isinstance(s.get("composes"), list) else []
+        return out + ([s["specializes"]] if s.get("specializes") in views else [])
+
+    def cycle(start: str) -> list[str] | None:
+        stack = [(start, [start])]
+        visited: set[str] = set()
+        while stack:
+            node, path = stack.pop()
+            for nxt in edges(node):
+                if nxt == start:
+                    return path + [start]
+                if nxt not in visited:
+                    visited.add(nxt)
+                    stack.append((nxt, path + [nxt]))
+        return None
+
+    for rel in sorted(views):
+        spec = _spec(docs.get(rel))
+        if "composes" not in spec:
+            continue
+        listed = spec["composes"]
+        if not (isinstance(listed, list) and listed and all(isinstance(c, str) for c in listed)):
+            warnings.append(f"experimental.field: {rel}: spec.composes must be a non-empty list of local WorldViewProfile paths")
+            continue
+        if "specializes" in spec:
+            warnings.append(f"experimental.field: {rel}: a View declares spec.composes or spec.specializes, not both (it resolves by specializes)")
+            continue
+        missing = [c for c in listed if c not in views]
+        for c in missing:
+            warnings.append(f"experimental.reference: {rel}: spec.composes {c!r} must be a local WorldViewProfile asset")
+        if not (isinstance(spec.get("purpose"), dict) and spec["purpose"]):
+            warnings.append(f"experimental.field: {rel}: a composed View declares its own spec.purpose")
+        found = cycle(rel)
+        if found:
+            warnings.append(f"experimental.reference: {rel}: spec.composes forms a cycle: {' -> '.join(found)}")
+            continue
+        parts = [(c, resolve_view(c, docs, local_kinds)) for c in listed if c in views]
+        for section in ("conditioning", "projection"):
+            own = spec.get(section) if isinstance(spec.get(section), dict) else {}
+            keys: list[str] = []
+            for _, resolved in parts:
+                for k in (resolved.get(section) if isinstance(resolved.get(section), dict) else {}):
+                    if k not in {"include", "exclude"} and k not in keys:
+                        keys.append(k)
+            for key in keys:
+                if key in own:
+                    continue
+                setters = [(c, r[section][key]) for c, r in parts if isinstance(r.get(section), dict) and key in r[section]]
+                first_c, first_v = setters[0]
+                other = next((c for c, v in setters[1:] if not json_equal(v, first_v)), None)
+                if other is not None:
+                    warnings.append(f"experimental.field: {rel}: composed Views {first_c} and {other} disagree on spec.{section}.{key}; "
+                                    f"set it in this View")
+    return warnings
 
 
 # --- Reference graph (relation names are informative; spec section 13 does not standardize them) ---
@@ -656,6 +761,8 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "compiles_view", s.get("worldViewRef"))
         elif kind == "WorldViewProfile":
             edge(rel, "specializes", s.get("specializes"))
+            for part in _names(s.get("composes")) if isinstance(s.get("composes"), list) else []:
+                edge(rel, "composes", part)
             conditioning = s["conditioning"] if isinstance(s.get("conditioning"), dict) else {}
             edge(rel, "for_actor", conditioning.get("actorRef"))
             for v in _values(conditioning.get("roleRefs")):
@@ -732,7 +839,7 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
 
 
 EXPERIMENTAL_FIELDS = {  # spec Appendix C.1
-    "WorldViewProfile": [("specializes",), ("projection", "exclude")],
+    "WorldViewProfile": [("specializes",), ("composes",), ("projection", "exclude")],
 }
 
 

@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: quality}
+spec:
+  purpose: {task: inspect_quality}
+  projection: {include: [lot, claim, inspection], timeScope: last_quarter}
+  conditioning: {authorityScope: read_only}

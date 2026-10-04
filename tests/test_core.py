@@ -130,13 +130,26 @@ class OntleTests(unittest.TestCase):
                 doc = yaml.safe_load(target.read_text())
                 self.assertEqual((doc["apiVersion"], doc["kind"], doc["metadata"]["name"]), ("openworld/v1alpha1", kind, target.stem))
             new_asset(p, "WorldViewProfile", "views/regional.yaml", specializes="views/default.yaml")
+            new_asset(p, "WorldViewProfile", "views/combined.yaml", composes=["views/default.yaml", "views/regional.yaml"])
             result = validate_package(p)
             self.assertTrue(result.valid, result.errors)
+            self.assertFalse([w for w in result.warnings if w.startswith("experimental.")], result.warnings)
             self.assertEqual((p / "owp.yaml").read_text(), before)
             for kind, rel in [("NotAKind", "x.yaml"), ("WorldViewProfile", "views/operator.yaml"), ("WorldViewProfile", "../x.yaml"),
                               ("PackageExample", "examples/x.yaml")]:
                 with self.assertRaises(OWPError):
                     new_asset(p, kind, rel)
+
+    def test_composed_view_resolves_to_the_union(self):
+        from ontle import experimental
+        from ontle.core import local_assets
+        case = Path(__file__).resolve().parent.parent / "conformance" / "cases" / "view-composes"
+        kinds, docs = local_assets(case, {})
+        resolved = experimental.resolve_view("views/plant.yaml", docs, kinds)
+        self.assertEqual(resolved["projection"], {"timeScope": "last_quarter", "include": ["lot", "inspection", "equipment", "work_order"]})
+        self.assertEqual(resolved["purpose"], {"task": "plant_review"})
+        self.assertEqual(resolved["conditioning"], {"authorityScope": "read_only"})
+        self.assertNotIn("composes", resolved)
 
     def test_deterministic_pack_and_verify(self):
         with tempfile.TemporaryDirectory() as td:

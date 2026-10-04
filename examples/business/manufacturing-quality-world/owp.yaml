@@ -5,6 +5,7 @@ metadata:
   name: manufacturing-quality-world
   version: 0.1.0
   title: Manufacturing Quality World
+  description: Quality incidents, lots, equipment, inspections, and CAPA for manufacturing root-cause analysis, bound to ISA-95 and OPC UA.
   license: Apache-2.0
 spec:
   dependencies:

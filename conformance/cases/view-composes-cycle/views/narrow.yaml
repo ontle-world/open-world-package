@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: narrow}
+spec:
+  specializes: views/plant.yaml
+  projection: {exclude: [claim]}

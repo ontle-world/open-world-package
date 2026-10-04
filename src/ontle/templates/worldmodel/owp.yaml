@@ -5,6 +5,7 @@ metadata:
   name: my-world-model
   version: 0.1.0
   title: My World Model
+  description: One line on what this model estimates, predicts, or simulates.
   license: Apache-2.0
 spec:
   domains: []

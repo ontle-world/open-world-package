@@ -500,23 +500,143 @@ export function checkViewSpecialization(ctx: Context): void {
   }
 }
 
-/**
- * Appendix C: a View's resolved `projection.include` — the base View's resolved include ∪ its own
- * include − its own exclude, following `specializes` through local WorldViewProfiles (cycles stop the chain).
- */
-export function resolvedInclude(p: string, docs: Map<string, unknown>, kinds: Map<string, string>, seen: string[] = []): string[] {
+const has = (o: Obj, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k);
+type ResolvedView = { projection: Obj; include: string[]; conditioning: Obj };
+
+const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+const specOf = (docs: Map<string, unknown>, p: string): Obj => {
   const s = isObj(docs.get(p)) ? (docs.get(p) as Obj).spec : undefined;
-  const spec = isObj(s) ? s : {};
+  return isObj(s) ? s : {};
+};
+
+/** The Views a View composes, when it composes (a list, and no specializes); undefined otherwise. */
+function composed(spec: Obj, kinds: Map<string, string>): string[] | undefined {
+  if (has(spec, "specializes") || !Array.isArray(spec.composes)) return undefined;
+  return strings(spec.composes).filter((c) => kinds.get(c) === "WorldViewProfile");
+}
+
+/**
+ * Appendix C: a View's resolved projection (include separately) and conditioning.
+ * specializes: include = base include ∪ include − exclude; conditioning and projection keys override the base's.
+ * composes: include = the composed Views' includes in order ∪ include − exclude; conditioning and the other
+ * projection keys come from the composed Views (the first that sets a key wins), overridden by the View's own.
+ * A View that declares both resolves by specializes. Cycles stop the chain.
+ */
+export function resolvedView(p: string, docs: Map<string, unknown>, kinds: Map<string, string>, seen: string[] = []): ResolvedView {
+  const spec = specOf(docs, p);
   const projection = isObj(spec.projection) ? spec.projection : {};
-  const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  const conditioning = isObj(spec.conditioning) ? spec.conditioning : {};
   const exclude = new Set(strings(projection.exclude));
-  const base = spec.specializes;
+  const ownKeys = (o: Obj): Obj => Object.fromEntries(Object.entries(o).filter(([k]) => k !== "include" && k !== "exclude"));
+  const parts = composed(spec, kinds);
+  const parents: ResolvedView[] = [];
+  if (parts !== undefined) {
+    for (const c of parts) if (!seen.includes(c) && c !== p) parents.push(resolvedView(c, docs, kinds, [...seen, p]));
+  } else {
+    const base = spec.specializes;
+    if (typeof base === "string" && kinds.get(base) === "WorldViewProfile" && !seen.includes(base) && base !== p) {
+      parents.push(resolvedView(base, docs, kinds, [...seen, p]));
+    }
+  }
   const include: string[] = [];
-  if (typeof base === "string" && kinds.get(base) === "WorldViewProfile" && !seen.includes(base) && base !== p) {
-    include.push(...resolvedInclude(base, docs, kinds, [...seen, p]));
+  const proj: Obj = {};
+  const cond: Obj = {};
+  for (const parent of parents) {
+    for (const x of parent.include) if (!include.includes(x)) include.push(x);
+    for (const [k, v] of Object.entries(parent.projection)) if (!has(proj, k)) proj[k] = v;
+    for (const [k, v] of Object.entries(parent.conditioning)) if (!has(cond, k)) cond[k] = v;
   }
   for (const x of strings(projection.include)) if (!include.includes(x)) include.push(x);
-  return include.filter((x) => !exclude.has(x));
+  return {
+    projection: { ...proj, ...ownKeys(projection) },
+    include: include.filter((x) => !exclude.has(x)),
+    conditioning: { ...cond, ...conditioning },
+  };
+}
+
+/** Appendix C: a View's resolved `projection.include`. */
+export function resolvedInclude(p: string, docs: Map<string, unknown>, kinds: Map<string, string>): string[] {
+  return resolvedView(p, docs, kinds).include;
+}
+
+/** Equality in the JSON data model (key order does not matter). */
+function jsonSame(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => jsonSame(x, b[i]));
+  if (isObj(a) && isObj(b)) {
+    const ka = Object.keys(a).sort(), kb = Object.keys(b).sort();
+    return ka.length === kb.length && ka.every((k, i) => k === kb[i] && jsonSame(a[k], b[k]));
+  }
+  return a === b;
+}
+
+/**
+ * Appendix C: `spec.composes` lists local Views, without cycles (through composes and specializes); a composed View
+ * has its own purpose; the composed Views agree on each conditioning and projection key the View does not set.
+ */
+export function checkViewComposition(ctx: Context): void {
+  const kinds = localKinds(ctx);
+  const docs = new Map<string, unknown>();
+  for (const a of ctx.localAssets) if (!docs.has(a.rawPath)) docs.set(a.rawPath, a.doc);
+  const views = new Set([...kinds].filter(([, k]) => k === "WorldViewProfile").map(([p]) => p));
+  const edges = (v: string): string[] => {
+    const s = specOf(docs, v);
+    const out = Array.isArray(s.composes) ? strings(s.composes).filter((c) => views.has(c)) : [];
+    return typeof s.specializes === "string" && views.has(s.specializes) ? [...out, s.specializes] : out;
+  };
+  const cycle = (start: string): string[] | undefined => {
+    const stack: [string, string[]][] = [[start, [start]]];
+    const visited = new Set<string>();
+    while (stack.length) {
+      const [node, trail] = stack.pop()!;
+      for (const next of edges(node)) {
+        if (next === start) return [...trail, start];
+        if (!visited.has(next)) {
+          visited.add(next);
+          stack.push([next, [...trail, next]]);
+        }
+      }
+    }
+    return undefined;
+  };
+  for (const p of [...views].sort()) {
+    const spec = specOf(docs, p);
+    if (!has(spec, "composes")) continue;
+    const listed = spec.composes;
+    if (!(Array.isArray(listed) && listed.length > 0 && listed.every((c) => typeof c === "string"))) {
+      warn(ctx, "experimental.field", `${p}: spec.composes must be a non-empty list of local WorldViewProfile paths`, p);
+      continue;
+    }
+    if (has(spec, "specializes")) {
+      warn(ctx, "experimental.field", `${p}: a View declares spec.composes or spec.specializes, not both (it resolves by specializes)`, p);
+      continue;
+    }
+    for (const c of listed as string[]) {
+      if (!views.has(c)) warn(ctx, "experimental.reference", `${p}: spec.composes ${JSON.stringify(c)} must be a local WorldViewProfile asset`, p);
+    }
+    if (!(isObj(spec.purpose) && Object.keys(spec.purpose).length > 0)) {
+      warn(ctx, "experimental.field", `${p}: a composed View declares its own spec.purpose`, p);
+    }
+    const found = cycle(p);
+    if (found) {
+      warn(ctx, "experimental.reference", `${p}: spec.composes forms a cycle: ${found.join(" -> ")}`, p);
+      continue;
+    }
+    const parts = (listed as string[]).filter((c) => views.has(c)).map((c) => [c, resolvedView(c, docs, kinds)] as const);
+    for (const section of ["conditioning", "projection"] as const) {
+      const ownSection = isObj(spec[section]) ? (spec[section] as Obj) : {};
+      const keys: string[] = [];
+      for (const [, r] of parts) for (const k of Object.keys(r[section])) if (!keys.includes(k)) keys.push(k);
+      for (const key of keys) {
+        if (has(ownSection, key)) continue;
+        const setters = parts.filter(([, r]) => has(r[section], key));
+        const [firstC, first] = setters[0];
+        const other = setters.slice(1).find(([, r]) => !jsonSame(r[section][key], first[section][key]));
+        if (other) {
+          warn(ctx, "experimental.field", `${p}: composed Views ${firstC} and ${other[0]} disagree on spec.${section}.${key}; set it in this View`, p);
+        }
+      }
+    }
+  }
 }
 
 /** Union of the resolved projection.include of every local World View. */

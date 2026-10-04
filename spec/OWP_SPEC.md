@@ -427,6 +427,8 @@ Each identity appears once. `archive` is a URL or a path relative to the index. 
 
 An index MAY also carry a term index, for registries and search. `terms` maps an ontology term IRI to the identities of the indexed packages that define it (`definedBy`: an OntologyPackage's schema terms and term index) and that use it (`usedBy`: terms named by a World's SemanticBindings, and identifiers an ontology's schema takes from other namespaces). `mappings` lists the mapping-set entrypoints (`role: mappings`) of the indexed packages. Resolution ignores both. `ontle index build --terms` writes them.
 
+A registry that serves an index usually shows more about each package: its verdict, profile, asset counts, binding coverage, pinned references, and evidence. These numbers are derived from the package and are not stored in it or in the index. `schemas/package-report.schema.json` gives one shape for them (informative), and `ontle inspect --report` computes it from a package directory or archive. No conformance rule depends on it.
+
 ## 13. Extensions
 
 Publishers can add their own asset kinds, fields, and vocabulary values without changing this specification. Tools that do not know an extension can ignore it safely.
@@ -626,7 +628,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside a value set in an experimental kind |
-| `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
+| `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` or `composes` cycle |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 

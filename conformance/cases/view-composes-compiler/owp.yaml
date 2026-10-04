@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.
+    defaultView: views/plant.yaml
+    defaultStateCompiler: state/plant-compiler.yaml
+  conformance:
+    profile: stateful

@@ -207,14 +207,14 @@ function externalsProblem(lock: LockData, manifest: Obj, have: Map<string, Buffe
 }
 
 /**
- * Spec 7: the `externals` entries for a manifest — each bound ExternalRef (status absent or bound) of
+ * Spec 7: the `externals` entries for a manifest — each bound ExternalRef (status absent, null, or bound) of
  * spec.assets[].ref, then spec.ontology.externalImports[].ref, with pointer, provider, uri, and
  * revision/digest/mediaType when declared.
  */
 export function lockExternals(manifest: Obj): Obj[] {
   const out: Obj[] = [];
   const add = (pointer: string, ref: unknown) => {
-    if (!isObj(ref) || (ref.status !== undefined && ref.status !== "bound")) return;
+    if (!isObj(ref) || (ref.status !== undefined && ref.status !== null && ref.status !== "bound")) return; // null counts as absent (spec 5.1)
     const entry: Obj = { pointer, provider: ref.provider ?? null, uri: ref.uri ?? null };
     for (const k of ["revision", "digest", "mediaType"]) if (ref[k] !== undefined && ref[k] !== null) entry[k] = ref[k];
     out.push(entry);

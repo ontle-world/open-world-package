@@ -6,6 +6,7 @@ import { validatePackage, ValidationResult } from "./validate.js";
 import { validateWithResolution } from "./resolve.js";
 import { checkEws, compileEws } from "./ews.js";
 import { checkDetachedEvidence } from "./evidence.js";
+import { packageReport } from "./report.js";
 import { get, loadYamlFile } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 
@@ -14,6 +15,7 @@ const USAGE = `usage:
   owp-validate ews check <ews.yaml> --world <world-dir> [--json]
   owp-validate ews compile <world-dir> [--compiler <path>] --observations <file> [--observations <file> ...] --as-of <timestamp>
   owp-validate evidence check <evidence.yaml> --package <archive.owp.zip> [--json]
+  owp-validate report <package-dir|archive.owp.zip>   (PackageReport JSON, informative)
 
 Package sources for --resolve: each --source (directory, *.owp.zip, git+<url>@<rev>[#subdir=<p>], index:<local PackageIndex>),
 then entries of $ONTLE_PATH (separated by '${path.delimiter}').
@@ -119,6 +121,16 @@ function main(argv: string[]): number {
   const json = takeFlag(args, "--json");
   if (args[0] === "ews") return ewsMain(args.slice(1), json);
   if (args[0] === "evidence") return evidenceMain(args.slice(1), json);
+  if (args[0] === "report") {
+    if (!args[1]) return usage();
+    try {
+      process.stdout.write(JSON.stringify(packageReport(args[1]), null, 2) + "\n");
+    } catch (e) {
+      process.stderr.write(`ERROR: ${(e as Error).message}\n`);
+      return 2;
+    }
+    return 0;
+  }
   const resolve = takeFlag(args, "--resolve");
   const sources = takeOpt(args, "--source", true);
   if (process.env.ONTLE_PATH) sources.push(...process.env.ONTLE_PATH.split(path.delimiter).filter(Boolean));

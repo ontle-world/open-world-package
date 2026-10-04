@@ -6,7 +6,7 @@ metadata:
   description: Daily replay of the sample records for claim CLM-001 with a rule-based stub, not a trained model.
 spec:
   subject: openworld-examples/quality-transition-world-model@0.1.0
-  subjectDigest: sha256:19cb7a55111a4a1fb009fe3a47db207bcb2658ef35b240af3afe5602a6536171
+  subjectDigest: sha256:36f2772bdb61a28929713ba9b5be207e5dec414947f7a4ad8fa1a4e91c35462d
   evaluationProfile: quality-basic@0.1.0
   scope:
     worldRef: openworld-examples/manufacturing-quality-world@0.1.0

@@ -230,7 +230,7 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
     return {}
 
 
-def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None = None) -> Path:
+def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None = None, composes: list[str] | None = None) -> Path:
     """Write a skeleton asset file. Discovery finds it by its apiVersion and kind; owp.yaml is not changed."""
     from .core import KNOWN_ASSET_KINDS, local_assets
     from .structure import EXTENSION_KIND_RE
@@ -262,6 +262,17 @@ def new_asset(project: str | Path, kind: str, rel: str, specializes: str | None 
             raise OWPError(f"--specializes must name a local WorldViewProfile asset: {specializes}")
         skeleton = {"specializes": specializes, "purpose": {"actorScope": None},
                     "projection": {"include": [], "exclude": []}, "conditioning": {}}
+    if composes:
+        if kind != "WorldViewProfile":
+            raise OWPError("--composes applies to WorldViewProfile only")
+        if specializes is not None:
+            raise OWPError("a View composes or specializes, not both")
+        kinds = local_assets(root, manifest.get("spec") or {})[0]
+        for part in composes:
+            if kinds.get(part) != "WorldViewProfile":
+                raise OWPError(f"--composes must name local WorldViewProfile assets: {part}")
+        skeleton = {"composes": list(composes), "purpose": {"task": None, "objective": None},
+                    "projection": {"exclude": []}}
 
     def blank(value):  # editors validate against the schemas: placeholders are empty strings, not null
         if isinstance(value, dict):

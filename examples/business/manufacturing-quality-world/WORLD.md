@@ -2,7 +2,42 @@
 
 Represents quality incidents and their evidence, production lineage, equipment context, decisions, corrective actions, and outcomes.
 
-The package is intentionally not a full MES or QMS database schema. Native system records are bound through explicit interface/mapping assets.
+## Scope
+
+Included: `quality_incident`, `lot`, `equipment`, `inspection`, `claim`, `evidence`, `constraint`, `decision`, `capa`, `outcome`.
+
+Excluded: `complete_mes_implementation`, `complete_qms_implementation`.
+
+The package is intentionally not a full MES or QMS database schema.
+
+## Sources
+
+- Source systems (`interfaces/sources.yaml`): MES (production orders, operation execution, production lots, equipment, defect events) and QMS (inspections, nonconformances, claims, CAPA, verification).
+- Standards: ISA-95 and OPC UA, bound in `interfaces/sources.yaml` (see Adjacent standards).
+- Ontology: `openworld-examples/quality-ontology@0.1.0`, a dependency.
+- Knowledge graph: `knowledge/plant-kg.yaml`, a small illustrative plant graph.
+
+Native system records are bound through explicit interface/mapping assets.
+
+## Use it for
+
+- What is the current status of an incident, its claim, and its CAPA, and which inspection results and equipment condition events go with it?
+- Which lots, equipment, and parts are behind a customer claim (`extraction/claim-context.yaml`)?
+- Should affected lots be put on quality hold (`scenarios/quality-hold.yaml`)?
+- Trace a claim to production and equipment evidence and propose a reviewed RCA and CAPA (`tasks/claim-rca.yaml`).
+- Check whether a committed action had its intended effect: QMS status, follow-up inspection, CAPA outcome (`interfaces/effect-verification.yaml`).
+
+## Limitations
+
+- Reference semantic package; source systems remain external.
+- `evidence.open_hypotheses` is in the EWS schema but has no binding in the State Compiler.
+- The RCA playbook (`knowledge/rca-playbook.yaml`) has no bound content.
+- The plant knowledge graph holds no real plant data.
+- Task, work, artifact, and consumer assets are experimental (spec Appendix C).
+
+## Versions
+
+- 0.1.0: first public example.
 
 ## Conformance
 

@@ -1166,6 +1166,48 @@
    ],
    "warnings": []
   },
+  "view-composes": {
+   "errors": [],
+   "warnings": []
+  },
+  "view-composes-and-specializes": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "view-composes-compiler": {
+   "errors": [],
+   "warnings": []
+  },
+  "view-composes-conflict": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "view-composes-conflict-set": {
+   "errors": [],
+   "warnings": []
+  },
+  "view-composes-cycle": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "view-composes-missing": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "view-composes-no-purpose": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
   "view-external-world-not-dependency": {
    "errors": [
     "view.external-world"

@@ -34,3 +34,22 @@ ontle interop mcp examples/business/manufacturing-quality-world
 ```
 
 This prints the server's resources, resource templates, and tools as MCP JSON shapes (protocol revision 2025-06-18). A server can serve these as they are. To answer a read of an EWS resource, it runs `ontle ews compile` with the `asOf` from the URI.
+
+## A read-only server
+
+```bash
+ontle mcp examples/business/manufacturing-quality-world \
+  --observations examples/business/manufacturing-quality-world/examples/observations.yaml
+```
+
+`ontle mcp <package>` serves one package, a directory or an `.owp.zip`, over the stdio transport. Configure it in an MCP client as a local command. It serves the resources above, plus the card. It does not serve the actions as tools, since a server that runs actions is a runtime and outside this repository. Its tools only read the package:
+
+| Tool | Returns |
+|---|---|
+| `world_describe` | Identity, title, description, domains, the World's definition and boundary, its Views and State Compilers, and the card text. |
+| `view_get` | A World View's purpose, projection, and conditioning, with `specializes` or `composes` applied. Without `path`: the default View. |
+| `term_lookup` | Matches for a name, CURIE, or IRI in the SemanticBinding, or among an OntologyPackage's terms. |
+| `ews_compile` | The EWS of a State Compiler at `asOf`, from an ObservationSet given inline or by its path in the package. |
+| `package_report` | The `PackageReport` (`ontle inspect --report`). |
+
+A read of an EWS resource compiles from the files given with `--observations`. Without them, the read fails and says so; `ews_compile` with inline observations still works.

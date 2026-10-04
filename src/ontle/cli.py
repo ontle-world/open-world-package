@@ -18,8 +18,23 @@ from .yamlio import dump_yaml, load_yaml
 
 def cmd_init(args):
     path = init_project(args.name, args.namespace, args.template, args.destination, args.world, args.view)
-    print(path)
+    print(path)  # stdout is the project path alone, for scripts
+    for line in next_steps(path, args.template):
+        print(line, file=sys.stderr)
     return 0
+
+
+def next_steps(path: Path, template: str) -> list[str]:
+    """What to do after `ontle init`: edit, validate, report."""
+    try:
+        shown = path.relative_to(Path.cwd())
+    except ValueError:
+        shown = path
+    card = {"ontology": "ONTOLOGY.md", "worldmodel": "WORLDMODEL.md", "worldmodel-multimodal": "WORLDMODEL.md"}.get(template, "WORLD.md")
+    return ["Next:",
+            f"  1. edit {shown / 'owp.yaml'} (title, description, license) and {shown / card}",
+            f"  2. ontle validate {shown}",
+            f"  3. ontle inspect {shown} --report    # what a catalog would show, with hints"]
 
 
 def cmd_validate(args):
@@ -188,6 +203,11 @@ def cmd_interop_mcp(args):
     return 0
 
 
+def cmd_mcp(args):
+    from .mcp import run
+    return run(args.package, args.observations)
+
+
 def cmd_fetch(args):
     from .distribution import fetch_package
     for path in fetch_package(args.path, args.into):
@@ -250,7 +270,16 @@ def cmd_catalog(args):
 
 
 def cmd_inspect(args):
-    print(json.dumps(inspect_package(args.path, graph=args.graph, resolved_views=args.resolved_views), indent=2, ensure_ascii=False))
+    if args.report:
+        from .report import package_report
+        print(json.dumps(package_report(args.path), indent=2, ensure_ascii=False))
+        return 0
+    from .report import opened_package
+    with opened_package(args.path) as (root, integrity):
+        summary = inspect_package(root, graph=args.graph, resolved_views=args.resolved_views)
+        if integrity is not None:  # an archive: name it, not the temporary directory it was read from
+            summary["root"] = str(Path(args.path).resolve())
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 
 
@@ -264,8 +293,15 @@ def cmd_pack(args):
     with zipfile.ZipFile(out) as z:
         names = z.namelist()
     print(f"{len(names)} files", file=sys.stderr)
+    from .report import pack_size_hint
+    hint = pack_size_hint(out.stat().st_size, PACK_SIZE_HINT)
+    if hint:
+        print(f"WARN: {hint}", file=sys.stderr)
     print(out)  # stdout is the archive path alone, for scripts
     return 0
+
+
+PACK_SIZE_HINT = 50_000_000  # bytes; registries set their own upload limits
 
 
 def cmd_verify(args):
@@ -290,7 +326,7 @@ def cmd_add(args):
 
 
 def cmd_new(args):
-    print(new_asset(args.package, args.kind, args.path, args.specializes))
+    print(new_asset(args.package, args.kind, args.path, args.specializes, args.composes))
     return 0
 
 
@@ -340,9 +376,11 @@ def build_parser():
     y.set_defaults(func=cmd_ews_check)
 
     x = sp.add_parser("inspect", help="inspect package identity and summary")
-    x.add_argument("path", nargs="?", default=".")
+    x.add_argument("path", nargs="?", default=".", help="package directory or .owp.zip archive")
+    x.add_argument("--report", action="store_true", help="print the PackageReport (schemas/package-report.schema.json): verdict, "
+                   "profile, asset counts, binding coverage, external references, evidence, card hints; with an archive, its digest and size")
     x.add_argument("--graph", action="store_true", help="include the reference graph between the package, its dependencies, and its assets")
-    x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes applied")
+    x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes or composes applied")
     x.set_defaults(func=cmd_inspect)
 
     x = sp.add_parser("ontology", help="ontology tooling")
@@ -370,6 +408,12 @@ def build_parser():
     y = isp.add_parser("mcp", help="print what a Model Context Protocol server for this World exposes: resources, resource templates, tools")
     y.add_argument("world", help="World package directory")
     y.set_defaults(func=cmd_interop_mcp)
+
+    x = sp.add_parser("mcp", help="serve one package read-only to agents as a Model Context Protocol server on stdio (docs/interop/MCP.md)")
+    x.add_argument("package", nargs="?", default=".", help="package directory or .owp.zip archive")
+    x.add_argument("--observations", action="append", default=[], help="ObservationSet YAML file the EWS resources compile from "
+                   "(repeatable; sets are merged)")
+    x.set_defaults(func=cmd_mcp)
 
     x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
     x.add_argument("path", nargs="?", default=".")
@@ -441,6 +485,7 @@ def build_parser():
     x.add_argument("path", help="package-relative file, for example views/barista.yaml")
     x.add_argument("--package", default=".", help="package directory (default: current directory)")
     x.add_argument("--specializes", help="WorldViewProfile: path of the local View this View specializes (experimental)")
+    x.add_argument("--composes", action="append", help="WorldViewProfile: path of a local View this View composes (repeatable; experimental)")
     x.set_defaults(func=cmd_new)
 
     x = sp.add_parser("add", help="declare a publisher extension in spec.dependencies")

@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: maintenance}
+spec:
+  purpose: {task: plan_maintenance}
+  projection: {include: [equipment, work_order], timeScope: last_quarter}
+  conditioning: {authorityScope: read_only}

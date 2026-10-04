@@ -41,6 +41,14 @@
         "specializes": {
           "type": "string"
         },
+        "composes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Experimental (Appendix C): local WorldViewProfile paths this View composes."
+        },
         "purpose": {
           "type": "object",
           "properties": {

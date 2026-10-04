@@ -380,7 +380,7 @@ def build_parser():
     x.add_argument("--report", action="store_true", help="print the PackageReport (schemas/package-report.schema.json): verdict, "
                    "profile, asset counts, binding coverage, external references, evidence, card hints; with an archive, its digest and size")
     x.add_argument("--graph", action="store_true", help="include the reference graph between the package, its dependencies, and its assets")
-    x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes applied")
+    x.add_argument("--resolved-views", action="store_true", help="include each World View with specializes or composes applied")
     x.set_defaults(func=cmd_inspect)
 
     x = sp.add_parser("ontology", help="ontology tooling")

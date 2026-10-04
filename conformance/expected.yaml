@@ -597,6 +597,43 @@ cases:
     satisfiedProfile: viewable
     warnings: [experimental.reference]
     rule: "specializes must name a local WorldViewProfile; otherwise a warning."
+  view-composes:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A World View may compose other local World Views: the union of their includes, minus its own exclude (experimental)."
+  view-composes-compiler:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "A composed View's include is the union of the composed Views' includes; a State Compiler's fields may name any of them."
+  view-composes-missing:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "composes must name local WorldViewProfiles; otherwise a warning."
+  view-composes-cycle:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.reference]
+    rule: "A cycle through composes (and specializes) is a warning."
+  view-composes-conflict:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "Composed Views that disagree on a conditioning or projection key the View does not set is a warning."
+  view-composes-conflict-set:
+    valid: true
+    satisfiedProfile: viewable
+    rule: "A composed View may settle a disagreement by setting the key itself."
+  view-composes-no-purpose:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "A composed View declares its own purpose; otherwise a warning."
+  view-composes-and-specializes:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [experimental.field]
+    rule: "A View declares composes or specializes, not both; otherwise a warning (it resolves by specializes)."
   ontology-no-profile:
     valid: true
     rule: "Without spec.conformance no ontology profile is required."

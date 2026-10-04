@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: plant-compiler
+spec:
+  worldViewRef: views/plant.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [lot.status, equipment.state]

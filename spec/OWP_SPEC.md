@@ -628,7 +628,7 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside a value set in an experimental kind |
-| `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` cycle |
+| `experimental.reference` | C | experimental reference that does not name a suitable local asset, or a `specializes` or `composes` cycle |
 
 The machine-readable list of every id is `spec/rule-ids.yaml`.
 

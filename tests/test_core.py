@@ -138,6 +138,17 @@ class OntleTests(unittest.TestCase):
                 with self.assertRaises(OWPError):
                     new_asset(p, kind, rel)
 
+    def test_composed_view_resolves_to_the_union(self):
+        from ontle import experimental
+        from ontle.core import local_assets
+        case = Path(__file__).resolve().parent.parent / "conformance" / "cases" / "view-composes"
+        kinds, docs = local_assets(case, {})
+        resolved = experimental.resolve_view("views/plant.yaml", docs, kinds)
+        self.assertEqual(resolved["projection"], {"timeScope": "last_quarter", "include": ["lot", "inspection", "equipment", "work_order"]})
+        self.assertEqual(resolved["purpose"], {"task": "plant_review"})
+        self.assertEqual(resolved["conditioning"], {"authorityScope": "read_only"})
+        self.assertNotIn("composes", resolved)
+
     def test_deterministic_pack_and_verify(self):
         with tempfile.TemporaryDirectory() as td:
             p = init_project("demo", "test", "minimal", Path(td) / "demo")

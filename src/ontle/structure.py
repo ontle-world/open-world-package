@@ -136,6 +136,7 @@ def _standard(spec_fields: dict[str, Any]) -> dict[str, Any]:
 WORLD_VIEW_PROFILE = _standard({
     "externalWorldRefs": VALUE,
     "specializes": VALUE,                                  # experimental
+    "composes": VALUE,                                     # experimental
     "purpose": closed({"task": VALUE, "actorScope": VALUE, "objective": VALUE}),
     "projection": closed({"include": VALUE, "exclude": VALUE, "principle": VALUE,
                           "scale": VALUE, "resolution": VALUE, "timeScope": VALUE}),

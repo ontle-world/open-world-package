@@ -32,7 +32,7 @@ TOOLS = [
      "description": "Identity, kind, title, description, domains, the World's definition and boundary, its Views and State Compilers, and the card text.",
      "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False}},
     {"name": "view_get", "title": "Show a World View",
-     "description": "A World View's purpose, projection, and conditioning, with specializes applied. Without path: the World's default View.",
+     "description": "A World View's purpose, projection, and conditioning, with specializes or composes applied. Without path: the World's default View.",
      "inputSchema": {"type": "object", "properties": {"path": {"type": "string", "description": "View path in the package, e.g. views/default.yaml"}},
                      "additionalProperties": False}},
     {"name": "term_lookup", "title": "Look up a term",

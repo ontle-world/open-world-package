@@ -47,7 +47,7 @@ ontle mcp examples/business/manufacturing-quality-world \
 | Tool | Returns |
 |---|---|
 | `world_describe` | Identity, title, description, domains, the World's definition and boundary, its Views and State Compilers, and the card text. |
-| `view_get` | A World View's purpose, projection, and conditioning, with `specializes` applied. Without `path`: the default View. |
+| `view_get` | A World View's purpose, projection, and conditioning, with `specializes` or `composes` applied. Without `path`: the default View. |
 | `term_lookup` | Matches for a name, CURIE, or IRI in the SemanticBinding, or among an OntologyPackage's terms. |
 | `ews_compile` | The EWS of a State Compiler at `asOf`, from an ObservationSet given inline or by its path in the package. |
 | `package_report` | The `PackageReport` (`ontle inspect --report`). |

@@ -1,0 +1,5 @@
+apiVersion: openworld/v1alpha1
+kind: WorldViewProfile
+metadata: {name: plant}
+spec:
+  composes: [views/quality.yaml, views/maintenance.yaml]

@@ -1,5 +1,17 @@
 # 10-minute Quickstart
 
+The five-minute path, from nothing to a checked archive:
+
+```bash
+python3 -m venv .venv && . .venv/bin/activate && python -m pip install -e .   # from a clone of this repository
+ontle init my-world --namespace acme          # prints the project path, then the next steps
+ontle validate my-world
+ontle inspect my-world --report               # what a catalog would show, with hints
+ontle pack my-world && ontle verify my-world/dist/acme-my-world-0.1.0.owp.zip
+```
+
+The sections below explain each step and what to add next.
+
 ## 1. Install
 
 From a clone of this repository, in a virtual environment (Python 3.11+):
@@ -38,7 +50,10 @@ ontle validate .
 ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z > ews.yaml
 ontle ews check ews.yaml --world .
 ontle inspect .
+ontle inspect . --report
 ```
+
+`inspect --report` prints the `PackageReport` ([schema](../schemas/package-report.schema.json)): the verdict, the declared and satisfied profile, assets by kind, how many EWS fields have a binding, external references and how many are pinned, evidence, and `hints`. A catalog or registry builds its badges and filters from this report, so authors never write statistics by hand. The hints are not validation findings: they point at what a catalog page would miss, such as a missing `metadata.description` (the one-line summary on a package card) or a card without the recommended sections `Scope`, `Sources`, `Use it for`, `Limitations`, and `Versions`. The templates' cards start with these sections.
 
 The starter compiles as generated: its State Compiler has one observed field, one aggregate, and one classification, each with a value per item, and `examples/expected-ews.yaml` is what the sample observations compile to. Replace the `item` fields and observations with your own; [STATE_COMPILATION.md](STATE_COMPILATION.md) shows how to write fields and bindings.
 
@@ -84,7 +99,10 @@ Verify it:
 
 ```bash
 ontle verify dist/<artifact>.owp.zip
+ontle inspect dist/<artifact>.owp.zip --report   # the report of the archive, with its digest and size
 ```
+
+`ontle pack` warns when an archive is over 50 MB. Registries set their own upload limits; keep large data outside the package as an `ExternalRef` (spec section 5.1).
 
 
 ## 6. Create an Ontology package
@@ -157,3 +175,5 @@ ontle sign dist/acme-demo-0.1.0.owp.zip                           # needs cosign
 ```
 
 Consumers resolve with `--source index:<url-or-path>` or `--source oci:<reference>`.
+
+To let an agent read a package, serve it over the Model Context Protocol: `ontle mcp .` (stdio, read-only; see [interop/MCP.md](interop/MCP.md)).

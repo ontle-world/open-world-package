@@ -5,6 +5,7 @@ metadata:
   name: mobile-manipulation-world
   version: 0.1.0
   title: Mobile Manipulation World
+  description: Pick-and-place task world for a mobile manipulator, bound to ROS 2 types, an OpenUSD scene, and LeRobot episodes.
   license: Apache-2.0
 spec:
   domains:

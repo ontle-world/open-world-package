@@ -5,6 +5,7 @@ metadata:
   name: assay-optimization-world
   version: 0.1.0
   title: Assay Optimization World
+  description: Assays, plates, reagents, instruments, runs, and measurements for optimizing laboratory assays.
   license: Apache-2.0
 spec:
   dependencies:

@@ -1,30 +1,32 @@
 # My World
 
-## Definition
+Describe in one paragraph what target world this package represents. Put the one-line summary in `metadata.description` in `owp.yaml`; catalogs show it on the package card.
 
-Describe what target world this package represents.
+## Scope
 
-## Boundary
+Included:
 
-### Included
+- Add included entities, processes, and relations (the same names as `spec.world.boundary.included`).
 
-- Add included entities/processes/relations.
+Excluded:
 
-### Excluded
+- Add intentional exclusions (`spec.world.boundary.excluded`).
 
-- Add intentional exclusions.
+## Sources
 
-## Typical questions
+- Which systems, standards, datasets, or packages the World comes from.
 
-- What should a user or agent be able to ask about this World?
+## Use it for
 
-## Capabilities
+- Three to five questions a user or agent can answer with this World, or decisions it supports.
 
-- Explore
+## Limitations
 
-## Validity and limitations
+State the assumptions and known blind spots, and the fields that have no binding yet.
 
-State the scope, assumptions, and known blind spots.
+## Versions
+
+- 0.1.0: first version.
 
 ## State
 

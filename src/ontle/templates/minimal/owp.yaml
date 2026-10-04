@@ -5,6 +5,7 @@ metadata:
   name: my-world
   version: 0.1.0
   title: My World
+  description: One line on the target world this package represents.
   license: Apache-2.0
 spec:
   domains: []

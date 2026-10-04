@@ -10,6 +10,13 @@
   - The site publishes all three.
 - `vocab/value-sets.yaml`: two labels contained a comma inside a flow mapping, so they were cut short and split into stray keys (`media`, `verification`). They are quoted now, and a test rejects unknown keys in value entries.
 - The TypeScript implementation's package version follows the release (`0.2.0-alpha.3`), and the release workflow checks it.
+- Registry readiness (reference CLI; no spec rule or verdict changes):
+  - `ontle inspect --report` prints a `PackageReport` (`schemas/package-report.schema.json`, informative): verdict, declared and satisfied profile, assets by kind, EWS fields with a binding, semantic coverage, external references and how many are pinned, standards, evidence, card sections, and catalog hints. With an `.owp.zip` it adds the archive digest, size, and file count. Spec section 11.1 mentions it in one paragraph. `ontle inspect` also reads archives.
+  - `ontle mcp <package>` serves one package read-only over the MCP stdio transport: the resources of `docs/interop/MCP.md` plus the card, and the tools `world_describe`, `view_get`, `term_lookup`, `ews_compile`, and `package_report`. It does not run actions.
+  - `ontle init` prints the next steps on stderr; stdout is still the project path alone.
+  - `ontle pack` warns when an archive is over 50 MB.
+  - The template cards start with the recommended sections `Scope`, `Sources`, `Use it for`, `Limitations`, and `Versions`, and the template manifests have a `metadata.description` placeholder. The example cards follow the same sections.
+  - `docs/QUICKSTART.md` opens with a five-minute path.
 
 ## 0.2.0-alpha.3 — Semantic Worlds, Work and Actors, Standards
 

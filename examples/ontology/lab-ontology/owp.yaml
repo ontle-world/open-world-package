@@ -5,6 +5,7 @@ metadata:
   name: lab-ontology
   version: 0.1.0
   title: Laboratory Assay Ontology
+  description: Laboratory assay vocabulary used by the Assay Optimization World.
   license: Apache-2.0
 spec:
   ontology:

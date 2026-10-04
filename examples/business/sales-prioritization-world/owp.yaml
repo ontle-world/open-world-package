@@ -5,6 +5,7 @@ metadata:
   name: sales-prioritization-world
   version: 0.1.0
   title: Sales Prioritization World
+  description: Accounts, opportunities, activity, territories, and quotas for deciding which accounts a sales team works first.
   license: Apache-2.0
 spec:
   dependencies:

@@ -5,6 +5,7 @@ metadata:
   name: sales-ontology
   version: 0.1.0
   title: Sales Account Ontology
+  description: Sales account vocabulary used by the Sales Prioritization World.
   license: Apache-2.0
 spec:
   ontology:

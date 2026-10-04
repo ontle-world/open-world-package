@@ -1,19 +1,27 @@
 # World Model Card
 
-## Role
-Describe what this model estimates, predicts, simulates, evaluates, or supports.
+Describe in one paragraph what this model estimates, predicts, simulates, evaluates, or supports. Put the one-line summary in `metadata.description` in `owp.yaml`; catalogs show it on the package card.
 
-## Semantic grounding
-Declare the compatible World, at least one compatible World View, and at least one compatible State Compiler. These are required, not optional model metadata.
+## Scope
 
-## Input / output
-Describe the logical input state and output semantics. Model-native representations belong behind a Representation Adapter.
+The World, World Views, and State Compilers the model is grounded in (`spec.worldModel.semanticGrounding`), and the logical input state and output semantics. Model-native representations belong behind a Representation Adapter.
 
-## Validity
-Document task, scale, resolution, temporal, data-quality, and uncertainty limits.
+## Sources
 
-## Implementation
-A package may be contract-only or bind an immutable model artifact stored elsewhere.
+Training or calibration data, and the model artifact. A package may be contract-only or bind an immutable model artifact stored elsewhere.
+
+## Use it for
+
+- Three to five tasks or decisions the model supports.
+
+## Limitations
+
+Task, scale, resolution, temporal, data-quality, and uncertainty limits, and known failure modes.
+
+## Versions
+
+- 0.1.0: first version.
 
 ## Evaluation
-Document the evaluation profile and known failure modes.
+
+The evaluation profile and the evidence for it.

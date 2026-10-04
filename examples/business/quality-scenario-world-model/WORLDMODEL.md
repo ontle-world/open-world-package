@@ -2,6 +2,34 @@
 
 Reference World Models for one decision in `openworld-examples/manufacturing-quality-world`: whether to hold lots L-1 and L-2 (`scenarios/quality-hold.yaml`), and a harness (`models/run.py`) that runs them, runs your own model next to them, and scores them against a recorded outcome.
 
+## Scope
+
+Estimates `expected_outcome`, `range`, `risk`, `uncertainty`, and `predicted_transition` for the quality-hold decision. It is grounded in `openworld-examples/manufacturing-quality-world@0.1.0`, its `views/quality-incident-task.yaml` View, and its `state/quality-incident-compiler.yaml` State Compiler, and takes the EffectiveWorldState as input. Persistence, three-point, and Monte Carlo also run on other EWS and scenarios.
+
+## Sources
+
+- `openworld-examples/manufacturing-quality-world@0.1.0` (a dependency): the scenario, the EWS it names, the observations, and the State Compiler.
+- `models/markov-transitions.yaml`: an assumed daily transition matrix, updated with observed history.
+- The LLM model calls Claude (`claude-opus-5-5`) through the Anthropic API.
+- `examples/observed-outcome.yaml`: an illustrative outcome used for scoring.
+
+## Use it for
+
+- Should lots L-1 and L-2 be held? How many escaped defects and how many days of delivery delay to expect over the 14-day horizon, with ranges?
+- What status will the incident, claim, and CAPA most likely have at the horizon (Markov)?
+- Does your own model beat the baselines and the scenario's base case on the recorded outcome (`run.py --evaluate`)?
+- Is a learned or simulation model good enough to replace the LLM minimum bar?
+
+## Limitations
+
+- The Markov matrix is mostly assumption: the example World holds two observed days of history, so the prior dominates. The matrix does not depend on the intervention; a hold-aware model would give one matrix per action.
+- The LLM model's answer depends on the model version, which is recorded in its output; its runs are not reproducible the way the baselines are.
+- `examples/observed-outcome.yaml` is illustrative, not a real record, so the scores are illustrative too.
+
+## Versions
+
+- 0.1.0: first public example.
+
 ## Models
 
 | Model | Asset | Status | Provides |
@@ -63,8 +91,3 @@ The scenario gives each outcome variable as `{low, mode, high}` in `spec.uncerta
 ## Markov transition matrix
 
 `models/markov-transitions.yaml` gives a daily transition matrix per EWS status field. The matrix is an assumption, marked `source: assumption`: each row counts as `strength` (10) observed days. The model adds the daily transitions observed in the World up to the EWS `asOf`, so as history accumulates the observed rates replace the assumed ones; `observed_transitions` in the output says how much history was used. The chain starts from the EWS value, and an unresolved field (here `capa.status`: proposed or approved) starts split evenly over its candidates. Observations sharing a timestamp have no order and are not counted. Fields the matrix file does not name are skipped, so on another World the model predicts nothing until you give it a matrix.
-
-## Limitations
-
-- The Markov matrix is mostly assumption: the example World holds two observed days of history, so the prior dominates. The matrix does not depend on the intervention; a hold-aware model would give one matrix per action.
-- The LLM model's answer depends on the model version, which is recorded in its output; its runs are not reproducible the way the baselines are.

@@ -5,6 +5,7 @@ metadata:
   name: my-ontology
   version: 0.1.0
   title: My Ontology
+  description: One line on the vocabulary this ontology provides.
   license: Apache-2.0
 spec:
   ontology:

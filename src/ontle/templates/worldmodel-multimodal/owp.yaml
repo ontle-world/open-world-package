@@ -5,6 +5,7 @@ metadata:
   name: multimodal-world-model
   version: 0.1.0
   title: Multimodal Action World Model
+  description: One line on what this multimodal model predicts and for which World.
   license: Apache-2.0
 spec:
   domains:

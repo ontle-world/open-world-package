@@ -5,6 +5,7 @@ metadata:
   name: quality-transition-world-model
   version: 0.1.0
   title: Quality Transition World Model
+  description: World Model for the Manufacturing Quality World that estimates state, predicts dynamics and outcomes, and supports decisions.
   license: Apache-2.0
 spec:
   domains:

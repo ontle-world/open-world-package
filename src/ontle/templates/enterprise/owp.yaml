@@ -5,6 +5,7 @@ metadata:
   name: enterprise-world
   version: 0.1.0
   title: Enterprise World
+  description: One line on the part of the enterprise this World represents.
   license: Apache-2.0
 spec:
   domains:

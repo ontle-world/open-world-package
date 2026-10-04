@@ -28,6 +28,9 @@ jobs:
           import ontle
           tag = sys.argv[1]
           assert Version(tag) == Version(ontle.__version__), f"tag {tag} != package {ontle.__version__}"
+          import json
+          ts = json.load(open("implementations/typescript/package.json", encoding="utf-8"))["version"]
+          assert ts == tag, f"tag {tag} != TypeScript implementation {ts}"
           assert re.search(rf"^## {re.escape(tag)}( |$)", open("CHANGELOG.md", encoding="utf-8").read(), re.M), f"no CHANGELOG section {tag}"
           PY
           python scripts/release_manifest.py --check

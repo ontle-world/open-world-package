@@ -4,7 +4,7 @@ This file lists, in order, how this repository is expected to change. Each step 
 
 OWP stays a portable contract: World, View, State Compiler, EWS, World Model applicability, evaluation lineage, and evidence. Evaluation execution and evolution, runtime execution, and model weight formats stay out of this repository (see "Out of scope").
 
-## Current state (Unreleased)
+## Current state (0.2.0-alpha.3)
 
 - WorldPackage conformance profiles (`descriptive` → `action-ready`); every World Model names its compatible Views and State Compilers.
 - Evaluation lineage and pinned `CompatibilityEvidence`.
@@ -15,10 +15,9 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Conformance suite: 240 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, 4 detached evidence cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
-## 1. Release 0.2.0a3
+## 1. ~~Release 0.2.0a3~~
 
-1. Move the `Unreleased` CHANGELOG section to `0.2.0-alpha.3`; bump `pyproject.toml` and `src/ontle/__init__.py`.
-2. Regenerate `RELEASE_MANIFEST.json`; tag after CI passes.
+Done: tagged `v0.2.0-alpha.3`. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml` and `src/ontle/__init__.py`, run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version and publishes the CHANGELOG section as the release notes.
 
 ## 2. Close known alpha limitations in the spec and suite
 

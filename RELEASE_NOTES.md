@@ -1,48 +1,62 @@
-# Public Alpha Release Notes
+# Public Alpha Release Notes — 0.2.0-alpha.3
 
-This source tree is prepared for an initial GitHub public release of ONTLE Open World tooling and the Open World Package (OWP) public-alpha specification.
+This is the first tagged public alpha of the Open World Package (OWP) specification (`openworld/v1alpha1`) and of `ontle`, its Python reference CLI. The full list of changes is in `CHANGELOG.md`.
 
-This revision closes the package-level semantic execution chain:
+OWP is a package format for Worlds and the models that work on them:
 
 ```text
-WorldPackage
--> WorldViewProfile
--> StateCompilerProfile
--> EffectiveWorldState (runtime)
--> RepresentationAdapterProfile
--> WorldModelPackage
+OntologyPackage            what things are (T-box)
+WorldPackage               a World: Views, State Compilers, bindings, knowledge, work and actors
+  -> WorldViewProfile      a projection of the World for a purpose
+  -> StateCompilerProfile  how observations become state
+  -> EffectiveWorldState   the state at a time, with provenance, unresolved values, and missing fields
+WorldModelPackage          a model that consumes that state, with evaluation lineage and evidence
 ```
 
-A World Model is no longer valid with only a `worldRef`; compatible View and State Compiler contracts are required. A World itself declares how far along this chain it goes through a conformance profile (`descriptive` through `action-ready`).
+## Install
+
+```bash
+pip install "ontle-open-world[rdf] @ https://github.com/ontle-world/open-world-package/releases/download/v0.2.0-alpha.3/ontle_open_world-0.2.0a3-py3-none-any.whl"
+ontle --version
+```
+
+Or install from a checkout with `pip install -e ".[rdf]"`. The package is not on PyPI yet. Python 3.11 or later is required.
 
 ## Included
 
-- `ontle` CLI: init, add, validate, inspect, pack, verify, resolve, ews compile/check
-- `owp.yaml` public manifest contract
-- deterministic `.owp.zip` archive profile with SHA-256 lock verification
-- minimal / enterprise World, ontology, generic World Model, and multimodal World Model generators
-- generated default World View + State Compiler profiles for World starters
-- mandatory WorldModel View/State-Compiler/EWS/Adapter compatibility declarations
-- Business AI World + World Model examples
-- Physical AI World + multimodal/VLA-style World Model examples
-- OWP manifest JSON Schema, CompatibilityEvidence JSON Schema, and public asset-kind vocabulary
-- WorldPackage conformance profiles
-- evaluation lineage and evidence binding (pinned EvaluationProfile/Verifier versions)
-- language-neutral `conformance/` suite for independent implementations (validation, resolution, EWS compile/check)
-- registry-free dependency resolution from directories, `.owp.zip` archives, and git tags
-- standard Effective World State document, output-contract checks, and a reference declarative State Compiler
-- GitHub CI/release workflows
-- standalone GitHub World repository starter
-- Apache-2.0 code/schema licensing and CC BY 4.0 docs/spec licensing
+- **Specification:**
+  - `spec/OWP_SPEC.md` (core).
+  - `OWP_SEMANTICS.md`: ontologies and semantic binding.
+  - `OWP_EVALUATION_AND_STATE.md`: evaluation, evidence, and EWS.
+  - `OWP_WORK_AND_ACTORS.md`: work, actors, artifacts, and knowledge.
+  - `OWP_EXPERIMENTAL.md`.
+- **Schemas and registries:** JSON Schemas for every document kind; the rule-id registry `spec/rule-ids.yaml`; the asset-kind and value-set vocabularies.
+- **`ontle` CLI:**
+  - Authoring: init, add, sync.
+  - Checking: validate (with `--resolve`), inspect.
+  - Packaging: pack, verify, lock, fetch, sign.
+  - Distribution: resolve, push, index, evidence.
+  - State: ews compile and check, with `--jsonld`, `--rdf`, and `--ngsi-ld` output.
+  - Knowledge: ontology index, export, kg check and extract, interop mcp.
+- **TypeScript implementation:** `implementations/typescript/`, written clean-room from the spec. It is not published to npm.
+- **Conformance suite:** `conformance/`, language-neutral, with the reference ids both implementations report.
+- **Examples:**
+  - Business: manufacturing quality, sales prioritization.
+  - Research: assay optimization.
+  - Physical AI: mobile manipulation.
+  - World Models: runnable reference models, including baseline and LLM World Models.
+  - End-to-end demos.
+- **OWP vocabulary and alignments:** at `https://w3id.org/owp/ns`, with PROV-O, BFO 2020, and DUL alignments checked with HermiT.
 
-## Explicitly not claimed
+## Not claimed
 
-- hosted ONTLE Registry production service
-- production enterprise/robot write connectors
-- production AX Guard / durable execution runtime
-- generic ML checkpoint standardization
-- automatic World/View/WorldModel composition
-- a second implementation maintained by an independent party (`implementations/typescript/` was written clean-room from the spec and passes the suite, but it lives in this repository and is not published to npm)
-- evaluation execution, triage, or promotion workflows
+- A hosted ONTLE Registry service, or PyPI and npm packages.
+- Production enterprise or robot write connectors, or an AX Guard / durable execution runtime.
+- Generic ML checkpoint standardization, or automatic World/View/World Model composition.
+- An implementation maintained by an independent party.
+- Evaluation execution, triage, or promotion workflows.
+- Stability: this is an alpha. Documents, rule ids, and CLI options may change before `v1beta1`.
 
-These can be layered on top of the package contract without changing the minimal authoring surface.
+## Licensing
+
+Code, the CLI, schemas, templates, and examples are Apache-2.0; `spec/`, `docs/`, and the OWP vocabulary are CC BY 4.0. See `LICENSE`, `LICENSES/CC-BY-4.0.txt`, and `NOTICE`.

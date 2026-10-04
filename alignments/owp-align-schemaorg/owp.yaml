@@ -1,0 +1,25 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyPackage
+metadata:
+  namespace: openworld
+  name: owp-align-schemaorg
+  version: 0.1.0
+  title: OWP to schema.org
+  license: CC-BY-4.0
+spec:
+  dependencies:
+  - openworld/owp-vocabulary@0.1.0
+  ontology:
+    description: ONTOLOGY.md
+    iri: https://w3id.org/owp/align/schemaorg#
+    prefixes:
+      owp: https://w3id.org/owp/ns#
+      schema: https://schema.org/
+    entrypoints:
+    - path: align.ttl
+      format: turtle
+      role: schema
+    - path: mappings.sssom.tsv
+      format: sssom-tsv
+      role: mappings
+    termIndex: semantics/terms.yaml

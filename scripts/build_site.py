@@ -6,6 +6,7 @@
 Layout (the w3id rules in internal docs map onto these paths):
     vocab/owp/ns.ttl, ns.jsonld, index.html      the vocabulary (https://w3id.org/owp/ns)
     vocab/owp/releases/<release>/ns.ttl          versioned vocabulary (owl:versionIRI)
+    vocab/owp/value-sets.ttl, shapes.ttl          value sets as SKOS (https://w3id.org/owp/vs/<set>), SHACL shapes for EWS RDF
     alignments/owp-align-*/                      informative alignments
     spec/<apiVersion>/                           the specification at this commit, as HTML
     pkg/index.html                               what a package IRI identifies
@@ -70,7 +71,7 @@ def vocabulary_html(graph: rdflib.Graph) -> str:
     version = graph.value(rdflib.URIRef("https://w3id.org/owp/ns"), OWL.versionIRI)
     body = f"""<h1>OWP vocabulary</h1>
 <p>Namespace <code>https://w3id.org/owp/ns#</code> · version <code>{html.escape(str(version))}</code> · OWL 2 DL · CC BY 4.0.
-Download: <a href="ns.ttl">Turtle</a>, <a href="ns.jsonld">JSON-LD</a>.</p>
+Download: <a href="ns.ttl">Turtle</a>, <a href="ns.jsonld">JSON-LD</a>. Also: <a href="value-sets.ttl">value sets as SKOS</a>, <a href="shapes.ttl">SHACL shapes for EWS RDF</a>.</p>
 <p>Terms for OWP's own concepts. Provenance, time, licensing and catalogs reuse PROV-O, XSD, DCTERMS and DCAT. Informative alignments: <a href="../../alignments/">PROV-O, BFO 2020 + IAO, DOLCE+DnS Ultralite</a>.</p>
 <h2>Classes</h2><table><tr><th>Term</th><th>Meaning</th></tr>{rows([OWL.Class])}</table>
 <h2>Properties</h2><table><tr><th>Term</th><th>Meaning</th></tr>{rows([OWL.ObjectProperty, OWL.DatatypeProperty])}</table>
@@ -92,6 +93,8 @@ def main() -> int:
     graph = rdflib.Graph()
     graph.parse(data=ttl, format="turtle")
     (vocab / "ns.ttl").write_text(ttl, encoding="utf-8")
+    for extra in ("value-sets.ttl", "shapes.ttl"):
+        shutil.copy2(ROOT / "vocab" / "owp" / extra, vocab / extra)
     (vocab / "ns.jsonld").write_text(graph.serialize(format="json-ld", indent=2), encoding="utf-8")
     (vocab / "index.html").write_text(vocabulary_html(graph), encoding="utf-8")
     release = str(graph.value(rdflib.URIRef("https://w3id.org/owp/ns"), OWL.versionIRI)).rsplit("/", 1)[-1]

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Standards relations, the rest of step P3:
+  - The value sets are published as SKOS concept schemes: `vocab/owp/value-sets.ttl`, at `https://w3id.org/owp/vs/<set>#<value>`. `scripts/build_value_sets.py` generates the file, and a test keeps it current.
+  - `vocab/owp/shapes.ttl` holds SHACL shapes for EWS RDF output. A test validates `--rdf` output against them, including a broken document they must reject. The new `shacl` extra installs pySHACL.
+  - `alignments/owp-align-schemaorg` has SKOS matches to schema.org for catalogs.
+  - `check_alignments.sh` also checks that package's OWL 2 DL profile.
+  - The site publishes all three.
+- `vocab/value-sets.yaml`: two labels contained a comma inside a flow mapping, so they were cut short and split into stray keys (`media`, `verification`). They are quoted now, and a test rejects unknown keys in value entries.
 - The TypeScript implementation's package version follows the release (`0.2.0-alpha.3`), and the release workflow checks it.
 
 ## 0.2.0-alpha.3 — Semantic Worlds, Work and Actors, Standards

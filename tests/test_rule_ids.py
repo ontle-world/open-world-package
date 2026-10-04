@@ -106,5 +106,18 @@ class CoverageTests(unittest.TestCase):
             for key in ("curie_map", "mapping_set_id", "mapping_set_version", "license"):
                 self.assertIn(key, meta, f"{tsv}: {key}")
 
+class ValueSetTests(unittest.TestCase):
+    def test_value_entries_have_only_known_keys(self):
+        """A comma in a flow mapping splits a label: {label: Image, audio, or video} has keys 'audio' and 'or video'."""
+        sets = yaml.safe_load((ROOT / "vocab" / "value-sets.yaml").read_text(encoding="utf-8"))["valueSets"]
+        bad = [(n, v, sorted(e)) for n, s in sets.items() for v, e in s["values"].items() if e and set(e) - {"label", "description", "family"}]
+        self.assertEqual(bad, [])
+
+    def test_skos_value_sets_are_current(self):
+        import subprocess
+        import sys
+        r = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_value_sets.py"), "--check"], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
 if __name__ == "__main__":
     unittest.main()

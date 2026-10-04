@@ -17,4 +17,10 @@ spec:
     - path: ns.ttl
       format: turtle
       role: schema
+    - path: value-sets.ttl
+      format: turtle
+      role: schema
+    - path: shapes.ttl
+      format: turtle
+      role: shapes
     termIndex: semantics/terms.yaml

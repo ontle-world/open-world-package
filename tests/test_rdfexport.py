@@ -11,6 +11,23 @@ from ontle.rdfexport import asset_iri, ews_turtle, package_iri, spec_iri
 from ontle.scaffold import init_project
 
 HAS_OXIGRAPH = importlib.util.find_spec("pyoxigraph") is not None
+HAS_SHACL = HAS_OXIGRAPH and importlib.util.find_spec("pyshacl") is not None
+SHAPES = Path(__file__).resolve().parent.parent / "vocab" / "owp" / "shapes.ttl"
+
+
+def shacl_report(turtle: str) -> tuple[bool, str]:
+    """Validate Turtle 1.2 against vocab/owp/shapes.ttl, with the OWP vocabulary as the ontology graph (for subclasses).
+    pySHACL reads RDF 1.1, so each triple term becomes a fresh blank node first (the shapes only check that rdf:reifies
+    is present). pyoxigraph's parser is used, not its store, which would rewrite xsd:dateTimeStamp as xsd:dateTime."""
+    import pyoxigraph
+    import pyshacl
+    import rdflib
+    triples = [pyoxigraph.Triple(q.subject, q.predicate, pyoxigraph.BlankNode() if isinstance(q.object, pyoxigraph.Triple) else q.object)
+               for q in pyoxigraph.parse(turtle.encode("utf-8"), format=pyoxigraph.RdfFormat.TURTLE)]
+    data = rdflib.Graph().parse(data=pyoxigraph.serialize(triples, format=pyoxigraph.RdfFormat.N_TRIPLES).decode(), format="nt")
+    conforms, _, text = pyshacl.validate(data, shacl_graph=rdflib.Graph().parse(SHAPES, format="turtle"),
+                                         ont_graph=rdflib.Graph().parse(SHAPES.parent / "ns.ttl", format="turtle"))
+    return conforms, text
 
 
 class IriTests(unittest.TestCase):
@@ -102,6 +119,21 @@ class EwsTurtleTests(unittest.TestCase):
         self.assertNotIn("rdf:reifies  ;", ttl)
         self.assertEqual([_literal(float(x)) for x in ("nan", "inf", "-inf")],
                          ['"NaN"^^xsd:double', '"INF"^^xsd:double', '"-INF"^^xsd:double'])
+
+    @unittest.skipUnless(HAS_SHACL, "pyoxigraph and pyshacl not installed (pip install 'ontle-open-world[rdf,shacl]')")
+    def test_rdf_output_conforms_to_the_vocabulary_shapes(self):
+        world, manifest, ews, observations = self.compiled()
+        binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"]}},
+                            "subjects": {"source.item_status": {"base": "https://example.org/item/"}}}}
+        for b in (None, binding):  # rdf:value only, and rdf:reifies for the bound field
+            conforms, text = shacl_report(ews_turtle(world, manifest, ews, observations, b, {"ex": "https://example.org/ns#"}))
+            self.assertTrue(conforms, text)
+        broken = ews_turtle(world, manifest, ews, observations, None, {}).replace("owp:resolution owp:resolved", "owp:resolution owp:guessed", 1)
+        broken = broken.replace('  owp:asOf "2026-01-02T00:00:00Z"^^xsd:dateTimeStamp ;\n', "")
+        conforms, text = shacl_report(broken)
+        self.assertFalse(conforms)
+        self.assertIn("owp:asOf", text.replace("https://w3id.org/owp/ns#", "owp:"))
+        self.assertIn("owp:resolution", text.replace("https://w3id.org/owp/ns#", "owp:"))
 
 if __name__ == "__main__":
     unittest.main()

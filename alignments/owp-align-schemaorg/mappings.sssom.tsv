@@ -1,0 +1,18 @@
+# curie_map:
+#   owp: https://w3id.org/owp/ns#
+#   schema: https://schema.org/
+#   skos: http://www.w3.org/2004/02/skos/core#
+#   semapv: https://w3id.org/semapv/vocab/
+# mapping_set_id: https://w3id.org/owp/align/v1alpha1/owp-align-schemaorg.sssom.tsv
+# mapping_set_version: 0.1.0
+# license: https://creativecommons.org/licenses/by/4.0/
+# mapping_date: 2026-10-04
+# comment: "Informative. SKOS matches only; schema.org has no axioms to align with. Target: schema.org current release (https://schema.org/version/latest/)."
+subject_id	predicate_id	object_id	mapping_justification	confidence	comment
+owp:Package	skos:broadMatch	schema:CreativeWork	semapv:ManualMappingCuration	0.7	schema.org has no package type; a package is a creative work
+owp:WorldPackage	skos:relatedMatch	schema:Dataset	semapv:ManualMappingCuration	0.5	catalogs describe data as schema:Dataset; a World package also holds Views and State Compilers
+owp:Observation	skos:relatedMatch	schema:Observation	semapv:ManualMappingCuration	0.5	schema.org observations are statistical measurements about an entity
+owp:observedAt	skos:closeMatch	schema:observationDate	semapv:ManualMappingCuration	0.7	
+owp:Compilation	skos:relatedMatch	schema:Action	semapv:ManualMappingCuration	0.5	a compilation is an action a software agent performs
+owp:packageId	skos:relatedMatch	schema:identifier	semapv:ManualMappingCuration	0.7	the identity <namespace>/<name>@<version>
+owp:dependsOn	skos:relatedMatch	schema:isBasedOn	semapv:ManualMappingCuration	0.5	a declared dependency

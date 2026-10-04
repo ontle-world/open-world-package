@@ -6,7 +6,7 @@
 #
 # Passes when the vocabulary and every alignment are consistent with no unsatisfiable classes, with and without
 # the sample data, when each deliberately wrong input (alignments/tests/invalid-*, wrong-*) is inconsistent, and
-# when the vocabulary and the BFO and DUL alignments are in the OWL 2 DL profile.
+# when the vocabulary and the BFO, DUL, and schema.org alignments are in the OWL 2 DL profile.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROBOT_VERSION=1.9.11
@@ -81,4 +81,5 @@ profile() {
 profile vocabulary vocab/owp/ns.ttl
 profile owp-align-bfo alignments/owp-align-bfo/align.ttl
 profile owp-align-dul alignments/owp-align-dul/align.ttl
+profile owp-align-schemaorg alignments/owp-align-schemaorg/align.ttl  # SKOS matches only: no reasoning case
 exit $bad

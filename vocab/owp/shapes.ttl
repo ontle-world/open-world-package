@@ -1,0 +1,55 @@
+@prefix owp: <https://w3id.org/owp/ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# SHACL shapes for an Effective World State in the OWP vocabulary, as `ontle ews compile --rdf` writes it (spec section
+# 12). Informative: a producer can check its RDF with them. They do not look inside RDF 1.2 triple terms; a state value
+# gives its value either as rdf:reifies (bound field and subject) or as rdf:value, not both. CC BY 4.0.
+
+<https://w3id.org/owp/shapes> a owl:Ontology ;
+  rdfs:comment "SHACL shapes for EWS data in the OWP vocabulary."@en .
+
+owp:EffectiveWorldStateShape a sh:NodeShape ;
+  sh:targetClass owp:EffectiveWorldState ;
+  sh:property [ sh:path owp:worldRef ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ,
+    [ sh:path owp:worldView ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ,
+    [ sh:path owp:stateCompiler ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ,
+    [ sh:path owp:asOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTimeStamp ] ,
+    [ sh:path dct:conformsTo ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ,
+    [ sh:path owp:missingField ; sh:datatype xsd:string ] .
+
+owp:StateValueShape a sh:NodeShape ;
+  sh:targetClass owp:StateValue ;
+  sh:property [ sh:path owp:inState ; sh:minCount 1 ; sh:maxCount 1 ; sh:class owp:EffectiveWorldState ] ,
+    [ sh:path owp:field ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ,
+    [ sh:path owp:subjectKey ; sh:maxCount 1 ; sh:datatype xsd:string ] ,
+    [ sh:path owp:resolution ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( owp:resolved owp:unresolved ) ] ,
+    [ sh:path owp:derivation ; sh:maxCount 1 ; sh:class owp:Derivation ] ,
+    [ sh:path prov:wasDerivedFrom ; sh:class owp:Observation ] ;
+  sh:xone ( [ sh:path rdf:value ; sh:minCount 1 ] [ sh:path rdf:reifies ; sh:minCount 1 ] ) .
+
+owp:ObservationShape a sh:NodeShape ;
+  sh:targetClass owp:Observation ;
+  sh:property [ sh:path dct:identifier ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ,
+    [ sh:path owp:observationType ; sh:maxCount 1 ; sh:datatype xsd:string ] ,
+    [ sh:path owp:observedAt ; sh:maxCount 1 ; sh:datatype xsd:dateTimeStamp ] .
+
+owp:AggregateShape a sh:NodeShape ;
+  sh:targetClass owp:Aggregate ;
+  sh:property [ sh:path owp:function ; sh:minCount 1 ; sh:maxCount 1 ;
+      sh:in ( "count" "distinct_count" "sum" "mean" "min" "max" ) ] ,
+    [ sh:path owp:window ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+owp:ClassificationShape a sh:NodeShape ;
+  sh:targetClass owp:Classification ;
+  sh:property [ sh:path owp:criterion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class owp:Criterion ] .
+
+owp:CriterionShape a sh:NodeShape ;
+  sh:targetClass owp:Criterion ;
+  sh:property [ sh:path dct:identifier ; sh:minCount 1 ; sh:maxCount 1 ] ,
+    [ sh:path dct:hasVersion ; sh:maxCount 1 ] .

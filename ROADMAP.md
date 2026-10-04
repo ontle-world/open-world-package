@@ -17,7 +17,7 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 
 ## 1. ~~Release 0.2.0a3~~
 
-Done: tagged `v0.2.0-alpha.3`. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml` and `src/ontle/__init__.py`, run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version and publishes the CHANGELOG section as the release notes.
+Done: tagged `v0.2.0-alpha.3`. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml`, `src/ontle/__init__.py`, and `implementations/typescript/package.json` (and its lock), run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version and publishes the CHANGELOG section as the release notes.
 
 ## 2. Close known alpha limitations in the spec and suite
 

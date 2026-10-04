@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The TypeScript implementation's package version follows the release (`0.2.0-alpha.3`), and the release workflow checks it.
+
 ## 0.2.0-alpha.3 — Semantic Worlds, Work and Actors, Standards
 
 The first tagged public alpha. Package format `openworld/v1alpha1`; Python reference CLI `ontle` 0.2.0a3; the TypeScript implementation in `implementations/typescript/` passes the same suite with the same rule ids.

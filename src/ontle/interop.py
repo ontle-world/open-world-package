@@ -2,8 +2,8 @@
 
 - mcp_description: what a Model Context Protocol server built on a World exposes. Its Views and State Compilers
   are resources, the EWS of a State Compiler at a time is a resource template, and its actions are tools.
-- ews_ngsi_ld: an EWS as NGSI-LD entities. Each subject is one entity, and each per-subject field an attribute of it,
-  named by its bound property IRI. An unresolved field gives one attribute instance per alternative (datasetId), and a
+- ews_ngsi_ld: an EWS as NGSI-LD entities. A subject's entity id is the IRI --rdf gives it, and each per-subject field
+  is an attribute named by its bound property IRI. An unresolved field gives one attribute instance per alternative (datasetId), and a
   coded value gives a VocabProperty. Fields that are not per subject go on one entity for the EWS.
 """
 from __future__ import annotations
@@ -15,6 +15,7 @@ from .core import load_manifest, local_assets
 from .rdfexport import asset_iri, package_iri
 
 NGSI_LD_CORE_CONTEXT = "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.8.jsonld"
+NGSI_LD_RESERVED = {"id", "type", "scope", "@context", "@id", "@type", "createdAt", "modifiedAt", "deletedAt"}
 
 
 def _identity(manifest: dict[str, Any]) -> str:
@@ -123,9 +124,12 @@ def ews_ngsi_ld(world_root: Path, world_manifest: dict[str, Any], ews: dict[str,
             return source_type(b["classify"].get("input"), seen + (field,))
         return None
 
-    def entity_id(subject: str) -> str:
-        """One entity per subject key, whichever observation type its fields come from: the IRI from the first
-        `subjects` rule (by observation type) of the fields that have one, else urn:ngsi-ld:Subject:<key>."""
+    def entity_id(subject: str, otype: str | None) -> str:
+        """The subject's IRI as --rdf and --jsonld give it: from the `subjects` rule of the field's observation type.
+        A field whose type has no rule joins the subject's entity under the first rule (by observation type) of its
+        other fields; with none, the entity is urn:ngsi-ld:Subject:<key>."""
+        if otype and isinstance(subjects.get(otype), dict):
+            return subject_iri(subjects[otype], subject)
         for otype in sorted(subject_types.get(subject, ())):
             rule = subjects.get(otype)
             if isinstance(rule, dict):
@@ -157,17 +161,21 @@ def ews_ngsi_ld(world_root: Path, world_manifest: dict[str, Any], ews: dict[str,
     provenance = spec.get("provenance") or {}
 
     def attribute_name(field: str) -> str:
-        """The bound property's IRI; otherwise the field name with '.' as '_' (NGSI-LD names exclude '.')."""
+        """The bound property's IRI; otherwise the field name with '.' as '_' (NGSI-LD names exclude '.'), and with
+        a trailing '_' when it would be a name NGSI-LD reserves (id, type, scope, ...)."""
         fb = fields_b.get(field)
         path = fb.get("path") if isinstance(fb, dict) and isinstance(fb.get("path"), list) else []
         iri = expand(path[-1], prefixes) if path and isinstance(path[-1], str) else None
-        return iri or field.replace(".", "_")
+        name = iri or field.replace(".", "_")
+        return name + "_" if name in NGSI_LD_RESERVED else name
+
+    entity_types: dict[str, list[str]] = {}
 
     def put(eid: str, etype: str, field: str, attr: Any) -> None:
         field = attribute_name(field)
-        e = entities.setdefault(eid, {"id": eid, "type": []})
-        if etype not in e["type"]:
-            e["type"].append(etype)
+        e = entities.setdefault(eid, {"id": eid})
+        if etype not in entity_types.setdefault(eid, []):
+            entity_types[eid].append(etype)
         if field in e:  # several alternatives: an array of attribute instances
             e[field] = (e[field] if isinstance(e[field], list) else [e[field]]) + [attr]
         else:
@@ -189,7 +197,7 @@ def ews_ngsi_ld(world_root: Path, world_manifest: dict[str, Any], ews: dict[str,
             groups = value.items() if field in per_subject and isinstance(value, dict) else [(None, value)]
             for subject, v in groups:
                 ids = list((prov or {}).get(subject) or []) if subject is not None and isinstance(prov, dict) else list(prov or []) if isinstance(prov, list) else []
-                eid, et = (entity_id(subject), etype) if subject is not None else (view_entity, "EffectiveWorldState")
+                eid, et = (entity_id(subject, otype), etype) if subject is not None else (view_entity, "EffectiveWorldState")
                 if section == "unresolved":
                     for n, alt in enumerate(v, start=1):
                         put(eid, et, field, attribute(field, alt, ids, f"urn:ngsi-ld:Dataset:alternative-{n}"))
@@ -198,8 +206,8 @@ def ews_ngsi_ld(world_root: Path, world_manifest: dict[str, Any], ews: dict[str,
     out = []
     for eid in sorted(entities):
         e = entities[eid]
-        types = sorted(e["type"])
+        types = sorted(entity_types[eid])
         if len(types) > 1 and "Subject" in types:  # the placeholder only when no observation type has a class
             types.remove("Subject")
-        out.append({**e, "type": types[0] if len(types) == 1 else types, "@context": context})  # NGSI-LD allows several types
+        out.append({"id": eid, "type": types[0] if len(types) == 1 else types, **{k: v for k, v in e.items() if k != "id"}, "@context": context})  # NGSI-LD allows several types
     return out

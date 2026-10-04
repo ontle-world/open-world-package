@@ -403,7 +403,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   for (const p of parseDependencies(rootManifest).problems) err("resolve.reference", p);
   const root: Node = {
     identity: rootId,
-    kind: String(rootManifest.kind),
+    kind: typeof rootManifest.kind === "string" ? rootManifest.kind : "",
     dir: rootDir,
     manifest: rootManifest,
     deps: parseDependencies(rootManifest).deps,
@@ -465,7 +465,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
       }
       const child: Node = {
         identity: dep.ref,
-        kind: String(cand.manifest.kind),
+        kind: typeof cand.manifest.kind === "string" ? cand.manifest.kind : "",
         dir: cand.dir,
         manifest: cand.manifest,
         deps: parseDependencies(cand.manifest).deps,
@@ -489,7 +489,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
 
   // Spec 11: dependencies point down the hierarchy Ontology <- World <- World Model (warning).
   for (const n of nodes.values()) {
-    const allowed = DEPENDENCY_DIRECTIONS[n.kind];
+    const allowed = Object.prototype.hasOwnProperty.call(DEPENDENCY_DIRECTIONS, n.kind) ? DEPENDENCY_DIRECTIONS[n.kind] : undefined;
     for (const d of n.deps) {
       const target = d.as === undefined ? nodes.get(d.ref) : undefined;
       if (allowed && target && !allowed.includes(target.kind)) {

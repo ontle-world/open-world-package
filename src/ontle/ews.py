@@ -6,35 +6,68 @@ Compilers without bindings are opaque; their EWS output is still checkable again
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 from pathlib import Path
+import math
 import re
 from typing import Any
 
-from .core import EWS, OWPError, load_manifest, local_assets, output_schema_fields
+from .core import EWS, MANIFEST, OWPError, local_assets, output_schema_fields
 from .structure import EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structure_errors
+from .values import js_string, nonempty_str
 from .yamlio import YAMLError, load_yaml
 
+API_VERSION = "openworld/v1alpha1"
+MAX_SAFE_INTEGER = 2 ** 53 - 1
+
 SELECTORS = {"latest", "all"}
-TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\Z")
+TIMESTAMP_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z\Z")
 
 
-def load_document(path: str | Path) -> Any:
+def load_document(path: str | Path, rule: str = "ews.input") -> Any:
     """Load an ObservationSet or EWS document (YAML 1.2 core schema: timestamps stay text)."""
     try:
         return load_yaml(Path(path).read_text(encoding="utf-8"))
-    except YAMLError as exc:
-        raise OWPError(f"cannot parse {path}: {exc}") from exc
+    except (OSError, UnicodeDecodeError, YAMLError) as exc:
+        raise OWPError(f"{rule}: cannot parse {path}: {exc}") from exc
+
+
+def _days_in_month(year: int, month: int) -> int:
+    if month == 2:
+        return 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
+    return 30 if month in (4, 6, 9, 11) else 31
 
 
 def _valid_timestamp(value: Any) -> bool:
-    if not (isinstance(value, str) and TIMESTAMP_RE.match(value)):
+    """UTC YYYY-MM-DDTHH:MM:SSZ that is a real calendar instant, for any year 0000-9999 (proleptic Gregorian)."""
+    m = TIMESTAMP_RE.match(value) if isinstance(value, str) else None
+    if not m:
         return False
-    try:
-        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
-    except ValueError:
-        return False
-    return True
+    year, month, day, hour, minute, second = (int(x) for x in m.groups())
+    return 1 <= month <= 12 and 1 <= day <= _days_in_month(year, month) and hour <= 23 and minute <= 59 and second <= 59
+
+
+def _seconds(ts: str) -> int:
+    """Seconds since 0000-01-01T00:00:00Z of a valid timestamp."""
+    year, month, day, hour, minute, second = (int(x) for x in TIMESTAMP_RE.match(ts).groups())  # type: ignore[union-attr]
+    days = year * 365 + (year + 3) // 4 - (year + 99) // 100 + (year + 399) // 400  # days before Jan 1 of `year`
+    days += sum(_days_in_month(year, m) for m in range(1, month)) + day - 1
+    return ((days * 24 + hour) * 60 + minute) * 60 + second
+
+
+def _timestamp(seconds: int) -> str:
+    """The UTC timestamp `seconds` after 0000-01-01T00:00:00Z (inverse of _seconds within years 0000-9999)."""
+    days, rest = divmod(seconds, 86400)
+    year = max(0, min(9999, days * 400 // 146097))
+    while year > 0 and _seconds(f"{year:04d}-01-01T00:00:00Z") // 86400 > days:
+        year -= 1
+    while year < 9999 and _seconds(f"{year + 1:04d}-01-01T00:00:00Z") // 86400 <= days:
+        year += 1
+    days -= _seconds(f"{year:04d}-01-01T00:00:00Z") // 86400
+    month = 1
+    while days >= _days_in_month(year, month):
+        days -= _days_in_month(year, month)
+        month += 1
+    return f"{year:04d}-{month:02d}-{days + 1:02d}T{rest // 3600:02d}:{rest // 60 % 60:02d}:{rest % 60:02d}Z"
 
 
 def json_equal(a: Any, b: Any) -> bool:
@@ -59,37 +92,45 @@ def _distinct(values: list[Any]) -> list[Any]:
 
 
 def _identity(manifest: dict[str, Any]) -> str:
-    md = manifest.get("metadata") or {}
-    return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
+    """<namespace>/<name>@<version> as written in the World's metadata; a missing part reads `undefined`, as in TypeScript."""
+    md = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
+    return "{}/{}@{}".format(*(js_string(md[k]) if k in md else "undefined" for k in ("namespace", "name", "version")))
 
 
-def _asset_kind(root: Path, manifest: dict[str, Any], rel: str) -> str | None:
-    return local_assets(root, manifest.get("spec") or {})[0].get(rel)
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
+def load_world(world_path: str | Path) -> tuple[Path, dict[str, Any], str]:
+    """The World's root, manifest, and identity. A World that is not a readable WorldPackage manifest raises a message without a rule id."""
+    root = Path(world_path).expanduser().resolve()
+    if root.is_file():
+        root = root.parent
     try:
-        data = load_yaml(path.read_text(encoding="utf-8"))
+        manifest = load_yaml((root / MANIFEST).read_text(encoding="utf-8"))
     except Exception as exc:
-        raise OWPError(f"cannot parse {path}: {exc}") from exc
-    if not isinstance(data, dict):
-        raise OWPError(f"{path} must contain a YAML mapping")
-    return data
+        raise OWPError(f"cannot read World manifest in {world_path}: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise OWPError(f"cannot read World manifest in {world_path}")
+    if manifest.get("kind") != "WorldPackage":
+        raise OWPError(f"{world_path} is not a WorldPackage")
+    return root, manifest, _identity(manifest)
 
 
 def load_compiler(world_root: Path, manifest: dict[str, Any], compiler_path: str) -> dict[str, Any]:
-    if _asset_kind(world_root, manifest, compiler_path) != "StateCompilerProfile":
-        raise OWPError(f"ews.state-compiler: {compiler_path} is not a StateCompilerProfile asset of {_identity(manifest)}")
-    spec = _load_yaml(world_root / compiler_path).get("spec")
+    """The spec of a local StateCompilerProfile asset of the World; refusals are ews.state-compiler."""
+    if local_assets(world_root, manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {})[0].get(compiler_path) != "StateCompilerProfile":
+        raise OWPError(f"ews.state-compiler: {compiler_path} is not a local StateCompilerProfile asset of {_identity(manifest)}")
+    try:
+        doc = load_yaml((world_root / compiler_path).read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise OWPError(f"ews.state-compiler: cannot read State Compiler {compiler_path}: {exc}") from exc
+    spec = doc.get("spec") if isinstance(doc, dict) else None
     if not isinstance(spec, dict):
-        raise OWPError(f"ews.state-compiler: {compiler_path} must declare spec")
+        raise OWPError(f"ews.state-compiler: State Compiler {compiler_path} has no spec")
     return spec
 
 
 AGGREGATE_FUNCTIONS = {"count", "distinct_count", "sum", "mean", "min", "max"}
 CONDITIONS = {"eq", "in", "gt", "gte", "lt", "lte"}
-DURATION_RE = re.compile(r"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?\Z")
-SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\Z")
+DURATION_RE = re.compile(r"^P(?:([0-9]+)D)?(?:T(?:([0-9]+)H)?(?:([0-9]+)M)?(?:([0-9]+)S)?)?\Z")
+SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?\Z")
 
 
 def duration_seconds(value: Any) -> int | None:
@@ -152,9 +193,9 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
                 if name not in (fields or []):
                     errors.append(f"compiler.unit: StateCompilerProfile {rel} spec.outputSchema.units names {name!r}, which is not one of its EWS fields")
     units = units or {}
-    bindings = compiler.get("bindings")
-    if bindings is None:
+    if "bindings" not in compiler:
         return errors
+    bindings = compiler["bindings"]
     if not isinstance(bindings, dict):
         return errors + [f"compiler.binding: StateCompilerProfile {rel} spec.bindings must be a mapping of EWS field to binding"]
     # An outputSchemaRef that does not resolve is already an error; its fields are unknown, so keys are not checked.
@@ -173,13 +214,13 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
         if form in ("observe", "estimate"):
             inner = b if form == "observe" else b["estimate"]
             errors += _source_errors(inner, where)
-            if isinstance(inner, dict) and inner.get("select", "latest") not in SELECTORS:
+            if isinstance(inner, dict) and "select" in inner and not (isinstance(inner["select"], str) and inner["select"] in SELECTORS):
                 errors.append(f"{where} select must be one of {sorted(SELECTORS)}")
         elif form == "aggregate":
             a = b["aggregate"]
             errors += _source_errors(a, where)
             if isinstance(a, dict):
-                if a.get("function") not in AGGREGATE_FUNCTIONS:
+                if not (isinstance(a.get("function"), str) and a["function"] in AGGREGATE_FUNCTIONS):
                     errors.append(f"{where} aggregate.function must be one of {sorted(AGGREGATE_FUNCTIONS)}")
                 if "window" in a and duration_seconds(a["window"]) is None:
                     errors.append(f"{where} aggregate.window must be an ISO 8601 duration such as PT24H or P7D")
@@ -254,38 +295,69 @@ def _classify_errors(c: Any, field: str, where: str, fields: list[str] | None, p
     return errors
 
 
-def _observations(doc: dict[str, Any]) -> list[dict[str, Any]]:
+def _inexact_number(value: Any) -> bool:
+    """A number JSON implementations cannot all represent exactly: .inf, .nan, or an integer outside +-(2^53-1)."""
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, float) and not math.isfinite(value):
+        return True
+    if isinstance(value, (int, float)):
+        return (isinstance(value, int) or value.is_integer()) and abs(value) > MAX_SAFE_INTEGER
+    if isinstance(value, list):
+        return any(_inexact_number(v) for v in value)
+    if isinstance(value, dict):
+        return any(_inexact_number(v) for v in value.values())
+    return False
+
+
+def observation_errors(doc: Any) -> tuple[list[dict[str, Any]], list[str]]:
+    """The observations of an ObservationSet and every reason it is invalid input (`<rule-id>: <message>`)."""
+    if not isinstance(doc, dict):
+        return [], ["ews.input: ObservationSet must be a mapping"]
+    errors = [f"{e.split(': ', 1)[0]}: ObservationSet: {e.split(': ', 1)[1]}" for e in structure_errors(doc, OBSERVATION_SET, "ObservationSet", None)]
+    if "apiVersion" in doc and doc["apiVersion"] != API_VERSION:
+        errors.append(f"ews.input: ObservationSet apiVersion must be {API_VERSION}")
     if doc.get("kind") != "ObservationSet":
-        raise OWPError("ews.input: observations document must have kind ObservationSet")
-    unknown = structure_errors(doc, OBSERVATION_SET, "ObservationSet", None)
-    if unknown:
-        raise OWPError("; ".join(unknown))
-    obs = (doc.get("spec") or {}).get("observations")
+        errors.append("ews.input: observations document must have kind ObservationSet")
+    obs = doc["spec"].get("observations") if isinstance(doc.get("spec"), dict) else None
     if not isinstance(obs, list):
-        raise OWPError("ews.input: ObservationSet requires spec.observations list")
+        return [], errors + ["ews.input: ObservationSet requires spec.observations list"]
     seen: set[str] = set()
-    for o in obs:
-        if not isinstance(o, dict) or not isinstance(o.get("id"), str) or not isinstance(o.get("type"), str):
-            raise OWPError("ews.input: each observation requires string id and type")
-        if o["id"] in seen:
-            raise OWPError(f"ews.input: duplicate observation id {o['id']}")
-        seen.add(o["id"])
+    out: list[dict[str, Any]] = []
+    for i, o in enumerate(obs):
+        where = f"ews.input: observations[{i}]"
+        if not isinstance(o, dict):
+            errors.append(f"{where} must be a mapping")
+            continue
+        if not nonempty_str(o.get("id")):
+            errors.append(f"{where} requires a non-empty string id")
+        elif o["id"] in seen:
+            errors.append(f"ews.input: duplicate observation id {o['id']}")
+        else:
+            seen.add(o["id"])
+        if not nonempty_str(o.get("type")):
+            errors.append(f"{where} requires a non-empty string type")
         if not _valid_timestamp(o.get("observedAt")):
-            raise OWPError(f"ews.input: observation {o['id']} observedAt must be UTC YYYY-MM-DDTHH:MM:SSZ")
+            errors.append(f"{where}.observedAt must be UTC YYYY-MM-DDTHH:MM:SSZ")
         if not isinstance(o.get("values"), dict):
-            raise OWPError(f"ews.input: observation {o['id']} requires a values mapping")
+            errors.append(f"{where} requires a values mapping")
+        elif _inexact_number(o["values"]):
+            errors.append(f"{where} has a value that is not a finite JSON number with an exact value (.inf, .nan, or an integer outside +-(2^53-1))")
         if "subject" in o and not isinstance(o["subject"], str):
-            raise OWPError(f"ews.input: observation {o['id']} subject must be a string")
-        if "estimatedBy" in o and not (isinstance(o["estimatedBy"], str) and o["estimatedBy"]):
-            raise OWPError(f"ews.input: observation {o['id']} estimatedBy must be a non-empty string")
-        if "units" in o and not (isinstance(o["units"], dict) and all(isinstance(k, str) and isinstance(v, str) and UCUM_CODE_RE.match(v)
-                                                                     for k, v in o["units"].items())):
-            raise OWPError(f"ews.input: observation {o['id']} units must map value keys to UCUM codes")
-    return obs
+            errors.append(f"{where}.subject must be a string")
+        if "estimatedBy" in o and not nonempty_str(o["estimatedBy"]):
+            errors.append(f"{where}.estimatedBy must be a non-empty string")
+        if "units" in o and not (isinstance(o["units"], dict) and all(isinstance(v, str) and UCUM_CODE_RE.match(v) for v in o["units"].values())):
+            errors.append(f"{where}.units must map value keys to UCUM codes")
+        if not errors:
+            out.append(o)
+    return out, errors
 
 
 def _shift(ts: str, seconds: int) -> str:
-    return (datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ") - timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    """`ts` minus `seconds`; before year 0000 the result sorts before every timestamp."""
+    shifted = _seconds(ts) - seconds
+    return _timestamp(shifted) if shifted >= 0 else "-"
 
 
 def _is_number(v: Any) -> bool:
@@ -357,18 +429,23 @@ def _classify(result: tuple[str, Any, list[str]], criterion: dict[str, Any]) -> 
 
 def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[str, Any], as_of: str) -> dict[str, Any]:
     """Reference compilation of a declarative State Compiler into an EWS document (sections 12.2-12.4)."""
-    world_root, manifest = load_manifest(world_path)
-    compiler = load_compiler(world_root, manifest, compiler_path)
+    try:
+        world_root, manifest, world_ref = load_world(world_path)
+    except OWPError as exc:
+        raise OWPError(f"ews.state-compiler: {exc}") from exc
     if not _valid_timestamp(as_of):
         raise OWPError("ews.input: asOf must be UTC YYYY-MM-DDTHH:MM:SSZ")
-    bindings = compiler.get("bindings")
-    if not isinstance(bindings, dict):
+    compiler = load_compiler(world_root, manifest, compiler_path)
+    if "bindings" not in compiler:
         raise OWPError(f"ews.opaque-compiler: {compiler_path} declares no spec.bindings; opaque compilers cannot be run by the reference compiler")
     fields, errors = output_schema_fields(world_root, compiler, compiler_path)
     errors += binding_errors(compiler, compiler_path, fields)
     if errors:
         raise OWPError("; ".join(errors))
-    obs = _observations(observations)
+    bindings = compiler["bindings"]
+    obs, errors = observation_errors(observations)
+    if errors:
+        raise OWPError("; ".join(errors))
     by_id = {o["id"]: o for o in obs}
     per_subject, latent = output_lists(compiler)
 
@@ -458,10 +535,9 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
         if field in latent:
             derivation[field] = _derivation(bindings[field], results[field], by_id)
 
-    world_ref = _identity(manifest)
     spec: dict[str, Any] = {
         "worldRef": world_ref,
-        "worldView": f"{world_ref}#{compiler.get('worldViewRef')}",
+        "worldView": f"{world_ref}#{js_string(compiler['worldViewRef']) if 'worldViewRef' in compiler else 'undefined'}",
         "stateCompiler": f"{world_ref}#{compiler_path}",
         "context": {"asOf": as_of},
         "state": state,
@@ -490,52 +566,80 @@ def _derivation(b: dict[str, Any], result: dict[str | None, tuple[str, Any, list
     return {"kind": "classify", "input": c["input"], "criterion": {k: c["criterion"][k] for k in ("id", "version", "basis") if k in c["criterion"]}}
 
 
-def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
-    """Check an EWS document produced by any runtime against the State Compiler's output contract."""
-    world_root, manifest = load_manifest(world_path)
-    world_ref = _identity(manifest)
-    if ews.get("kind") != EWS:
-        return [f"ews.kind: EWS document must have kind {EWS}"]
-    spec = ews.get("spec") if isinstance(ews.get("spec"), dict) else {}
-    errors: list[str] = structure_errors(ews, EFFECTIVE_WORLD_STATE, "EffectiveWorldState", None)
-    if spec.get("worldRef") != world_ref:
-        errors.append(f"ews.world-ref: spec.worldRef must be {world_ref}")
-    compiler_ref = spec.get("stateCompiler")
-    view_ref = spec.get("worldView")
-    if not isinstance(compiler_ref, str) or compiler_ref.partition("#")[0] != world_ref:
-        return errors + [f"ews.world-ref: spec.stateCompiler must have the form {world_ref}#<asset path>"]  # a reference to another World
+def check_ews(world_path: str | Path, ews: Any) -> list[str]:
+    """Check an EWS document produced by any runtime against the State Compiler's output contract (spec 12.1)."""
     try:
-        compiler = load_compiler(world_root, manifest, compiler_ref.partition("#")[2])
+        world_root, manifest, world_ref = load_world(world_path)
+    except OWPError as exc:
+        return [f"ews.world-ref: {exc}"]
+    if not isinstance(ews, dict):
+        return ["ews.kind: EWS document must be a mapping"]
+    errors: list[str] = []
+    if ews.get("apiVersion") != API_VERSION:
+        errors.append(f"ews.kind: apiVersion must be {API_VERSION}")
+    if ews.get("kind") != EWS:
+        errors.append(f"ews.kind: EWS document must have kind {EWS}")
+    errors += structure_errors(ews, EFFECTIVE_WORLD_STATE, "EffectiveWorldState", None)
+    spec = ews.get("spec")
+    if not isinstance(spec, dict):
+        return errors + ["ews.shape: spec must be a mapping"]
+    for key in ("worldRef", "worldView", "stateCompiler"):
+        if not nonempty_str(spec.get(key)):
+            errors.append(f"ews.shape: spec.{key} is required")
+    context = spec.get("context")
+    if not _valid_timestamp(context.get("asOf") if isinstance(context, dict) else None):
+        errors.append("ews.as-of: spec.context.asOf must be UTC YYYY-MM-DDTHH:MM:SSZ")
+    absent = lambda key, default: default if spec.get(key) is None else spec[key]  # null counts as absent
+    state = spec.get("state")
+    unresolved, missing, provenance, derivation = absent("unresolved", {}), absent("missing", []), absent("provenance", {}), absent("derivation", {})
+    if not isinstance(state, dict):
+        errors.append("ews.shape: spec.state must be a mapping")
+    if not isinstance(unresolved, dict):
+        errors.append("ews.shape: spec.unresolved must be a mapping")
+    if not (isinstance(missing, list) and all(isinstance(x, str) for x in missing)):
+        errors.append("ews.shape: spec.missing must be a list of strings")
+    elif len(set(missing)) != len(missing):
+        errors.append("ews.shape: spec.missing has duplicate entries")
+    id_list = lambda v: isinstance(v, list) and all(isinstance(x, str) for x in v)
+    if not isinstance(provenance, dict):
+        errors.append("ews.shape: spec.provenance must be a mapping")
+    else:
+        for key, value in provenance.items():  # a per-subject field maps subjects to id lists (section 12.3)
+            if not id_list(value) and not (isinstance(value, dict) and all(id_list(v) for v in value.values())):
+                errors.append(f"ews.shape: provenance.{key} must be a list of observation ids")
+    if not isinstance(derivation, dict):
+        errors.append("ews.shape: spec.derivation must be a mapping")
+    structural = ("ews.as-of:", "schema.unknown-field:", "extension.block:")
+    if any(not e.startswith(structural) for e in errors) or not (isinstance(state, dict) and isinstance(unresolved, dict) and isinstance(missing, list)
+                                                                and isinstance(provenance, dict) and isinstance(derivation, dict)):
+        return errors
+
+    if spec["worldRef"] != world_ref:
+        errors.append(f"ews.world-ref: spec.worldRef must be {world_ref}")
+    prefix = f"{world_ref}#"
+    if not spec["stateCompiler"].startswith(prefix):
+        return errors + [f"ews.world-ref: spec.stateCompiler must have the form {prefix}<asset path>"]  # a reference to another World
+    compiler_rel = spec["stateCompiler"][len(prefix):]
+    try:
+        compiler = load_compiler(world_root, manifest, compiler_rel)
     except OWPError as exc:
         return errors + [str(exc)]
-    if view_ref != f"{world_ref}#{compiler.get('worldViewRef')}":
+    view = js_string(compiler["worldViewRef"]) if "worldViewRef" in compiler else "undefined"
+    if spec["worldView"] != f"{prefix}{view}":
         errors.append("ews.world-view: spec.worldView must be the View compiled by spec.stateCompiler")
-    as_of = (spec.get("context") or {}).get("asOf") if isinstance(spec.get("context"), dict) else None
-    if not _valid_timestamp(as_of):
-        errors.append("ews.as-of: spec.context.asOf must be UTC YYYY-MM-DDTHH:MM:SSZ")
 
-    fields, field_errors = output_schema_fields(world_root, compiler, compiler_ref.partition("#")[2])
+    fields, field_errors = output_schema_fields(world_root, compiler, compiler_rel)
     errors += field_errors
-    state = spec.get("state") if isinstance(spec.get("state"), dict) else None
-    unresolved = spec.get("unresolved", {}) if isinstance(spec.get("unresolved", {}), dict) else None
-    missing = spec.get("missing", []) if isinstance(spec.get("missing", []), list) else None
-    provenance = spec.get("provenance", {}) if isinstance(spec.get("provenance", {}), dict) else None
-    if state is None or unresolved is None or missing is None or provenance is None:
-        return errors + ["ews.shape: spec.state must be a mapping; unresolved/provenance mappings and missing list when present"]
     per_subject, latent = output_lists(compiler)
-    derivation = spec.get("derivation", {}) if isinstance(spec.get("derivation", {}), dict) else None
-    if derivation is None:
-        return errors + ["ews.shape: spec.derivation must be a mapping when present"]
     for field in fields or []:
+        places = (field in state) + (field in unresolved) + missing.count(field)
         if field in per_subject and field in state and field in unresolved and field not in missing:
             continue  # subjects split between state and unresolved (section 12.3)
-        placements = (field in state) + (field in unresolved) + (field in missing)
-        if placements != 1:
-            errors.append(f"ews.field-placement: field {field!r} must appear in exactly one of state, unresolved, missing (found {placements})")
+        if places != 1:
+            errors.append(f"ews.field-placement: field {field!r} must appear in exactly one of state, unresolved, missing (found {places})")
     for field in [f for f in fields or [] if f in per_subject]:
-        parts = [(name, sec[field]) for name, sec in (("state", state), ("unresolved", unresolved), ("provenance", provenance)) if field in sec]
-        for name, value in parts:
-            if not isinstance(value, dict):
+        for name, sec in (("state", state), ("unresolved", unresolved), ("provenance", provenance)):
+            if field in sec and not isinstance(sec[field], dict):
                 errors.append(f"ews.per-subject-shape: per-subject field {field!r} in {name} must be a mapping from subject to value")
         if isinstance(state.get(field), dict) and isinstance(unresolved.get(field), dict):
             for subject in sorted(set(state[field]) & set(unresolved[field])):
@@ -546,11 +650,11 @@ def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
     for field, record in derivation.items():
         if field not in latent:
             errors.append(f"ews.derivation: {field!r} is not a latent field of the State Compiler")
-        elif not isinstance(record, dict) or record.get("kind") not in ("estimate", "aggregate", "classify"):
+        elif not isinstance(record, dict) or not (isinstance(record.get("kind"), str) and record["kind"] in ("estimate", "aggregate", "classify")):
             errors.append(f"ews.derivation: derivation of {field!r} must have kind estimate, aggregate, or classify")
         elif field not in state and field not in unresolved:
             errors.append(f"ews.derivation: derivation for {field!r}, which has no value")
-    for field in list(state) + list(unresolved) + list(missing) if fields is not None else []:
+    for field in dict.fromkeys(list(state) + list(unresolved) + missing) if fields is not None else []:
         if field not in fields:
             errors.append(f"ews.field-unknown: field {field!r} is not an EWS field of the State Compiler")
     for field, alternatives in unresolved.items():
@@ -559,20 +663,22 @@ def check_ews(world_path: str | Path, ews: dict[str, Any]) -> list[str]:
             if not isinstance(alts, list) or len(_distinct(alts)) < 2:
                 where = f"{field!r}" if subject is None else f"{field!r} subject {subject!r}"
                 errors.append(f"ews.unresolved-alternatives: unresolved field {where} must retain at least two distinct alternatives")
+    present = list(dict.fromkeys(list(state) + list(unresolved)))
     for field in provenance:
-        if field not in state and field not in unresolved:
+        if field not in present:
             errors.append(f"ews.provenance-orphan: provenance for {field!r} which has no value")
-    if compiler.get("traceRequired"):
-        for field in list(state) + list(unresolved):
+    if compiler.get("traceRequired") is True:
+        for field in present:
+            ids = provenance.get(field)
             # an aggregate over no observations (a count of 0) has an empty provenance list (section 12.4)
             empty_ok = isinstance(derivation.get(field), dict) and derivation[field].get("kind") == "aggregate"
-            if field in per_subject and isinstance(provenance.get(field), dict):
-                subjects = set(state.get(field) or {}) | set(unresolved.get(field) or {})
+            traced = lambda v: isinstance(v, list) and (bool(v) or empty_ok)
+            if field in per_subject and isinstance(ids, dict):
+                subjects = set(state[field] if isinstance(state.get(field), dict) else {}) | set(unresolved[field] if isinstance(unresolved.get(field), dict) else {})
                 for subject in sorted(subjects):
-                    ids = provenance[field].get(subject)
-                    if ids is None or (not ids and not empty_ok):
+                    if not traced(ids.get(subject)):
                         errors.append(f"ews.provenance-required: traceRequired: field {field!r} subject {subject!r} has no provenance")
-            elif field not in provenance or (not provenance[field] and not empty_ok):
+            elif not traced(ids):
                 errors.append(f"ews.provenance-required: traceRequired: field {field!r} has no provenance")
     return errors
 

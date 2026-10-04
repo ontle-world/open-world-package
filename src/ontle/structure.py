@@ -262,45 +262,55 @@ def extension_block_errors(block: Any, path: str, where: str, declared: set[str]
 
 
 def declared_extensions(spec: dict[str, Any]) -> tuple[set[str], list[str]]:
-    """Extension names declared by spec.dependencies entries with 'as', and declaration errors."""
+    """Extension names declared by spec.dependencies entries with 'as' (spec 13.1), and declaration errors."""
     names: set[str] = set()
     errors: list[str] = []
     deps = spec.get("dependencies")
-    for dep in deps if isinstance(deps, list) else []:
+    for i, dep in enumerate(deps) if isinstance(deps, list) else []:
         if not isinstance(dep, dict):
             continue
+        where = f"spec.dependencies[{i}]"
+        if "mustUnderstand" in dep:
+            if "as" not in dep:
+                errors.append(f"extension.declaration: {where} declares mustUnderstand without as")
+            elif not isinstance(dep["mustUnderstand"], bool):
+                errors.append(f"extension.declaration: {where}.mustUnderstand must be true or false")
         if "as" not in dep:
-            if "mustUnderstand" in dep:
-                errors.append(f"extension.declaration: dependency {dep.get('ref')!r} declares mustUnderstand without as")
             continue
         name = dep["as"]
         if not isinstance(name, str) or not EXTENSION_NAME_RE.match(name):
-            errors.append(f"extension.name: dependency {dep.get('ref')!r} as {name!r} must match [a-z][a-z0-9-]* (at most 63 characters)")
-            continue
-        if name in RESERVED_EXTENSION_NAMES:
-            errors.append(f"extension.name: extension name {name!r} is reserved")
-            continue
-        if name in names:
-            errors.append(f"extension.duplicate: extension name {name!r} is declared more than once")
-        names.add(name)
-        if "mustUnderstand" in dep and not isinstance(dep["mustUnderstand"], bool):
-            errors.append(f"extension.declaration: dependency {dep.get('ref')!r} mustUnderstand must be true or false")
+            errors.append(f"extension.name: {where}.as {name!r} must match [a-z][a-z0-9-]* (at most 63 characters)")
+        elif name in RESERVED_EXTENSION_NAMES:
+            errors.append(f"extension.name: {where}.as {name!r} is a reserved extension name")
+        elif name in names:
+            errors.append(f"extension.duplicate: {where}.as {name!r} declares an extension name that is already declared")
+        else:
+            names.add(name)
     return names, errors
 
 
 def extension_definition_errors(spec: dict[str, Any]) -> list[str]:
-    definition = spec.get("extensionDefinition")
-    if definition is None:
+    """Spec 13.2: spec.extensionDefinition {description, kinds, schemas}. Whether each schema file exists is checked by the caller."""
+    if "extensionDefinition" not in spec:
         return []
+    definition = spec["extensionDefinition"]
     if not isinstance(definition, dict):
         return ["extension.definition: spec.extensionDefinition must be a mapping"]
     errors = []
+    if "description" in definition and not isinstance(definition["description"], str):
+        errors.append("extension.definition: spec.extensionDefinition.description must be a string")
     kinds = definition.get("kinds")
-    if kinds is not None and not (isinstance(kinds, list) and all(isinstance(k, str) and re.match(r"^[A-Z][A-Za-z0-9]*\Z", k) for k in kinds)):
+    if "kinds" in definition and not (isinstance(kinds, list) and all(isinstance(k, str) and re.match(r"^[A-Z][A-Za-z0-9]*\Z", k) for k in kinds)):
         errors.append("extension.definition: spec.extensionDefinition.kinds must be a list of PascalCase kind names without a prefix")
     schemas = definition.get("schemas")
-    if schemas is not None and not (isinstance(schemas, list) and all(isinstance(s, str) and s for s in schemas)):
-        errors.append("extension.definition: spec.extensionDefinition.schemas must be a list of package-relative paths")
+    if "schemas" not in definition:
+        return errors
+    if not isinstance(schemas, list):
+        return errors + ["extension.definition: spec.extensionDefinition.schemas must be a list of package-relative paths"]
+    from .values import nonempty_str, normalize_rel_path
+    for i, rel in enumerate(schemas):
+        if not nonempty_str(rel) or normalize_rel_path(rel) is None or rel.startswith("./"):
+            errors.append(f"extension.definition: spec.extensionDefinition.schemas[{i}] {rel!r} must be a package-relative path")
     return errors
 
 
@@ -311,7 +321,7 @@ def external_ref_issues(ref: Any, where: str, declared: set[str]) -> tuple[list[
     errors: list[str] = []
     warnings: list[str] = []
     status = "bound" if ref.get("status") is None else ref["status"]  # null counts as absent
-    if status not in {"bound", "unbound"}:
+    if not (isinstance(status, str) and status in {"bound", "unbound"}):
         errors.append(f"ref.shape: {where}.status must be bound or unbound")
         return errors, warnings
     uri = ref.get("uri")

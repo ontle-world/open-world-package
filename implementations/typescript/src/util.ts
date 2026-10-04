@@ -34,9 +34,44 @@ export function get(o: unknown, ...keys: string[]): unknown {
   return cur;
 }
 
+/** table[key] when the table itself has that key: a document's "toString" or "constructor" is not a table entry. */
+export function own<T>(table: Record<string, T>, key: unknown): T | undefined {
+  return typeof key === "string" && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
+}
+
+/** String(value) for a JSON value, without calling a mapping's own toString (a key a YAML document may define). */
+export function jsString(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value === undefined) return "undefined";
+  if (Array.isArray(value)) return value.map((x) => (x === null || x === undefined ? "" : jsString(x))).join(",");
+  if (isObj(value)) return "[object Object]";
+  return String(value);
+}
+
 export type YamlLoad =
   | { ok: true; value: unknown }
   | { ok: false; error: string };
+
+const CORE_TAG = "tag:yaml.org,2002:";
+const BAD = Symbol("bad tag");
+/** The value of a scalar with an explicit YAML core tag, as the YAML 1.2 core schema reads it; BAD otherwise. */
+function coerceTagged(short: string | undefined, raw: unknown): unknown {
+  const s = String(raw);
+  switch (short) {
+    case "str": return s;
+    case "null": return /^(?:~|null|Null|NULL|)$/.test(s) ? null : BAD;
+    case "bool": return /^(?:true|True|TRUE)$/.test(s) ? true : /^(?:false|False|FALSE)$/.test(s) ? false : BAD;
+    case "int":
+      if (/^[-+]?[0-9]+$/.test(s)) return Number(s);
+      if (/^0o[0-7]+$/.test(s)) return parseInt(s.slice(2), 8);
+      return /^0x[0-9a-fA-F]+$/.test(s) ? parseInt(s.slice(2), 16) : BAD;
+    case "float":
+      if (/^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][-+]?[0-9]+)?$/.test(s)) return Number(s);
+      if (/^[-+]?\.(?:inf|Inf|INF)$/.test(s)) return s.startsWith("-") ? -Infinity : Infinity;
+      return /^\.(?:nan|NaN|NAN)$/.test(s) ? NaN : BAD;
+    default: return BAD;
+  }
+}
 
 export function loadYamlFile(file: string): YamlLoad {
   let text: string;
@@ -62,6 +97,22 @@ export function loadYamlFile(file: string): YamlLoad {
       },
     });
     if (badKey !== undefined) return { ok: false, error: `mapping key ${badKey} is not a string` };
+    // Spec 5.2: values are JSON values. The YAML core tags are applied (!!float 3 is the number 3); any other tag
+    // (!!binary, !!set, !!timestamp, a local !note) is an error rather than a value read as plain text.
+    let badTag: string | undefined;
+    visit(doc, {
+      Node(_, node) {
+        const tag = (node as { tag?: string }).tag;
+        if (tag === undefined || tag === "!") return;
+        const short = tag.startsWith(CORE_TAG) ? tag.slice(CORE_TAG.length) : undefined;
+        if (isScalar(node)) {
+          const coerced = coerceTagged(short, node.source ?? node.value);
+          if (coerced === BAD) { badTag = tag; return visit.BREAK; }
+          node.value = coerced;
+        } else if (short !== "map" && short !== "seq") { badTag = tag; return visit.BREAK; }
+      },
+    });
+    if (badTag !== undefined) return { ok: false, error: `YAML tag ${badTag} is not allowed: values are JSON values` };
     return { ok: true, value: doc.toJS() };
   } catch (e) {
     return { ok: false, error: (e as Error).message };

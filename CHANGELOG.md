@@ -2,7 +2,53 @@
 
 ## Unreleased
 
-- Every error id now has a conformance case. There are 13 new cases, and the known-gaps list in the coverage test is empty.
+- Second review fixes, and a parity check in CI:
+  - `scripts/parity_fuzz.py` runs mutants of every conformance fixture through both implementations. A mutant is a fixture with one value changed: a wrong type, an odd string, a removed or renamed key, or a YAML tag. Both implementations must give the same verdict, the same error and warning ids, and an equal EWS, and neither may crash. A new CI job runs 3 seeds. 15 seeds (about 49,000 mutants) agree. Before these fixes, about 1 in 9 mutants disagreed, and the Python reference crashed on 4%.
+  - `reference-ids.json` now also covers the EWS compile and EWS check sections, so both implementations report exactly the same ids there too.
+  - The Python reference no longer crashes on wrong-typed values in any package, ObservationSet, or EWS document, and reports the ids the TypeScript implementation reports.
+  - TypeScript no longer crashes on `kind: toString`, on metadata values such as `{toString: 1}`, or on table lookups by such names. Subjects and prefixes named `__proto__` or `constructor` are no longer treated as present.
+  - YAML:
+    - The core tags (`!!str`, `!!int`, `!!float`, `!!bool`, `!!null`, `!!map`, `!!seq`) are applied in both implementations.
+    - Any other tag (`!!binary`, `!!set`, `!!timestamp`, `!!omap`, `!!pairs`, a local tag such as `!note`) is a load error.
+  - Text rules:
+    - SemVer, timestamps, and durations accept ASCII digits only.
+    - "Whitespace" means the JavaScript whitespace set in both implementations.
+    - EWS timestamps cover the years 0000–9999.
+  - Field types:
+    - `spec.assets` that is present but not a list (including `null`) is `asset.list`.
+    - `worldModel.roles` must be a list of non-empty strings, and `world.definition` a non-empty string.
+    - `extensionDefinition.description` must be a string.
+    - A dependency `source` that is not a non-empty string is `manifest.dependency`.
+  - `metadata.version` that is present but not a SemVer string is `manifest.version`. A missing, null, or empty version is `manifest.identity`.
+  - CompatibilityEvidence:
+    - A missing `metadata.name` or a spec that is not a mapping is `evidence.required`.
+    - Scope fields that are not strings are `evidence.scope`.
+  - EWS compile:
+    - A World that is not a WorldPackage is `ews.state-compiler`.
+    - A malformed `spec.bindings` is `compiler.binding`.
+    - ObservationSet `apiVersion`, empty ids or types, and `.inf`, `.nan`, or integers outside ±(2^53−1) in values are `ews.input`.
+  - EWS check:
+    - A World that is not a WorldPackage is `ews.world-ref`, and checking stops at `ews.shape`.
+    - Null sections count as absent, and `traceRequired` must be `true`.
+  - Git sources:
+    - Refs are matched by exact name; before, `main` could match `feature/main`.
+    - Checkouts are keyed by the commit actually fetched.
+    - The commit each rev last resolved to is remembered, so a cached source works offline.
+  - `ontle kg check`:
+    - Within one OntologyPackage, separate domain or range statements must all hold.
+    - When several packages each state one for a property, one package's statements holding is enough, so a package can reuse a property for its own types.
+    - T-box files outside a package are never read.
+  - Output:
+    - NGSI-LD entity ids are the IRIs `--rdf` gives.
+    - A field named like a reserved NGSI-LD name (`type`, `id`, ...) gets a trailing `_`.
+    - An empty coded list as an unresolved alternative stays valid Turtle.
+    - A code `3.0` maps like `3`.
+    - Spec section 14 states the percent-encoded character set (RFC 3986 unreserved).
+  - Coverage:
+    - The coverage test no longer counts `evidence.scope` as covered by `evidence.scope.world-ref`.
+    - New cases: `evidence-scope-missing`, `manifest-kind-list`, `manifest-version-non-ascii-digit`, `asset-list-null`, `model-roles-string`, `yaml-local-tag`, and `dependency-source-not-string`; EWS cases `error-unsafe-integer` and `year-zero-timestamp`.
+    - The vocabulary term-index test regenerates the indexes and compares them with the committed files.
+- Conformance cases for the 13 error ids that had none: 16 new cases, so the known-gaps list in the coverage test is empty. (`evidence.scope` was still missing; see the next entry.)
   - New sections: a new `evidenceCases` section checks CompatibilityEvidence published outside a package against its archive (`evidence/<id>/evidence.yaml`, `package.owp.zip`; spec 9.1). Both implementations run it, and its ids are in `reference-ids.json`.
   - The cases found these disagreements, now fixed:
     - TypeScript did not report a malformed dependency of a resolved package as `resolve.reference`.
@@ -20,7 +66,7 @@
   - Output:
     - `--rdf`, `--jsonld`, and `--ngsi-ld` percent-encode subject keys under `base`, and refuse a subject that is not an IRI under `iri: true`.
     - All three map coded list elements and numeric codes (by their decimal text), and refuse codes without a concept.
-    - NGSI-LD gives one entity per subject.
+    - NGSI-LD gives one entity per subject (refined in the next entry: entity ids are the IRIs `--rdf` gives).
     - Non-finite numbers are written as `NaN`, `INF`, and `-INF`.
   - `ontle kg check`: separate `rdfs:domain` and `rdfs:range` triples must all hold, as in RDFS. Any member is enough only within an `owl:unionOf`.
   - Vocabulary:
@@ -75,7 +121,7 @@
 - WorldViewProfile fields follow `WorldView = Project(World, ViewSpec)`: `purpose` keeps `task`, `objective`, `actorScope`; `projection` gains `scale`, `resolution`, `timeScope`; `conditioning` holds `authorityScope`, `actorRef`, `roleRefs` (was `purpose.roleRef`), and `taskRef` (standard since the promotion above; a bad reference is `view.conditioning-ref`).
 - `VerifierPackage` is renamed `VerifierProfile`; `...Package` names are kept for package kinds. Dataset, AgentProfile, EnvironmentProfile, ModelArtifact, SourceSystemSchemaProfile, ObservationAcquisitionProfile, ActionBindingProfile, CommitContract, EffectVerificationProfile, and VerifierProfile get JSON Schemas with the fields in use plus `description` and `standardBindings` (examples move `note` to `description`). WorkPatternProfile and KnowledgeAsset drop the unused `worldRef`.
 - New example ontologies `lab-ontology` and `sales-ontology` are the T-boxes of the assay and sales example graphs.
-- Review fixes: `.owpignore` treats a `]` first in a class as literal and skips a pattern that does not compile (both implementations), splits lines the same way, and matches non-ASCII names in TypeScript; TypeScript no longer checks listed PackageExample files as Views under resolution; Python reads YAML with tabs or `%YAML` directives with the pure-Python parser, so verdicts do not depend on libyaml (cases `yaml-tab-in-flow`, `yaml-directive`); `ontle kg check` accepts any of several domains or ranges, ignores standard vocabularies such as RDFS, and reads named graphs in N-Quads; Python ignores a View `include` that is not a list and fields without an entity part, as TypeScript does; README and Quickstart drop View `worldRef`.
+- Review fixes: `.owpignore` treats a `]` first in a class as literal and skips a pattern that does not compile (both implementations), splits lines the same way, and matches non-ASCII names in TypeScript; TypeScript no longer checks listed PackageExample files as Views under resolution; Python reads YAML with tabs or `%YAML` directives with the pure-Python parser, so verdicts do not depend on libyaml (cases `yaml-tab-in-flow`, `yaml-directive`); `ontle kg check` accepts a property declared under several types (a union domain or range; see the later entry for domains stated separately), ignores standard vocabularies such as RDFS, and reads named graphs in N-Quads; Python ignores a View `include` that is not a list and fields without an entity part, as TypeScript does; README and Quickstart drop View `worldRef`.
 - World and World View definitions: a World is the target reality and a World package is its persistent representation; a World need not contain actors or tasks. A World View is a projection of a World for a purpose; conditioning on an actor, role, task, objective, or authority is optional, one View may serve several tasks, and a task may require several Views (spec section 6). A View belongs to the World package that contains it, so `WorldViewProfile.spec.worldRef` is removed (it could only be `self`); a WorldViewProfile outside a WorldPackage is the error `view.world-ref`, and `profile.viewable.world-ref` is gone. A View that reads other Worlds lists them in the new field `spec.externalWorldRefs` (each also a dependency) and names their content as `<world ref>#<name>` in `projection.include` (`view.external-world`; under resolution, external Worlds must be WorldPackages and the names should be in their boundary). New cases `view-in-world-model-package`, `view-external-world-undeclared`, `view-external-world-not-dependency`, and resolution case `view-external-world`; the cases `world-view-worldref-foreign`, `world-view-worldref-self`, and `world-viewable-view-without-worldref` are removed.
 - Hierarchy checks (warnings; verdicts are unchanged). A View's `projection.include` selects from a declared `spec.world.boundary.included` (`view.outside-world`), and a State Compiler field `<entity>.<property>` names an entity its View includes (`compiler.field-outside-view`); spec section 6. Dependencies point down Ontology ← World ← World Model (`resolve.dependency-direction`, section 11). A graph KnowledgeAsset declares its ontology (`experimental.graph-ontology`), and spec section 3.1 states that the T-box lives in OntologyPackages and the A-box in Worlds. The manufacturing, sales, and mobile-manipulation examples and the enterprise template now keep their Views and compiler fields inside their World boundaries. New cases `view-outside-world`, `compiler-field-outside-view`, `asset-kind-reserved`, and resolution case `dependency-direction`.
 - Vocabulary: a third stability, `reserved`, marks kinds that have a name but no schema or rules yet; using one is the warning `asset.kind-reserved`. Thirteen kinds move from `standard` to `reserved` (SourceAdapterProfile, IdentityResolutionProfile, ReferenceEnterpriseProfile, ReferenceIndustryProfile, SkillProfile, ToolProfile, WorkflowProfile, OperationalAsset, ReferenceFixture, NegativeFixture, BenchmarkCase, AcceptanceCase, Attestation). Six kinds that duplicated existing structure are removed: WorldDefinition and WorldModelContract (the manifest's `spec.world` and `spec.worldModel`), ResolutionProfile and AggregationCoarseGrainingProfile (a View's `projection.resolution` and `projection.scale`), MappingSpec (SemanticBinding and SSSOM mapping entrypoints), and Validator (VerifierPackage). The `descriptive` profile now requires `spec.world.definition`; case `world-descriptive-via-world-definition` is removed. SemanticBinding moves to the `semanticWorld` group.

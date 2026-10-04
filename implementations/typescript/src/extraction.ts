@@ -4,7 +4,7 @@
  */
 import { canon, isUtcTimestamp } from "./ews.js";
 import { isExtractionTemplate } from "./rules/experimental.js";
-import { isObj, Obj } from "./util.js";
+import { isObj, Obj, jsString } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 
 export type ExtractionResult = { ok: true; observations: Obj } | { ok: false; errors: string[] };
@@ -134,7 +134,7 @@ function transform(profile: unknown, rows: unknown, parameters: Obj, snapshot: s
 
   // Rule 5: provenance.
   const md = isObj(p.metadata) ? p.metadata : {};
-  const provenance: Obj = { extraction: present(md.version) && md.version !== "" ? `${String(md.name)}@${String(md.version)}` : String(md.name) };
+  const provenance: Obj = { extraction: present(md.version) && md.version !== "" ? `${jsString(md.name)}@${jsString(md.version)}` : jsString(md.name) };
   if (Object.keys(parameters).length > 0) provenance.parameters = { ...parameters };
   if (snapshot !== undefined) provenance.snapshot = snapshot;
   return { apiVersion: API_VERSION, kind: "ObservationSet", spec: { provenance, observations } };

@@ -52,6 +52,26 @@ class NgsiLdTests(unittest.TestCase):
         self.assertIn("item_events_24h", item2)
         self.assertFalse(any(k.startswith("urn:ngsi-ld:") for k in entities))
 
+    def test_entity_ids_match_rdf_and_reserved_names_are_kept_apart(self):
+        from ontle.rdfexport import ews_turtle
+        with tempfile.TemporaryDirectory() as td:
+            world = init_project("w", "acme", "minimal", Path(td) / "w")
+            manifest = yaml.safe_load((world / "owp.yaml").read_text(encoding="utf-8"))
+            observations = yaml.safe_load((world / "examples" / "observations.yaml").read_text(encoding="utf-8"))
+            ews = compile_ews(world, "state/default-compiler.yaml", observations, "2026-01-02T00:00:00Z")
+            ews["spec"]["state"]["type"] = ews["spec"]["state"].pop("item.attention")  # an unbound field named "type"
+            binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"]}},
+                                "subjects": {"source.item_status": {"base": "https://example.org/item/"},
+                                             "source.item_event": {"base": "https://example.org/event-subject/"}}}}
+            prefixes = {"ex": "https://example.org/ns#"}
+            entities = {e["id"]: e for e in ews_ngsi_ld(world, manifest, ews, observations, binding, prefixes)}
+            ttl = ews_turtle(world, manifest, ews, observations, binding, prefixes)
+        self.assertIn("<https://example.org/item/item-1> <https://example.org/ns#status>", ttl)
+        self.assertIn("https://example.org/ns#status", entities["https://example.org/item/item-1"])  # the IRI --rdf uses
+        self.assertIn("item_events_24h", entities["https://example.org/event-subject/item-1"])
+        view = next(e for e in entities.values() if e["type"] == "EffectiveWorldState")
+        self.assertIn("type_", view)  # the field, beside the entity type
+
     def test_a_code_without_a_concept_is_refused(self):
         from ontle.core import OWPError
         with tempfile.TemporaryDirectory() as td:

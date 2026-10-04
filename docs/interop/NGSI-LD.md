@@ -11,8 +11,8 @@ Compile with OWP, then serve with NGSI-LD.
 
 | EWS | NGSI-LD |
 |---|---|
-| Subject of a per-subject field | One entity per subject key, whatever observation types its fields come from. Its `id` comes from the first `subjects` rule (by observation type name) of those types, and is `urn:ngsi-ld:Subject:{percent-encoded key}` when none has a rule. Its `type` is the observation types' classes (a list when there are several). |
-| Field value | Property, named by the bound property's IRI. A field without a binding is named after the field, with `.` replaced by `_`. |
+| Subject of a per-subject field | Entity. Its `id` is the IRI `--rdf` gives the subject: from the `subjects` rule of the field's observation type. A field whose type has no rule joins the subject's entity under the first rule (by observation type name) of its other fields, or `urn:ngsi-ld:Subject:{percent-encoded key}` when none has one. Its `type` is the observation types' classes (a list when there are several). |
+| Field value | Property, named by the bound property's IRI. A field without a binding is named after the field, with `.` replaced by `_`, and a trailing `_` when that is a name NGSI-LD reserves (`id`, `type`, `scope`, ...). |
 | Coded value with `values` | VocabProperty, whose `vocab` is the concept IRI, or the list of IRIs for a list value (NGSI-LD 1.7 and later). A code without a concept is refused, as in `--rdf`. |
 | `unresolved` alternatives | One attribute instance per alternative, each with its own `datasetId` (`urn:ngsi-ld:Dataset:alternative-{n}`). The disagreement stays visible instead of one value being picked. |
 | `provenance` | `provenance` sub-property listing observation ids, and `observedAt` set to the newest observation time. |

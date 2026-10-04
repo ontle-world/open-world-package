@@ -8,7 +8,7 @@
  */
 import * as path from "node:path";
 import { Issue } from "./context.js";
-import { get, isNonEmptyString, isObj, loadYamlFile, Obj } from "./util.js";
+import { get, isNonEmptyString, isObj, loadYamlFile, Obj, jsString } from "./util.js";
 import { API_VERSION } from "./vocab.js";
 import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields, outputUnits, unitProblems } from "./rules/world.js";
 import { localAssetKinds } from "./discovery.js";
@@ -50,7 +50,7 @@ function loadWorld(worldDir: string): { identity?: string; manifest?: Obj; probl
   const n = get(m, "metadata", "name");
   const v = get(m, "metadata", "version");
   if (m.kind !== "WorldPackage") return { problems: [`${worldDir} is not a WorldPackage`] };
-  return { identity: `${ns}/${n}@${v}`, manifest: m, problems: [] };
+  return { identity: `${jsString(ns)}/${jsString(n)}@${jsString(v)}`, manifest: m, problems: [] };
 }
 
 /** Load a local StateCompilerProfile asset of the World. */
@@ -70,6 +70,9 @@ export interface EwsCheckResult {
   valid: boolean;
   errors: Issue[];
 }
+
+/** An own key of a mapping: a field or subject named "constructor" or "__proto__" is data, not an inherited property. */
+const own = (o: unknown, k: string): boolean => isObj(o) && Object.prototype.hasOwnProperty.call(o, k);
 
 export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   const errors: Issue[] = [];
@@ -131,7 +134,7 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
     return { valid: false, errors };
   }
   const wvr = comp.spec.worldViewRef;
-  if (s.worldView !== `${prefix}${wvr}`) e("ews.world-view", `spec.worldView must be ${prefix}${String(wvr)} (the compiler's worldViewRef)`);
+  if (s.worldView !== `${prefix}${jsString(wvr)}`) e("ews.world-view", `spec.worldView must be ${prefix}${jsString(wvr)} (the compiler's worldViewRef)`);
 
   comp.fieldProblems.forEach((p) => e(p.rule, p.msg));
   // Field partition (skipped when the compiler has no EWS fields; spec 12.1).
@@ -151,21 +154,21 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   }
   for (const f of (comp.fields ?? []).filter((x) => perSubject.includes(x))) {
     for (const [name, sec] of [["state", state], ["unresolved", unresolved], ["provenance", provenance]] as const) {
-      if (f in sec && !isObj(sec[f])) e("ews.per-subject-shape", `per-subject field ${f} in ${name} must be a mapping from subject to value`);
+      if (own(sec, f) && !isObj(sec[f])) e("ews.per-subject-shape", `per-subject field ${f} in ${name} must be a mapping from subject to value`);
     }
-    if (isObj(state[f]) && isObj(unresolved[f])) {
-      for (const subject of Object.keys(state[f] as Obj).filter((k) => k in (unresolved[f] as Obj)).sort()) {
+    if (own(state, f) && own(unresolved, f) && isObj(state[f]) && isObj(unresolved[f])) {
+      for (const subject of Object.keys(state[f] as Obj).filter((k) => own(unresolved[f], k)).sort()) {
         e("ews.per-subject-overlap", `subject ${subject} of ${f} is in both state and unresolved`);
       }
     }
   }
   for (const f of latent) {
-    if ((f in state || f in unresolved) && !(f in derivation)) e("ews.derivation", `latent field ${f} has a value but no spec.derivation entry`);
+    if ((own(state, f) || own(unresolved, f)) && !own(derivation, f)) e("ews.derivation", `latent field ${f} has a value but no spec.derivation entry`);
   }
   for (const [f, rec] of Object.entries(derivation)) {
     if (!latent.includes(f)) e("ews.derivation", `${f} is not a latent field of the State Compiler`);
     else if (!isObj(rec) || !["estimate", "aggregate", "classify"].includes(rec.kind as string)) e("ews.derivation", `derivation of ${f} must have kind estimate, aggregate, or classify`);
-    else if (!(f in state) && !(f in unresolved)) e("ews.derivation", `derivation for ${f}, which has no value`);
+    else if (!own(state, f) && !own(unresolved, f)) e("ews.derivation", `derivation for ${f}, which has no value`);
   }
   if (hasFields) for (const f of places.keys()) if (!fieldSet.has(f)) e("ews.field-unknown", `field ${f} is not an EWS field of the compiler`);
 
@@ -182,14 +185,14 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   for (const k of Object.keys(provenance)) if (!present.has(k)) e("ews.provenance-orphan", `provenance.${k} is not a field in state or unresolved`);
   if (comp.spec.traceRequired === true) {
     for (const f of present) {
-      const p = provenance[f];
+      const p = own(provenance, f) ? provenance[f] : undefined;
       // An aggregate over no observations (a count of 0) has an empty provenance list (spec 12.4).
-      const emptyOk = isObj(derivation[f]) && (derivation[f] as Obj).kind === "aggregate";
+      const emptyOk = own(derivation, f) && isObj(derivation[f]) && (derivation[f] as Obj).kind === "aggregate";
       const traced = (ids: unknown) => Array.isArray(ids) && (ids.length > 0 || emptyOk);
       if (perSubject.includes(f) && isObj(p)) {
-        const subjects = new Set([...Object.keys(isObj(state[f]) ? (state[f] as Obj) : {}), ...Object.keys(isObj(unresolved[f]) ? (unresolved[f] as Obj) : {})]);
+        const subjects = new Set([...Object.keys(own(state, f) && isObj(state[f]) ? (state[f] as Obj) : {}), ...Object.keys(own(unresolved, f) && isObj(unresolved[f]) ? (unresolved[f] as Obj) : {})]);
         for (const subject of [...subjects].sort()) {
-          if (!traced(p[subject])) e("ews.provenance-required", `traceRequired: field ${f} subject ${subject} has no provenance`);
+          if (!traced(own(p, subject) ? p[subject] : undefined)) e("ews.provenance-required", `traceRequired: field ${f} subject ${subject} has no provenance`);
         }
       } else if (!traced(p)) e("ews.provenance-required", `traceRequired: field ${f} has no provenance`);
     }
@@ -234,12 +237,24 @@ export function parseObservationSet(doc: unknown): { observations: Observation[]
     if (!isNonEmptyString(o.type)) input(`observations[${i}] is missing type`);
     if (!isUtcTimestamp(o.observedAt)) input(`observations[${i}].observedAt ${JSON.stringify(o.observedAt)} is not a UTC timestamp YYYY-MM-DDTHH:MM:SSZ`);
     if (!isObj(o.values)) input(`observations[${i}] is missing a values mapping`);
+    else if (inexactNumber(o.values)) input(`observations[${i}] has a value that is not a finite JSON number with an exact value (.inf, .nan, or an integer outside +-(2^53-1))`);
     if ("subject" in o && typeof o.subject !== "string") input(`observations[${i}].subject must be a string`);
     if ("estimatedBy" in o && !isNonEmptyString(o.estimatedBy)) input(`observations[${i}].estimatedBy must be a non-empty string`);
     if ("units" in o && !(isObj(o.units) && Object.values(o.units).every((u) => typeof u === "string" && /^[!-~]+$/.test(u)))) input(`observation ${String(o.id)} units must map value keys to UCUM codes`);
     if (errors.length === 0) observations.push(o as unknown as Observation);
   });
   return { observations, errors };
+}
+
+/**
+ * A number JSON implementations cannot all represent exactly, anywhere in v: .inf, .nan, or an integer outside
+ * +-(2^53-1) (YAML reads such an integer as an inexact number).
+ */
+function inexactNumber(v: unknown): boolean {
+  if (typeof v === "number") return !Number.isFinite(v) || (Number.isInteger(v) && !Number.isSafeInteger(v));
+  if (Array.isArray(v)) return v.some(inexactNumber);
+  if (isObj(v)) return Object.values(v).some(inexactNumber);
+  return false;
 }
 
 function refusal(rule: string, message: string): string {
@@ -358,7 +373,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   }
   const spec: Obj = {
     worldRef: world.identity,
-    worldView: `${world.identity}#${String(comp.spec.worldViewRef)}`,
+    worldView: `${world.identity}#${jsString(comp.spec.worldViewRef)}`,
     stateCompiler: `${world.identity}#${compilerPath}`,
     context: { asOf },
     state,

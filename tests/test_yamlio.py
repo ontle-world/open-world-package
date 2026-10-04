@@ -58,5 +58,22 @@ class FastLoaderMatchesPurePython(unittest.TestCase):
                     yaml.load(bad, Loader=loader)
 
 
+class Tags(unittest.TestCase):
+    """Spec 5.2: values are JSON values; the core tags apply and every other tag is a load error."""
+
+    def test_core_tags_apply(self):
+        text = "a: !!str 12\nb: !!int 7\nc: !!float 3\nd: !!null ''\ne: !!bool true\nf: !!map {x: 1}\ng: !!seq [1]\n"
+        want = {"a": "12", "b": 7, "c": 3.0, "d": None, "e": True, "f": {"x": 1}, "g": [1]}
+        for loader in {CoreLoader, FastCoreLoader}:
+            self.assertTrue(same(yaml.load(text, Loader=loader), want))
+
+    def test_other_tags_do_not_load(self):
+        for text in ("a: !note x\n", "a: !!binary aGVsbG8=\n", "a: !!set {a, b}\n", "a: !!timestamp 2024-01-01\n",
+                     "a: !!omap [a: 1]\n", "a: !!pairs [a: 1]\n", "a: !!bool yes\n", "a: !!int 1_000\n", "a: !!str {x: 1}\n"):
+            for loader in {CoreLoader, FastCoreLoader}:
+                with self.subTest(text=text, loader=loader.__name__), self.assertRaises(yaml.YAMLError):
+                    yaml.load(text, Loader=loader)
+
+
 if __name__ == "__main__":
     unittest.main()

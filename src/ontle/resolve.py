@@ -21,10 +21,11 @@ import tempfile
 import zipfile
 from typing import Any
 
-from .core import MANIFEST, SEMVER_PATTERN, OWPError, ValidationResult, load_manifest, local_assets, validate_package, verify_archive
+from .core import MANIFEST, SEMVER_PATTERN, OWPError, dependency_problems, ValidationResult, load_manifest, local_assets, validate_package, verify_archive
+from .values import WHITESPACE, dig, nonempty_str
 from .yamlio import load_yaml
 
-PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@\s]+)/(?P<name>[^/@\s]+)@(?P<version>{SEMVER_PATTERN})\Z")
+PACKAGE_REF_RE = re.compile(rf"^(?P<namespace>[^/@#{WHITESPACE}]+)/(?P<name>[^/@#{WHITESPACE}]+)@(?P<version>{SEMVER_PATTERN})\Z")
 GIT_SOURCE_RE = re.compile(r"^git\+(?P<url>.+?)@(?P<rev>[^@#]+)(?:#subdir=(?P<subdir>.+))?\Z")
 
 
@@ -70,8 +71,12 @@ def parse_package_ref(ref: str) -> tuple[str, str, str]:
 
 
 def identity_of(manifest: dict[str, Any]) -> str:
-    md = manifest.get("metadata") or {}
+    md = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
     return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
+
+
+def _kind(manifest: dict[str, Any]) -> str | None:
+    return manifest["kind"] if isinstance(manifest.get("kind"), str) else None
 
 
 def cache_dir() -> Path:
@@ -79,18 +84,26 @@ def cache_dir() -> Path:
     return Path(base)
 
 
-def _dependency_refs(manifest: dict[str, Any]) -> list[tuple[str, str | None]]:
-    """(ref, per-dependency source) pairs from spec.dependencies (strings or {ref, source} mappings)."""
-    out: list[tuple[str, str | None]] = []
-    spec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}  # a malformed spec is manifest.spec
-    for dep in spec.get("dependencies", []) or []:
-        if isinstance(dep, str):
-            out.append((dep, None))
-        elif isinstance(dep, dict) and isinstance(dep.get("ref"), str):
-            out.append((dep["ref"], dep.get("source")))
-        else:
-            raise OWPError(f"spec.dependencies entries must be a reference string or a mapping with ref: {dep!r}")
+def _dependencies(manifest: dict[str, Any]) -> list[tuple[str, str | None, str | None]]:
+    """(ref, per-dependency source, extension name) of each well-formed entry of spec.dependencies.
+
+    Malformed entries are reported by dependency_problems (manifest.dependency, resolve.reference) and left out here.
+    """
+    deps = dig(manifest, "spec", "dependencies")
+    out: list[tuple[str, str | None, str | None]] = []
+    for dep in deps if isinstance(deps, list) else []:
+        ref = dep if isinstance(dep, str) else dep.get("ref") if isinstance(dep, dict) else None
+        if not (isinstance(ref, str) and PACKAGE_REF_RE.match(ref)):
+            continue
+        source = dep.get("source") if isinstance(dep, dict) and nonempty_str(dep.get("source")) else None
+        name = dep.get("as") if isinstance(dep, dict) and isinstance(dep.get("as"), str) else None
+        out.append((ref, source, name))
     return out
+
+
+def _dependency_refs(manifest: dict[str, Any]) -> list[tuple[str, str | None]]:
+    """(ref, per-dependency source) pairs of the well-formed entries of spec.dependencies."""
+    return [(ref, source) for ref, source, _ in _dependencies(manifest)]
 
 
 class PackageSource:
@@ -137,7 +150,7 @@ class DirectorySource(PackageSource):
                 root, manifest = load_manifest(manifest_path.parent)
             except OWPError:
                 continue
-            out.append(ResolvedPackage(identity_of(manifest), manifest.get("kind"), root, self.label, manifest, self.revision))
+            out.append(ResolvedPackage(identity_of(manifest), _kind(manifest), root, self.label, manifest, self.revision))
         for archive in sorted(self.path.glob("*.owp.zip")):
             out.extend(ArchiveSource(str(archive), archive)._scan())
         return out
@@ -163,7 +176,7 @@ class ArchiveSource(PackageSource):
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     dest.write_bytes(zf.read(name))
         root, manifest = load_manifest(target)
-        return [ResolvedPackage(identity_of(manifest), manifest.get("kind"), root, str(self.path), manifest, f"sha256:{digest}")]
+        return [ResolvedPackage(identity_of(manifest), _kind(manifest), root, str(self.path), manifest, f"sha256:{digest}")]
 
 
 class GitSource(PackageSource):
@@ -171,33 +184,48 @@ class GitSource(PackageSource):
         super().__init__(spec)
         self.url, self.rev, self.subdir = url, rev, subdir
 
-    def _commit_of_rev(self) -> str:
-        """The commit a tag or branch names now (it can move), so the cache is keyed by commit; a full commit is used as is."""
+    def _remote_commit(self) -> str | None:
+        """The commit `rev` names on the remote now (tags and branches move), matched by exact ref name; None offline."""
         if re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", self.rev):
             return self.rev
         try:
-            refs = [line.split("\t") for line in _git("ls-remote", self.url, self.rev, f"{self.rev}^{{}}").splitlines() if "\t" in line]
+            out = _git("ls-remote", self.url)
         except OWPError:
-            return self.rev  # an abbreviated commit, or a remote that does not list refs: keyed by rev as given
-        peeled = [c for c, ref in refs if ref.endswith("^{}")]  # an annotated tag: the commit it points to
-        return (peeled or [c for c, _ in refs] or [self.rev])[0]
+            return None
+        refs = dict(reversed(line.split("\t", 1)) for line in out.splitlines() if "\t" in line)
+        for name in (f"refs/tags/{self.rev}^{{}}", f"refs/tags/{self.rev}", f"refs/heads/{self.rev}", self.rev):
+            if name in refs:  # a peeled annotated tag first: the commit, not the tag object
+                return refs[name]
+        return None
 
     def _checkout(self) -> tuple[Path, str]:
-        key = hashlib.sha256(f"{self.url}@{self._commit_of_rev()}".encode()).hexdigest()[:32]
-        target = cache_dir() / "git" / key
-        if not (target / ".git").exists():
-            target.parent.mkdir(parents=True, exist_ok=True)
-            tmp = Path(tempfile.mkdtemp(dir=target.parent))
+        """A checkout keyed by the commit it holds; `refs/` remembers the commit each rev last resolved to, for offline use."""
+        root = cache_dir() / "git"
+        ref_file = root / "refs" / hashlib.sha256(f"{self.url}@{self.rev}".encode()).hexdigest()[:32]
+        commit = self._remote_commit()
+        if commit is None and ref_file.is_file():
+            commit = ref_file.read_text(encoding="utf-8").strip()  # offline: the commit this rev resolved to last time
+        keyed = lambda c: root / hashlib.sha256(f"{self.url}@{c}".encode()).hexdigest()[:32]
+        if commit is None or not (keyed(commit) / ".git").exists():
+            root.mkdir(parents=True, exist_ok=True)
+            tmp = Path(tempfile.mkdtemp(dir=root))
             try:
                 _git("init", "-q", str(tmp))
                 _git("-C", str(tmp), "fetch", "-q", "--depth", "1", self.url, self.rev)
                 _git("-C", str(tmp), "checkout", "-q", "FETCH_HEAD")
-                tmp.rename(target)
+                commit = _git("-C", str(tmp), "rev-parse", "HEAD").strip()  # what was fetched, not what was expected
+                if (keyed(commit) / ".git").exists():
+                    shutil.rmtree(tmp, ignore_errors=True)
+                else:
+                    tmp.rename(keyed(commit))
             except Exception:
                 shutil.rmtree(tmp, ignore_errors=True)
                 raise
-        commit = _git("-C", str(target), "rev-parse", "HEAD").strip()
-        return target, commit
+        target = keyed(commit)
+        actual = _git("-C", str(target), "rev-parse", "HEAD").strip()
+        ref_file.parent.mkdir(parents=True, exist_ok=True)
+        ref_file.write_text(actual + "\n", encoding="utf-8")
+        return target, actual
 
     def _scan(self) -> list[ResolvedPackage]:
         checkout, commit = self._checkout()
@@ -269,23 +297,18 @@ def default_sources(extra: list[str] | None = None) -> list[str]:
 def resolve_package(path: str | Path, sources: list[str] | None = None) -> Resolution:
     """Resolve the dependency closure of the package at `path`. Errors are collected, not raised."""
     root_dir, manifest = load_manifest(path)
-    root_pkg = ResolvedPackage(identity_of(manifest), manifest.get("kind"), root_dir, "local", manifest)
+    root_pkg = ResolvedPackage(identity_of(manifest), _kind(manifest), root_dir, "local", manifest)
     resolution = Resolution(root_pkg, {root_pkg.identity: root_pkg})
     global_sources = [make_source(s) for s in default_sources(sources)]
     by_name: dict[str, str] = {root_pkg.identity.rsplit("@", 1)[0]: root_pkg.identity}
 
     def visit(pkg: ResolvedPackage, stack: list[str]) -> None:
-        try:
-            deps = _dependency_refs(pkg.manifest)
-        except OWPError as exc:
-            resolution.errors.append(f"resolve.reference: {pkg.identity}: {exc}")
-            return
-        for ref, dep_source in deps:
-            try:
-                parse_package_ref(ref)
-            except OWPError as exc:
-                resolution.errors.append(f"resolve.reference: {pkg.identity}: {exc}")
-                continue
+        # Spec 11: a dependency that is not a package reference cannot be resolved (also reported as manifest.dependency).
+        spec = pkg.manifest.get("spec") if isinstance(pkg.manifest.get("spec"), dict) else {}
+        for problem in dependency_problems(spec):
+            if ".source must be" not in problem:
+                resolution.errors.append(f"resolve.reference: {pkg.identity}: {problem}")
+        for ref, dep_source in _dependency_refs(pkg.manifest):
             if ref in stack:
                 resolution.errors.append(f"resolve.cycle: dependency cycle: {' -> '.join(stack + [ref])}")
                 continue
@@ -355,13 +378,15 @@ def _ontology_dependency_errors(pkg: ResolvedPackage, resolution: Resolution) ->
     deps = []
     for ref, _ in _dependency_refs(pkg.manifest):
         dep = resolution.packages.get(ref)
-        iri = (((dep.manifest.get("spec") or {}).get("ontology") or {}).get("iri") if dep is not None and dep.kind == "OntologyPackage" else None)
+        iri = dig(dep.manifest, "spec", "ontology", "iri") if dep is not None and dep.kind == "OntologyPackage" else None
         if isinstance(iri, str) and iri:
             deps.append((ref, iri, ontology_terms(dep.root, dep.manifest)[1]))  # type: ignore[union-attr]
-    ontology = (pkg.manifest.get("spec") or {}).get("ontology") or {}
+    ontology = dig(pkg.manifest, "spec", "ontology")
+    ontology = ontology if isinstance(ontology, dict) else {}
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
+    entrypoints = ontology.get("entrypoints") if isinstance(ontology.get("entrypoints"), list) else []
     errors: list[str] = []
-    for entry in ontology.get("entrypoints") or [] if deps else []:
+    for entry in entrypoints if deps else []:
         if not (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and isinstance(entry.get("path"), str)):
             continue
         doc = _load(pkg.root / entry["path"])
@@ -375,23 +400,21 @@ def _ontology_dependency_errors(pkg: ResolvedPackage, resolution: Resolution) ->
 
 def cross_package_errors(resolution: Resolution) -> list[str]:
     """Rules that need more than one package: extension definitions and World Model grounding against the referenced World."""
+    from .core import contract_ref_path
     errors: list[str] = []
     for pkg in resolution.packages.values():
         errors += _binding_grounding_errors(pkg, resolution)
         errors += _ontology_dependency_errors(pkg, resolution)
-        deps = (pkg.manifest.get("spec") or {}).get("dependencies") or []
-        for dep in deps if isinstance(deps, list) else []:
-            if not (isinstance(dep, dict) and isinstance(dep.get("as"), str) and isinstance(dep.get("ref"), str)):
-                continue
-            target = resolution.packages.get(dep["ref"])
-            if target is not None and not isinstance((target.manifest.get("spec") or {}).get("extensionDefinition"), dict):
-                errors.append(f"extension.definition: {pkg.identity}: extension {dep['as']!r} resolves to {dep['ref']}, which declares no spec.extensionDefinition")
+        for ref, _, name in _dependencies(pkg.manifest):
+            target = resolution.packages.get(ref) if name is not None else None
+            if target is not None and not isinstance(dig(target.manifest, "spec", "extensionDefinition"), dict):
+                errors.append(f"extension.definition: {pkg.identity}: extension {name!r} resolves to {ref}, which declares no spec.extensionDefinition")
         if pkg.kind != "WorldModelPackage":
             continue
-        grounding = ((pkg.manifest.get("spec") or {}).get("worldModel") or {}).get("semanticGrounding") or {}
-        world_ref = grounding.get("worldRef")
+        grounding = dig(pkg.manifest, "spec", "worldModel", "semanticGrounding")
+        world_ref = dig(grounding, "worldRef")
         if not isinstance(world_ref, str):
-            continue
+            continue  # reported by single-package validation
         if world_ref not in {ref for ref, _ in _dependency_refs(pkg.manifest)}:
             errors.append(f"grounding.world-not-dependency: {pkg.identity}: semanticGrounding.worldRef {world_ref} must also be listed in spec.dependencies")
             continue
@@ -401,22 +424,24 @@ def cross_package_errors(resolution: Resolution) -> list[str]:
         if world.kind != "WorldPackage":
             errors.append(f"grounding.world-kind: {pkg.identity}: worldRef {world_ref} resolves to {world.kind}, not WorldPackage")
             continue
-        view_paths = set()
-        for ref in grounding.get("compatibleWorldViews") or []:
-            rel = ref.partition("#")[2]
-            view_paths.add(rel)
+
+        def paths(field: str) -> list[str]:
+            refs = dig(grounding, field)
+            return [p for p in (contract_ref_path(r, world_ref) for r in (refs if isinstance(refs, list) else [])) if p is not None]
+
+        view_paths = paths("compatibleWorldViews")
+        for rel in view_paths:
             if _local_asset_kind(world, rel) != "WorldViewProfile":
                 views = sorted(p for p, k in world.local_assets()[0].items() if k == "WorldViewProfile")
-                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {ref} is not a WorldViewProfile asset of {world_ref}"
+                errors.append(f"grounding.world-view: {pkg.identity}: compatibleWorldViews entry {world_ref}#{rel} is not a WorldViewProfile asset of {world_ref}"
                               f" (its Views: {', '.join(views) or 'none'})")
-        for ref in grounding.get("compatibleStateCompilers") or []:
-            rel = ref.partition("#")[2]
+        for rel in paths("compatibleStateCompilers"):
             if _local_asset_kind(world, rel) != "StateCompilerProfile":
-                errors.append(f"grounding.state-compiler: {pkg.identity}: compatibleStateCompilers entry {ref} is not a StateCompilerProfile asset of {world_ref}")
+                errors.append(f"grounding.state-compiler: {pkg.identity}: compatibleStateCompilers entry {world_ref}#{rel} is not a StateCompilerProfile asset of {world_ref}")
                 continue
-            compiled_view = (_load_asset(world, rel).get("spec") or {}).get("worldViewRef")
-            if compiled_view not in view_paths:
-                errors.append(f"grounding.compiler-view: {pkg.identity}: State Compiler {ref} compiles {compiled_view!r}, which is not among compatibleWorldViews")
+            compiled_view = dig(_load_asset(world, rel), "spec", "worldViewRef")
+            if not (isinstance(compiled_view, str) and compiled_view in view_paths):
+                errors.append(f"grounding.compiler-view: {pkg.identity}: State Compiler {world_ref}#{rel} compiles {compiled_view!r}, which is not among compatibleWorldViews")
     return errors
 
 
@@ -430,15 +455,17 @@ DEPENDENCY_DIRECTIONS = {
 
 def external_world_issues(resolution: Resolution) -> tuple[list[str], list[str]]:
     """Section 6: a View's external Worlds resolve to WorldPackages; names it takes from them are in their boundary."""
-    from .core import view_external_names
+    from .core import package_documents, view_external_names
     errors: list[str] = []
     warnings: list[str] = []
     for pkg in resolution.packages.values():
         if pkg.kind != "WorldPackage":
             continue
-        kinds, docs = pkg.local_assets()
-        for rel in sorted(r for r, k in kinds.items() if k == "WorldViewProfile"):
-            vspec = (docs.get(rel) or {}).get("spec") or {}
+        examples = {p for p, k in pkg.local_assets()[0].items() if k == "PackageExample"}  # listed examples are not assets
+        for rel, doc in package_documents(pkg.root, skip=examples):
+            if not (isinstance(doc, dict) and doc.get("kind") == "WorldViewProfile"):
+                continue
+            vspec = doc.get("spec") if isinstance(doc.get("spec"), dict) else {}
             refs = vspec.get("externalWorldRefs") if isinstance(vspec.get("externalWorldRefs"), list) else []
             for ref in refs:
                 target = resolution.packages.get(ref) if isinstance(ref, str) else None
@@ -446,8 +473,7 @@ def external_world_issues(resolution: Resolution) -> tuple[list[str], list[str]]
                     errors.append(f"view.external-world: {pkg.identity}: {rel}: external World {ref} resolves to a {target.kind}, not a WorldPackage")
             for ref, name in view_external_names(vspec):
                 target = resolution.packages.get(ref)
-                world = ((target.manifest.get("spec") or {}).get("world") or {}) if target is not None and target.kind == "WorldPackage" else {}
-                included = (world.get("boundary") or {}).get("included") if isinstance(world.get("boundary"), dict) else None
+                included = dig(target.manifest, "spec", "world", "boundary", "included") if target is not None and target.kind == "WorldPackage" else None
                 if isinstance(included, list) and included and name not in included:
                     warnings.append(f"view.outside-world: {pkg.identity}: {rel}: projection.include '{ref}#{name}' is not in that World's spec.world.boundary.included")
     return errors, warnings
@@ -457,13 +483,10 @@ def dependency_direction_warnings(resolution: Resolution) -> list[str]:
     """Dependencies that point up the hierarchy. Extension dependencies (declared with `as`) are exempt."""
     warnings: list[str] = []
     for pkg in resolution.packages.values():
-        allowed = DEPENDENCY_DIRECTIONS.get(pkg.kind or "")
-        for dep in (pkg.manifest.get("spec") or {}).get("dependencies") or []:
-            if allowed is None or (isinstance(dep, dict) and "as" in dep):
-                continue
-            ref = dep if isinstance(dep, str) else dep.get("ref") if isinstance(dep, dict) else None
-            target = resolution.packages.get(ref) if isinstance(ref, str) else None
-            if target is not None and target.kind not in allowed:
+        allowed = DEPENDENCY_DIRECTIONS.get(pkg.kind) if isinstance(pkg.kind, str) else None
+        for ref, _, name in _dependencies(pkg.manifest):
+            target = resolution.packages.get(ref) if name is None else None
+            if allowed is not None and target is not None and target.kind not in allowed:
                 warnings.append(f"resolve.dependency-direction: {pkg.identity} ({pkg.kind}) depends on {ref} ({target.kind}); "
                                 f"allowed for {pkg.kind}: {', '.join(allowed)}")
     return warnings
@@ -474,12 +497,15 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
     result = validate_package(path)
     errors, warnings = list(result.errors), list(result.warnings)
     manifest = result.manifest or {}
-    if not (isinstance(manifest.get("metadata"), dict) and isinstance(manifest.get("spec"), dict)):
-        return result, None  # type: ignore[return-value]  # manifest.metadata / manifest.spec: nothing to resolve
+    md = manifest.get("metadata")
+    if not (isinstance(md, dict) and all(isinstance(md.get(k), str) for k in ("namespace", "name", "version"))):
+        return result, None  # type: ignore[return-value]  # no package identity to resolve from (manifest.metadata / manifest.identity)
     try:
         resolution = resolve_package(path, sources)
     except OWPError as exc:
         return ValidationResult(False, errors + [f"resolve.reference: {exc}"], warnings, result.manifest), None  # type: ignore[return-value]
+    root_spec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}
+    errors += [f"resolve.reference: {p}" for p in dependency_problems(root_spec)]
     errors += resolution.errors
     for ident, pkg in sorted(resolution.packages.items()):
         if pkg is not resolution.root:
@@ -496,7 +522,7 @@ def binding_and_prefixes(world_path: str | Path, sources: list[str] | None = Non
     """(World root, manifest, SemanticBinding or None, prefixes of its dependency ontologies), for RDF-based output."""
     from .ontology import terms as ontology_terms
     root, manifest = load_manifest(world_path)
-    binding_rel = ((manifest.get("spec") or {}).get("world") or {}).get("semanticBinding")
+    binding_rel = dig(manifest, "spec", "world", "semanticBinding")
     binding, prefixes = None, {}
     if isinstance(binding_rel, str):
         resolution = resolve_package(world_path, sources)
@@ -534,7 +560,7 @@ def ews_jsonld(world_path: str | Path, ews: dict[str, Any], sources: list[str] |
     if resolution.errors:
         raise OWPError("; ".join(resolution.errors))
     world = resolution.root
-    binding_rel = ((world.manifest.get("spec") or {}).get("world") or {}).get("semanticBinding")
+    binding_rel = dig(world.manifest, "spec", "world", "semanticBinding")
     if not isinstance(binding_rel, str):
         raise OWPError("the World declares no spec.world.semanticBinding")
     prefixes: dict[str, str] = {}
@@ -567,13 +593,14 @@ def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[st
     A field whose binding declares `values` gives concept IRIs instead of codes."""
     from .binding import subject_iri
     from .ews import binding_form, output_lists
-    bspec = binding.get("spec") or {}
+    bspec = binding.get("spec") if isinstance(binding.get("spec"), dict) else {}
     subjects = bspec.get("subjects") if isinstance(bspec.get("subjects"), dict) else {}
     types = bspec.get("observationTypes") if isinstance(bspec.get("observationTypes"), dict) else {}
     compiler_ref = ((ews.get("spec") or {}).get("stateCompiler") or "").partition("#")[2]
     if not subjects or not compiler_ref:
         return []
-    compiler = (_load_asset(world, compiler_ref).get("spec") or {})
+    compiler = _load_asset(world, compiler_ref).get("spec")
+    compiler = compiler if isinstance(compiler, dict) else {}
     bindings = compiler.get("bindings") if isinstance(compiler.get("bindings"), dict) else {}
     per_subject, _ = output_lists(compiler)
 

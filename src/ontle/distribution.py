@@ -363,10 +363,10 @@ def verify_signature(archive: str | Path, key: str | None = None, identity: str 
 
 def check_detached_evidence(evidence: dict[str, Any], archive: str | Path) -> list[str]:
     """Spec section 9.1: evidence published outside the package binds to the archive by identity and digest."""
-    from .core import _validate_evaluation_lineage, verify_archive
+    from .core import _validate_evaluation_lineage, _world_model_grounding, verify_archive
     from .structure import COMPATIBILITY_EVIDENCE, structure_errors
     errors = structure_errors(evidence, COMPATIBILITY_EVIDENCE, "evidence", None)
-    if evidence.get("kind") != "CompatibilityEvidence":
+    if not isinstance(evidence, dict) or evidence.get("kind") != "CompatibilityEvidence":
         return errors + ["evidence.detached-subject: document is not a CompatibilityEvidence"]
     archive = Path(archive)
     ok, problems = verify_archive(archive)
@@ -374,16 +374,20 @@ def check_detached_evidence(evidence: dict[str, Any], archive: str | Path) -> li
         return errors + [f"evidence.detached-subject: archive does not verify: {'; '.join(problems)}"]
     with zipfile.ZipFile(archive) as zf:
         manifest = load_yaml(zf.read(MANIFEST))
-    md = manifest.get("metadata") or {}
+    md = manifest.get("metadata") if isinstance(manifest, dict) and isinstance(manifest.get("metadata"), dict) else {}
+    if not all(isinstance(md.get(k), str) for k in ("namespace", "name", "version")):
+        return errors + ["evidence.detached-subject: archive does not verify: its owp.yaml declares no package identity"]
     identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
-    spec = evidence.get("spec") or {}
+    spec = evidence.get("spec") if isinstance(evidence.get("spec"), dict) else {}
     if spec.get("subject") != identity:
         errors.append(f"evidence.detached-subject: spec.subject must be the archive's identity {identity}")
     digest = f"sha256:{sha256_bytes(archive.read_bytes())}"
     if spec.get("subjectDigest") != digest:
         errors.append(f"evidence.detached-subject: spec.subjectDigest must be the archive digest {digest}")
     lineage_errors: list[str] = []
-    _validate_evaluation_lineage(manifest.get("spec") or {}, manifest.get("kind"), identity,
+    mspec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}
+    grounding = _world_model_grounding(mspec, []) if manifest.get("kind") == "WorldModelPackage" else None
+    _validate_evaluation_lineage(manifest.get("kind"), identity, grounding,
                                  {"evidence": "CompatibilityEvidence"}, {"evidence": evidence}, lineage_errors, [])
     return errors + [e for e in lineage_errors if not e.startswith("evidence.version-mismatch")]
 

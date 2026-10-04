@@ -335,5 +335,33 @@ class OntleTests(unittest.TestCase):
                 deterministic_pack(p, Path(td) / "broken.owp.zip")
 
 
+class JavaScriptValueRules(unittest.TestCase):
+    """Rules read values as the TypeScript implementation does (ontle.values)."""
+
+    def test_whitespace_is_the_javascript_set(self):
+        from ontle.values import nonempty_str, trim
+        self.assertFalse(nonempty_str("\ufeff\u3000 "))
+        self.assertTrue(nonempty_str("\x1c"))  # not whitespace in JavaScript, although str.isspace() says it is
+        self.assertEqual(trim("\u00a0a b\u2028"), "a b")
+
+    def test_identity_text_is_javascript_string(self):
+        from ontle.values import js_string
+        self.assertEqual([js_string(v) for v in (1152921504606846976, 1e-7, 3.0, None, True, [1, None])],
+                         ["1152921504606847000", "1e-7", "3", "null", "true", "1,"])
+
+    def test_semver_digits_are_ascii(self):
+        from ontle.core import PACKAGE_REF_RE, SEMVER_RE
+        for version in ("0.1.1\u0663", "\uff11.0.0"):
+            self.assertIsNone(SEMVER_RE.match(version))
+            self.assertIsNone(PACKAGE_REF_RE.match(f"a/b@{version}"))
+
+    def test_timestamps_from_year_zero(self):
+        from ontle.ews import _shift, _valid_timestamp
+        self.assertTrue(_valid_timestamp("0000-02-29T00:00:10Z"))
+        self.assertFalse(_valid_timestamp("0100-02-29T00:00:00Z"))
+        self.assertEqual(_shift("0000-03-01T00:00:00Z", 86400), "0000-02-29T00:00:00Z")
+        self.assertFalse(_valid_timestamp("2026-01-01T00:00:0\u0661Z"))
+
+
 if __name__ == "__main__":
     unittest.main()

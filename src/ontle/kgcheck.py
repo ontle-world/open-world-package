@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from .core import OWPError, load_manifest, local_assets
-from .ontology import RDF_FORMATS, _load, expand, export_rdf
+from .ontology import RDF_FORMATS, _load, expand, export_rdf, inside_package
 
 KG_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "ntriples": "nt", "rdf-xml": "xml", "nquads": "nquads"}
 
@@ -57,11 +57,11 @@ def tbox_graph(root: Path, manifest: dict[str, Any]):
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
     for entry in ontology.get("entrypoints") or []:
         if isinstance(entry, dict) and entry.get("role") == "schema" and entry.get("format") in RDF_FORMATS:
-            if not (root / entry["path"]).is_file():
+            if not inside_package(root, entry.get("path")):  # never read outside the package (validate reports it)
                 raise OWPError(f"{root.name}: schema entrypoint {entry['path']} does not exist; run ontle validate on the package")
             graph.parse(root / entry["path"], format=RDF_FORMATS[entry["format"]])
     index = ontology.get("termIndex")
-    doc = _load(root / index) if isinstance(index, str) else None
+    doc = _load(root / index) if inside_package(root, index) else None
     for term in ((doc or {}).get("spec") or {}).get("terms") or [] if isinstance(doc, dict) else []:
         kind = {"class": OWL.Class, "property": RDF.Property}.get(term.get("type")) if isinstance(term, dict) else None
         if kind is not None and isinstance(term.get("iri"), str):
@@ -75,7 +75,7 @@ def _enum_types(root: Path, manifest: dict[str, Any]) -> set[str]:
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
     out: set[str] = set()
     for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
+        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and inside_package(root, entry.get("path")):
             for t in ((_load(root / entry["path"]) or {}).get("spec") or {}).get("types") or []:
                 if isinstance(t, dict) and "enum" in t and isinstance(t.get("id"), str) and expand(t["id"], prefixes):
                     out.add(expand(t["id"], prefixes))  # type: ignore[arg-type]
@@ -125,12 +125,14 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
             raise OWPError(f"{rel}: cannot resolve spec.conformsTo.ontology {onto_ref}")
 
         tbox, namespaces, enums, todo, seen = rdflib.Graph(), set(), set(), [onto], set()
+        package_graphs: list[Any] = []  # one T-box per package: domains and ranges are read per package
         while todo:  # the ontology and the OntologyPackages it builds on
             pkg = todo.pop()
             if pkg.identity in seen or pkg.kind != "OntologyPackage":
                 continue
             seen.add(pkg.identity)
-            tbox += tbox_graph(pkg.root, pkg.manifest)
+            package_graphs.append(tbox_graph(pkg.root, pkg.manifest))
+            tbox += package_graphs[-1]
             namespaces |= _namespaces(pkg.manifest)
             enums |= {rdflib.URIRef(e) for e in _enum_types(pkg.root, pkg.manifest)}
             for dep in (pkg.manifest.get("spec") or {}).get("dependencies") or []:
@@ -153,11 +155,6 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
                         out.add(p)
                         todo2.append(p)
             return out
-
-        def members(node) -> list[Any]:
-            """A class, or the members of an owl:unionOf class (the domain of a property several types declare)."""
-            union = tbox.value(node, OWL.unionOf)
-            return list(rdflib.collection.Collection(tbox, union)) if union is not None else [node]
 
         def ours(term) -> bool:
             return isinstance(term, rdflib.URIRef) and any(str(term).startswith(ns) for ns in namespaces)
@@ -184,24 +181,46 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
             if p not in properties:
                 found[("kg.unknown-property", f"property {name} is not defined by the ontology")] += 1
                 continue
-            # Each rdfs:domain must hold (RDFS reads several as an intersection); within one owl:unionOf domain,
-            # the domain of a property several types declare, any member is enough. Ranges likewise.
+            # Within one package, each rdfs:domain must hold (RDFS reads several as an intersection), and within an
+            # owl:unionOf domain (a property several types declare) any member is enough. Packages that each declare a
+            # domain for a shared property extend it: one package's domains holding is enough. Ranges likewise.
             nn = graph.namespace_manager.normalizeUri
-            label_of = lambda groups: " and ".join("(" + " or ".join(map(nn, g)) + ")" if len(g) > 1 else nn(g[0]) for g in groups)
-            domains = sorted((sorted(members(d)) for d in tbox.objects(p, RDFS.domain)), key=str)
+
+            def requirements(axis) -> list[list[list[Any]]]:
+                """Per package that states `axis` for p: its groups (one per triple) of accepted classes."""
+                out = []
+                for g in package_graphs:
+                    groups = []
+                    for d in g.objects(p, axis):
+                        union = g.value(d, OWL.unionOf)
+                        ms = list(rdflib.collection.Collection(g, union)) if union is not None else [d]
+                        if axis == RDFS.range:
+                            ms = [m for m in ms if m in classes and m not in enums]  # datatypes and enumerations are not checked
+                        if ms:
+                            groups.append(sorted(ms))
+                    if groups:
+                        out.append(sorted(groups))
+                return out
+
+            def label_of(reqs) -> str:
+                group = lambda g: "(" + " or ".join(map(nn, g)) + ")" if len(g) > 1 else nn(g[0])
+                alt = lambda gs: " and ".join(map(group, gs))
+                return " or ".join(f"({alt(gs)})" if len(gs) > 1 and len(reqs) > 1 else alt(gs) for gs in reqs)
+
+            holds = lambda reqs, have: any(all(any(m in have for m in g) for g in gs) for gs in reqs)
+            domains = requirements(RDFS.domain)
             if domains and s not in types:
                 found[("kg.untyped", f"subject of {name} has no rdf:type, so domain {label_of(domains)} cannot be checked")] += 1
-            elif domains and not all(any(m in types[s] for m in g) for g in domains):
+            elif domains and not holds(domains, types[s]):
                 found[("kg.domain", f"subject of {name} is not a {label_of(domains)}")] += 1
-            ranges = [g for g in sorted((sorted(r for r in members(d) if r in classes and r not in enums)  # datatypes and enumerations are not checked
-                                         for d in tbox.objects(p, RDFS.range)), key=str) if g]
+            ranges = requirements(RDFS.range)
             if not ranges:
                 continue
             if isinstance(o, rdflib.Literal):
                 found[("kg.range", f"object of {name} is a literal, not a {label_of(ranges)}")] += 1
             elif o not in types:
                 found[("kg.untyped", f"object of {name} has no rdf:type, so range {label_of(ranges)} cannot be checked")] += 1
-            elif not all(any(r in types[o] for r in g) for g in ranges):
+            elif not holds(ranges, types[o]):
                 found[("kg.range", f"object of {name} is not a {label_of(ranges)}")] += 1
         report.checked.append(rel)
         report.findings += [KgFinding(code, rel, message, n) for (code, message), n in sorted(found.items())]

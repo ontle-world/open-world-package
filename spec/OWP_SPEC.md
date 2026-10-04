@@ -215,6 +215,8 @@ Every OWP YAML document (`owp.yaml`, local YAML assets, ObservationSet and EWS d
 - A mapping with two equal keys does not parse (`manifest.load`, `asset.yaml`).
 - A `%YAML` directive does not change these rules: the document is read as YAML 1.2 whatever version it names.
 - Tabs are not indentation: a line indented with a tab inside a block or flow collection does not parse.
+- Values are JSON values. The core tags `!!str`, `!!int`, `!!float`, `!!bool`, `!!null`, `!!map`, and `!!seq` are applied (`!!float 3` is the number 3; a tagged scalar that is not a value of its type, such as `!!bool yes`, does not parse). Any other tag, such as `!!binary`, `!!set`, `!!timestamp`, `!!omap`, `!!pairs`, or a local tag such as `!note`, does not parse.
+- Whitespace, wherever a rule speaks of it (identity parts, non-empty strings, `.owpignore` lines), is the JavaScript whitespace set: tab, line feed, vertical tab, form feed, carriage return, space, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000, and U+FEFF. Digits in SemVer, timestamps, and durations are the ASCII digits `0`–`9`.
 
 Authors SHOULD quote strings that a YAML 1.1 reader would type differently, for example `"yes"` or `"2026-01-01"`.
 
@@ -482,20 +484,20 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `manifest.api-version` | 2 | `apiVersion` is not `openworld/v1alpha1` |
 | `manifest.kind` | 3 | unknown package `kind` |
 | `manifest.metadata` | 2 | `metadata` is not a mapping |
-| `manifest.identity` | 2 | missing `namespace`, `name`, or `version`, or `namespace`/`name` containing `/`, `@`, `#`, or whitespace |
-| `manifest.version` | 2 | `metadata.version` is not SemVer |
+| `manifest.identity` | 2 | `namespace` or `name` missing or not a non-empty string, `version` missing, null, or empty, or `namespace`/`name` containing `/`, `@`, `#`, or whitespace |
+| `manifest.version` | 2 | `metadata.version` is present but not a SemVer string (a number, a list, or blank text included) |
 | `manifest.spec` | 2 | `spec` is not a mapping |
 | `package.card` | 3 | required human card missing |
 | `package.legacy-manifest` | 8 | `package.yaml` or `world.yaml` at the root |
-| `asset.list`, `asset.entry`, `asset.kind` | 5 | malformed `spec.assets` or entry, missing entry `kind`, a kind containing `:` that is not `<extension>:<Kind>`, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind |
+| `asset.list`, `asset.entry`, `asset.kind` | 5 | `spec.assets` present but not a list (`null` included), an entry that is not a mapping, an entry `kind` that is missing or not a non-empty string (the entry is not checked further), a kind containing `:` that is not `<extension>:<Kind>`, or a discovered OWP document without a kind or with a kind that is neither a vocabulary nor an extension kind |
 | `asset.path-or-ref` | 5 | entry has both or neither of `path` and `ref`, or a `path` entry is not a `PackageExample` |
 | `ref.shape` | 5.1 | malformed ExternalRef: not a mapping, bad `status`, `digest`, `size`, or field type, or a bound reference without `provider` or `uri` |
 | `ref.provider` | 5.1 | `provider` is neither a listed provider nor `<extension>:<provider>` |
-| `asset.path-form` | 3 | local path is not a relative POSIX path, or starts with `./` |
-| `manifest.dependency` | 2 | `spec.dependencies` entry is not an exact package reference |
+| `asset.path-form` | 3 | local path is not a non-empty string or not a relative POSIX path (absolute, a drive letter such as `a:`, `\`, `//`, or a trailing `/`), or starts with `./` |
+| `manifest.dependency` | 2 | `spec.dependencies` is not a list, an entry is not an exact package reference, or an entry's `source` is not a non-empty string |
 | `eval.duplicate-name` | 8 | two local EvaluationProfile or VerifierProfile assets share `metadata.name` |
 | `asset.duplicate-path` | 8 | same `PackageExample` path listed twice |
-| `asset.path-escape` | 8 | listed `PackageExample` path resolves outside the package root |
+| `asset.path-escape` | 8 | listed `PackageExample` path is absolute (including a drive letter) or resolves outside the package root |
 | `asset.missing-file` | 8 | listed `PackageExample` path does not exist or is excluded by `.owpignore` |
 | `standard.binding` | 5.3 | malformed `spec.standardBindings`: not a mapping, an entry without `standard`, `terms` not a mapping of strings, an empty `license`, or neither `ref` nor `terms` |
 | `standard.unpinned` | 5.3 | a bound `ref` in a standard binding is not pinned |
@@ -504,7 +506,7 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `asset.api-version` | 5 | a discovered OWP document's `apiVersion` differs from the manifest's |
 | `world.spec` | 6.1 | WorldPackage without `spec.world` |
 | `profile.unknown` | 3.1, 6.1 | undefined `spec.conformance.profile` for the package kind |
-| `profile.descriptive` | 6.1 | no `spec.world.definition` |
+| `profile.descriptive` | 6.1 | `spec.world.definition` is not a non-empty string |
 | `model.entrypoint` | 8 | a ModelArtifact `entrypoint` that does not name a file in the package |
 | `profile.viewable` | 6.1 | no View, no `defaultView`, or `defaultView` not a local View |
 | `view.world-ref` | 6 | a WorldViewProfile in a package that is not a WorldPackage |
@@ -521,11 +523,11 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `compiler.unit` | 12.5 | `outputSchema.units` that is not a mapping of EWS fields to UCUM codes, a dimensioned unit on a count, a unit on a classification, or a criterion unit unlike its input's |
 | `compiler.output-schema-ref` | 12.1 | `outputSchemaRef` is not a package-relative path to a JSON Schema with a non-empty top-level `properties` object |
 | `compiler.output-schema-mismatch` | 12.1 | `outputSchema.fields` and the `properties` of `outputSchemaRef` list different fields |
-| `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel` or roles |
+| `worldmodel.spec`, `worldmodel.roles` | 3 | missing `spec.worldModel`, or `roles` is not a non-empty list of non-empty strings |
 | `worldmodel.world-ref` | 3 | missing `semanticGrounding.worldRef`, or not `<namespace>/<name>@<semver>` |
 | `worldmodel.compatible-views` | 3 | missing `compatibleWorldViews` |
 | `worldmodel.compatible-compilers` | 3 | missing `compatibleStateCompilers` |
-| `worldmodel.grounding-ref` | 3 | grounding entry not `<worldRef>#<asset path>` |
+| `worldmodel.grounding-ref` | 3 | grounding entry (of any type) not `<worldRef>#<asset path>`; such an entry is left out of the grounding |
 | `worldmodel.adapter`, `worldmodel.adapter-ref`, `worldmodel.adapter-source` | 6 | Representation Adapter missing, not referenced locally, or not sourced from EWS |
 | `worldmodel.input-contract` | 6 | `inputs.contract` is not `EffectiveWorldState` |
 | `ontology.spec` | 3 | OntologyPackage without `spec.ontology` |
@@ -542,12 +544,12 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `eval.version` | 9 | EvaluationProfile/VerifierProfile `metadata.version` not SemVer |
 | `eval.supersedes` | 9 | `supersedes` not pinned |
 | `evidence.subject` | 9 | `subject` missing or not the package identity |
-| `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `evaluationProfile`, `result`, or `scope.worldRef`/`scope.worldView` |
+| `evidence.required`, `evidence.result`, `evidence.scope` | 9 | missing `metadata.name`, a `spec` that is not a mapping (nothing else is checked), missing `evaluationProfile` or `result`, missing `scope.worldRef`/`scope.worldView`, or a scope field that is not a non-empty string |
 | `evidence.unpinned` | 9 | reference not `<name>@<exact-semver>` |
 | `evidence.version-mismatch` | 9 | bound local asset missing that exact version |
-| `evidence.detached-subject` | 9.1 | detached evidence whose `subject` or `subjectDigest` does not match the archive |
+| `evidence.detached-subject` | 9.1 | detached evidence that is not a CompatibilityEvidence, whose archive does not verify, or whose `subject` or `subjectDigest` does not match the archive |
 | `evidence.scope.world-ref`, `evidence.scope.world-view`, `evidence.scope.state-compiler` | 9 | scope outside the model's grounding |
-| `resolve.reference` | 11 | malformed dependency reference |
+| `resolve.reference` | 11 | malformed dependency reference (for the root package also a malformed `source`) |
 | `resolve.source` | 11 | source unusable (for example an archive fails verification) |
 | `resolve.unresolved` | 11 | dependency not found in any source |
 | `resolve.version-conflict` | 11 | two versions of one package in a closure |
@@ -565,11 +567,11 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `scenario.baseline-ref` | 15.2 | `baselineStateRef` is neither a file in the package nor a URI |
 | `scenario.confidence` | 15.2 | `confidence` is not a number from 0 to 1 |
 | `extraction.input` | 19.2 | invalid extraction input; nothing is produced |
-| `ews.input` | 12.2 | invalid ObservationSet or `asOf`; compilation refused |
-| `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings`; compilation refused |
-| `ews.state-compiler` | 12 | named State Compiler is not a local asset, or has no `spec` |
-| `ews.kind`, `ews.shape` | 12 | not an EffectiveWorldState document, or malformed sections |
-| `ews.world-ref`, `ews.world-view` | 12.1 | references do not match the World, compiler, and compiled View |
+| `ews.input` | 12.2 | invalid ObservationSet (not a mapping, an `apiVersion` other than `openworld/v1alpha1`, a missing or empty observation `id` or `type`, a value that is `.inf`, `.nan`, or an integer outside ±(2^53−1)) or `asOf`; compilation refused |
+| `ews.opaque-compiler` | 12.2 | compiler has no `spec.bindings` key; compilation refused (a `bindings` value that is not a mapping is `compiler.binding`) |
+| `ews.state-compiler` | 12 | when compiling: the World is not a readable WorldPackage manifest, or the named State Compiler is not a local asset or has no `spec` |
+| `ews.kind`, `ews.shape` | 12 | not a parseable EffectiveWorldState document (`apiVersion`, `kind`), or malformed sections; checking stops at `ews.shape` |
+| `ews.world-ref`, `ews.world-view` | 12.1 | when checking: the World is not a readable WorldPackage manifest, or references do not match the World, compiler, and compiled View |
 | `ews.as-of` | 12.1 | `context.asOf` not a UTC timestamp |
 | `ews.field-placement` | 12.1 | schema field not in exactly one of state/unresolved/missing |
 | `ews.field-unknown` | 12.1 | field that is not an EWS field of the compiler |
@@ -600,13 +602,13 @@ Each error has a stable rule id. Implementations SHOULD prefix error messages wi
 | `extension.declaration` | 13.1 | `mustUnderstand` without `as`, or not a boolean |
 | `extension.undeclared` | 13.3 | extension kind or `extensions` block uses an undeclared name |
 | `extension.block` | 13.3 | `extensions` value is not a mapping of names to mappings |
-| `extension.definition` | 13.1, 13.2 | malformed `spec.extensionDefinition`, a missing schema file, or (under resolution) an `as` dependency without one |
+| `extension.definition` | 13.1, 13.2 | malformed `spec.extensionDefinition` (not a mapping, a `description` that is not a string, malformed `kinds` or `schemas`), a missing schema file, or (under resolution) an `as` dependency without one |
 
 Warnings also have ids. Implementations SHOULD prefix warning messages with them. An implementation MAY report additional warnings; their ids MUST contain `:` (for example `owp-ts:eval-order`) so they cannot collide with ids added to this table.
 
 | Warning id | Section | Condition |
 |---|---|---|
-| `world.undescribed` | 8 | `spec.world` without definition or description |
+| `world.undescribed` | 8 | `spec.world` without a non-empty `definition` or `description` string |
 | `worldmodel.model-artifact-missing` | 8 | WorldModelPackage without a `ModelArtifact` asset |
 | `worldmodel.evaluation-profile-missing` | 8 | WorldModelPackage without an `EvaluationProfile` asset |
 | `eval.version-missing` | 9 | EvaluationProfile or VerifierProfile without `metadata.version` |

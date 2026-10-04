@@ -15,6 +15,7 @@ from typing import Any
 
 from . import structure
 from .structure import EXTERNAL_REF, OPEN, VALUE, array, closed
+from .values import dig, js_equal, hashable
 from .yamlio import load_yaml
 
 ASSET_METADATA = structure.ASSET_METADATA
@@ -196,6 +197,16 @@ def _load_value_sets() -> dict[str, set[str]]:
 VALUE_SETS = _load_value_sets()
 
 
+def _spec(doc: Any) -> dict[str, Any]:
+    """A document's spec mapping; {} when the document or its spec is not a mapping."""
+    spec = doc.get("spec") if isinstance(doc, dict) else None
+    return spec if isinstance(spec, dict) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
 def _values(value: Any) -> list[Any]:
     if value is None:
         return []
@@ -266,11 +277,11 @@ def _delegator_grants(delegator: Any, local_kinds: dict[str, str], docs: dict[st
         return None
     actions: set[str] = set()
     decisions: set[str] = set()
-    for role in _values(((docs.get(delegator) or {}).get("spec") or {}).get("roleRefs")):
-        rspec = (docs.get(role) or {}).get("spec") or {}
-        for p in rspec.get("permissions") or []:
+    for role in _values(_spec(docs.get(delegator)).get("roleRefs")):
+        rspec = _spec(docs.get(role))
+        for p in _list(rspec.get("permissions")):
             actions |= {a for a in _values(p.get("actions") if isinstance(p, dict) else None) if isinstance(a, str)}
-        for a in rspec.get("authorities") or []:
+        for a in _list(rspec.get("authorities")):
             decisions |= {d for d in _values(a.get("decisions") if isinstance(a, dict) else None) if isinstance(d, str)}
     return actions, decisions
 
@@ -280,40 +291,44 @@ def _check_graph(graph: dict[str, Any], rel: str, declared: set[str], errors: li
     if not graph:
         return
     def ids(section: str) -> list[Any]:
-        return [x.get("id") for x in graph.get(section) or [] if isinstance(x, dict)]
+        return [x.get("id") for x in _list(graph.get(section)) if isinstance(x, dict)]
     nodes = ids("nodes")
     for section, seen_ids in (("nodes", nodes), ("guards", ids("guards")), ("events", ids("events"))):
-        duplicates = {i for i in seen_ids if seen_ids.count(i) > 1}
+        duplicates = any(seen_ids.count(i) > 1 for i in seen_ids)
         if duplicates or any(not isinstance(i, str) or not i for i in seen_ids):
             warnings.append(f"experimental.field: {rel}: spec.graph.{section} need unique string ids")
-    for i, node in enumerate(graph.get("nodes") or []):
+    for i, node in enumerate(_list(graph.get("nodes"))):
         if isinstance(node, dict):
             if "family" in node:
                 _check_value(node["family"], "workNodeFamilies", f"spec.graph.nodes[{i}].family", rel, declared, errors, warnings)
             if "patternKind" in node:
                 _check_value(node["patternKind"], "workPatterns", f"spec.graph.nodes[{i}].patternKind", rel, declared, errors, warnings)
-    guards, events = set(ids("guards")), set(ids("events"))
-    for i, t in enumerate(graph.get("transitions") or []):
+    guards, events = ids("guards"), ids("events")
+
+    def has(values: list[Any], value: Any) -> bool:  # Array.prototype.includes: a list or mapping equals only itself
+        return any(js_equal(value, v) for v in values)
+
+    for i, t in enumerate(_list(graph.get("transitions"))):
         if not isinstance(t, dict):
             continue
         for end in ("from", "to"):
-            if t.get(end) not in nodes:
+            if not has(nodes, t.get(end)):
                 warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].{end} {t.get(end)!r} is not a node")
-        if t.get("guard") is not None and t["guard"] not in guards:
+        if t.get("guard") is not None and not has(guards, t["guard"]):
             warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].guard {t['guard']!r} is not a declared guard")
-        if t.get("event") is not None and t["event"] not in events:
+        if t.get("event") is not None and not has(events, t["event"]):
             warnings.append(f"experimental.reference: {rel}: spec.graph.transitions[{i}].event {t['event']!r} is not a declared event")
-    for i, e in enumerate(graph.get("events") or []):
+    for i, e in enumerate(_list(graph.get("events"))):
         for target in _values(e.get("triggers") if isinstance(e, dict) else None):
-            if target not in nodes:
+            if not has(nodes, target):
                 warnings.append(f"experimental.reference: {rel}: spec.graph.events[{i}].triggers {target!r} is not a node")
-    for i, loop in enumerate(graph.get("loops") or []):
+    for i, loop in enumerate(_list(graph.get("loops"))):
         if not isinstance(loop, dict):
             continue
         for node in _values(loop.get("nodes")):
-            if node not in nodes:
+            if not has(nodes, node):
                 warnings.append(f"experimental.reference: {rel}: spec.graph.loops[{i}].nodes {node!r} is not a node")
-        if loop.get("until") is not None and loop["until"] not in guards:
+        if loop.get("until") is not None and not has(guards, loop["until"]):
             warnings.append(f"experimental.reference: {rel}: spec.graph.loops[{i}].until {loop['until']!r} is not a declared guard")
         bound = loop.get("maxIterations")
         integral = isinstance(bound, int) or (isinstance(bound, float) and bound.is_integer())  # JSON data model: 1.0 == 1
@@ -419,7 +434,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             warnings.append(f"knowledge.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
                             "that is its T-box in spec.conformsTo.ontology")
         if ontology is not None:
-            dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in spec_manifest.get("dependencies") or []}
+            dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in _list(spec_manifest.get("dependencies"))}
             if ontology not in dependency_refs:
                 warnings.append(f"experimental.reference: {rel}: spec.conformsTo.ontology {ontology!r} must also be listed in spec.dependencies")
         _check_content(sub("content"), rel, root, declared, errors, warnings)
@@ -459,8 +474,9 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
         granted = _delegator_grants(spec.get("delegator"), local_kinds, docs)
         if granted is not None:
             actions, decisions = granted
-            over = [a for a in _values(spec.get("permittedActions")) if a not in actions | decisions]
-            over += [d for d in _values(sub("authorityCeiling").get("decisions")) if d not in decisions]
+            granted_any = actions | decisions
+            over = [a for a in _values(spec.get("permittedActions")) if not (hashable(a) and a in granted_any)]  # a list is never granted
+            over += [d for d in _values(sub("authorityCeiling").get("decisions")) if not (hashable(d) and d in decisions)]
             if over:
                 errors.append(f"actor.delegation-exceeds-authority: {rel}: delegates {', '.join(map(str, over))}, which the delegator's roles do not grant")
     elif kind == "KnowledgeExtractionProfile":
@@ -561,7 +577,7 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
     for rel, kind in sorted(local_kinds.items()):
         if kind != "WorldViewProfile":
             continue
-        spec = (docs.get(rel) or {}).get("spec") or {}
+        spec = _spec(docs.get(rel))
         base = spec.get("specializes") if isinstance(spec, dict) else None
         if base is None:
             continue
@@ -575,7 +591,7 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
                 warnings.append(f"experimental.reference: {rel}: spec.specializes forms a cycle: {' -> '.join(seen + [current])}")
                 break
             seen.append(current)
-            nxt = ((docs.get(current) or {}).get("spec") or {}).get("specializes")
+            nxt = _spec(docs.get(current)).get("specializes")
             current = nxt if local_kinds.get(nxt) == "WorldViewProfile" else None
     return warnings
 
@@ -587,7 +603,8 @@ def _names(value: Any) -> list[str]:
 
 def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[str, str], _seen: tuple[str, ...] = ()) -> dict[str, Any]:
     """The View's spec with `specializes` applied: include = base ∪ include − exclude; purpose and conditioning override key by key."""
-    spec = dict((docs.get(rel) or {}).get("spec") or {})
+    raw = (docs.get(rel) or {}).get("spec")
+    spec = dict(raw) if isinstance(raw, dict) else {}
     base = spec.pop("specializes", None)
     if base is None or local_kinds.get(base) != "WorldViewProfile" or base in _seen + (rel,):
         projection = dict(spec.get("projection") or {}) if isinstance(spec.get("projection"), dict) else {}
@@ -599,9 +616,9 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
     merged: dict[str, Any] = dict(parent)
     for key, value in spec.items():
         if key in {"purpose", "conditioning"} and isinstance(value, dict):
-            merged[key] = {**(parent.get(key) or {}), **value}
+            merged[key] = {**(parent[key] if isinstance(parent.get(key), dict) else {}), **value}
         elif key == "projection" and isinstance(value, dict):
-            projection = {**(parent.get("projection") or {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
+            projection = {**(parent["projection"] if isinstance(parent.get("projection"), dict) else {}), **{k: v for k, v in value.items() if k not in {"include", "exclude"}}}
             include = _names(parent.get("projection", {}).get("include"))
             include += [x for x in _names(value.get("include")) if x not in include]
             exclude = set(_names(value.get("exclude")))
@@ -615,8 +632,8 @@ def resolve_view(rel: str, docs: dict[str, dict[str, Any]], local_kinds: dict[st
 # --- Reference graph (relation names are informative; spec section 13 does not standardize them) ---
 
 def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], local_kinds: dict[str, str]) -> dict[str, Any]:
-    md = manifest.get("metadata") or {}
-    spec = manifest.get("spec") or {}
+    md = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
+    spec = _spec(manifest)
     identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
     nodes: list[dict[str, Any]] = [{"id": identity, "type": "package", "kind": manifest.get("kind")}]
     edges: list[dict[str, str]] = []
@@ -626,20 +643,20 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
         if isinstance(target, str) and target and item not in edges:
             edges.append(item)
 
-    for dep in spec.get("dependencies") or []:
+    for dep in _list(spec.get("dependencies")):
         ref = dep.get("ref") if isinstance(dep, dict) else dep
         edge(identity, "uses_extension" if isinstance(dep, dict) and dep.get("as") else "depends_on", ref)
     for rel, kind in sorted(local_kinds.items()):
         nodes.append({"id": rel, "type": "asset", "kind": kind})
         edge(identity, "contains", rel)
-        s = (docs.get(rel) or {}).get("spec") or {}
+        s = _spec(docs.get(rel))
         if not isinstance(s, dict):
             continue
         if kind == "StateCompilerProfile":
             edge(rel, "compiles_view", s.get("worldViewRef"))
         elif kind == "WorldViewProfile":
             edge(rel, "specializes", s.get("specializes"))
-            conditioning = s.get("conditioning") or {}
+            conditioning = s["conditioning"] if isinstance(s.get("conditioning"), dict) else {}
             edge(rel, "for_actor", conditioning.get("actorRef"))
             for v in _values(conditioning.get("roleRefs")):
                 edge(rel, "for_role", v)
@@ -665,29 +682,29 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             for v in _values(s.get("outputContracts")):
                 edge(rel, "produces_contract", v)
         elif kind == "EvaluationProfile":
-            subject = s.get("subject") or {}
+            subject = s["subject"] if isinstance(s.get("subject"), dict) else {}
             edge(rel, "evaluates", subject.get("ref") if isinstance(subject, dict) else None)
             edge(rel, "evaluated_by_actor", s.get("evaluatorRef"))
         elif kind == "ScenarioProfile":
             edge(rel, "baseline", s.get("baselineStateRef"))
-            engine = s.get("engine") or {}
+            engine = s["engine"] if isinstance(s.get("engine"), dict) else {}
             edge(rel, "uses_engine", engine.get("ref") if isinstance(engine, dict) else None)
         elif kind == "TaskSetProfile":
-            for v in _values((s.get("task") or {}).get("workPatterns")):
+            for v in _values(dig(s, "task", "workPatterns")):
                 for prel, pkind in local_kinds.items():
-                    if pkind == "WorkPatternProfile" and (((docs.get(prel) or {}).get("spec") or {}).get("pattern") or {}).get("kind") == v:
+                    if pkind == "WorkPatternProfile" and dig(_spec(docs.get(prel)), "pattern", "kind") == v:
                         edge(rel, "uses_pattern", prel)
-            for v in _values((s.get("requires") or {}).get("worldViews")):
+            for v in _values(dig(s, "requires", "worldViews")):
                 edge(rel, "requires_view", v)
-            for v in _values((s.get("requires") or {}).get("knowledge")):
+            for v in _values(dig(s, "requires", "knowledge")):
                 edge(rel, "requires_knowledge", v)
-            for v in _values((s.get("requires") or {}).get("actors")):
+            for v in _values(dig(s, "requires", "actors")):
                 edge(rel, "performed_by", v)
             for v in _values(s.get("workPatternRefs")):
                 edge(rel, "uses_pattern", v)
-            for v in _values((s.get("mayUse") or {}).get("scenarios")):
+            for v in _values(dig(s, "mayUse", "scenarios")):
                 edge(rel, "may_use_scenario", v)
-            for v in _values((s.get("produces") or {}).get("artifacts")):
+            for v in _values(dig(s, "produces", "artifacts")):
                 edge(rel, "produces_artifact", v)
             for v in _values(s.get("evaluationRefs")):
                 edge(rel, "evaluated_by", v)
@@ -695,22 +712,22 @@ def reference_graph(manifest: dict[str, Any], docs: dict[str, dict[str, Any]], l
             edge(rel, "template_for", s.get("artifactContractRef"))
         elif kind == "ConsumerRepresentationProfile":
             edge(rel, "represents_view", s.get("worldViewRef"))
-            edge(rel, "for_actor", (s.get("actor") or {}).get("ref") if isinstance(s.get("actor"), dict) else None)
-            for v in _values((s.get("human") or {}).get("artifactContractRefs")):
+            edge(rel, "for_actor", dig(s, "actor", "ref") if isinstance(s.get("actor"), dict) else None)
+            for v in _values(dig(s, "human", "artifactContractRefs")):
                 edge(rel, "consumes_contract", v)
-            edge(rel, "uses_adapter", (s.get("model") or {}).get("adapterRef"))
+            edge(rel, "uses_adapter", dig(s, "model", "adapterRef"))
         elif kind == "KnowledgeAsset":
-            edge(rel, "conforms_to", (s.get("conformsTo") or {}).get("ontology"))
+            edge(rel, "conforms_to", dig(s, "conformsTo", "ontology"))
         elif kind == "CompatibilityEvidence":
             edge(rel, "evidences", s.get("subject"))
-    world_model = spec.get("worldModel") or {}
-    grounding = world_model.get("semanticGrounding") or {}
+    world_model = spec.get("worldModel") if isinstance(spec.get("worldModel"), dict) else {}
+    grounding = world_model.get("semanticGrounding") if isinstance(world_model.get("semanticGrounding"), dict) else {}
     edge(identity, "grounded_in", grounding.get("worldRef"))
-    for v in grounding.get("compatibleWorldViews") or []:
+    for v in _list(grounding.get("compatibleWorldViews")):
         edge(identity, "valid_for_view", v)
-    for v in grounding.get("compatibleStateCompilers") or []:
+    for v in _list(grounding.get("compatibleStateCompilers")):
         edge(identity, "valid_for_compiler", v)
-    edge(identity, "uses_adapter", (world_model.get("representation") or {}).get("adapterRef"))
+    edge(identity, "uses_adapter", dig(world_model, "representation", "adapterRef"))
     return {"nodes": nodes, "edges": edges}
 
 
@@ -725,7 +742,7 @@ def usage(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]], stabilit
     fields = []
     for rel, kind in sorted(local_kinds.items()):
         for path in EXPERIMENTAL_FIELDS.get(kind, []):
-            node: Any = (docs.get(rel) or {}).get("spec") or {}
+            node: Any = _spec(docs.get(rel))
             for part in path:
                 node = node.get(part) if isinstance(node, dict) else None
             if node is not None:

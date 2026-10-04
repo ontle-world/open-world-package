@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: WorldPackage
+metadata:
+  namespace: conformance
+  name: world
+  version: 0.1.0
+spec:
+  dependencies:
+  - ref: conformance/taxonomy@1.0.0
+    source: 5
+  world:
+    description: WORLD.md
+    definition: Conformance fixture World.

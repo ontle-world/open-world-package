@@ -15,6 +15,7 @@ from . import binding as binding_module
 from . import experimental, structure
 from . import ontology as ontology_module
 from .ignore import IGNORE_FILE, is_ignored, load_ignore
+from .values import WHITESPACE, PathMap, dig, js_equal, js_string, nonempty_str, normalize_rel_path
 from .yamlio import dump_yaml, load_yaml
 
 MANIFEST = "owp.yaml"
@@ -35,13 +36,14 @@ def _load_vocabulary() -> dict[str, str]:
 ASSET_KIND_STABILITY = _load_vocabulary()
 KNOWN_ASSET_KINDS = set(ASSET_KIND_STABILITY)
 DOCUMENT_KINDS = {"ObservationSet", "EffectiveWorldState"}  # OWP documents that are package files, not assets
-SEMVER_PATTERN = r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
+# ASCII digits only: Python's \d also matches other decimal digits (such as U+0663 or full-width digits).
+SEMVER_PATTERN = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
 SEMVER_RE = re.compile(rf"^{SEMVER_PATTERN}\Z")
 # Exact reference to a versioned asset: <name>@<semver>. Ranges are not allowed.
-PINNED_REF_RE = re.compile(rf"^[^@\s]+@{SEMVER_PATTERN}\Z")
+PINNED_REF_RE = re.compile(rf"^[^@{WHITESPACE}]+@{SEMVER_PATTERN}\Z")
 # Exact package reference: <namespace>/<name>@<semver>.
-PACKAGE_REF_RE = re.compile(rf"^[^/@#\s]+/[^/@#\s]+@{SEMVER_PATTERN}\Z")
-IDENTITY_PART_RE = re.compile(r"^[^/@#\s]+\Z")
+PACKAGE_REF_RE = re.compile(rf"^[^/@#{WHITESPACE}]+/[^/@#{WHITESPACE}]+@{SEMVER_PATTERN}\Z")
+IDENTITY_PART_RE = re.compile(rf"^[^/@#{WHITESPACE}]+\Z")
 EWS = "EffectiveWorldState"
 
 # WorldPackage conformance profiles. Each profile includes every requirement of the previous ones.
@@ -152,6 +154,13 @@ def compiler_fields(root: Path, local_asset_kinds: dict[str, str],
     return fields, errors
 
 
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
+_ABSENT = object()  # a missing key: equal only to another missing key
+
+
 def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[str],
                           local_asset_kinds: dict[str, str], local_asset_docs: dict[str, dict[str, Any]],
                           ews_fields: dict[str, list[str] | None], identity: str | None = None) -> list[str]:
@@ -159,7 +168,7 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
     level = WORLD_PROFILES.index(profile)
     errors: list[str] = []
     world = spec.get("world") if isinstance(spec.get("world"), dict) else {}
-    if not world.get("definition"):
+    if not nonempty_str(world.get("definition")):
         errors.append("profile.descriptive: requires spec.world.definition")
     if level < 1:
         return errors
@@ -167,7 +176,7 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
     if "WorldViewProfile" not in asset_kinds:
         errors.append("profile.viewable: requires at least one WorldViewProfile")
     default_view = world.get("defaultView")
-    if not isinstance(default_view, str) or not default_view.strip():
+    if "defaultView" not in world:
         errors.append("profile.viewable: requires spec.world.defaultView")
     elif local_asset_kinds.get(default_view) != "WorldViewProfile":
         errors.append("profile.viewable: spec.world.defaultView must point to a local WorldViewProfile asset")
@@ -177,11 +186,11 @@ def _world_profile_errors(profile: str, spec: dict[str, Any], asset_kinds: set[s
     if "StateCompilerProfile" not in asset_kinds:
         errors.append("profile.stateful: requires at least one StateCompilerProfile")
     default_compiler = world.get("defaultStateCompiler")
-    if not isinstance(default_compiler, str) or not default_compiler.strip():
+    if "defaultStateCompiler" not in world:
         errors.append("profile.stateful: requires spec.world.defaultStateCompiler")
     elif local_asset_kinds.get(default_compiler) != "StateCompilerProfile":
         errors.append("profile.stateful: spec.world.defaultStateCompiler must point to a local StateCompilerProfile asset")
-    elif _spec_of(local_asset_docs.get(default_compiler)).get("worldViewRef") != default_view:
+    elif not js_equal(_spec_of(local_asset_docs.get(default_compiler)).get("worldViewRef", _ABSENT), world.get("defaultView", _ABSENT)):
         errors.append("profile.stateful.default-compiler-view: default StateCompilerProfile spec.worldViewRef must reference spec.world.defaultView")
     for rel, kind in sorted(local_asset_kinds.items()):
         if kind != "StateCompilerProfile":
@@ -216,71 +225,89 @@ def satisfied_world_profile(spec: dict[str, Any], asset_kinds: set[str],
     return satisfied
 
 
-def _validate_evaluation_lineage(spec: dict[str, Any], kind: Any, identity: str, local_asset_kinds: dict[str, str],
+def _validate_evaluation_lineage(kind: Any, identity: str | None, grounding: Grounding | None, local_asset_kinds: dict[str, str],
                                  local_asset_docs: dict[str, dict[str, Any]], errors: list[str], warnings: list[str]) -> None:
-    """Evaluation lineage and evidence binding. OWP records which exact evaluation produced a result; it does not run or evolve evaluations."""
-    local_versions: dict[str, dict[str, str | None]] = {"EvaluationProfile": {}, "VerifierProfile": {}}
+    """Evaluation lineage and evidence binding (spec 9). OWP records which exact evaluation produced a result; it does not run or evolve evaluations."""
+    names: dict[str, set[str]] = {"EvaluationProfile": set(), "VerifierProfile": set()}
     for rel, asset_kind in sorted(local_asset_kinds.items()):
-        if asset_kind not in local_versions or rel not in local_asset_docs:
+        if asset_kind not in names or not isinstance(local_asset_docs.get(rel), dict):
             continue
         doc = local_asset_docs[rel]
         md = doc.get("metadata") if isinstance(doc.get("metadata"), dict) else {}
-        version = md.get("version")
         if isinstance(md.get("name"), str):
-            if md["name"] in local_versions[asset_kind]:
+            if md["name"] in names[asset_kind]:
                 errors.append(f"eval.duplicate-name: more than one local {asset_kind} is named {md['name']!r}")
-            local_versions[asset_kind].setdefault(md["name"], version if isinstance(version, str) else None)
-        if version is None:
+            names[asset_kind].add(md["name"])
+        if "version" not in md:
             warnings.append(f"eval.version-missing: {asset_kind} {rel} should declare metadata.version so evidence can bind to it")
-        elif not isinstance(version, str) or not SEMVER_RE.match(version):
+        elif not isinstance(md["version"], str) or not SEMVER_RE.match(md["version"]):
             errors.append(f"eval.version: {asset_kind} {rel} metadata.version must use SemVer")
-        supersedes = _spec_of(doc).get("supersedes")
-        if supersedes is not None and not (isinstance(supersedes, str) and PINNED_REF_RE.match(supersedes)):
+        spec = doc.get("spec")
+        if isinstance(spec, dict) and "supersedes" in spec and not (isinstance(spec["supersedes"], str) and PINNED_REF_RE.match(spec["supersedes"])):
             errors.append(f"eval.supersedes: {asset_kind} {rel} spec.supersedes must be a pinned <name>@<version> reference")
 
-    grounding: dict[str, Any] = {}
-    if kind == "WorldModelPackage" and isinstance(spec.get("worldModel"), dict):
-        g = spec["worldModel"].get("semanticGrounding")
-        grounding = g if isinstance(g, dict) else {}
+    def local_versions(bound_kind: str, name: str) -> list[Any] | None:
+        """metadata.version of each local asset of the kind named `name`; None when there is none."""
+        found = []
+        for rel, k in sorted(local_asset_kinds.items()):
+            md = (local_asset_docs.get(rel) or {}).get("metadata") if k == bound_kind else None
+            if isinstance(md, dict) and md.get("name") == name and isinstance(md.get("name"), str):
+                found.append(md.get("version") if "version" in md else _MISSING)
+        return found or None
 
     for rel, asset_kind in sorted(local_asset_kinds.items()):
-        if asset_kind != "CompatibilityEvidence" or rel not in local_asset_docs:
+        if asset_kind != "CompatibilityEvidence" or not isinstance(local_asset_docs.get(rel), dict):
             continue
-        espec = _spec_of(local_asset_docs[rel])
-        if not espec.get("subject"):
+        doc = local_asset_docs[rel]
+        md = doc.get("metadata")
+        if not (isinstance(md, dict) and nonempty_str(md.get("name"))):
+            errors.append(f"evidence.required: CompatibilityEvidence {rel} must declare metadata.name")
+        espec = doc.get("spec")
+        if not isinstance(espec, dict):
+            errors.append(f"evidence.required: CompatibilityEvidence {rel} must declare a spec mapping")
+            continue
+        if not nonempty_str(espec.get("subject")):
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} must declare spec.subject")
         elif kind == "WorldModelPackage" and espec["subject"] != identity:
             errors.append(f"evidence.subject: CompatibilityEvidence {rel} spec.subject must be this package's identity {identity}")
-        for field, bound_kind, required in (("evaluationProfile", "EvaluationProfile", True), ("verifier", "VerifierProfile", False)):
-            ref = espec.get(field)
-            if ref is None:
-                if required:
+        for field in ("evaluationProfile", "verifier", "goldenSet", "dataset"):
+            if field not in espec:
+                if field == "evaluationProfile":
                     errors.append(f"evidence.required: CompatibilityEvidence {rel} must declare spec.{field}")
                 continue
+            ref = espec[field]
             if not (isinstance(ref, str) and PINNED_REF_RE.match(ref)):
                 errors.append(f"evidence.unpinned: CompatibilityEvidence {rel} spec.{field} must be a pinned <name>@<version> reference")
-                continue
-            name, version = ref.split("@", 1)
-            if name in local_versions[bound_kind] and local_versions[bound_kind][name] != version:
-                local = local_versions[bound_kind][name] or "unversioned"
-                errors.append(f"evidence.version-mismatch: CompatibilityEvidence {rel} binds {ref} but the packaged {bound_kind} {name} is {local}")
-        for field in ("goldenSet", "dataset"):
+        for field, bound_kind in (("evaluationProfile", "EvaluationProfile"), ("verifier", "VerifierProfile")):
             ref = espec.get(field)
-            if ref is not None and not (isinstance(ref, str) and PINNED_REF_RE.match(ref)):
-                errors.append(f"evidence.unpinned: CompatibilityEvidence {rel} spec.{field} must be a pinned <name>@<version> reference")
+            if not (isinstance(ref, str) and PINNED_REF_RE.match(ref)):
+                continue
+            name, _, version = ref.rpartition("@")
+            versions = local_versions(bound_kind, name)
+            if versions is not None and version not in [v for v in versions if isinstance(v, str)]:
+                errors.append(f"evidence.version-mismatch: CompatibilityEvidence {rel} binds {ref} but the packaged {bound_kind} {name} has a different version")
         scope = espec.get("scope")
-        if not isinstance(scope, dict) or not scope.get("worldRef") or not scope.get("worldView"):
+        if not isinstance(scope, dict):
             errors.append(f"evidence.scope: CompatibilityEvidence {rel} must declare spec.scope.worldRef and spec.scope.worldView")
-        elif grounding:
-            if grounding.get("worldRef") and scope["worldRef"] != grounding["worldRef"]:
-                errors.append(f"evidence.scope.world-ref: CompatibilityEvidence {rel} scope.worldRef differs from semanticGrounding.worldRef")
-            if scope["worldView"] not in (grounding.get("compatibleWorldViews") or []):
-                errors.append(f"evidence.scope.world-view: CompatibilityEvidence {rel} scope.worldView is outside semanticGrounding.compatibleWorldViews")
-            compiler = scope.get("stateCompiler")
-            if compiler is not None and compiler not in (grounding.get("compatibleStateCompilers") or []):
-                errors.append(f"evidence.scope.state-compiler: CompatibilityEvidence {rel} scope.stateCompiler is outside semanticGrounding.compatibleStateCompilers")
+        else:
+            for field in ("worldRef", "worldView"):
+                if not nonempty_str(scope.get(field)):
+                    errors.append(f"evidence.scope: CompatibilityEvidence {rel} must declare spec.scope.{field}")
+            for field in ("stateCompiler", "environment", "task"):
+                if field in scope and not nonempty_str(scope[field]):
+                    errors.append(f"evidence.scope: CompatibilityEvidence {rel} spec.scope.{field} must be a non-empty string when present")
+            if grounding is not None:
+                if nonempty_str(scope.get("worldRef")) and grounding.world_ref is not None and scope["worldRef"] != grounding.world_ref:
+                    errors.append(f"evidence.scope.world-ref: CompatibilityEvidence {rel} scope.worldRef differs from semanticGrounding.worldRef")
+                if nonempty_str(scope.get("worldView")) and scope["worldView"] not in grounding.views:
+                    errors.append(f"evidence.scope.world-view: CompatibilityEvidence {rel} scope.worldView is outside semanticGrounding.compatibleWorldViews")
+                if nonempty_str(scope.get("stateCompiler")) and scope["stateCompiler"] not in grounding.compilers:
+                    errors.append(f"evidence.scope.state-compiler: CompatibilityEvidence {rel} scope.stateCompiler is outside semanticGrounding.compatibleStateCompilers")
         if not isinstance(espec.get("result"), dict):
             errors.append(f"evidence.result: CompatibilityEvidence {rel} must declare spec.result")
+
+
+_MISSING = object()
 
 
 def _asset_structure_errors(doc: dict[str, Any], asset_kind: Any, rel: str, extension_names: set[str]) -> list[str]:
@@ -309,7 +336,7 @@ def _external_world_errors(rel: str, vspec: dict[str, Any], spec: dict[str, Any]
     if refs is not None and not (isinstance(refs, list) and all(isinstance(r, str) for r in refs)):
         return [f"view.external-world: {rel}: spec.externalWorldRefs must be a list of package references"]
     declared = set(refs or [])
-    deps = {d if isinstance(d, str) else d.get("ref") for d in spec.get("dependencies") or [] if isinstance(d, (str, dict))}
+    deps = [d if isinstance(d, str) else d.get("ref") for d in _list(spec.get("dependencies")) if isinstance(d, (str, dict))]
     for ref in refs or []:
         if ref not in deps:
             errors.append(f"view.external-world: {rel}: external World {ref} must also be listed in spec.dependencies")
@@ -330,7 +357,7 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
     for rel, k in sorted(local_asset_kinds.items()):
         if k != "WorldViewProfile":
             continue
-        names = (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include")
+        names = dig(experimental.resolve_view(rel, local_asset_docs, local_asset_kinds), "projection", "include")
         own = {x for x in names if isinstance(x, str) and "#" not in x} if isinstance(names, list) else set()
         external = {x.split("#", 1)[1] for x in names if isinstance(x, str) and "#" in x} if isinstance(names, list) else set()
         includes[rel] = own | external  # a compiler field may describe an entity of an external World the View selects
@@ -348,13 +375,98 @@ def _containment_warnings(spec: dict[str, Any], local_asset_kinds: dict[str, str
     return warnings
 
 
+def dependency_problems(spec: dict[str, Any]) -> list[str]:
+    """Spec 11: spec.dependencies lists exact <namespace>/<name>@<version> strings or {ref, source, as, mustUnderstand} mappings."""
+    if "dependencies" not in spec:
+        return []
+    deps = spec["dependencies"]
+    if not isinstance(deps, list):
+        return ["spec.dependencies must be a list"]
+    problems: list[str] = []
+    for i, dep in enumerate(deps):
+        if isinstance(dep, dict):
+            ref = dep.get("ref")
+            if "source" in dep and not nonempty_str(dep["source"]):
+                problems.append(f"spec.dependencies[{i}].source must be a non-empty string")
+        elif isinstance(dep, str):
+            ref = dep
+        else:
+            problems.append(f"spec.dependencies[{i}] must be a string or a {{ref, source}} mapping")
+            continue
+        if not isinstance(ref, str):
+            problems.append(f"spec.dependencies[{i}] requires ref <namespace>/<name>@<version>")
+        elif not PACKAGE_REF_RE.match(ref):
+            problems.append(f"spec.dependencies[{i}] {ref!r} must be an exact <namespace>/<name>@<version>; ranges are not allowed")
+    return problems
+
+
+@dataclass
+class Grounding:
+    """A World Model's semantic grounding as far as it is well-formed: entries that are not <worldRef>#<path> are left out."""
+    world_ref: str | None
+    views: list[str]
+    compilers: list[str]
+
+
+def contract_ref_path(entry: Any, world_ref: str | None) -> str | None:
+    """The asset path of a `<worldRef>#<asset path>` grounding entry, or None when the entry is malformed."""
+    if not nonempty_str(entry) or "#" not in entry:
+        return None
+    ref, _, path = entry.partition("#")
+    if world_ref is not None and ref != world_ref:
+        return None
+    norm = normalize_rel_path(path)
+    return norm if norm is not None and norm == path and not path.startswith("./") else None
+
+
+def _world_model_grounding(spec: dict[str, Any], errors: list[str]) -> Grounding:
+    """Spec 3 (WorldModelPackage): roles and semanticGrounding."""
+    g = Grounding(None, [], [])
+    wm = spec.get("worldModel")
+    if not isinstance(wm, dict):
+        errors.append("worldmodel.spec: WorldModelPackage requires spec.worldModel")
+        return g
+    roles = wm.get("roles")
+    if not isinstance(roles, list) or not roles or not all(nonempty_str(r) for r in roles):
+        errors.append("worldmodel.roles: spec.worldModel.roles must be a non-empty list of non-empty strings")
+    sg = wm.get("semanticGrounding")
+    if not isinstance(sg, dict):
+        errors.append("worldmodel.world-ref: WorldModelPackage requires spec.worldModel.semanticGrounding.worldRef")
+        errors.append("worldmodel.compatible-views: WorldModelPackage requires semanticGrounding.compatibleWorldViews")
+        errors.append("worldmodel.compatible-compilers: WorldModelPackage requires semanticGrounding.compatibleStateCompilers")
+        return g
+    world_ref = sg.get("worldRef")
+    if not nonempty_str(world_ref):
+        errors.append("worldmodel.world-ref: WorldModelPackage requires spec.worldModel.semanticGrounding.worldRef")
+    else:
+        if not PACKAGE_REF_RE.match(world_ref):
+            errors.append(f"worldmodel.world-ref: semanticGrounding.worldRef {world_ref!r} must be <namespace>/<name>@<exact-semver>")
+        g.world_ref = world_ref
+    for field, into, rule in (("compatibleWorldViews", g.views, "worldmodel.compatible-views"),
+                              ("compatibleStateCompilers", g.compilers, "worldmodel.compatible-compilers")):
+        refs = sg.get(field)
+        if not isinstance(refs, list) or not refs:
+            errors.append(f"{rule}: WorldModelPackage requires at least one semanticGrounding.{field} reference")
+            continue
+        for i, ref in enumerate(refs):
+            if contract_ref_path(ref, g.world_ref) is None:
+                errors.append(f"worldmodel.grounding-ref: semanticGrounding.{field}[{i}] {ref!r} must have the form <worldRef>#<asset path>"
+                              + (f" with worldRef {g.world_ref}" if g.world_ref else ""))
+            else:
+                into.append(ref)
+    return g
+
+
 def validate_package(path: str | Path) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
     try:
         root, data = load_manifest(path)
     except OWPError as exc:
-        return ValidationResult(False, [f"manifest.load: {exc}"], warnings, None)
+        root = package_root(path)
+        legacy = [f"package.legacy-manifest: legacy manifest {name} is not allowed; use only {MANIFEST}"
+                  for name in sorted(LEGACY_MANIFESTS) if root.is_dir() and (root / name).exists()]
+        return ValidationResult(False, legacy + [f"manifest.load: {exc}"], warnings, None)
 
     for legacy in sorted(LEGACY_MANIFESTS):
         if (root / legacy).exists():
@@ -363,54 +475,51 @@ def validate_package(path: str | Path) -> ValidationResult:
     if data.get("apiVersion") != "openworld/v1alpha1":
         errors.append("manifest.api-version: apiVersion must be openworld/v1alpha1")
 
-    kind = data.get("kind")
+    kind = data.get("kind") if isinstance(data.get("kind"), str) else None
     if kind not in KINDS:
         errors.append(f"manifest.kind: kind must be one of {sorted(KINDS)}")
 
     metadata = data.get("metadata")
-    malformed_metadata = not isinstance(metadata, dict)
-    if malformed_metadata:
+    raw_identity = None  # <namespace>/<name>@<version> from the raw metadata, for identity comparisons
+    if not isinstance(metadata, dict):
         errors.append("manifest.metadata: metadata must be a mapping")
         metadata = {}
-    for key in ("namespace", "name", "version") if not malformed_metadata else ():  # one error for a malformed metadata
-        if not isinstance(metadata.get(key), str) or not metadata.get(key).strip():
-            errors.append(f"manifest.identity: metadata.{key} is required")
-        elif key != "version" and not IDENTITY_PART_RE.match(metadata[key]):
-            errors.append(f"manifest.identity: metadata.{key} must not contain '/', '@', '#', or whitespace")
-    version = metadata.get("version")
-    if isinstance(version, str) and not SEMVER_RE.match(version):
-        errors.append("manifest.version: metadata.version must use SemVer (for example 0.1.0 or 0.1.0-alpha.1)")
-
-    identity = f"{metadata.get('namespace')}/{metadata.get('name')}@{metadata.get('version')}"
+    else:
+        for key in ("namespace", "name"):
+            if not nonempty_str(metadata.get(key)):
+                errors.append(f"manifest.identity: metadata.{key} is required")
+            elif not IDENTITY_PART_RE.match(metadata[key]):
+                errors.append(f"manifest.identity: metadata.{key} must not contain '/', '@', '#', or whitespace")
+        version = metadata.get("version")
+        if version is None or version == "":
+            errors.append("manifest.identity: metadata.version is required")
+        elif not isinstance(version, str) or not SEMVER_RE.match(version):
+            errors.append("manifest.version: metadata.version must use SemVer (for example 0.1.0 or 0.1.0-alpha.1)")
+        if all(key in metadata for key in ("namespace", "name", "version")):
+            raw_identity = f"{js_string(metadata['namespace'])}/{js_string(metadata['name'])}@{js_string(metadata['version'])}"
+    identity = raw_identity
 
     spec = data.get("spec")
     if not isinstance(spec, dict):
         errors.append("manifest.spec: spec must be a mapping")
         spec = {}
 
-    dependencies = spec.get("dependencies", []) or []
-    if not isinstance(dependencies, list):
-        errors.append("manifest.dependency: spec.dependencies must be a list")
-        dependencies = []
-    for dep in dependencies:
-        ref = dep.get("ref") if isinstance(dep, dict) else dep
-        if not (isinstance(ref, str) and PACKAGE_REF_RE.match(ref)):
-            errors.append(f"manifest.dependency: dependency {dep!r} must be <namespace>/<name>@<exact-semver> or a mapping with such a ref")
+    errors.extend(f"manifest.dependency: {p}" for p in dependency_problems(spec))
 
     extension_names, extension_errors = structure.declared_extensions(spec)
     errors.extend(extension_errors)
     errors.extend(structure.structure_errors(data, structure.MANIFEST, MANIFEST, extension_names))
     errors.extend(structure.extension_definition_errors(spec))
     definition = spec.get("extensionDefinition")
-    for rel in (definition.get("schemas") or []) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
-        if isinstance(rel, str) and rel and not ontology_module.inside_package(root, rel):
-            errors.append(f"extension.definition: spec.extensionDefinition.schemas entry {rel} must be an existing file inside the package")
+    for i, rel in enumerate(definition.get("schemas")) if isinstance(definition, dict) and isinstance(definition.get("schemas"), list) else []:
+        if nonempty_str(rel) and normalize_rel_path(rel) is not None and not rel.startswith("./") and not ontology_module.inside_package(root, rel):
+            errors.append(f"extension.definition: spec.extensionDefinition.schemas[{i}] {rel} must be an existing file inside the package")
 
     card = {
         "WorldPackage": "WORLD.md",
         "WorldModelPackage": "WORLDMODEL.md",
         "OntologyPackage": "ONTOLOGY.md",
-    }.get(kind)
+    }.get(kind or "")
     if card and not (root / card).exists():
         errors.append(f"package.card: {kind} requires {card}")
 
@@ -418,33 +527,12 @@ def validate_package(path: str | Path) -> ValidationResult:
         world = spec.get("world")
         if not isinstance(world, dict):
             errors.append("world.spec: WorldPackage requires spec.world")
-        elif not (world.get("definition") or world.get("description")):
+        elif not (nonempty_str(world.get("definition")) or nonempty_str(world.get("description"))):
             warnings.append("world.undescribed: spec.world should declare definition or description")
 
+    grounding: Grounding | None = None
     if kind == "WorldModelPackage":
-        wm = spec.get("worldModel")
-        if not isinstance(wm, dict):
-            errors.append("worldmodel.spec: WorldModelPackage requires spec.worldModel")
-        else:
-            if not wm.get("roles"):
-                errors.append("worldmodel.roles: spec.worldModel.roles must contain at least one role")
-            grounding = wm.get("semanticGrounding")
-            if not isinstance(grounding, dict) or not isinstance(grounding.get("worldRef"), str) or not grounding.get("worldRef", "").strip():
-                errors.append("worldmodel.world-ref: WorldModelPackage requires spec.worldModel.semanticGrounding.worldRef")
-                grounding = {}
-            views = grounding.get("compatibleWorldViews") if isinstance(grounding, dict) else None
-            if not isinstance(views, list) or not views or not all(isinstance(x, str) and x.strip() for x in views):
-                errors.append("worldmodel.compatible-views: WorldModelPackage requires at least one semanticGrounding.compatibleWorldViews reference")
-            compilers = grounding.get("compatibleStateCompilers") if isinstance(grounding, dict) else None
-            if not isinstance(compilers, list) or not compilers or not all(isinstance(x, str) and x.strip() for x in compilers):
-                errors.append("worldmodel.compatible-compilers: WorldModelPackage requires at least one semanticGrounding.compatibleStateCompilers reference")
-            world_ref = grounding.get("worldRef")
-            if isinstance(world_ref, str) and world_ref.strip() and not PACKAGE_REF_RE.match(world_ref):
-                errors.append(f"worldmodel.world-ref: semanticGrounding.worldRef {world_ref!r} must be <namespace>/<name>@<exact-semver>")
-            for field, refs in (("compatibleWorldViews", views), ("compatibleStateCompilers", compilers)):
-                for ref in refs if isinstance(refs, list) and isinstance(world_ref, str) else []:
-                    if isinstance(ref, str) and (ref.partition("#")[0] != world_ref or not _asset_path_form(ref.partition("#")[2])):
-                        errors.append(f"worldmodel.grounding-ref: semanticGrounding.{field} entry {ref!r} must have the form <worldRef>#<asset path> with worldRef {world_ref}")
+        grounding = _world_model_grounding(spec, errors)
 
     if kind == "OntologyPackage":
         ontology = spec.get("ontology")
@@ -455,16 +543,16 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.extend(onto_errors)
             warnings.extend(onto_warnings)
 
-    assets = spec.get("assets", []) or []
-    if not isinstance(assets, list):
+    assets = spec.get("assets", [])
+    if not isinstance(assets, list):  # an absent key is no assets; any other value that is not a list is malformed
         errors.append("asset.list: spec.assets must be a list when present")
         assets = []
     experimental_docs: list[tuple[str, str, dict[str, Any]]] = []
     experimental_kind_counts: dict[str, int] = {}
     reserved_kind_counts: dict[str, int] = {}
     standard_docs: list[tuple[str, str, dict[str, Any]]] = []
-    local_asset_kinds: dict[str, str] = {}
-    local_asset_docs: dict[str, dict[str, Any]] = {}
+    local_asset_kinds: dict[str, str] = PathMap()
+    local_asset_docs: dict[str, dict[str, Any]] = PathMap()
     asset_kinds: set[str] = set()
 
     def kind_issues(asset_kind: str, where: str, discovered: bool) -> bool:
@@ -487,51 +575,68 @@ def validate_package(path: str | Path) -> ValidationResult:
         return True
 
     # The manifest lists external assets (ref) and PackageExample files; other local assets are discovered.
-    example_paths: set[str] = set()
+    example_paths: set[str] = set()  # listed PackageExample paths: discovery skips them
+    seen_paths: set[str] = set()
     ignore_rules = load_ignore(root)
     for idx, item in enumerate(assets):
+        where = f"spec.assets[{idx}]"
         if not isinstance(item, dict):
-            errors.append(f"asset.entry: spec.assets[{idx}] must be a mapping")
+            errors.append(f"asset.entry: {where} must be a mapping")
             continue
         asset_kind = item.get("kind")
-        if not isinstance(asset_kind, str) or not asset_kind.strip():
-            errors.append(f"asset.kind: spec.assets[{idx}].kind is required")
-        else:
-            asset_kinds.add(asset_kind)
-            kind_issues(asset_kind, f"spec.assets[{idx}].kind", discovered=False)
-        has_path = isinstance(item.get("path"), str) and bool(item.get("path").strip())
-        has_ref = "ref" in item
+        if not nonempty_str(asset_kind):
+            errors.append(f"asset.kind: {where}.kind is required")
+            continue
+        kind_issues(asset_kind, f"{where}.kind", discovered=False)
+        has_path = "path" in item
+        has_ref = "ref" in item  # spec 5.1: a present ref key is an ExternalRef, whatever its value
         if has_ref:
-            ref_errors, ref_warnings = structure.external_ref_issues(item["ref"], f"spec.assets[{idx}].ref", extension_names)
+            ref_errors, ref_warnings = structure.external_ref_issues(item["ref"], f"{where}.ref", extension_names)
             errors.extend(ref_errors)
             warnings.extend(ref_warnings)
         if has_path and asset_kind != "PackageExample":
-            errors.append(f"asset.path-or-ref: spec.assets[{idx}] lists the local file {item['path']!r}; local assets are found by their "
+            errors.append(f"asset.path-or-ref: {where} lists the local file {item['path']!r}; local assets are found by their "
                           "apiVersion and kind, and only PackageExample files are listed")
             continue
         if has_path == has_ref:
-            errors.append(f"asset.path-or-ref: spec.assets[{idx}] must declare exactly one of path or ref")
+            errors.append(f"asset.path-or-ref: {where} must declare exactly one of path or ref")
             continue
-        if not has_path:
+        if has_ref:
+            if isinstance(item["ref"], dict):
+                asset_kinds.add(asset_kind)
             continue
         rel = item["path"]
-        if rel.startswith("./") or "\\" in rel:
-            errors.append(f"asset.path-form: local asset path {rel!r} must be a relative POSIX path without a leading './'")
-        if rel in example_paths:
-            errors.append(f"asset.duplicate-path: duplicate local asset path: {rel}")
+        if not nonempty_str(rel):
+            errors.append(f"asset.path-form: {where}.path must be a non-empty string")
             continue
         example_paths.add(rel)
-        local_asset_kinds[rel] = "PackageExample"
-        target = (root / rel).resolve()
-        try:
-            target.relative_to(root)
-        except ValueError:
-            errors.append(f"asset.path-escape: asset path escapes package root: {rel}")
+        asset_kinds.add(asset_kind)
+        absolute = rel.startswith("/") or bool(re.match(r"^[A-Za-z]:", rel))
+        form_bad = absolute or "\\" in rel or rel.startswith("./") or "//" in rel or rel.endswith("/")
+        if form_bad:
+            errors.append(f"asset.path-form: local asset path {rel!r} must be a relative POSIX path without a leading './'")
+        norm = None if absolute else normalize_rel_path(rel)
+        if norm is None:
+            if absolute or posixpath.normpath(rel).startswith(".."):
+                errors.append(f"asset.path-escape: asset path escapes package root: {rel}")
             continue
-        if not target.exists():
+        if form_bad:
+            continue
+        if rel in seen_paths:
+            errors.append(f"asset.duplicate-path: duplicate local asset path: {rel}")
+        seen_paths.add(rel)
+        local_asset_kinds[rel] = "PackageExample"
+        target = root / norm
+        if target.is_file():
+            try:
+                target.resolve().relative_to(root.resolve())
+            except ValueError:
+                errors.append(f"asset.path-escape: asset path escapes package root: {rel}")
+                continue
+        if not target.is_file():
             errors.append(f"asset.missing-file: local asset path does not exist: {rel}")
             continue
-        if is_ignored(ignore_rules, rel):
+        if is_ignored(ignore_rules, norm):
             errors.append(f"asset.missing-file: local asset path {rel} is excluded by {IGNORE_FILE}, so it is not a package file")
             continue
         if target.suffix.lower() in {".yaml", ".yml"}:
@@ -552,9 +657,9 @@ def validate_package(path: str | Path) -> ValidationResult:
         if adata["apiVersion"] != data.get("apiVersion"):
             errors.append(f"asset.api-version: {rel} declares apiVersion {adata['apiVersion']!r}; it must equal the manifest's {data.get('apiVersion')!r}")
         asset_kind = adata.get("kind")
-        if asset_kind in DOCUMENT_KINDS:
+        if isinstance(asset_kind, str) and asset_kind in DOCUMENT_KINDS:
             continue  # an ObservationSet or EWS document, not an asset
-        if not isinstance(asset_kind, str) or not asset_kind:
+        if not nonempty_str(asset_kind):
             errors.append(f"asset.kind: {rel} declares apiVersion {adata['apiVersion']!r} but no kind")
             continue
         if not kind_issues(asset_kind, f"{rel}: kind", discovered=True):
@@ -592,7 +697,7 @@ def validate_package(path: str | Path) -> ValidationResult:
     from .extraction import multi_latest_warnings  # local import: extraction depends on core
     warnings.extend(multi_latest_warnings(local_asset_kinds, local_asset_docs))
     view_includes = {x for rel, k in local_asset_kinds.items() if k == "WorldViewProfile"
-                     for x in (experimental.resolve_view(rel, local_asset_docs, local_asset_kinds).get("projection") or {}).get("include", []) or []
+                     for x in (lambda inc: inc if isinstance(inc, list) else [])(dig(experimental.resolve_view(rel, local_asset_docs, local_asset_kinds), "projection", "include"))
                      if isinstance(x, str)}
     ews_fields, field_errors = compiler_fields(root, local_asset_kinds, local_asset_docs)
     errors.extend(field_errors)
@@ -619,7 +724,7 @@ def validate_package(path: str | Path) -> ValidationResult:
             warnings.append("worldmodel.model-artifact-missing: WorldModelPackage should reference a ModelArtifact, even if it is contract-only/unbound")
         if "EvaluationProfile" not in asset_kinds:
             warnings.append("worldmodel.evaluation-profile-missing: WorldModelPackage should reference an EvaluationProfile")
-        if "RepresentationAdapterProfile" not in asset_kinds:
+        if "RepresentationAdapterProfile" not in local_asset_kinds.values():
             errors.append("worldmodel.adapter: WorldModelPackage requires a RepresentationAdapterProfile (an identity adapter is valid when no transform is needed)")
         wm = spec.get("worldModel") if isinstance(spec.get("worldModel"), dict) else None  # missing: worldmodel.spec only
         inputs = wm.get("inputs") if wm is not None else None
@@ -629,7 +734,7 @@ def validate_package(path: str | Path) -> ValidationResult:
         adapter_ref = representation.get("adapterRef") if isinstance(representation, dict) else None
         if wm is None:
             pass
-        elif not isinstance(adapter_ref, str) or not adapter_ref.strip():
+        elif not nonempty_str(adapter_ref):
             errors.append("worldmodel.adapter-ref: WorldModelPackage requires spec.worldModel.representation.adapterRef")
         elif local_asset_kinds.get(adapter_ref) != "RepresentationAdapterProfile":
             errors.append("worldmodel.adapter-ref: spec.worldModel.representation.adapterRef must point to a local RepresentationAdapterProfile asset")
@@ -640,12 +745,17 @@ def validate_package(path: str | Path) -> ValidationResult:
                 errors.append("worldmodel.adapter-source: RepresentationAdapterProfile referenced by adapterRef must declare spec.source = EffectiveWorldState")
 
     if kind == "WorldPackage":
-        conformance = spec.get("conformance") if spec.get("conformance") is not None else {}
-        profile = conformance.get("profile", DEFAULT_WORLD_PROFILE) if isinstance(conformance, dict) else None
-        if profile not in WORLD_PROFILES:
-            errors.append(f"profile.unknown: spec.conformance.profile must be one of {WORLD_PROFILES}")
-        else:
-            errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, ews_fields, identity))
+        profile = DEFAULT_WORLD_PROFILE
+        if "conformance" in spec:
+            conformance = spec["conformance"]
+            if not isinstance(conformance, dict):
+                errors.append("profile.unknown: spec.conformance must be a mapping with a defined profile")
+            elif "profile" in conformance:
+                if isinstance(conformance["profile"], str) and conformance["profile"] in WORLD_PROFILES:
+                    profile = conformance["profile"]
+                else:
+                    errors.append(f"profile.unknown: spec.conformance.profile must be one of {WORLD_PROFILES}")
+        errors.extend(_world_profile_errors(profile, spec, asset_kinds, local_asset_kinds, local_asset_docs, ews_fields, identity))
     elif kind == "OntologyPackage" and spec.get("conformance") is not None:
         conformance = spec.get("conformance")
         profile = conformance.get("profile") if isinstance(conformance, dict) else None
@@ -653,10 +763,10 @@ def validate_package(path: str | Path) -> ValidationResult:
             errors.append(f"profile.unknown: spec.conformance.profile must be one of {ontology_module.ONTOLOGY_PROFILES} for an OntologyPackage")
         else:
             errors.extend(ontology_module.ontology_profile_errors(profile, root, spec))
-    elif spec.get("conformance") is not None:
+    elif "conformance" in spec and kind not in ("WorldPackage", "OntologyPackage"):
         warnings.append("manifest.conformance-ignored: spec.conformance applies to WorldPackage and OntologyPackage only and is ignored")
 
-    _validate_evaluation_lineage(spec, kind, identity, local_asset_kinds, local_asset_docs, errors, warnings)
+    _validate_evaluation_lineage(kind, identity, grounding, local_asset_kinds, local_asset_docs, errors, warnings)
 
     return ValidationResult(not errors, errors, warnings, data)
 
@@ -677,9 +787,9 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
                                                  ews_fields,
                                                  f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"),
         }
-    if data.get("kind") == "WorldPackage" and isinstance(spec, dict) and isinstance((spec.get("world") or {}).get("semanticBinding"), str):
-        bdoc = docs.get(spec["world"]["semanticBinding"]) or {}
-        bound = set(((bdoc.get("spec") or {}).get("fields") or {}))
+    if data.get("kind") == "WorldPackage" and isinstance(dig(spec, "world", "semanticBinding"), str):
+        bound_fields = dig(docs.get(spec["world"]["semanticBinding"]), "spec", "fields")
+        bound = set(bound_fields) if isinstance(bound_fields, dict) else set()
         fields = {f for compiler in ews_fields.values() for f in compiler or []}
         summary["semanticCoverage"] = {"boundFields": len(bound & fields), "fields": len(fields)}
     if data.get("kind") == "OntologyPackage" and isinstance(spec, dict):
@@ -702,11 +812,11 @@ def inspect_package(path: str | Path, graph: bool = False, resolved_views: bool 
         "valid": result.valid,
         "errors": result.errors,
         "warnings": result.warnings,
-        "asset_count": len(local_assets(root, spec)[0]) + len([a for a in spec.get("assets", []) or [] if isinstance(a, dict) and "ref" in a]),
+        "asset_count": len(local_assets(root, spec)[0]) + len([a for a in _list(spec.get("assets")) if isinstance(a, dict) and "ref" in a]),
         "domains": spec.get("domains", []),
         "extensions": [
             {"name": d["as"], "ref": d.get("ref"), "mustUnderstand": bool(d.get("mustUnderstand", False))}
-            for d in (spec.get("dependencies") or []) if isinstance(d, dict) and isinstance(d.get("as"), str)
+            for d in _list(spec.get("dependencies")) if isinstance(d, dict) and isinstance(d.get("as"), str)
         ],
         **summary,
     }
@@ -743,14 +853,16 @@ def package_documents(root: Path, skip: set[str] = frozenset()) -> Iterator[tupl
 
 def local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dict[str, dict[str, Any]]]:
     """Kinds and parsed YAML documents of local assets (discovered, plus listed PackageExample files), by path."""
-    kinds: dict[str, str] = {}
-    docs: dict[str, dict[str, Any]] = {}
-    examples = {item["path"] for item in spec.get("assets", []) or []
-                if isinstance(item, dict) and item.get("kind") == "PackageExample" and isinstance(item.get("path"), str)}
+    kinds: dict[str, str] = PathMap()
+    docs: dict[str, dict[str, Any]] = PathMap()
+    assets = spec.get("assets") if isinstance(spec, dict) else None
+    examples = {item["path"] for item in assets if isinstance(item, dict) and item.get("kind") == "PackageExample"
+                and isinstance(item.get("path"), str)} if isinstance(assets, list) else set()
     for rel in examples:
         kinds[rel] = "PackageExample"
+        norm = normalize_rel_path(rel)
         try:
-            doc = load_yaml((root / rel).read_text(encoding="utf-8"))
+            doc = load_yaml((root / norm).read_text(encoding="utf-8")) if norm else None
         except Exception:
             continue
         if isinstance(doc, dict):
@@ -763,7 +875,9 @@ def local_assets(root: Path, spec: dict[str, Any]) -> tuple[dict[str, str], dict
 
 
 def _ref_asset_kinds(spec: dict[str, Any]) -> set[str]:
-    return {a["kind"] for a in spec.get("assets", []) or [] if isinstance(a, dict) and isinstance(a.get("kind"), str) and isinstance(a.get("ref"), dict)}
+    assets = spec.get("assets")
+    return {a["kind"] for a in assets if isinstance(a, dict) and nonempty_str(a.get("kind")) and isinstance(a.get("ref"), dict)
+            and "path" not in a} if isinstance(assets, list) else set()
 
 
 def package_files(root: Path) -> list[Path]:
@@ -885,10 +999,10 @@ def _ensure_term_index(root: Path, manifest: dict[str, Any]) -> None:
     """DD-2: an OntologyPackage whose schema is not owp-yaml needs a term index; generate it when it is missing and rdflib is available."""
     if manifest.get("kind") != "OntologyPackage":
         return
-    onto = (manifest.get("spec") or {}).get("ontology")
+    onto = dig(manifest, "spec", "ontology")
     if not isinstance(onto, dict) or onto.get("termIndex"):
         return
-    schema = [e for e in onto.get("entrypoints") or [] if isinstance(e, dict) and e.get("role") == "schema"]
+    schema = [e for e in _list(onto.get("entrypoints")) if isinstance(e, dict) and e.get("role") == "schema"]
     if schema and not any(e.get("format") == "owp-yaml" for e in schema):
         try:
             import rdflib  # noqa: F401

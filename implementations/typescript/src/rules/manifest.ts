@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { Context, error } from "../context.js";
-import { fileExists, isNonEmptyString, isObj, SEMVER_RE } from "../util.js";
+import { fileExists, isNonEmptyString, isObj, SEMVER_RE, jsString } from "../util.js";
 import { API_VERSION, HUMAN_CARDS, PACKAGE_KINDS } from "../vocab.js";
 
 /** Spec section 2 + 3: identity, apiVersion, kind, spec object, human card. */
@@ -38,7 +38,7 @@ export function checkManifest(ctx: Context): void {
       ok = false;
     }
     if (md.namespace !== undefined && md.name !== undefined && md.version !== undefined) {
-      ctx.rawIdentity = `${md.namespace}/${md.name}@${md.version}`;
+      ctx.rawIdentity = `${jsString(md.namespace)}/${jsString(md.name)}@${jsString(md.version)}`; // any value, even {toString: 1}
     }
     if (ok) ctx.identity = `${md.namespace}/${md.name}@${md.version}`;
   }
@@ -47,7 +47,7 @@ export function checkManifest(ctx: Context): void {
     error(ctx, "manifest.spec", "spec must be a mapping", "owp.yaml");
   }
 
-  const card = HUMAN_CARDS[ctx.packageKind];
+  const card = Object.prototype.hasOwnProperty.call(HUMAN_CARDS, ctx.packageKind) ? HUMAN_CARDS[ctx.packageKind] : undefined; // kind: toString is no kind
   if (card && !fileExists(path.join(ctx.root, card))) {
     error(ctx, "package.card", `${ctx.packageKind} requires human card ${card} at the package root`, card);
   }

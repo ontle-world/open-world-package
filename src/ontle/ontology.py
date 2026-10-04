@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .structure import SEMANTIC_PROFILE, TERM_INDEX, external_ref_issues, structure_errors
+from .values import WHITESPACE, dig, normalize_rel_path
 from .yamlio import dump_yaml, load_yaml
 
 ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"]
@@ -18,14 +19,17 @@ FORMATS = {"owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "li
 ROLES = {"schema", "shapes", "mappings", "labels"}
 TERM_TYPES = {"class", "property", "individual", "datatype", "concept"}
 PREFIX_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*\Z")
-IRI_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:\S+\Z")
-CURIE_RE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):([^\s/][^\s]*)\Z")
+IRI_RE = re.compile(rf"^[A-Za-z][A-Za-z0-9+.-]*:[^{WHITESPACE}]+\Z")
+CURIE_RE = re.compile(rf"^([A-Za-z][A-Za-z0-9_-]*):([^{WHITESPACE}/][^{WHITESPACE}]*)\Z")
 
 def inside_package(root: Path, rel: Any) -> bool:
-    """rel is a package-relative path of an existing file inside the package root."""
-    if not isinstance(rel, str) or not rel or rel.startswith("./") or "\\" in rel:
+    """rel is a package-relative path (relative POSIX, no leading './') of an existing file inside the package root."""
+    if not isinstance(rel, str) or not rel or rel.startswith("./"):
         return False
-    target = (root / rel).resolve()
+    norm = normalize_rel_path(rel)
+    if norm is None:
+        return False
+    target = (root / norm).resolve()
     try:
         target.relative_to(root.resolve())
     except ValueError:
@@ -54,18 +58,20 @@ def _profile_curies(doc: dict[str, Any]) -> list[tuple[str, str, str]]:
     """(where, value, term type) for every CURIE a SemanticProfile defines or uses. Term type is '' for uses."""
     out: list[tuple[str, str, str]] = []
     spec = doc.get("spec") if isinstance(doc.get("spec"), dict) else {}
-    for i, t in enumerate(spec.get("types") or []):
+    as_list = lambda v: v if isinstance(v, list) else []
+    for i, t in enumerate(as_list(spec.get("types"))):
         if not isinstance(t, dict):
             continue
         out.append((f"spec.types[{i}].id", t.get("id"), "class"))
-        for parent in t.get("subClassOf") or [] if isinstance(t.get("subClassOf"), list) else [t.get("subClassOf")] if t.get("subClassOf") else []:
+        parent = t.get("subClassOf")
+        for parent in parent if isinstance(parent, list) else [parent] if parent not in (None, False, 0, "") else []:
             out.append((f"spec.types[{i}].subClassOf", parent, ""))
-        for j, p in enumerate(t.get("properties") or []):
+        for j, p in enumerate(as_list(t.get("properties"))):
             if isinstance(p, dict):
                 out.append((f"spec.types[{i}].properties[{j}].id", p.get("id"), "property"))
                 if isinstance(p.get("range"), str) and ":" in p["range"]:
                     out.append((f"spec.types[{i}].properties[{j}].range", p["range"], ""))
-    for i, r in enumerate(spec.get("relations") or []):
+    for i, r in enumerate(as_list(spec.get("relations"))):
         if isinstance(r, dict):
             out.append((f"spec.relations[{i}].id", r.get("id"), "property"))
             for key in ("domain", "range"):
@@ -105,9 +111,9 @@ def ontology_issues(root: Path, spec: dict[str, Any], declared: set[str]) -> tup
         if not inside_package(root, path):
             errors.append(f"ontology.entrypoint: spec.ontology.entrypoints[{i}].path {path!r} must be an existing file inside the package")
             continue
-        if fmt not in FORMATS:
+        if not (isinstance(fmt, str) and fmt in FORMATS):
             errors.append(f"ontology.format: spec.ontology.entrypoints[{i}].format {fmt!r} must be one of {sorted(FORMATS)}")
-        if role not in ROLES:
+        if not (isinstance(role, str) and role in ROLES):
             errors.append(f"ontology.entrypoint: spec.ontology.entrypoints[{i}].role {role!r} must be one of {sorted(ROLES)}")
         if fmt == "owp-yaml":
             doc = _load(root / path)
@@ -126,8 +132,10 @@ def ontology_issues(root: Path, spec: dict[str, Any], declared: set[str]) -> tup
             errors.append(f"ontology.term-index: spec.ontology.termIndex {term_index!r} must be an existing OntologyTermIndex document")
         else:
             errors.extend(structure_errors(doc, TERM_INDEX, term_index, declared))
-            for j, term in enumerate((doc.get("spec") or {}).get("terms") or []):
-                if not (isinstance(term, dict) and isinstance(term.get("iri"), str) and IRI_RE.match(term["iri"]) and term.get("type") in TERM_TYPES):
+            listed = doc["spec"].get("terms") if isinstance(doc.get("spec"), dict) else None
+            for j, term in enumerate(listed if isinstance(listed, list) else []):
+                if not (isinstance(term, dict) and isinstance(term.get("iri"), str) and IRI_RE.match(term["iri"])
+                        and isinstance(term.get("type"), str) and term["type"] in TERM_TYPES):
                     errors.append(f"ontology.term-index: {term_index}: spec.terms[{j}] needs an absolute iri and a type in {sorted(TERM_TYPES)}")
     for i, imp in enumerate(ontology.get("externalImports") or [] if isinstance(ontology.get("externalImports"), list) else []):
         if not isinstance(imp, dict) or not (isinstance(imp.get("iri"), str) and IRI_RE.match(imp["iri"])):
@@ -179,10 +187,11 @@ def satisfied_ontology_profile(root: Path, spec: dict[str, Any]) -> str | None:
 
 def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str]]:
     """(prefixes, term IRIs) an OntologyPackage defines: owp-yaml schema entrypoints plus its term index."""
-    ontology = (manifest.get("spec") or {}).get("ontology") or {}
-    prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
+    ontology = manifest.get("spec", {}).get("ontology") if isinstance(manifest.get("spec"), dict) else None
+    ontology = ontology if isinstance(ontology, dict) else {}
+    prefixes = {k: v for k, v in ontology["prefixes"].items() if isinstance(v, str)} if isinstance(ontology.get("prefixes"), dict) else {}
     out: set[str] = set()
-    for entry in ontology.get("entrypoints") or []:
+    for entry in ontology.get("entrypoints") if isinstance(ontology.get("entrypoints"), list) else []:
         if (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema"
                 and inside_package(root, entry.get("path"))):  # never read outside the package
             doc = _load(root / entry["path"])
@@ -193,7 +202,8 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
     index = ontology.get("termIndex")
     if inside_package(root, index):
         doc = _load(root / index)
-        for term in ((doc or {}).get("spec") or {}).get("terms") or [] if isinstance(doc, dict) else []:
+        listed = doc["spec"].get("terms") if isinstance(doc, dict) and isinstance(doc.get("spec"), dict) else None
+        for term in listed if isinstance(listed, list) else []:
             if isinstance(term, dict) and isinstance(term.get("iri"), str):
                 out.add(term["iri"])
     return prefixes, out
@@ -206,16 +216,27 @@ RDFS_NS = "http://www.w3.org/2000/01/rdf-schema#"
 RDF_FORMATS = {"turtle": "turtle", "jsonld": "json-ld", "rdf-xml": "xml", "ntriples": "nt"}  # OWL/XML (owl-xml) needs an OWL API tool
 
 
+def _ontology(manifest: Any) -> dict[str, Any]:
+    ontology = dig(manifest, "spec", "ontology")
+    return ontology if isinstance(ontology, dict) else {}
+
+
+def _list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
 def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
     """Terms from every schema entrypoint. RDF formats need the optional rdflib dependency (pip install ontle-open-world[rdf])."""
-    ontology = (manifest.get("spec") or {}).get("ontology") or {}
+    ontology = _ontology(manifest)
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
     found: dict[str, str] = {}
-    for entry in ontology.get("entrypoints") or []:
+    for entry in _list(ontology.get("entrypoints")):
         if not isinstance(entry, dict) or entry.get("role") != "schema":
             continue
         path = root / str(entry.get("path"))
         fmt = entry.get("format")
+        if not isinstance(fmt, str):
+            fmt = repr(fmt)
         if fmt == "owp-yaml":
             doc = _load(path) or {}
             for _, value, term_type in _profile_curies(doc):
@@ -264,11 +285,17 @@ def _rdf_terms(path: Path, rdf_format: str) -> dict[str, str]:
 
 def write_term_index(root: Path, manifest_path: Path) -> Path:
     manifest = load_yaml(manifest_path.read_text(encoding="utf-8"))
-    ontology = manifest.setdefault("spec", {}).setdefault("ontology", {})
+    ontology = dig(manifest, "spec", "ontology")
+    if not isinstance(ontology, dict):
+        from .core import OWPError
+        raise OWPError("ontle ontology index needs an OntologyPackage manifest with a spec.ontology mapping")
     rel = ontology.get("termIndex") or "semantics/terms.yaml"
+    if not isinstance(rel, str) or normalize_rel_path(rel) is None or rel.startswith("./"):
+        from .core import OWPError
+        raise OWPError(f"spec.ontology.termIndex {rel!r} must be a package-relative path")
     target = root / rel
     target.parent.mkdir(parents=True, exist_ok=True)
-    md = manifest.get("metadata") or {}
+    md = manifest.get("metadata") if isinstance(manifest.get("metadata"), dict) else {}
     target.write_text(dump_yaml({
         "apiVersion": "openworld/v1alpha1",
         "kind": "OntologyTermIndex",
@@ -289,8 +316,8 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
     range is a datatype (xsd:, rdf:langString, rdfs:Literal, an enum type, or none) is an owl:DatatypeProperty,
     otherwise an owl:ObjectProperty. A property declared under several types has their union as its domain.
     """
-    ontology = (manifest.get("spec") or {}).get("ontology") or {}
-    prefixes = dict(ontology.get("prefixes") or {})
+    ontology = _ontology(manifest)
+    prefixes = dict(ontology["prefixes"]) if isinstance(ontology.get("prefixes"), dict) else {}
     triples: list[tuple[str, str, str, bool]] = []  # subject, predicate, object, object-is-literal
 
     def iri(value: Any) -> str | None:
@@ -298,11 +325,12 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
 
     specs = []
     for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema":
-            specs.append((_load(root / entry["path"]) or {}).get("spec") or {})
+        if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and inside_package(root, entry.get("path")):
+            doc = _load(root / entry["path"])
+            specs.append(doc.get("spec") if isinstance(doc, dict) and isinstance(doc.get("spec"), dict) else {})
     enums: dict[str, list[Any]] = {}
     for spec in specs:
-        for t in spec.get("types") or []:
+        for t in _list(spec.get("types")):
             if isinstance(t, dict) and iri(t.get("id")) and isinstance(t.get("enum"), list):
                 enums[iri(t.get("id"))] = t["enum"]  # type: ignore[index]
     literal_ranges = ("http://www.w3.org/2001/XMLSchema#", RDF_NS + "langString", RDFS_NS + "Literal")
@@ -316,7 +344,7 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
             entry["ranges"].add(rng)
 
     for spec in specs:
-        for t in spec.get("types") or []:
+        for t in _list(spec.get("types")):
             cls = iri(t.get("id")) if isinstance(t, dict) else None
             if not cls:
                 continue
@@ -330,10 +358,10 @@ def export_rdf(root: Path, manifest: dict[str, Any], fmt: str) -> str:
                     triples.append((cls, "rdfs:subClassOf", iri(parent), False))  # type: ignore[arg-type]
             for lang, text in (t.get("label") or {}).items() if isinstance(t.get("label"), dict) else []:
                 triples.append((cls, "rdfs:label", f"{text}@{lang}", True))
-            for p in t.get("properties") or []:
+            for p in _list(t.get("properties")):
                 if isinstance(p, dict) and iri(p.get("id")):
                     declare(iri(p["id"]), cls, iri(p.get("range")))  # type: ignore[arg-type]
-        for r in spec.get("relations") or []:
+        for r in _list(spec.get("relations")):
             if isinstance(r, dict) and iri(r.get("id")):
                 declare(iri(r["id"]), iri(r.get("domain")), iri(r.get("range")))  # type: ignore[arg-type]
                 props[iri(r["id"])].setdefault("relation", set()).add("yes")  # type: ignore[index]

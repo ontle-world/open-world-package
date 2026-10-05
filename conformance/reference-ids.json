@@ -1454,6 +1454,12 @@
   "valid": {
    "errors": [],
    "warnings": []
+  },
+  "version-mismatch": {
+   "errors": [
+    "evidence.version-mismatch"
+   ],
+   "warnings": []
   }
  },
  "ewsCases": {

@@ -36,8 +36,9 @@ TOOLS = [
      "inputSchema": {"type": "object", "properties": {"path": {"type": "string", "description": "View path in the package, e.g. views/default.yaml"}},
                      "additionalProperties": False}},
     {"name": "term_lookup", "title": "Look up a term",
-     "description": "Find a name, CURIE, or IRI in the package's SemanticBinding (World names, EWS fields, observation types, actions) "
-                    "or, for an OntologyPackage, its terms. Matches case-insensitively on substrings.",
+     "description": "Find a name, label, CURIE, or IRI in the package's SemanticBinding (World names, EWS fields, observation types, "
+                    "actions) and in the terms of its ontologies (the package itself, or OntologyPackage dependencies that resolve). "
+                    "Matches case-insensitively on substrings.",
      "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"], "additionalProperties": False}},
     {"name": "ews_compile", "title": "Compile an Effective World State",
      "description": "Run a State Compiler over observations at asOf and return the EWS (unresolved and missing fields included). "
@@ -62,7 +63,7 @@ class ToolError(Exception):
 
 
 class PackageServer:
-    def __init__(self, root: Path, report_path: str | Path, observations: list[str] | None = None):
+    def __init__(self, root: Path, report_path: str | Path, observations: list[str] | None = None, sources: list[str] | None = None):
         self.root, self.manifest = load_manifest(root)
         self.report_path = report_path  # the directory or archive the user named, so the report carries archive integrity
         self.spec = self.manifest.get("spec") if isinstance(self.manifest.get("spec"), dict) else {}
@@ -71,6 +72,23 @@ class PackageServer:
         self.identity = f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
         self.kinds, self.docs = local_assets(self.root, self.spec)
         self.observations = observations or []
+        self.sources = sources or []
+        self._terms: list[tuple[str, dict[str, str]]] | None = None
+
+    def ontology_terms(self) -> list[tuple[str, dict[str, str]]]:
+        """(package identity, term) for this package if it is an OntologyPackage, and the OntologyPackages among its
+        dependencies that resolve (--source, ONTLE_PATH)."""
+        if self._terms is None:
+            from .resolve import resolve_package
+            packages = {self.identity: (self.root, self.manifest)}
+            try:
+                for ident, p in resolve_package(self.root, self.sources).packages.items():
+                    packages.setdefault(ident, (p.root, p.manifest))
+            except OWPError:
+                pass  # lookups then cover this package only
+            self._terms = [(ident, t) for ident, (root, manifest) in sorted(packages.items()) if manifest.get("kind") == "OntologyPackage"
+                           for t in ontology_module.term_catalog(root, manifest)]
+        return self._terms
 
     # --- resources -------------------------------------------------------------------------------
 
@@ -120,6 +138,15 @@ class PackageServer:
     # --- tools -------------------------------------------------------------------------------
 
     def call(self, name: str, args: dict[str, Any]) -> Any:
+        schema = next(t["inputSchema"] for t in TOOLS if t["name"] == name)
+        unknown = sorted(set(args) - set(schema.get("properties", {})))
+        if unknown:
+            raise ToolError(f"{name} does not take {', '.join(unknown)}; it takes {', '.join(schema.get('properties', {})) or 'no arguments'}")
+        for key, prop in schema.get("properties", {}).items():
+            if key in args and prop.get("type") == "string" and not isinstance(args[key], str):
+                raise ToolError(f"{key} must be a string")
+        if "observations" in args and not isinstance(args["observations"], dict):
+            raise ToolError("observations is an ObservationSet document (an object); for a file in the package, use observationsPath")
         if name == "world_describe":
             return self.describe()
         if name == "view_get":
@@ -172,12 +199,9 @@ class PackageServer:
             for key, value in (entries.items() if isinstance(entries, dict) else []):
                 if q in str(key).lower() or q in json.dumps(value, ensure_ascii=False).lower():
                     matches.append({"in": f"{binding_rel}: spec.{section}", "name": key, "boundTo": value})
-        if self.manifest.get("kind") == "OntologyPackage":
-            prefixes, iris = ontology_module.terms(self.root, self.manifest)
-            for iri in sorted(iris):
-                curie = next((f"{p}:{iri[len(ns):]}" for p, ns in prefixes.items() if iri.startswith(ns)), None)
-                if q in iri.lower() or (curie and q in curie.lower()):
-                    matches.append({"in": "ontology terms", "iri": iri, **({"curie": curie} if curie else {})})
+        for ident, term in self.ontology_terms():
+            if any(q in term[k].lower() for k in ("iri", "curie", "label")):
+                matches.append({"in": f"ontology {ident}", **{k: v for k, v in term.items() if v}})
         return {"query": query, "matches": matches}
 
     def compile(self, args: dict[str, Any]) -> dict[str, Any]:
@@ -288,10 +312,10 @@ def serve(server: PackageServer, stdin: TextIO, stdout: TextIO) -> None:
             stdout.flush()
 
 
-def run(package: str, observations: list[str] | None = None) -> int:
+def run(package: str, observations: list[str] | None = None, sources: list[str] | None = None) -> int:
     from .report import opened_package
     with opened_package(package) as (root, _):
-        server = PackageServer(root, package, observations)
+        server = PackageServer(root, package, [str(Path(p).resolve()) for p in observations or []], sources)
         print(f"ontle mcp: serving {server.identity} on stdio", file=sys.stderr)
         serve(server, sys.stdin, sys.stdout)
     return 0

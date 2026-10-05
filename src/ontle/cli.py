@@ -99,7 +99,27 @@ def fold_errors(errors: list[str]) -> list[str]:
                 lines.append(f"  likely caused by the error above: {e}")
                 shown.add(i)
     lines += [f"ERROR: {e}" for i, e in enumerate(errors) if i not in shown]
-    return lines
+    return collapse_after_unresolved(lines)
+
+
+def collapse_after_unresolved(lines: list[str]) -> list[str]:
+    """When a dependency does not resolve, the terms it would define are unknown: print the first such error per
+    package and count the rest, instead of one line per term."""
+    if not any(line.startswith("ERROR: resolve.unresolved:") for line in lines):
+        return lines
+    out: list[str] = []
+    hidden: dict[str, int] = {}
+    for line in lines:
+        m = re.match(r"ERROR: (grounding\.prefix-unknown): ([^:]+@[^:]+): ", line)
+        if m:
+            key = f"{m.group(1)} in {m.group(2)}"
+            if key in hidden:
+                hidden[key] += 1
+                continue
+            hidden[key] = 0
+        out.append(line)
+    out += [f"  ... and {n} more {key}, likely caused by the unresolved dependency above" for key, n in hidden.items() if n]
+    return out
 
 
 def cmd_resolve(args):
@@ -108,17 +128,21 @@ def cmd_resolve(args):
     return 1 if resolution.errors else 0
 
 
-def cmd_ews_compile(args):
-    docs = [load_document(path) for path in args.observations]
+def merged_observations(paths: list[str]) -> Any:
+    """One ObservationSet from several files; ids must stay unique (checked by the compiler)."""
+    docs = [load_document(path) for path in paths]
     if len(docs) == 1:
-        observations = docs[0]
-    else:  # several ObservationSets are merged into one; ids must stay unique (checked by the compiler)
-        merged: list = []
-        for doc in docs:
-            spec = doc.get("spec") if isinstance(doc, dict) else None
-            listed = spec.get("observations") if isinstance(spec, dict) else None
-            merged += listed if isinstance(listed, list) else []
-        observations = {"apiVersion": "openworld/v1alpha1", "kind": "ObservationSet", "spec": {"observations": merged}}
+        return docs[0]
+    merged: list = []
+    for doc in docs:
+        spec = doc.get("spec") if isinstance(doc, dict) else None
+        listed = spec.get("observations") if isinstance(spec, dict) else None
+        merged += listed if isinstance(listed, list) else []
+    return {"apiVersion": "openworld/v1alpha1", "kind": "ObservationSet", "spec": {"observations": merged}}
+
+
+def cmd_ews_compile(args):
+    observations = merged_observations(args.observations)
     compiler = args.compiler
     if compiler is None:
         manifest = load_manifest(args.world)[1]
@@ -141,6 +165,13 @@ def cmd_ews_compile(args):
     return 0
 
 
+def cmd_observations_csv(args):
+    from .observations import csv_observations
+    print(dump_yaml(csv_observations(args.file, args.type, args.subject, args.time, args.number, args.list, args.separator,
+                                     args.column)), end="")
+    return 0
+
+
 def cmd_ews_check(args):
     try:
         ews = load_document(args.ews, rule="ews.kind")
@@ -148,6 +179,16 @@ def cmd_ews_check(args):
         errors = [str(exc)]
     else:
         errors = check_ews(args.world, ews)
+    if not errors and args.observations:  # also recompile and compare: the values, not only the shape
+        from .ews import ews_differences
+        spec = ews.get("spec") or {}
+        compiler = (spec.get("stateCompiler") or "").partition("#")[2]
+        as_of = args.as_of or (spec.get("context") or {}).get("asOf")
+        if not compiler or not isinstance(as_of, str):
+            errors = ["ews check --observations needs the EWS's spec.stateCompiler and spec.context.asOf (or --as-of)"]
+        else:
+            compiled = compile_ews(args.world, compiler, merged_observations(args.observations), as_of)
+            errors = [f"compiled value differs: {d}" for d in ews_differences(ews, compiled)]
     if not errors:
         print("VALID")
         return 0
@@ -205,7 +246,7 @@ def cmd_interop_mcp(args):
 
 def cmd_mcp(args):
     from .mcp import run
-    return run(args.package, args.observations)
+    return run(args.package, args.observations, args.source + project_sources(args.package))
 
 
 def cmd_fetch(args):
@@ -363,7 +404,7 @@ def build_parser():
     y = esp.add_parser("compile", help="run a declarative State Compiler over an ObservationSet")
     y.add_argument("world", help="World package directory")
     y.add_argument("--compiler", help="StateCompilerProfile path inside the World package (default: the World's defaultStateCompiler)")
-    y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file, relative to the current directory (repeatable; sets are merged)")
+    y.add_argument("--observations", required=True, action="append", help="ObservationSet file (YAML or JSON), relative to the current directory (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
     y.add_argument("--ngsi-ld", action="store_true", help="print NGSI-LD entities (normalized): per-subject fields as attributes, unresolved alternatives as datasetId instances")
@@ -373,7 +414,23 @@ def build_parser():
     y = esp.add_parser("check", help="check an EWS document against its State Compiler output contract")
     y.add_argument("ews", help="EffectiveWorldState YAML file")
     y.add_argument("--world", required=True, help="World package directory")
+    y.add_argument("--observations", action="append", default=[], help="also compile these ObservationSet files with the EWS's State "
+                   "Compiler and compare the values (repeatable)")
+    y.add_argument("--as-of", help="with --observations: compilation time (default: the EWS's spec.context.asOf)")
     y.set_defaults(func=cmd_ews_check)
+
+    x = sp.add_parser("observations", help="make ObservationSet documents from records")
+    osp2 = x.add_subparsers(dest="observations_command", required=True)
+    y = osp2.add_parser("csv", help="one CSV of one record type -> an ObservationSet on stdout (merge sets with repeated ews compile --observations)")
+    y.add_argument("file")
+    y.add_argument("--type", required=True, help="observation type, as State Compiler bindings name it in `from`, for example QMS.claim")
+    y.add_argument("--subject", required=True, help="column with the record's subject (the entity it is about)")
+    y.add_argument("--time", required=True, help="column with the time it was observed, UTC YYYY-MM-DDTHH:MM:SSZ")
+    y.add_argument("--number", action="append", default=[], help="column whose values are numbers (repeatable)")
+    y.add_argument("--list", action="append", default=[], help="column whose values are lists (repeatable)")
+    y.add_argument("--separator", default=";", help="list separator (default ';')")
+    y.add_argument("--column", action="append", default=[], help="keep only these value columns (repeatable; default: every other column)")
+    y.set_defaults(func=cmd_observations_csv)
 
     x = sp.add_parser("inspect", help="inspect package identity and summary")
     x.add_argument("path", nargs="?", default=".", help="package directory or .owp.zip archive")
@@ -411,8 +468,10 @@ def build_parser():
 
     x = sp.add_parser("mcp", help="serve one package read-only to agents as a Model Context Protocol server on stdio (docs/interop/MCP.md)")
     x.add_argument("package", nargs="?", default=".", help="package directory or .owp.zip archive")
-    x.add_argument("--observations", action="append", default=[], help="ObservationSet YAML file the EWS resources compile from "
+    x.add_argument("--observations", action="append", default=[], help="ObservationSet file (YAML or JSON) the EWS resources compile from "
                    "(repeatable; sets are merged)")
+    x.add_argument("--source", action="append", default=[], help="package source for its dependencies, so term_lookup also searches "
+                   "the ontologies it depends on (repeatable; ONTLE_PATH is also read)")
     x.set_defaults(func=cmd_mcp)
 
     x = sp.add_parser("export", help="export an OntologyPackage's owp-yaml schema as RDF")
@@ -422,7 +481,7 @@ def build_parser():
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")
-    x.add_argument("--output")
+    x.add_argument("--output", help="archive file, or a directory for the default name <namespace>-<name>-<version>.owp.zip (default: <package>/dist/)")
     x.add_argument("--vendor", action="store_true", help="include pinned https external content in the archive (spec section 7)")
     x.add_argument("--list", action="store_true", help="print the files the archive would contain, without writing it")
     x.set_defaults(func=cmd_pack)

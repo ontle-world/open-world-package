@@ -83,11 +83,14 @@ drafts/
 *.wip.yaml
 ```
 
-`ontle new <Kind> <path>` writes the same kind of file as a skeleton. It starts with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete it:
+`ontle new <Kind> <path>` writes the same kind of file as a skeleton, filled from the package where it can be (a State Compiler's `worldViewRef`, evidence's `subject` and `scope`). For a kind with a JSON Schema it starts with a `# yaml-language-server: $schema=...` line, so editors with the YAML extension validate and complete it:
 
 ```bash
+ontle new WorldViewProfile views/sales-manager.yaml
 ontle new StateCompilerProfile state/sales-manager.yaml
 ```
+
+`ontle inspect` shows the profile the package declares and the highest one it satisfies. The starter declares `stateful` and satisfies `model-ready`, since its State Compiler already has an output schema; declare the higher profile when you want validation to hold you to it.
 
 ## 5. Build a deterministic package archive
 
@@ -126,6 +129,20 @@ Grounding is checked against the World itself, so `ontle validate` needs to find
 
 To run and compare models, see `examples/business/quality-scenario-world-model/WORLDMODEL.md`: a model is a function over an EWS and a scenario, and `models/run.py` runs yours next to reference baselines and scores them against a recorded outcome.
 
+### Evidence
+
+`CompatibilityEvidence` records an evaluation result for the model: which EvaluationProfile (`<name>@<version>`) produced it, and its scope in the World. Inside the package it is one more asset. When the evaluation finishes after the release, publish it next to the archive instead:
+
+```bash
+ontle pack . --output dist/
+ontle inspect dist/example-quality-model-0.1.0.owp.zip --report    # integrity.digest is the archive digest
+ontle new CompatibilityEvidence evidence.yaml                          # subject and scope come from the package
+# set spec.subjectDigest to that digest and spec.evaluationProfile, then move evidence.yaml out of the package
+ontle evidence check evidence.yaml --package dist/example-quality-model-0.1.0.owp.zip
+```
+
+`evidence check` checks the subject and digest against the archive, the scope against the model's grounding, and the EvaluationProfile version against the one the archive packages (spec section 9.1).
+
 Both templates expose the same `ModelArtifact + RepresentationAdapter + EvaluationProfile` skeleton. Every World Model must also declare its compatible World View(s) and State Compiler(s) as `<worldRef>#<asset path>`; the multimodal variant additionally declares modality and temporal contracts.
 
 ## 8. Bind your World to an ontology
@@ -134,11 +151,34 @@ Publish shared vocabulary as an OntologyPackage, depend on it, and bind your Wor
 
 ```bash
 ontle init quality-terms --template ontology --namespace acme
-# in the World: add the ontology to spec.dependencies, add a SemanticBinding asset,
-# and point spec.world.semanticBinding at it (see examples/business/manufacturing-quality-world)
+```
+
+In the World, add the ontology to `spec.dependencies`, write a SemanticBinding, and point `spec.world.semanticBinding` at it:
+
+```yaml
+# semantics/terms.yaml
+apiVersion: openworld/v1alpha1
+kind: SemanticBinding
+metadata: {name: terms}
+spec:
+  terms:                        # World names -> ontology classes
+    lot: q:Lot
+    claim: q:Claim
+  fields:                       # EWS fields -> a class and a property path
+    claim.status: {class: q:Claim, path: [q:claimStatus]}
+  observationTypes:             # observation types -> the class of their subjects
+    QMS.claim: q:Claim
+```
+
+The prefix (`q:`) is the one the ontology declares in `spec.ontology.prefixes`. Then:
+
+```bash
 ontle validate --resolve --source .. .
 ontle inspect .            # semanticCoverage shows how many EWS fields are bound
+ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z --jsonld --source ..
 ```
+
+`examples/business/manufacturing-quality-world/semantics/quality-terms.yaml` binds a whole World, including coded values and actions.
 
 ## 9. Describe who does the work
 
@@ -176,6 +216,6 @@ ontle push dist/acme-demo-0.1.0.owp.zip ghcr.io/acme/demo:0.1.0   # needs oras
 ontle sign dist/acme-demo-0.1.0.owp.zip                           # needs cosign
 ```
 
-Consumers resolve with `--source index:<url-or-path>` or `--source oci:<reference>`.
+Consumers resolve with `--source index:<url-or-path>` or `--source oci:<reference>`. The [package catalog](https://ontle-world.github.io/open-world-package/catalog/) publishes the example packages this way: `--source index:https://ontle-world.github.io/open-world-package/catalog/index.json`.
 
 To let an agent read a package, serve it over the Model Context Protocol: `ontle mcp .` (stdio, read-only; see [interop/MCP.md](interop/MCP.md)).

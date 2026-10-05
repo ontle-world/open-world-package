@@ -9,7 +9,8 @@ Layout (the w3id rules in internal docs map onto these paths):
     vocab/owp/value-sets.ttl, shapes.ttl          value sets as SKOS (https://w3id.org/owp/vs/<set>), SHACL shapes for EWS RDF
     alignments/owp-align-*/                      informative alignments
     spec/<apiVersion>/                           the specification at this commit, as HTML
-    pkg/index.html                               what a package IRI identifies
+    pkg/index.html                               what a package IRI identifies; links to its catalog page when there is one
+    catalog/                                     the example packages: pages, archives, and a PackageIndex (site_catalog.py)
 """
 from __future__ import annotations
 
@@ -21,6 +22,8 @@ from pathlib import Path
 import markdown
 import rdflib
 from rdflib.namespace import OWL, RDF, RDFS
+
+from site_catalog import build_catalog
 
 ROOT = Path(__file__).resolve().parent.parent
 OWP = rdflib.Namespace("https://w3id.org/owp/ns#")
@@ -135,14 +138,27 @@ def main() -> int:
 <script>
 const q = new URLSearchParams(location.search);
 if (q.get("ns") && q.get("name") && q.get("version")) {
-  document.getElementById("id").textContent = "This identifier names the package " + q.get("ns") + "/" + q.get("name") + "@" + q.get("version") + ".";
+  const id = q.get("ns") + "/" + q.get("name") + "@" + q.get("version");
+  const el = document.getElementById("id");
+  el.textContent = "This identifier names the package " + id + ".";
+  fetch("../catalog/index.json").then((r) => r.json()).then((index) => {
+    if (!index.packages.some((p) => p.identity === id)) return;
+    const a = document.createElement("a");
+    a.href = "../catalog/" + [q.get("ns"), q.get("name"), q.get("version")].map(encodeURIComponent).join("/") + "/";
+    a.textContent = "Open it in the package catalog";
+    el.append(" ", a, ".");
+  }).catch(() => {});
 }
 </script>"""), encoding="utf-8")
+
+    # package catalog (registry step P0)
+    build_catalog(out, page)
 
     # landing
     (out / "index.html").write_text(page("Open World Package", f"""<h1>Open World Package</h1>
 <ul><li><a href="vocab/owp/">Vocabulary</a> (<code>https://w3id.org/owp/ns#</code>)</li>
 <li><a href="alignments/">Alignments</a></li><li><a href="spec/{API_VERSION}/">Specification {API_VERSION}</a></li>
+<li><a href="catalog/">Package catalog</a>: the example packages, with reports and archives</li>
 <li><a href="pkg/">Package identifiers</a></li></ul>"""), encoding="utf-8")
     print(out)
     return 0

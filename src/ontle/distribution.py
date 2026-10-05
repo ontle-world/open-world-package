@@ -392,9 +392,18 @@ def check_detached_evidence(evidence: dict[str, Any], archive: str | Path) -> li
     lineage_errors: list[str] = []
     mspec = manifest.get("spec") if isinstance(manifest.get("spec"), dict) else {}
     grounding = _world_model_grounding(mspec, []) if manifest.get("kind") == "WorldModelPackage" else None
-    _validate_evaluation_lineage(manifest.get("kind"), identity, grounding,
-                                 {"evidence": "CompatibilityEvidence"}, {"evidence": evidence}, lineage_errors, [])
-    return errors + [e for e in lineage_errors if not e.startswith("evidence.version-mismatch")]
+    # The archive's EvaluationProfiles and VerifierProfiles, so a version the evidence names must match a packaged one.
+    kinds: dict[str, str] = {}
+    docs: dict[str, Any] = {}
+    with tempfile.TemporaryDirectory() as td, zipfile.ZipFile(archive) as zf:
+        zf.extractall(td)  # verify_archive accepted every name
+        packaged_kinds, packaged_docs = local_assets(Path(td), mspec)
+    for rel, kind in packaged_kinds.items():
+        if kind in {"EvaluationProfile", "VerifierProfile"}:
+            kinds[f"package:{rel}"], docs[f"package:{rel}"] = kind, packaged_docs.get(rel)
+    kinds["evidence"], docs["evidence"] = "CompatibilityEvidence", evidence
+    _validate_evaluation_lineage(manifest.get("kind"), identity, grounding, kinds, docs, lineage_errors, [])
+    return errors + [e for e in lineage_errors if e.startswith("evidence.")]  # the packaged profiles were checked when it was packed
 
 
 # --- catalogs (informative exports) ------------------------------------------------

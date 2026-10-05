@@ -949,6 +949,8 @@ def deterministic_pack(path: str | Path, output: str | Path | None = None, vendo
         out_dir.mkdir(exist_ok=True)
         output = out_dir / f"{md['namespace']}-{md['name']}-{md['version']}.owp.zip"
     output = Path(output).expanduser().resolve()
+    if output.is_dir():  # a directory: the default file name inside it
+        output = output / f"{md['namespace']}-{md['name']}-{md['version']}.owp.zip"
     output.parent.mkdir(parents=True, exist_ok=True)
 
     files = package_files(root)

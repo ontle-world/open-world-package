@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Fixes and improvements from a new-user pilot (PyPI `ontle`, a World from raw MES/QMS records, and a World Model with detached evidence):
+  - Fix: `ontle evidence check` compares the EvaluationProfile and VerifierProfile versions the evidence names with the ones the archive packages (`evidence.version-mismatch`), as validation does inside a package. Spec section 9.1 says so; both implementations; a new evidence conformance case.
+  - Fix: `ontle pack --output <directory>` writes the default file name into the directory instead of failing.
+  - When a dependency does not resolve, `validate` prints the first `grounding.prefix-unknown` error per package and counts the rest, instead of one line per term.
+  - `--source <file>.json` says to use `index:<file>`.
+  - Report hints: a `metadata.description` or card that still has template text, and a card that names package files that are not there. Both implementations.
+  - The report's `state.boundFields` is now `state.withBinding`, and `semanticCoverage.boundFields` is `semanticCoverage.boundToTerms`, so the two counts are not confused.
+  - `ontle mcp` tools reject unknown arguments, and `ews_compile` points at `observationsPath` when `observations` is not a document.
+  - `ontle new CompatibilityEvidence` fills `subject` and `scope` from the package.
+  - `ontle observations csv <file> --type --subject --time [--number] [--list]` turns a CSV of one record type into an ObservationSet.
+  - `ontle ews check <ews> --world <w> --observations <file>` also compiles the observations and reports every field whose value differs, so an expected EWS can be kept current in CI. Before, `ews check` checked only the shape.
+  - `ontle mcp --source` resolves the package's dependencies, and `term_lookup` searches the labels (every language), CURIEs, and IRIs of the ontologies among them.
+  - Docs: STATE_COMPILATION.md shows how to turn CSV records into an ObservationSet; QUICKSTART shows a SemanticBinding, how to publish and check detached evidence, and what declared and satisfied profiles mean.
+
+- Package catalog (registry step P0) on the project site, `https://ontle-world.github.io/open-world-package/catalog/`: a page per example package with its card, report, assets, dependencies and dependents, and verified archive, plus a filterable list. Every number comes from `ontle inspect --report`. The catalog's `index.json` is a PackageIndex with a term index, so `--source index:https://ontle-world.github.io/open-world-package/catalog/index.json` resolves the examples. A package identifier page (`https://w3id.org/owp/pkg/...`) links to the package's catalog page when there is one.
+
 ## 0.2.0-alpha.5 — On PyPI
 
 The first release on PyPI: `pip install --pre ontle`. No changes to the spec, the suite, or verdicts since 0.2.0-alpha.4.

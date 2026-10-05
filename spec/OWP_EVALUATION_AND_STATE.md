@@ -55,7 +55,7 @@ JSON Schema: `schemas/compatibility-evidence.schema.json`.
 
 ### 9.1 Evidence published outside the package
 
-Evaluations often finish after a package is released. Such evidence MAY be published as a standalone CompatibilityEvidence document (for example as an OCI referrer, section 7.1). It then MUST declare `spec.subjectDigest`, the SHA-256 digest of the subject archive (`sha256:<hex>`), and `spec.subject` MUST be that archive's identity. The scope rules of section 9 apply against the subject's grounding. The reference CLI checks this with `ontle evidence check <evidence.yaml> --package <archive>`.
+Evaluations often finish after a package is released. Such evidence MAY be published as a standalone CompatibilityEvidence document (for example as an OCI referrer, section 7.1). It then MUST declare `spec.subjectDigest`, the SHA-256 digest of the subject archive (`sha256:<hex>`), and `spec.subject` MUST be that archive's identity. The scope rules of section 9 apply against the subject's grounding, and an EvaluationProfile or VerifierProfile it names that the archive packages under the same name must have the version it names (`evidence.version-mismatch`). The reference CLI checks this with `ontle evidence check <evidence.yaml> --package <archive>`.
 
 ## 12. Effective World State documents
 

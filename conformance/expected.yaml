@@ -1614,3 +1614,7 @@ evidenceCases:
     valid: false
     errors: [evidence.detached-subject]
     rule: "The document is a CompatibilityEvidence."
+  version-mismatch:
+    valid: false
+    errors: [evidence.version-mismatch]
+    rule: "An EvaluationProfile or VerifierProfile the evidence names, when the archive packages one by that name, has the version it names."

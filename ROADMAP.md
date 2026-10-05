@@ -63,7 +63,7 @@ Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detac
 
 ## 6. Hosted ONTLE Registry (separate platform)
 
-Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here. This repository supplies what it reads: the package report (`ontle inspect --report`, `schemas/package-report.schema.json`), the package index, the OCI profile, and the MCP tools (`ontle mcp`).
+Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here. Step P0, a static catalog of the example packages, is on the project site (`scripts/site_catalog.py`). This repository supplies what a registry reads: the package report (`ontle inspect --report`, `schemas/package-report.schema.json`), the package index, the OCI profile, and the MCP tools (`ontle mcp`).
 
 ## Out of scope for this repository
 

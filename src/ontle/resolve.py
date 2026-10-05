@@ -138,7 +138,9 @@ class DirectorySource(PackageSource):
 
     def _scan(self) -> list[ResolvedPackage]:
         if not self.path.is_dir():
-            raise OWPError(f"package source is not a directory: {self.path}")
+            hint = (f"; for a package index, use index:{self.label}" if self.path.suffix.lower() == ".json"
+                    else "; a source is a directory, an .owp.zip archive, git+<url>@<rev>, index:<index>, or oci:<reference>")
+            raise OWPError(f"package source is not a directory: {self.path}{hint}")
         candidates = [self.path / MANIFEST] if (self.path / MANIFEST).exists() else []
         # Hidden directories (such as .git or tool caches) are not scanned.
         visible = lambda p: not any(part.startswith(".") for part in p.relative_to(self.path).parts)

@@ -75,8 +75,8 @@ class PackageReportTests(unittest.TestCase):
         report = package_report(WORLD)
         self.assertEqual(report["identity"], "openworld-examples/manufacturing-quality-world@0.1.0")
         self.assertEqual(report["profile"], {"declared": "action-ready", "satisfied": "action-ready"})
-        self.assertEqual(report["state"], {"stateCompilers": 1, "fields": 9, "boundFields": 8})
-        self.assertEqual(report["semanticCoverage"], {"boundFields": 9, "fields": 9})
+        self.assertEqual(report["state"], {"stateCompilers": 1, "fields": 9, "withBinding": 8})
+        self.assertEqual(report["semanticCoverage"], {"boundToTerms": 9, "fields": 9})
         self.assertEqual(report["externalRefs"]["total"], report["externalRefs"]["pinned"])
         self.assertIn("opcua", report["standardBindings"]["standards"])
         self.assertEqual(report["assets"]["total"], sum(report["assets"]["byKind"].values()))
@@ -101,14 +101,15 @@ class PackageReportTests(unittest.TestCase):
             root = init_project("hinted", "acme", destination=Path(td) / "p")
             report = package_report(root)
             self.assertEqual(report["card"]["missingRecommended"], [])
-            self.assertEqual(report["hints"], [])
-            (root / "WORLD.md").write_text("# Hinted\n\n## Scope\n", encoding="utf-8")
+            self.assertEqual(report["hints"], ["metadata.description is still the template text", "WORLD.md still has template text to replace"])
+            (root / "WORLD.md").write_text("# Hinted\n\n## Scope\n\nSee `views/default.yaml` and `views/gone.yaml`.\n", encoding="utf-8")
             manifest = (root / "owp.yaml").read_text(encoding="utf-8")
             (root / "owp.yaml").write_text(manifest.replace("  description: One line", "  description: " + "x" * 200 + " One line"), encoding="utf-8")
             report = package_report(root)
             self.assertEqual(report["card"]["missingRecommended"], CARD_SECTIONS[1:])
             self.assertTrue(any("has no section Sources" in h for h in report["hints"]))
             self.assertTrue(any("metadata.description has" in h for h in report["hints"]))
+            self.assertIn("WORLD.md names files that are not in the package: views/gone.yaml", report["hints"])
 
     def test_cli_report_and_archive_inspect(self):
         code, out, _ = run_cli(["inspect", str(WORLD), "--report"])
@@ -138,6 +139,44 @@ class AuthoringHintTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("WARN: archive is", err)
             self.assertTrue(out.strip().endswith("w.owp.zip"))
+        with tempfile.TemporaryDirectory() as td:  # a directory as --output: the default file name inside it
+            code, out, _ = run_cli(["pack", str(WORLD), "--output", td])
+            self.assertEqual(code, 0)
+            self.assertEqual(Path(out.strip()).name, "openworld-examples-manufacturing-quality-world-0.1.0.owp.zip")
+
+
+class RecordsAndCheckTests(unittest.TestCase):
+    def test_observations_from_csv(self):
+        records = ROOT / "demos" / "business-ai" / "records"
+        with tempfile.TemporaryDirectory() as td:
+            outs = []
+            for name, otype, subject, extra in (("qms_claims.csv", "QMS.claim", "claim_id", []),
+                                                ("mes_production_lots.csv", "MES.production_lot", "lot_id", ["--list", "genealogy"])):
+                code, out, _ = run_cli(["observations", "csv", str(records / name), "--type", otype, "--subject", subject,
+                                        "--time", "recorded_at", *extra])
+                self.assertEqual(code, 0)
+                outs.append(Path(td) / f"{otype}.yaml")
+                outs[-1].write_text(out, encoding="utf-8")
+            doc = load_yaml(outs[1].read_text(encoding="utf-8"))
+            self.assertEqual(doc["spec"]["observations"][0]["values"], {"genealogy": ["RM-778", "RM-779"]})
+            code, out, _ = run_cli(["ews", "compile", str(WORLD), "--observations", str(outs[0]), "--observations", str(outs[1]),
+                                    "--as-of", "2026-09-05T00:00:00Z"])
+            self.assertEqual(code, 0)
+            self.assertEqual(load_yaml(out)["spec"]["state"]["claim.status"], "open")
+            code, _, err = run_cli(["observations", "csv", str(records / "qms_claims.csv"), "--type", "X", "--subject", "nope", "--time", "recorded_at"])
+            self.assertEqual(code, 2)
+            self.assertIn("no column 'nope'", err)
+
+    def test_ews_check_compares_values_with_observations(self):
+        expected, observations = WORLD / "examples" / "expected-ews.yaml", WORLD / "examples" / "observations.yaml"
+        self.assertEqual(run_cli(["ews", "check", str(expected), "--world", str(WORLD), "--observations", str(observations)])[0], 0)
+        with tempfile.TemporaryDirectory() as td:
+            wrong = Path(td) / "wrong.yaml"
+            wrong.write_text(expected.read_text(encoding="utf-8").replace("claim.status: open", "claim.status: closed"), encoding="utf-8")
+            self.assertEqual(run_cli(["ews", "check", str(wrong), "--world", str(WORLD)])[0], 0)  # the shape is right
+            code, _, err = run_cli(["ews", "check", str(wrong), "--world", str(WORLD), "--observations", str(observations)])
+            self.assertEqual(code, 1)
+            self.assertIn('state.claim.status: expected "closed", compiled "open"', err)
 
 
 class McpServerTests(unittest.TestCase):
@@ -184,6 +223,11 @@ class McpServerTests(unittest.TestCase):
         self.assertEqual(self.call(server, "package_report")["structuredContent"]["kind"], "PackageReport")
         failed = self.call(server, "ews_compile", {"asOf": "2026-09-05T00:00:00Z", "observationsPath": "../outside.yaml"})
         self.assertTrue(failed["isError"])
+        unknown = self.call(server, "view_get", {"view": "views/quality-incident-task.yaml"})
+        self.assertTrue(unknown["isError"])
+        self.assertIn("does not take view", unknown["content"][0]["text"])
+        as_path = self.call(server, "ews_compile", {"asOf": "2026-09-05T00:00:00Z", "observations": "examples/observations.yaml"})
+        self.assertIn("observationsPath", as_path["content"][0]["text"])
 
     def test_resources(self):
         server = PackageServer(WORLD, WORLD, [str(WORLD / "examples" / "observations.yaml")])
@@ -204,7 +248,12 @@ class McpServerTests(unittest.TestCase):
         onto = EXAMPLES / "ontology" / "quality-ontology"
         matches = self.call(PackageServer(onto, onto), "term_lookup", {"query": "claim"})["structuredContent"]["matches"]
         self.assertTrue(matches)
-        self.assertTrue(all(m["in"] == "ontology terms" for m in matches))
+        self.assertTrue(all(m["in"] == "ontology openworld-examples/quality-ontology@0.1.0" for m in matches))
+
+    def test_term_lookup_searches_dependency_labels(self):
+        server = PackageServer(WORLD, WORLD, sources=[str(EXAMPLES)])
+        matches = self.call(server, "term_lookup", {"query": "생산 로트"})["structuredContent"]["matches"]
+        self.assertEqual([m["curie"] for m in matches], ["q:Lot"])
 
 
 if __name__ == "__main__":

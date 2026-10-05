@@ -209,6 +209,45 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
     return prefixes, out
 
 
+def term_catalog(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
+    """Terms an OntologyPackage defines, for search: iri, curie, type, and label (owp-yaml labels: every language,
+    joined). From owp-yaml schema entrypoints and the term index. Tooling, not a conformance rule."""
+    ontology = manifest.get("spec", {}).get("ontology") if isinstance(manifest.get("spec"), dict) else None
+    ontology = ontology if isinstance(ontology, dict) else {}
+    prefixes = {k: v for k, v in ontology["prefixes"].items() if isinstance(v, str)} if isinstance(ontology.get("prefixes"), dict) else {}
+
+    def label_text(label: Any) -> str:
+        if isinstance(label, dict):
+            return " / ".join(str(v) for v in label.values() if isinstance(v, str))
+        return label if isinstance(label, str) else ""
+
+    def curie_of(iri: str) -> str:
+        return next((f"{p}:{iri[len(ns):]}" for p, ns in prefixes.items() if iri.startswith(ns)), "")
+
+    found: dict[str, dict[str, str]] = {}
+    for entry in ontology.get("entrypoints") if isinstance(ontology.get("entrypoints"), list) else []:
+        if not (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema"
+                and inside_package(root, entry.get("path"))):
+            continue
+        doc = _load(root / entry["path"])
+        spec = doc.get("spec") if isinstance(doc, dict) and isinstance(doc.get("spec"), dict) else {}
+        items = [(t, "class") for t in spec.get("types") or [] if isinstance(t, dict)]
+        items += [(p, "property") for t in spec.get("types") or [] if isinstance(t, dict) for p in t.get("properties") or [] if isinstance(p, dict)]
+        items += [(r, "property") for r in spec.get("relations") or [] if isinstance(r, dict)]
+        for item, kind in items:
+            iri = expand(item.get("id"), prefixes) if isinstance(item.get("id"), str) else None
+            if iri and iri not in found:
+                found[iri] = {"iri": iri, "curie": item["id"], "type": kind, "label": label_text(item.get("label"))}
+    index = ontology.get("termIndex")
+    if inside_package(root, index):
+        doc = _load(root / index)
+        for term in (doc.get("spec") or {}).get("terms") or [] if isinstance(doc, dict) else []:
+            if isinstance(term, dict) and isinstance(term.get("iri"), str) and term["iri"] not in found:
+                found[term["iri"]] = {"iri": term["iri"], "curie": curie_of(term["iri"]), "type": str(term.get("type") or ""),
+                                      "label": label_text(term.get("label"))}
+    return [found[k] for k in sorted(found)]
+
+
 # --- tooling (T): index generation and export -------------------------------
 
 RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"

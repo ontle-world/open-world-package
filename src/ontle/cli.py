@@ -385,7 +385,7 @@ def build_parser():
 
     x = sp.add_parser("ontology", help="ontology tooling")
     osp = x.add_subparsers(dest="ontology_command", required=True)
-    y = osp.add_parser("index", help="write spec.ontology.termIndex from the schema entrypoints (RDF needs: pip install 'ontle-open-world[rdf]')")
+    y = osp.add_parser("index", help="write spec.ontology.termIndex from the schema entrypoints (RDF needs: pip install 'ontle[rdf]')")
     y.add_argument("path", nargs="?", default=".")
     y.set_defaults(func=cmd_ontology_index)
 

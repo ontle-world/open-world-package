@@ -10,7 +10,7 @@ jobs:
           python-version: "3.14"
       - run: python -m pip install --upgrade pip
       - name: Install released ONTLE CLI
-        run: python -m pip install ontle-open-world  # replace with immutable Git tag source before package-index release
+        run: python -m pip install --pre ontle  # pin a version, e.g. ontle==0.2.0a5
       - run: ontle validate .
       - run: ontle inspect .
       - run: ontle pack .

@@ -37,7 +37,8 @@ Requires Python 3.11+ (tested on 3.11–3.14).
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
-python -m pip install -e .
+python -m pip install --pre ontle     # alpha releases need --pre; add [rdf] for RDF tooling
+# or, from a clone of this repository: python -m pip install -e .
 
 ontle init my-world --namespace acme
 cd my-world
@@ -54,10 +55,10 @@ The generated project contains only the authoring surface. `.ontle/` is generato
 
 | You want to | Read | Then try |
 |---|---|---|
-| Describe a World: what exists, what is observed, what state a task needs | [docs/QUICKSTART.md](docs/QUICKSTART.md), [docs/STATE_COMPILATION.md](docs/STATE_COMPILATION.md) | `examples/business/manufacturing-quality-world` |
-| Build or compare a World Model for a World | [docs/QUICKSTART.md §7](docs/QUICKSTART.md#7-create-a-world-model-package), [quality-scenario-world-model](examples/business/quality-scenario-world-model/WORLDMODEL.md) | `python examples/business/quality-scenario-world-model/models/run.py --baselines` |
-| Run packages in your own runtime | [docs/RUNTIME_INTEGRATION.md](docs/RUNTIME_INTEGRATION.md), [demos/](demos/) | `python demos/business-ai/run.py` |
-| Look up a term | [docs/CONCEPTS.md](docs/CONCEPTS.md), [docs/GLOSSARY.md](docs/GLOSSARY.md) | |
+| Describe a World: what exists, what is observed, what state a task needs | [docs/QUICKSTART.md](https://github.com/ontle-world/open-world-package/blob/main/docs/QUICKSTART.md), [docs/STATE_COMPILATION.md](https://github.com/ontle-world/open-world-package/blob/main/docs/STATE_COMPILATION.md) | `examples/business/manufacturing-quality-world` |
+| Build or compare a World Model for a World | [docs/QUICKSTART.md §7](https://github.com/ontle-world/open-world-package/blob/main/docs/QUICKSTART.md#7-create-a-world-model-package), [quality-scenario-world-model](https://github.com/ontle-world/open-world-package/blob/main/examples/business/quality-scenario-world-model/WORLDMODEL.md) | `python examples/business/quality-scenario-world-model/models/run.py --baselines` |
+| Run packages in your own runtime | [docs/RUNTIME_INTEGRATION.md](https://github.com/ontle-world/open-world-package/blob/main/docs/RUNTIME_INTEGRATION.md), [demos/](https://github.com/ontle-world/open-world-package/blob/main/demos/) | `python demos/business-ai/run.py` |
+| Look up a term | [docs/CONCEPTS.md](https://github.com/ontle-world/open-world-package/blob/main/docs/CONCEPTS.md), [docs/GLOSSARY.md](https://github.com/ontle-world/open-world-package/blob/main/docs/GLOSSARY.md) | |
 
 ## Starter templates
 
@@ -108,7 +109,7 @@ ontle sign dist/acme-line-world-0.1.0.owp.zip                                 # 
 ontle catalog . --format dcat
 
 # ontology packages
-ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle-open-world[rdf]')
+ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle[rdf]')
 ontle export --format turtle
 ```
 

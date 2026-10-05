@@ -8,7 +8,7 @@ Repository contents are designed to be publishable as-is. Before making the repo
 - [ ] Confirm organization contact/security route.
 - [ ] Confirm trademark/branding text with counsel if a stronger policy is needed.
 - [ ] Create the first tag after CI passes.
-- [ ] If publishing to PyPI later, configure Trusted Publishing separately.
+- [ ] PyPI: the `ontle` project lists this repository, workflow `release.yml`, and environment `pypi` as a trusted publisher, and the repository has a `pypi` environment.
 - [ ] If publishing OWP archives to a hosted Registry/OCI transport later, configure credentials separately.
 
 No hosted Registry, external credentials, or customer data are required for the current public-alpha repository.

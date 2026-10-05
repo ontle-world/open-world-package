@@ -28,7 +28,7 @@ def compute() -> dict:
         data = (ROOT / rel).read_bytes()
         files.append({"path": rel, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
     return {"manifest": "ontle-public-release-manifest/v1", "release": RELEASE, "version": __version__, "cli": "ontle",
-            "distribution": "ontle-open-world", "file_count_excluding_manifest": len(files), "files": files}
+            "distribution": "ontle", "file_count_excluding_manifest": len(files), "files": files}
 
 
 def render(data: dict) -> str:

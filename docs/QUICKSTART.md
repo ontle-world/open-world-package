@@ -3,7 +3,7 @@
 The five-minute path, from nothing to a checked archive:
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate && python -m pip install -e .   # from a clone of this repository
+python3 -m venv .venv && . .venv/bin/activate && python -m pip install --pre ontle
 ontle init my-world --namespace acme          # prints the project path, then the next steps
 ontle validate my-world
 ontle inspect my-world --report               # what a catalog would show, with hints
@@ -14,13 +14,15 @@ The sections below explain each step and what to add next.
 
 ## 1. Install
 
-From a clone of this repository, in a virtual environment (Python 3.11+):
+In a virtual environment (Python 3.11+):
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
-python -m pip install -e .
+python -m pip install --pre ontle      # alpha releases need --pre
 ontle --version
 ```
+
+`ontle[rdf]` adds RDF tooling (ontology index for RDF entrypoints, `kg check`, SPARQL extraction). To work on ONTLE itself, install from a clone with `python -m pip install -e .`.
 
 ## 2. Create a World
 

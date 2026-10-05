@@ -176,6 +176,6 @@ ontle push dist/acme-demo-0.1.0.owp.zip ghcr.io/acme/demo:0.1.0   # needs oras
 ontle sign dist/acme-demo-0.1.0.owp.zip                           # needs cosign
 ```
 
-Consumers resolve with `--source index:<url-or-path>` or `--source oci:<reference>`.
+Consumers resolve with `--source index:<url-or-path>` or `--source oci:<reference>`. The [package catalog](https://ontle-world.github.io/open-world-package/catalog/) publishes the example packages this way: `--source index:https://ontle-world.github.io/open-world-package/catalog/index.json`.
 
 To let an agent read a package, serve it over the Model Context Protocol: `ontle mcp .` (stdio, read-only; see [interop/MCP.md](interop/MCP.md)).

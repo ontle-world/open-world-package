@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Package catalog (registry step P0) on the project site, `https://ontle-world.github.io/open-world-package/catalog/`: a page per example package with its card, report, assets, dependencies and dependents, and verified archive, plus a filterable list. Every number comes from `ontle inspect --report`. The catalog's `index.json` is a PackageIndex with a term index, so `--source index:https://ontle-world.github.io/open-world-package/catalog/index.json` resolves the examples. A package identifier page (`https://w3id.org/owp/pkg/...`) links to the package's catalog page when there is one.
+
 ## 0.2.0-alpha.5 — On PyPI
 
 The first release on PyPI: `pip install --pre ontle`. No changes to the spec, the suite, or verdicts since 0.2.0-alpha.4.

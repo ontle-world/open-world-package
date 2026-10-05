@@ -141,11 +141,11 @@
     },
     "state": {
       "type": "object",
-      "description": "WorldPackage: State Compilers, their EWS fields, and the fields with a declarative binding.",
+      "description": "WorldPackage: State Compilers, their EWS fields, and the fields with a declarative binding (withBinding).",
       "required": [
         "stateCompilers",
         "fields",
-        "boundFields"
+        "withBinding"
       ],
       "properties": {
         "stateCompilers": {
@@ -156,7 +156,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "boundFields": {
+        "withBinding": {
           "type": "integer",
           "minimum": 0
         }
@@ -167,11 +167,11 @@
       "type": "object",
       "description": "WorldPackage with a SemanticBinding: EWS fields bound to ontology terms.",
       "required": [
-        "boundFields",
+        "boundToTerms",
         "fields"
       ],
       "properties": {
-        "boundFields": {
+        "boundToTerms": {
           "type": "integer",
           "minimum": 0
         },

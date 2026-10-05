@@ -120,6 +120,15 @@ class PackageServer:
     # --- tools -------------------------------------------------------------------------------
 
     def call(self, name: str, args: dict[str, Any]) -> Any:
+        schema = next(t["inputSchema"] for t in TOOLS if t["name"] == name)
+        unknown = sorted(set(args) - set(schema.get("properties", {})))
+        if unknown:
+            raise ToolError(f"{name} does not take {', '.join(unknown)}; it takes {', '.join(schema.get('properties', {})) or 'no arguments'}")
+        for key, prop in schema.get("properties", {}).items():
+            if key in args and prop.get("type") == "string" and not isinstance(args[key], str):
+                raise ToolError(f"{key} must be a string")
+        if "observations" in args and not isinstance(args["observations"], dict):
+            raise ToolError("observations is an ObservationSet document (an object); for a file in the package, use observationsPath")
         if name == "world_describe":
             return self.describe()
         if name == "view_get":

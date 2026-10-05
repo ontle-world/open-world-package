@@ -32,6 +32,36 @@ bindings:
 
 Rename `item` to your own entities and add fields as you go; the rest of this guide explains each part.
 
+## From records to observations
+
+A State Compiler reads an ObservationSet: one entry per thing a source system recorded, with its `type`, its `subject`, when it was observed, and its `values`. Mapping your records to that shape is up to you, since every source system differs. For CSV exports, a short script is enough:
+
+```python
+# records_to_observations.py: one CSV per record type -> an ObservationSet (YAML is a superset of JSON)
+import csv, json, sys
+
+FILES = {  # file -> (observation type, subject column, time column)
+    "qms_claims.csv": ("QMS.claim", "claim_id", "recorded_at"),
+    "qms_inspections.csv": ("QMS.inspection", "lot_id", "recorded_at"),
+}
+observations = []
+for file, (otype, subject, time) in FILES.items():
+    with open(file, newline="", encoding="utf-8") as f:
+        for i, row in enumerate(csv.DictReader(f), 1):
+            observations.append({
+                "id": f"{otype}-{i}", "type": otype, "subject": row.pop(subject), "observedAt": row.pop(time),
+                "values": row,  # the remaining columns; a binding's `value` names one of them
+            })
+json.dump({"apiVersion": "openworld/v1alpha1", "kind": "ObservationSet", "spec": {"observations": observations}}, sys.stdout, indent=2)
+```
+
+```bash
+python records_to_observations.py > observations.json
+ontle ews compile . --observations observations.json --as-of 2026-09-05T00:00:00Z
+```
+
+Ids must be unique across the set, and `observedAt` is UTC (`YYYY-MM-DDTHH:MM:SSZ`). A binding's `from` matches `type`, and its `value` names a key of `values`. To count only some records (say, failed inspections), give them their own type when you map them (`QMS.inspection_failure`); an aggregate counts every observation of its type. [demos/business-ai/map_records.py](../demos/business-ai/map_records.py) is a fuller version that reads the record types from the World's source system profile. For records in a knowledge graph, `ontle kg extract` does the mapping declaratively.
+
 ## 2. Name fields inside the View
 
 A field name is `<name>.<attribute>`. Its first part must be something the View includes (`projection.include` in the View), and what the View includes should be inside the World's boundary (`spec.world.boundary.included`). Otherwise validation warns with `compiler.field-outside-view` or `view.outside-world`. For a field `zone.picks_4h`, add `zone` to both.

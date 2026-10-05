@@ -27,6 +27,10 @@ const DEFAULT_CARDS: Record<string, string> = { WorldPackage: "WORLD.md", WorldM
 const CARD_SPEC_KEY: Record<string, string> = { WorldPackage: "world", WorldModelPackage: "worldModel", OntologyPackage: "ontology" };
 const DESCRIPTION_LIMIT = 160;
 const COMMIT_RE = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+// Text the init templates ship for the author to replace (src/ontle/templates/*).
+const TEMPLATE_DESCRIPTION = /^One line on (the|what) /;
+const TEMPLATE_CARD_TEXT = ["Describe in one paragraph", "Add included entities", "Add intentional exclusions", "Three to five "];
+const CARD_PATH = /`([A-Za-z0-9_.-]+\/[A-Za-z0-9_./-]*\.(?:ya?ml|json|md|ttl|csv|py))`/g;
 
 const obj = (v: unknown): Obj => (isObj(v) ? v : {});
 const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
@@ -122,11 +126,11 @@ function report(root: string): Obj {
         if (has(bindings, f)) boundFields.add(f);
       }
     }
-    out.state = { stateCompilers: compilers, fields: fields.size, boundFields: boundFields.size };
+    out.state = { stateCompilers: compilers, fields: fields.size, withBinding: boundFields.size };
     const bindingRel = get(spec, "world", "semanticBinding");
     if (typeof bindingRel === "string") {
       const semantic = Object.keys(obj(specOf(bindingRel).fields));
-      out.semanticCoverage = { boundFields: semantic.filter((f) => fields.has(f)).length, fields: fields.size };
+      out.semanticCoverage = { boundToTerms: semantic.filter((f) => fields.has(f)).length, fields: fields.size };
     }
   } else if (kind === "OntologyPackage") {
     out.profile = { declared: typeof declared === "string" ? declared : null, satisfied: result.satisfiedProfile ?? null };
@@ -172,17 +176,30 @@ function report(root: string): Obj {
     hints.push("metadata.description is missing: catalogs show it as the package's one-line summary");
   } else if (chars(description) > DESCRIPTION_LIMIT) {
     hints.push(`metadata.description has ${chars(description)} characters; catalogs show about ${DESCRIPTION_LIMIT}`);
+  } else if (TEMPLATE_DESCRIPTION.test(description)) {
+    hints.push("metadata.description is still the template text");
   }
   if (typeof md.license !== "string") hints.push("metadata.license is missing");
   const declaredCard = get(spec, CARD_SPEC_KEY[kind] ?? "", "description");
   const cardRel = typeof declaredCard === "string" && declaredCard.endsWith(".md") ? declaredCard : DEFAULT_CARDS[kind];
   const cardFile = cardRel ? packageFile(root, cardRel) : null;
   if (cardRel && cardFile !== null && fs.statSync(cardFile).isFile()) {
-    const present = cardSections(fs.readFileSync(cardFile, "utf8"));
+    const cardText = fs.readFileSync(cardFile, "utf8");
+    const present = cardSections(cardText);
     const lowered = new Set(present.map((s) => s.toLowerCase()));
     const missing = CARD_SECTIONS.filter((s) => !lowered.has(s.toLowerCase()));
     out.card = { path: cardRel, sections: present, missingRecommended: missing };
     if (missing.length) hints.push(`${cardRel} has no section ${missing.join(", ")} (recommended card sections: ${CARD_SECTIONS.join(", ")})`);
+    if (TEMPLATE_CARD_TEXT.some((t) => cardText.includes(t))) hints.push(`${cardRel} still has template text to replace`);
+    const named = [...new Set([...cardText.matchAll(CARD_PATH)].map((m) => m[1]))].sort();
+    // Only paths under a directory the package has: a World Model card may name files of the World it is grounded in.
+    const absent = named.filter((p) => {
+      const top = path.join(root, p.split("/")[0]);
+      if (!(fs.existsSync(top) && fs.statSync(top).isDirectory())) return false;
+      const abs = packageFile(root, p);
+      return abs === null || !fs.existsSync(abs);
+    });
+    if (absent.length) hints.push(`${cardRel} names files that are not in the package: ${absent.join(", ")}`);
   } else if (cardRel) {
     hints.push(`no card ${cardRel}`);
   }

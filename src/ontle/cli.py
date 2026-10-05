@@ -99,7 +99,27 @@ def fold_errors(errors: list[str]) -> list[str]:
                 lines.append(f"  likely caused by the error above: {e}")
                 shown.add(i)
     lines += [f"ERROR: {e}" for i, e in enumerate(errors) if i not in shown]
-    return lines
+    return collapse_after_unresolved(lines)
+
+
+def collapse_after_unresolved(lines: list[str]) -> list[str]:
+    """When a dependency does not resolve, the terms it would define are unknown: print the first such error per
+    package and count the rest, instead of one line per term."""
+    if not any(line.startswith("ERROR: resolve.unresolved:") for line in lines):
+        return lines
+    out: list[str] = []
+    hidden: dict[str, int] = {}
+    for line in lines:
+        m = re.match(r"ERROR: (grounding\.prefix-unknown): ([^:]+@[^:]+): ", line)
+        if m:
+            key = f"{m.group(1)} in {m.group(2)}"
+            if key in hidden:
+                hidden[key] += 1
+                continue
+            hidden[key] = 0
+        out.append(line)
+    out += [f"  ... and {n} more {key}, likely caused by the unresolved dependency above" for key, n in hidden.items() if n]
+    return out
 
 
 def cmd_resolve(args):
@@ -363,7 +383,7 @@ def build_parser():
     y = esp.add_parser("compile", help="run a declarative State Compiler over an ObservationSet")
     y.add_argument("world", help="World package directory")
     y.add_argument("--compiler", help="StateCompilerProfile path inside the World package (default: the World's defaultStateCompiler)")
-    y.add_argument("--observations", required=True, action="append", help="ObservationSet YAML file, relative to the current directory (repeatable; sets are merged)")
+    y.add_argument("--observations", required=True, action="append", help="ObservationSet file (YAML or JSON), relative to the current directory (repeatable; sets are merged)")
     y.add_argument("--as-of", required=True, help="compilation time, UTC YYYY-MM-DDTHH:MM:SSZ")
     y.add_argument("--jsonld", action="store_true", help="print JSON with an @context from the World's SemanticBinding (needs its ontology dependencies)")
     y.add_argument("--ngsi-ld", action="store_true", help="print NGSI-LD entities (normalized): per-subject fields as attributes, unresolved alternatives as datasetId instances")
@@ -411,7 +431,7 @@ def build_parser():
 
     x = sp.add_parser("mcp", help="serve one package read-only to agents as a Model Context Protocol server on stdio (docs/interop/MCP.md)")
     x.add_argument("package", nargs="?", default=".", help="package directory or .owp.zip archive")
-    x.add_argument("--observations", action="append", default=[], help="ObservationSet YAML file the EWS resources compile from "
+    x.add_argument("--observations", action="append", default=[], help="ObservationSet file (YAML or JSON) the EWS resources compile from "
                    "(repeatable; sets are merged)")
     x.set_defaults(func=cmd_mcp)
 
@@ -422,7 +442,7 @@ def build_parser():
 
     x = sp.add_parser("pack", help="build a deterministic .owp.zip archive")
     x.add_argument("path", nargs="?", default=".")
-    x.add_argument("--output")
+    x.add_argument("--output", help="archive file, or a directory for the default name <namespace>-<name>-<version>.owp.zip (default: <package>/dist/)")
     x.add_argument("--vendor", action="store_true", help="include pinned https external content in the archive (spec section 7)")
     x.add_argument("--list", action="store_true", help="print the files the archive would contain, without writing it")
     x.set_defaults(func=cmd_pack)

@@ -5,7 +5,8 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Context, Issue } from "./context.js";
+import { Context, Issue, LocalAsset } from "./context.js";
+import { localAssetKinds, packageDocuments } from "./discovery.js";
 import { loadArchive } from "./resolve.js";
 import { checkEvidence } from "./rules/evaluation.js";
 import { checkWorldModelPackage, Grounding } from "./rules/worldmodel.js";
@@ -36,15 +37,20 @@ export function checkDetachedEvidence(evidence: unknown, archive: string, cacheD
   if (get(evidence, "spec", "subject") !== cand.identity) e(DETACHED, `spec.subject must be the archive's identity ${cand.identity}`);
   if (get(evidence, "spec", "subjectDigest") !== cand.revision) e(DETACHED, `spec.subjectDigest must be the archive digest ${cand.revision}`);
 
-  // Section 9 rules against the archive's grounding. Only the evidence itself is a local asset here,
-  // so local version binding (evidence.version-mismatch) does not apply.
+  // Section 9 rules against the archive's grounding. The archive's EvaluationProfiles and VerifierProfiles are
+  // local assets, so a version the evidence names must match a packaged one (evidence.version-mismatch).
+  const packaged = localAssetKinds(cand.dir, cand.manifest);
+  const docs = new Map(packageDocuments(cand.dir).filter((d) => d.ok).map((d) => [d.rel, d.value]));
+  const profiles: LocalAsset[] = [...packaged]
+    .filter(([, k]) => k === "EvaluationProfile" || k === "VerifierProfile")
+    .map(([rel, kind], i) => ({ index: i + 1, kind, rawPath: rel, path: rel, exists: true, doc: docs.get(rel) }));
   const ctx: Context = {
     root: cand.dir,
     manifest: cand.manifest,
     packageKind: typeof cand.manifest.kind === "string" ? cand.manifest.kind : "",
     rawIdentity: cand.identity,
     identity: cand.identity,
-    localAssets: [],
+    localAssets: profiles,
     refAssets: [],
     extensionNames: new Set(),
     errors: [],
@@ -55,6 +61,6 @@ export function checkDetachedEvidence(evidence: unknown, archive: string, cacheD
     g = checkWorldModelPackage({ ...ctx, errors: [], warnings: [] }); // only the grounding is needed
   }
   checkEvidence(ctx, { index: 0, kind: "CompatibilityEvidence", rawPath: "evidence", path: "evidence", exists: true, doc: evidence }, g);
-  errors.push(...ctx.errors.filter((x) => x.code !== "evidence.version-mismatch"));
+  errors.push(...ctx.errors.filter((x) => x.code.startsWith("evidence.")));
   return { valid: errors.length === 0, errors };
 }

@@ -24,6 +24,10 @@ CARD_SECTIONS = ["Scope", "Sources", "Use it for", "Limitations", "Versions"]
 DEFAULT_CARDS = {"WorldPackage": "WORLD.md", "WorldModelPackage": "WORLDMODEL.md", "OntologyPackage": "ONTOLOGY.md"}
 CARD_SPEC_KEY = {"WorldPackage": "world", "WorldModelPackage": "worldModel", "OntologyPackage": "ontology"}
 DESCRIPTION_LIMIT = 160  # one line on a package card
+# Text the init templates ship for the author to replace (src/ontle/templates/*).
+TEMPLATE_DESCRIPTION = re.compile(r"^One line on (the|what) ")
+TEMPLATE_CARD_TEXT = ["Describe in one paragraph", "Add included entities", "Add intentional exclusions", "Three to five "]
+CARD_PATH = re.compile(r"`([A-Za-z0-9_.-]+/[A-Za-z0-9_./-]*\.(?:ya?ml|json|md|ttl|csv|py))`")
 
 
 def _dict(value: Any) -> dict[str, Any]:
@@ -120,11 +124,11 @@ def _report(path: Path) -> dict[str, Any]:
         for rel, listed in ews_fields.items():
             bindings = _dict(_dict(_dict(docs.get(rel)).get("spec")).get("bindings"))
             bound |= {f for f in listed or [] if f in bindings}
-        report["state"] = {"stateCompilers": len(ews_fields), "fields": len(fields), "boundFields": len(bound)}
+        report["state"] = {"stateCompilers": len(ews_fields), "fields": len(fields), "withBinding": len(bound)}
         binding_rel = _dict(spec.get("world")).get("semanticBinding")
         if isinstance(binding_rel, str):
             semantic = set(_dict(_dict(_dict(docs.get(binding_rel)).get("spec")).get("fields")))
-            report["semanticCoverage"] = {"boundFields": len(semantic & fields), "fields": len(fields)}
+            report["semanticCoverage"] = {"boundToTerms": len(semantic & fields), "fields": len(fields)}
     elif kind == "OntologyPackage":
         report["profile"] = {"declared": conformance.get("profile") if isinstance(conformance.get("profile"), str) else None,
                              "satisfied": ontology_module.satisfied_ontology_profile(root, spec)}
@@ -165,17 +169,27 @@ def _report(path: Path) -> dict[str, Any]:
         hints.append("metadata.description is missing: catalogs show it as the package's one-line summary")
     elif len(description) > DESCRIPTION_LIMIT:
         hints.append(f"metadata.description has {len(description)} characters; catalogs show about {DESCRIPTION_LIMIT}")
+    elif TEMPLATE_DESCRIPTION.match(description):
+        hints.append("metadata.description is still the template text")
     if not isinstance(md.get("license"), str):
         hints.append("metadata.license is missing")
     card_rel = _dict(spec.get(CARD_SPEC_KEY.get(kind or "", ""))).get("description")
     card_rel = card_rel if isinstance(card_rel, str) and card_rel.endswith(".md") else DEFAULT_CARDS.get(kind or "")
     if card_rel and ontology_module.inside_package(root, card_rel) and (root / card_rel).is_file():
-        present = card_sections((root / card_rel).read_text(encoding="utf-8"))
+        card_text = (root / card_rel).read_text(encoding="utf-8")
+        present = card_sections(card_text)
         lowered = {s.lower() for s in present}
         missing = [s for s in CARD_SECTIONS if s.lower() not in lowered]
         report["card"] = {"path": card_rel, "sections": present, "missingRecommended": missing}
         if missing:
             hints.append(f"{card_rel} has no section {', '.join(missing)} (recommended card sections: {', '.join(CARD_SECTIONS)})")
+        if any(t in card_text for t in TEMPLATE_CARD_TEXT):
+            hints.append(f"{card_rel} still has template text to replace")
+        named = sorted({m.group(1) for m in CARD_PATH.finditer(card_text)})
+        # Only paths under a directory the package has: a World Model card may name files of the World it is grounded in.
+        absent = [p for p in named if (root / p.split("/", 1)[0]).is_dir() and not (ontology_module.inside_package(root, p) and (root / p).exists())]
+        if absent:
+            hints.append(f"{card_rel} names files that are not in the package: {', '.join(absent)}")
     elif card_rel:
         hints.append(f"no card {card_rel}")
     unpinned = report["externalRefs"]["total"] - report["externalRefs"]["pinned"]

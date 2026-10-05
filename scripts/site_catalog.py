@@ -132,10 +132,10 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
     stats = []
     if "state" in report:
         s = report["state"]
-        stats.append(f"<p>EWS fields with a binding: {s['boundFields']}/{s['fields']} ({s['stateCompilers']} State Compiler{'s' if s['stateCompilers'] != 1 else ''})</p>")
+        stats.append(f"<p>EWS fields with a binding: {s['withBinding']}/{s['fields']} ({s['stateCompilers']} State Compiler{'s' if s['stateCompilers'] != 1 else ''})</p>")
     if "semanticCoverage" in report:
         c = report["semanticCoverage"]
-        stats.append(f"<p>Fields bound to ontology terms: {c['boundFields']}/{c['fields']}</p>")
+        stats.append(f"<p>Fields bound to ontology terms: {c['boundToTerms']}/{c['fields']}</p>")
     if "ontology" in report:
         stats.append(f"<p>Terms: {report['ontology']['terms']}</p>")
     refs = report["externalRefs"]

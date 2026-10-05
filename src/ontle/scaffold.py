@@ -46,6 +46,9 @@ HINTS = {
     "ActorProfile": "actorType: human, ai_agent, team, organization, external_institution, or automated_system; assignments optional (spec section 17).",
     "RoleProfile": "permissions: what the role may do; authorities: what it may decide (spec section 17).",
     "DelegationProfile": "Delegate only actions and decisions the delegator's roles grant, for a bounded period (spec section 17).",
+    "CompatibilityEvidence": "evaluationProfile is <name>@<version> of the EvaluationProfile that produced the result. Inside the package, "
+                             "remove subjectDigest; published separately, set it to the archive digest (ontle inspect <archive> --report: "
+                             "integrity.digest) and check it with ontle evidence check (spec section 9.1).",
 }
 
 
@@ -225,6 +228,14 @@ def _skeleton_spec(kind: str, manifest: dict) -> dict:
         return {"description": None, "implementationStatus": "unbound", "bundled": False, "artifactRef": {"status": "unbound"}}
     if kind == "CapabilityContract":
         return {"description": None, "outcomeRefs": [], "requiredInputs": []}
+    if kind == "CompatibilityEvidence":
+        md = (manifest or {}).get("metadata") or {}
+        grounding = (((manifest or {}).get("spec") or {}).get("worldModel") or {}).get("semanticGrounding") or {}
+        scope = {"worldRef": grounding.get("worldRef"),
+                 "worldView": (grounding.get("compatibleWorldViews") or [None])[0],
+                 "stateCompiler": (grounding.get("compatibleStateCompilers") or [None])[0]}
+        return {"subject": f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}", "subjectDigest": None,
+                "evaluationProfile": None, "scope": scope, "result": {"status": "illustrative", "metrics": {}}}
     if kind == "KnowledgeAsset":
         return {"roles": ["definition"], "representation": "documents", "content": {"ref": {"status": "unbound"}}}
     return {}

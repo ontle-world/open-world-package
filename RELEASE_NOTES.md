@@ -1,6 +1,6 @@
-# Public Alpha Release Notes — 0.2.0-alpha.4
+# Public Alpha Release Notes — 0.2.0-alpha.5
 
-This is the second tagged public alpha of the Open World Package (OWP) specification (`openworld/v1alpha1`) and of `ontle`, its Python reference CLI. The full list of changes is in `CHANGELOG.md`.
+This is the third tagged public alpha, and the first on PyPI, of the Open World Package (OWP) specification (`openworld/v1alpha1`) and of `ontle`, its Python reference CLI. The full list of changes is in `CHANGELOG.md`.
 
 OWP is a package format for Worlds and the models that work on them:
 
@@ -12,6 +12,10 @@ WorldPackage               a World: Views, State Compilers, bindings, knowledge,
   -> EffectiveWorldState   the state at a time, with provenance, unresolved values, and missing fields
 WorldModelPackage          a model that consumes that state, with evaluation lineage and evidence
 ```
+
+## New in 0.2.0-alpha.5
+
+- **On PyPI as `ontle`.** The Python distribution is renamed from `ontle-open-world` to `ontle`, so the package, the import, and the command share one name. Releases are published from the release workflow with Trusted Publishing.
 
 ## New in 0.2.0-alpha.4
 
@@ -25,11 +29,11 @@ WorldModelPackage          a model that consumes that state, with evaluation lin
 ## Install
 
 ```bash
-pip install "ontle-open-world[rdf] @ https://github.com/ontle-world/open-world-package/releases/download/v0.2.0-alpha.4/ontle_open_world-0.2.0a4-py3-none-any.whl"
+pip install --pre "ontle[rdf]"
 ontle --version
 ```
 
-Or install from a checkout with `pip install -e ".[rdf]"`. The package is not on PyPI yet. Python 3.11 or later is required.
+`--pre` is needed while releases are alpha. `ontle[rdf]` adds RDF tooling; plain `ontle` is enough for validation. Or install from a checkout with `pip install -e ".[rdf]"`. Python 3.11 or later is required.
 
 ## Included
 
@@ -60,7 +64,7 @@ Or install from a checkout with `pip install -e ".[rdf]"`. The package is not on
 
 ## Not claimed
 
-- A hosted ONTLE Registry service, or PyPI and npm packages.
+- A hosted ONTLE Registry service, or an npm package of the TypeScript implementation.
 - Production enterprise or robot write connectors, or an AX Guard / durable execution runtime.
 - Generic ML checkpoint standardization, or automatic World or World Model composition (World View composition is declared, experimental).
 - An implementation maintained by an independent party.

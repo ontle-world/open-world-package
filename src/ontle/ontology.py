@@ -226,7 +226,7 @@ def _list(value: Any) -> list[Any]:
 
 
 def build_term_index(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
-    """Terms from every schema entrypoint. RDF formats need the optional rdflib dependency (pip install ontle-open-world[rdf])."""
+    """Terms from every schema entrypoint. RDF formats need the optional rdflib dependency (pip install ontle[rdf])."""
     ontology = _ontology(manifest)
     prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
     found: dict[str, str] = {}
@@ -259,7 +259,7 @@ def _rdf_terms(path: Path, rdf_format: str) -> dict[str, str]:
         from rdflib.namespace import OWL, RDF, RDFS, SKOS
     except ImportError as exc:
         from .core import OWPError
-        raise OWPError("RDF entrypoints need rdflib: pip install 'ontle-open-world[rdf]'") from exc
+        raise OWPError("RDF entrypoints need rdflib: pip install 'ontle[rdf]'") from exc
     if not path.is_file():
         from .core import OWPError
         raise OWPError(f"schema entrypoint {path.name} does not exist; run ontle validate on the package")

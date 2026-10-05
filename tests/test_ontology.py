@@ -60,7 +60,7 @@ class OntologyTests(unittest.TestCase):
             turtle = export_rdf(root, manifest, "turtle")
         self.assertIn("<https://w3id.org/openworld-examples/quality#CustomerClaim> rdfs:subClassOf <https://w3id.org/openworld-examples/quality#Claim> .", turtle)
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_pack_generates_missing_term_index_for_rdf_schema(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td) / "onto"
@@ -95,7 +95,7 @@ class SemanticBindingTests(unittest.TestCase):
 
 
 class KnowledgeExtractionTests(unittest.TestCase):
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_example_extraction_runs_sparql_with_parameter(self):
         from ontle.extraction import run_extraction
         world = ROOT / "examples" / "business" / "manufacturing-quality-world"
@@ -108,14 +108,14 @@ class KnowledgeExtractionTests(unittest.TestCase):
 
 
 class KnowledgeGraphCheckTests(unittest.TestCase):
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_example_graph_follows_its_ontology(self):
         from ontle.kgcheck import check_knowledge_graphs
         report = check_knowledge_graphs(ROOT / "examples" / "business" / "manufacturing-quality-world", [str(ROOT / "examples")])
         self.assertEqual(report.checked, ["knowledge/plant-kg.yaml"])
         self.assertEqual(report.findings, [])
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_graph_outside_its_ontology(self):
         from ontle.kgcheck import check_knowledge_graphs
         with tempfile.TemporaryDirectory() as td:
@@ -135,7 +135,7 @@ class KnowledgeGraphCheckTests(unittest.TestCase):
                          ["kg.domain", "kg.range", "kg.unknown-class", "kg.unknown-property", "kg.untyped"])
         self.assertFalse(report.ok)
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_shared_property_and_standard_prefixes(self):
         from ontle.kgcheck import check_knowledge_graphs
         with tempfile.TemporaryDirectory() as td:
@@ -180,7 +180,7 @@ class StandardVocabularyTests(unittest.TestCase):
              '  <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#label"/>\n'
              '  <owl:AnnotationProperty rdf:about="http://www.w3.org/2004/02/skos/core#prefLabel"/>\n</rdf:RDF>\n')
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_term_index_keeps_only_the_vocabularys_own_terms(self):
         from ontle.ontology import build_term_index
         with tempfile.TemporaryDirectory() as td:
@@ -191,14 +191,14 @@ class StandardVocabularyTests(unittest.TestCase):
         self.assertEqual(terms, [{"iri": "http://www.w3.org/2004/02/skos/core#Concept", "type": "class"},
                                  {"iri": "http://www.w3.org/2004/02/skos/core#broader", "type": "property"}])
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_single_superclass_is_exported(self):
         root = ROOT / "conformance" / "resolution" / "ontology-dependency-term" / "root"
         turtle = export_rdf(root, yaml.safe_load((root / "owp.yaml").read_text(encoding="utf-8")), "turtle")
         self.assertIn("<https://example.org/domain#Machine> rdfs:subClassOf <https://example.org/upper#MaterialEntity>", turtle)  # a string
         self.assertIn("<https://example.org/domain#Repair> rdfs:subClassOf <https://example.org/upper#Process>", turtle)  # a list
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_kg_check_covers_a_published_vocabulary_and_reports_unreadable_graphs(self):
         from ontle.kgcheck import check_knowledge_graphs
         with tempfile.TemporaryDirectory() as td:
@@ -224,7 +224,7 @@ class StandardVocabularyTests(unittest.TestCase):
             self.assertFalse(report.ok)
 
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_separate_domains_must_all_hold(self):
         from ontle.kgcheck import check_knowledge_graphs
         ns = "https://example.org/v#"
@@ -252,7 +252,7 @@ class StandardVocabularyTests(unittest.TestCase):
         # RDFS reads two rdfs:domain triples as both: ex:x (only an A) is outside the domain, ex:y is inside
         self.assertEqual([(f.code, f.count) for f in report.findings], [("kg.domain", 1)])
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_a_package_that_reuses_a_property_extends_its_domain(self):
         from ontle.kgcheck import check_knowledge_graphs
         with tempfile.TemporaryDirectory() as td:
@@ -285,7 +285,7 @@ class StandardVocabularyTests(unittest.TestCase):
         # q:Claim (the quality ontology's domain) and x:Batch (the extension's) both hold; q:Equipment neither
         self.assertEqual([(f.code, f.count) for f in report.findings], [("kg.domain", 1)])
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_vocabulary_index_includes_its_individuals_and_schemes(self):
         """The committed term indexes are what `ontle ontology index` generates now (individuals and schemes included)."""
         for pkg in [ROOT / "vocab" / "owp", *sorted((ROOT / "alignments").glob("owp-align-*"))]:
@@ -305,7 +305,7 @@ class StandardVocabularyTests(unittest.TestCase):
 class OwlExportTests(unittest.TestCase):
     """spec 3.1, RDF meaning of owp-yaml: the export is OWL 2 DL."""
 
-    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle-open-world[rdf]')")
+    @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")
     def test_export_types_properties_by_their_range_and_unions_shared_domains(self):
         import rdflib
         import rdflib.collection

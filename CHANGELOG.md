@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The Python distribution is renamed `ontle` (was `ontle-open-world`), so the package, the import, and the command share one name: `pip install --pre ontle`. Extras are `ontle[rdf]`, `ontle[shacl]`, and so on.
+- The release workflow publishes to PyPI with Trusted Publishing (no stored token) after the GitHub release, and checks with `twine check` that the README renders there. The README links are absolute so they work on PyPI.
+- `pyproject.toml` lists project URLs, keywords, and more classifiers.
+
 ## 0.2.0-alpha.4 — Registry Readiness, View Composition
 
 Python reference CLI `ontle` 0.2.0a4; the TypeScript implementation passes the same suite with the same rule ids, and now gives the same package report.

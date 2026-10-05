@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
-      - run: python -m pip install --upgrade pip build
+      - run: python -m pip install --upgrade pip build twine
       - run: python -m pip install -e .
       # The tag is v<CHANGELOG version>, the package version matches it, and RELEASE_MANIFEST.json matches the tree.
       - name: Check version and manifest
@@ -35,6 +35,7 @@ jobs:
           PY
           python scripts/release_manifest.py --check
       - run: python -m build
+      - run: python -m twine check --strict dist/*  # the README renders on PyPI
       - run: ./scripts/golden_smoke.sh
       - uses: actions/upload-artifact@v7
         with:
@@ -48,3 +49,20 @@ jobs:
           awk -v h="## ${version}" 'index($0, h) == 1 {f = 1; next} f && /^## / {exit} f' CHANGELOG.md > notes.md
           prerelease=$(case "$version" in *-*) echo --prerelease;; esac)
           gh release create "${GITHUB_REF_NAME}" dist/* RELEASE_MANIFEST.json --title "${GITHUB_REF_NAME}" --notes-file notes.md $prerelease
+
+  # PyPI Trusted Publishing: pypi.org lists this repository, workflow release.yml, and environment pypi as the
+  # publisher of the `ontle` project, so no token is stored. Versions on PyPI cannot be replaced.
+  publish-pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ontle
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: python-dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1

@@ -44,7 +44,7 @@ def _rdflib():
     try:
         import rdflib
     except ImportError as exc:
-        raise OWPError("checking a knowledge graph needs rdflib: pip install 'ontle-open-world[rdf]'") from exc
+        raise OWPError("checking a knowledge graph needs rdflib: pip install 'ontle[rdf]'") from exc
     return rdflib
 
 

@@ -120,7 +120,7 @@ class EwsTurtleTests(unittest.TestCase):
         self.assertEqual([_literal(float(x)) for x in ("nan", "inf", "-inf")],
                          ['"NaN"^^xsd:double', '"INF"^^xsd:double', '"-INF"^^xsd:double'])
 
-    @unittest.skipUnless(HAS_SHACL, "pyoxigraph and pyshacl not installed (pip install 'ontle-open-world[rdf,shacl]')")
+    @unittest.skipUnless(HAS_SHACL, "pyoxigraph and pyshacl not installed (pip install 'ontle[rdf,shacl]')")
     def test_rdf_output_conforms_to_the_vocabulary_shapes(self):
         world, manifest, ews, observations = self.compiled()
         binding = {"spec": {"fields": {"item.status": {"class": "ex:Item", "path": ["ex:status"]}},

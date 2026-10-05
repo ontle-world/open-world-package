@@ -149,7 +149,7 @@ def _run_sparql(root: Path, asset: dict[str, Any], spec: dict[str, Any], paramet
     try:
         import rdflib
     except ImportError as exc:
-        raise OWPError("running SPARQL needs rdflib: pip install 'ontle-open-world[rdf]'") from exc
+        raise OWPError("running SPARQL needs rdflib: pip install 'ontle[rdf]'") from exc
     declared_format = asset.get("format", "turtle")
     fmt = {"turtle": "turtle", "nquads": "nquads", "jsonld": "json-ld", "ntriples": "nt"}.get(declared_format if isinstance(declared_format, str) else "", "turtle")
     graph = rdflib.Dataset(default_union=True) if fmt == "nquads" else rdflib.Graph()  # query named graphs too

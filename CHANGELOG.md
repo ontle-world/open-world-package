@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.5 — On PyPI
+
+The first release on PyPI: `pip install --pre ontle`. No changes to the spec, the suite, or verdicts since 0.2.0-alpha.4.
+
 - The Python distribution is renamed `ontle` (was `ontle-open-world`), so the package, the import, and the command share one name: `pip install --pre ontle`. Extras are `ontle[rdf]`, `ontle[shacl]`, and so on.
 - The release workflow publishes to PyPI with Trusted Publishing (no stored token) after the GitHub release, and checks with `twine check` that the README renders there. The README links are absolute so they work on PyPI.
 - `pyproject.toml` lists project URLs, keywords, and more classifiers.

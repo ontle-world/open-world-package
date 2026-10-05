@@ -1,9 +1,9 @@
 {
   "manifest": "ontle-public-release-manifest/v1",
   "release": "public-alpha-3",
-  "version": "0.2.0a4",
+  "version": "0.2.0a5",
   "cli": "ontle",
-  "distribution": "ontle-open-world",
+  "distribution": "ontle",
   "file_count_excluding_manifest": 2060,
   "files": [
     {
@@ -33,8 +33,8 @@
     },
     {
       "path": ".github/workflows/release.yml",
-      "sha256": "987c332183ca86545731438875d303358f83182a6eeb38ed3e16570e9f45d366",
-      "size": 1891
+      "sha256": "a33bc5d2980067e83fa2fb02d135b7541165aa643b56ce53585c2fb708dbc089",
+      "size": 2527
     },
     {
       "path": ".gitignore",
@@ -53,8 +53,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "abed778b51e491518bba3b8713d9a4a236b51ed0386334599d6eb507e9e1322a",
-      "size": 53371
+      "sha256": "0c4110c58127dbe88161f9e5f23afb76a6af789b7f9be001d52f9d097cdc1b7f",
+      "size": 54028
     },
     {
       "path": "CODE_OF_CONDUCT.md",
@@ -88,18 +88,18 @@
     },
     {
       "path": "README.md",
-      "sha256": "12fe300fcf8487e5fd373f41ffa65f6d976cb715080b4210955af988fe21f367",
-      "size": 9699
+      "sha256": "35f75cf031a79ea4992e481487c97d130964dcb2c22d0cc700dfa720237f6857",
+      "size": 10300
     },
     {
       "path": "RELEASE_NOTES.md",
-      "sha256": "4af3b9a48d48048e3bc064645cedf11058c6e2e6ecb418058949dfcb3953e80f",
-      "size": 4577
+      "sha256": "b693448d6e0237bc43b457bfa46bf1b132ee7f780191cf2ffaab7c022801cafd",
+      "size": 4834
     },
     {
       "path": "ROADMAP.md",
-      "sha256": "ca5124c655aa7cf5317e2720c236a2083a19659fa264879660b990d7a83f936a",
-      "size": 5965
+      "sha256": "9f1e56c67ac63c2b79534378a5d41a5579f0e8d3f370f270b497cda47ddc097d",
+      "size": 6075
     },
     {
       "path": "SECURITY.md",
@@ -8738,8 +8738,8 @@
     },
     {
       "path": "docs/QUICKSTART.md",
-      "sha256": "79bc7223dd65ce42ad0ba98ede39c021f8e79ecd72fba7f92d7419a454c6c6f0",
-      "size": 8640
+      "sha256": "c3e325c4882295392334c3a5e94d2fac0b8f1606260c51037ad1becdb37a0710",
+      "size": 8799
     },
     {
       "path": "docs/REFERENCES.md",
@@ -8748,8 +8748,8 @@
     },
     {
       "path": "docs/RELEASE_CHECKLIST.md",
-      "sha256": "18161bc815d576fbf76cd4d14a4bb2d63a4fee138cbdd11b71c8347a46598567",
-      "size": 1351
+      "sha256": "797fa824d47316e8320d7d6182c75eed932bcd2ec855ed6950a39f1bd9f54749",
+      "size": 1446
     },
     {
       "path": "docs/RUNTIME_INTEGRATION.md",
@@ -9458,12 +9458,12 @@
     },
     {
       "path": "implementations/typescript/package-lock.json",
-      "sha256": "7b430fcef8be921a49b7d57f68c498856e786dc13196346890c85eb0c1e05374",
+      "sha256": "165bb4c554449eb44d7a6767a591080b3a23a2cf1febb95bef9fa204419b6b0c",
       "size": 13915
     },
     {
       "path": "implementations/typescript/package.json",
-      "sha256": "a82290d87ff09c2daf2eb0dc502d689e2401a97eac8765a599f00194ee7f016c",
+      "sha256": "dc0ca8ed1eb301a5380f574f1f9d6ea318ad4baaee5730cc1dd02fd3aa30f0e2",
       "size": 1830
     },
     {
@@ -9643,8 +9643,8 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "11f9d5ca2f45b98d71b3c9f4a11823d56c0236a94b567b6fa2139ee596c13c8f",
-      "size": 1647
+      "sha256": "518091ae49cf1f1001e678e383f42f799745a9deaee5c47f11762f17fa5cec1a",
+      "size": 2270
     },
     {
       "path": "schemas/action-binding-profile.schema.json",
@@ -9853,8 +9853,8 @@
     },
     {
       "path": "scripts/release_manifest.py",
-      "sha256": "9c24ef95d26d5929ec0b9ef70708f9825a9f70f5f7d77f3684bf9a1bf214e078",
-      "size": 1874
+      "sha256": "3b4e2d58c93094bb2ca140d7fab1f17645b9f7dde7ddcda5f076e92d707f9afe",
+      "size": 1863
     },
     {
       "path": "scripts/report_parity.py",
@@ -9898,7 +9898,7 @@
     },
     {
       "path": "src/ontle/__init__.py",
-      "sha256": "d739958a01e8dfcdc9893d077fca7014118fc4874c147189d687ccb50d6d6166",
+      "sha256": "9f18d2b3b4d09f50e5d4eee9d2a3ad871798206fc7313328c98bee5a0ab9548b",
       "size": 24
     },
     {
@@ -9908,8 +9908,8 @@
     },
     {
       "path": "src/ontle/cli.py",
-      "sha256": "166432ef7c8d4ddfe6b823f045a59876b1dfd5d383d2462b5049487d80a107fe",
-      "size": 24503
+      "sha256": "90ef662d0da0703a1be5410350409abb8b6be648f868547fc96508c02b552cb7",
+      "size": 24492
     },
     {
       "path": "src/ontle/core.py",
@@ -9933,8 +9933,8 @@
     },
     {
       "path": "src/ontle/extraction.py",
-      "sha256": "49b6d2a2583e49b4bc648d6f75f19c7e11702e29b9384cde1ccc41fb12b8f317",
-      "size": 11028
+      "sha256": "6a5988adce449f17179260aa787522cabbe53f965424a06ef302436985048969",
+      "size": 11017
     },
     {
       "path": "src/ontle/ignore.py",
@@ -9948,8 +9948,8 @@
     },
     {
       "path": "src/ontle/kgcheck.py",
-      "sha256": "5324a4fe04d692bb060e059bd44e5c99c43b5c2045f7ad66fee208eff98aab91",
-      "size": 12074
+      "sha256": "11ac18e7fe6c14ac834516e9e40c923c2130c12543cd9e317e4f52559d99eac0",
+      "size": 12063
     },
     {
       "path": "src/ontle/mcp.py",
@@ -9958,8 +9958,8 @@
     },
     {
       "path": "src/ontle/ontology.py",
-      "sha256": "c2bfb939247bb1cd34263d5a9882d4a536fbf435e92cbb6d78cabe262f6a260c",
-      "size": 24831
+      "sha256": "d761e30f82d67591611c9a34ba16d4de6f602f9658d6fc94631c3f28f36aedde",
+      "size": 24809
     },
     {
       "path": "src/ontle/rdfexport.py",
@@ -10138,8 +10138,8 @@
     },
     {
       "path": "starters/github-world-repo/.github/workflows/owp-ci.yml",
-      "sha256": "029f6804a0ceae44447e4b7ae68eb635a777bcb2d74df50826d1d98dcdfb0661",
-      "size": 510
+      "sha256": "07b83ba7b732e084d62733516db2733eb9dc3ba2f110be4bafd13c22c53aef05",
+      "size": 473
     },
     {
       "path": "starters/github-world-repo/.gitignore",
@@ -10148,8 +10148,8 @@
     },
     {
       "path": "starters/github-world-repo/README.md",
-      "sha256": "6fb9c314a9f963856da593a3c9f0a30ed3488a304cba91c9285a042ec69c995a",
-      "size": 669
+      "sha256": "50a9927c5f07bb9f438187db22e3dd7ae5cce5411558d87b46e0c914f9319a7b",
+      "size": 606
     },
     {
       "path": "starters/github-world-repo/WORLD.md",
@@ -10223,13 +10223,13 @@
     },
     {
       "path": "tests/test_ontology.py",
-      "sha256": "8dbf91efe0037da15044bb3f4d6176c77865605ca65177d30f244d7d0986bb03",
-      "size": 23499
+      "sha256": "6e6a1345bd603b2a7e9086bd4c86bd58fb25af99aec6b6c4e543a8b716a239be",
+      "size": 23367
     },
     {
       "path": "tests/test_rdfexport.py",
-      "sha256": "81cd8ae10d132f856fbb4813b813fcca215b91c533c07016019a2a38094c5bbd",
-      "size": 9540
+      "sha256": "bfab6b551126d32c8562c69575aeed36ac326dc92b6280668241ce31c8d0c1b3",
+      "size": 9529
     },
     {
       "path": "tests/test_report.py",

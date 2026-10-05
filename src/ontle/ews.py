@@ -6,6 +6,8 @@ Compilers without bindings are opaque; their EWS output is still checkable again
 """
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 import math
 import re
@@ -703,3 +705,20 @@ def canonical(ews: dict[str, Any]) -> dict[str, Any]:
 def ews_equal(a: dict[str, Any], b: dict[str, Any]) -> bool:
     """Spec 12.2 equality of two EWS documents."""
     return json_equal(canonical(a), canonical(b))
+
+
+def ews_differences(expected: dict[str, Any], actual: dict[str, Any]) -> list[str]:
+    """Where two EWS documents differ in their comparable form, one line per field (tooling)."""
+    a, b = canonical(expected), canonical(actual)
+    out: list[str] = []
+    for part in a:
+        x, y = a[part], b[part]
+        if json_equal(x, y):
+            continue
+        if isinstance(x, dict) and isinstance(y, dict):
+            for key in sorted(set(x) | set(y)):
+                if key not in x or key not in y or not json_equal(x[key], y[key]):
+                    out.append(f"{part}.{key}: expected {json.dumps(x.get(key), ensure_ascii=False)}, compiled {json.dumps(y.get(key), ensure_ascii=False)}")
+        else:
+            out.append(f"{part}: expected {json.dumps(x, ensure_ascii=False)}, compiled {json.dumps(y, ensure_ascii=False)}")
+    return out

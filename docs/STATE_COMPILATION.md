@@ -34,7 +34,15 @@ Rename `item` to your own entities and add fields as you go; the rest of this gu
 
 ## From records to observations
 
-A State Compiler reads an ObservationSet: one entry per thing a source system recorded, with its `type`, its `subject`, when it was observed, and its `values`. Mapping your records to that shape is up to you, since every source system differs. For CSV exports, a short script is enough:
+A State Compiler reads an ObservationSet: one entry per thing a source system recorded, with its `type`, its `subject`, when it was observed, and its `values`. For a CSV export with one record type per file, `ontle observations csv` does the mapping:
+
+```bash
+ontle observations csv qms_claims.csv --type QMS.claim --subject claim_id --time recorded_at > claims.yaml
+ontle observations csv mes_lots.csv --type MES.production_lot --subject lot_id --time recorded_at --list genealogy > lots.yaml
+ontle ews compile . --observations claims.yaml --observations lots.yaml --as-of 2026-09-05T00:00:00Z
+```
+
+The other columns become `values`, as strings unless you name them with `--number` or `--list`. For anything else (joins, renamed columns, several record types in one file), write the mapping yourself; a short script is enough:
 
 ```python
 # records_to_observations.py: one CSV per record type -> an ObservationSet (YAML is a superset of JSON)
@@ -113,9 +121,10 @@ Every field of the compiler appears in exactly one of `state`, `unresolved`, and
 ```bash
 ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02T00:00:00Z > ews.yaml
 ontle ews check ews.yaml --world .
+ontle ews check examples/expected-ews.yaml --world . --observations examples/observations.yaml
 ```
 
-`--compiler state/<file>.yaml` compiles a compiler other than the World's default. Keep sample observations and the EWS they compile to under `examples/` and list them as `PackageExample` assets, as the starter does: a reader sees what the compiler produces, and a runtime can check that it produces the same.
+`ews check` alone checks an EWS against its State Compiler's output contract: its shape, not its values. With `--observations` it also compiles them at the EWS's `asOf` and reports every field whose value, `unresolved`, `missing`, provenance, or derivation differs. Run it in CI to keep an expected EWS current. `--compiler state/<file>.yaml` compiles a compiler other than the World's default. Keep sample observations and the EWS they compile to under `examples/` and list them as `PackageExample` assets, as the starter does: a reader sees what the compiler produces, and a runtime can check that it produces the same.
 
 ## Common errors
 

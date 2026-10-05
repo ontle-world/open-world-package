@@ -145,6 +145,40 @@ class AuthoringHintTests(unittest.TestCase):
             self.assertEqual(Path(out.strip()).name, "openworld-examples-manufacturing-quality-world-0.1.0.owp.zip")
 
 
+class RecordsAndCheckTests(unittest.TestCase):
+    def test_observations_from_csv(self):
+        records = ROOT / "demos" / "business-ai" / "records"
+        with tempfile.TemporaryDirectory() as td:
+            outs = []
+            for name, otype, subject, extra in (("qms_claims.csv", "QMS.claim", "claim_id", []),
+                                                ("mes_production_lots.csv", "MES.production_lot", "lot_id", ["--list", "genealogy"])):
+                code, out, _ = run_cli(["observations", "csv", str(records / name), "--type", otype, "--subject", subject,
+                                        "--time", "recorded_at", *extra])
+                self.assertEqual(code, 0)
+                outs.append(Path(td) / f"{otype}.yaml")
+                outs[-1].write_text(out, encoding="utf-8")
+            doc = load_yaml(outs[1].read_text(encoding="utf-8"))
+            self.assertEqual(doc["spec"]["observations"][0]["values"], {"genealogy": ["RM-778", "RM-779"]})
+            code, out, _ = run_cli(["ews", "compile", str(WORLD), "--observations", str(outs[0]), "--observations", str(outs[1]),
+                                    "--as-of", "2026-09-05T00:00:00Z"])
+            self.assertEqual(code, 0)
+            self.assertEqual(load_yaml(out)["spec"]["state"]["claim.status"], "open")
+            code, _, err = run_cli(["observations", "csv", str(records / "qms_claims.csv"), "--type", "X", "--subject", "nope", "--time", "recorded_at"])
+            self.assertEqual(code, 2)
+            self.assertIn("no column 'nope'", err)
+
+    def test_ews_check_compares_values_with_observations(self):
+        expected, observations = WORLD / "examples" / "expected-ews.yaml", WORLD / "examples" / "observations.yaml"
+        self.assertEqual(run_cli(["ews", "check", str(expected), "--world", str(WORLD), "--observations", str(observations)])[0], 0)
+        with tempfile.TemporaryDirectory() as td:
+            wrong = Path(td) / "wrong.yaml"
+            wrong.write_text(expected.read_text(encoding="utf-8").replace("claim.status: open", "claim.status: closed"), encoding="utf-8")
+            self.assertEqual(run_cli(["ews", "check", str(wrong), "--world", str(WORLD)])[0], 0)  # the shape is right
+            code, _, err = run_cli(["ews", "check", str(wrong), "--world", str(WORLD), "--observations", str(observations)])
+            self.assertEqual(code, 1)
+            self.assertIn('state.claim.status: expected "closed", compiled "open"', err)
+
+
 class McpServerTests(unittest.TestCase):
     def exchange(self, server, *messages):
         out = io.StringIO()
@@ -214,7 +248,12 @@ class McpServerTests(unittest.TestCase):
         onto = EXAMPLES / "ontology" / "quality-ontology"
         matches = self.call(PackageServer(onto, onto), "term_lookup", {"query": "claim"})["structuredContent"]["matches"]
         self.assertTrue(matches)
-        self.assertTrue(all(m["in"] == "ontology terms" for m in matches))
+        self.assertTrue(all(m["in"] == "ontology openworld-examples/quality-ontology@0.1.0" for m in matches))
+
+    def test_term_lookup_searches_dependency_labels(self):
+        server = PackageServer(WORLD, WORLD, sources=[str(EXAMPLES)])
+        matches = self.call(server, "term_lookup", {"query": "생산 로트"})["structuredContent"]["matches"]
+        self.assertEqual([m["curie"] for m in matches], ["q:Lot"])
 
 
 if __name__ == "__main__":

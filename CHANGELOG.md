@@ -11,6 +11,9 @@
   - The report's `state.boundFields` is now `state.withBinding`, and `semanticCoverage.boundFields` is `semanticCoverage.boundToTerms`, so the two counts are not confused.
   - `ontle mcp` tools reject unknown arguments, and `ews_compile` points at `observationsPath` when `observations` is not a document.
   - `ontle new CompatibilityEvidence` fills `subject` and `scope` from the package.
+  - `ontle observations csv <file> --type --subject --time [--number] [--list]` turns a CSV of one record type into an ObservationSet.
+  - `ontle ews check <ews> --world <w> --observations <file>` also compiles the observations and reports every field whose value differs, so an expected EWS can be kept current in CI. Before, `ews check` checked only the shape.
+  - `ontle mcp --source` resolves the package's dependencies, and `term_lookup` searches the labels (every language), CURIEs, and IRIs of the ontologies among them.
   - Docs: STATE_COMPILATION.md shows how to turn CSV records into an ObservationSet; QUICKSTART shows a SemanticBinding, how to publish and check detached evidence, and what declared and satisfied profiles mean.
 
 - Package catalog (registry step P0) on the project site, `https://ontle-world.github.io/open-world-package/catalog/`: a page per example package with its card, report, assets, dependencies and dependents, and verified archive, plus a filterable list. Every number comes from `ontle inspect --report`. The catalog's `index.json` is a PackageIndex with a term index, so `--source index:https://ontle-world.github.io/open-world-package/catalog/index.json` resolves the examples. A package identifier page (`https://w3id.org/owp/pkg/...`) links to the package's catalog page when there is one.

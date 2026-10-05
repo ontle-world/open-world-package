@@ -1,0 +1,99 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.jams_24h:
+      press-7: 1
+    m.faults_24h:
+      press-7: 1
+      robot-2: 1
+    plant.t1_hot: 2
+    plant.t1_hot_max: 88
+    plant.l1_readings: 2
+    plant.none_match: 0
+  unresolved: {}
+  missing: []
+  provenance:
+    m.jams_24h:
+      press-7:
+      - a1
+    m.faults_24h:
+      press-7:
+      - a2
+      robot-2:
+      - a3
+    plant.t1_hot:
+    - t0
+    - t3
+    plant.t1_hot_max:
+    - t0
+    - t3
+    plant.l1_readings:
+    - t0
+    - t1
+    - t2
+    - t4
+    plant.none_match: []
+  derivation:
+    m.jams_24h:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+      window: PT24H
+      where:
+        code:
+          eq: jam
+    m.faults_24h:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+      window: PT24H
+      where:
+        code:
+          in:
+          - overtemp
+          - estop
+    plant.t1_hot:
+      kind: aggregate
+      from: ot.temp
+      value: celsius
+      function: count
+      where:
+        celsius:
+          gte: 80
+        sensor:
+          eq: T1
+    plant.t1_hot_max:
+      kind: aggregate
+      from: ot.temp
+      value: celsius
+      function: max
+      where:
+        celsius:
+          gte: 80
+          lt: 90
+        sensor:
+          eq: T1
+    plant.l1_readings:
+      kind: aggregate
+      from: ot.temp
+      value: sensor
+      function: distinct_count
+      where:
+        line:
+          eq: L1
+    plant.none_match:
+      kind: aggregate
+      from: ot.temp
+      value: celsius
+      function: count
+      where:
+        sensor:
+          eq: T9

@@ -94,6 +94,65 @@ export function ontologyTerms(dir: string, manifest: Obj): { prefixes: Record<st
   return { prefixes, terms };
 }
 
+/** What an OntologyPackage's owp-yaml schema entrypoints declare, by expanded IRI (spec 14 binding warnings). */
+export interface SchemaModel {
+  classes: Set<string>;
+  parents: Map<string, Set<string>>;
+  declaredOn: Map<string, Set<string>>;
+  range: Map<string, string>;
+  enums: Map<string, Set<string>>;
+}
+
+export function emptySchemaModel(): SchemaModel {
+  return { classes: new Set(), parents: new Map(), declaredOn: new Map(), range: new Map(), enums: new Map() };
+}
+
+/**
+ * Classes, their parents (subClassOf), the classes each property is declared on (types[].properties and relations'
+ * domain), each property's range, and the values of each enum type. RDF entrypoints are not read (spec 14).
+ */
+export function schemaModel(dir: string, manifest: Obj): SchemaModel {
+  const { prefixes } = ontologyTerms(dir, manifest);
+  const o = isObj(get(manifest, "spec", "ontology")) ? (get(manifest, "spec", "ontology") as Obj) : {};
+  const m = emptySchemaModel();
+  const iri = (v: unknown): string | null => (typeof v === "string" ? expandCurie(v, prefixes) : null);
+  const declare = (prop: string, cls: string | null, rng: unknown) => {
+    if (!m.declaredOn.has(prop)) m.declaredOn.set(prop, new Set());
+    if (cls) m.declaredOn.get(prop)!.add(cls);
+    const r = iri(rng);
+    if (r && !m.range.has(prop)) m.range.set(prop, r);
+  };
+  for (const e of Array.isArray(o.entrypoints) ? o.entrypoints : []) {
+    if (!isObj(e) || e.format !== "owp-yaml" || e.role !== "schema" || typeof e.path !== "string") continue;
+    const norm = normalizeRelPath(e.path);
+    const doc = norm === null ? undefined : loadDoc(path.join(dir, norm));
+    const spec = doc && isObj(doc.spec) ? doc.spec : {};
+    for (const t of Array.isArray(spec.types) ? spec.types : []) {
+      const cls = isObj(t) ? iri(t.id) : null;
+      if (!cls || !isObj(t)) continue;
+      if (Array.isArray(t.enum)) {
+        m.enums.set(cls, new Set(t.enum.filter((v): v is string => typeof v === "string")));
+        continue;
+      }
+      m.classes.add(cls);
+      if (!m.parents.has(cls)) m.parents.set(cls, new Set());
+      for (const p of Array.isArray(t.subClassOf) ? t.subClassOf : [t.subClassOf]) {
+        const parent = iri(p);
+        if (parent) m.parents.get(cls)!.add(parent);
+      }
+      for (const p of Array.isArray(t.properties) ? t.properties : []) {
+        const prop = isObj(p) ? iri(p.id) : null;
+        if (prop && isObj(p)) declare(prop, cls, p.range);
+      }
+    }
+    for (const r of Array.isArray(spec.relations) ? spec.relations : []) {
+      const prop = isObj(r) ? iri(r.id) : null;
+      if (prop && isObj(r)) declare(prop, iri(r.domain), r.range);
+    }
+  }
+  return m;
+}
+
 /** Every identifier the owp-yaml schema entrypoints use (not define), expanded with the package's prefixes. */
 export function ontologyUses(dir: string, manifest: Obj): Array<{ file: string; where: string; value: string; iri: string }> {
   const o = get(manifest, "spec", "ontology");

@@ -38,6 +38,25 @@ cases:
     errors: [compiler.binding]
     satisfiedProfile: viewable
     rule: Classification inputs do not form a cycle.
+  compiler-aggregate-where:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: An aggregate may limit its candidates with where, a mapping from a values key to classify conditions.
+  compiler-aggregate-where-empty:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: aggregate.where is a non-empty mapping.
+  compiler-aggregate-where-operator:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: aggregate.where uses only the conditions eq, in, gt, gte, lt, lte.
+  compiler-aggregate-where-in-not-list:
+    valid: false
+    errors: [compiler.binding]
+    satisfiedProfile: viewable
+    rule: an aggregate.where in condition is a list.
   world-descriptive-default:
     valid: true
     satisfiedProfile: descriptive
@@ -1273,6 +1292,29 @@ resolutionCases:
     resolved:
       conformance/onto@0.1.0: null
     rule: "Binding CURIEs expand with the dependency ontology's prefixes to terms it defines."
+  binding-path-domain:
+    valid: true
+    warnings: [binding.path-domain]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A binding path starts at a property the ontology's owp-yaml schema declares on the field's class; another class is a warning."
+  binding-path-chain:
+    valid: true
+    warnings: [binding.path-domain]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "Each later path step is a property of the previous step's range class; otherwise a warning."
+  binding-path-parent:
+    valid: true
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A property of a parent class (subClassOf), a two-step path through a class range, and a property only a term index lists are not warnings."
+  binding-value-range:
+    valid: true
+    warnings: [binding.value-range]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A values.map code outside the enum range of the field's property is a warning."
   binding-prefix-unknown:
     valid: false
     errors: [grounding.prefix-unknown]
@@ -1299,6 +1341,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"
     rule: Observation bindings ignore estimates and estimate bindings read only them; the derivation lists who estimated each subject's value.
+  aggregate-where:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: aggregate.where keeps the candidates for which every condition on every key holds (classify conditions); a missing key or a number comparison on a non-number fails; the filter applies before numeric functions, per subject, and is recorded in the derivation; no passing candidate counts 0.
   aggregate-window:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"

@@ -9,7 +9,7 @@ spec:
     properties:
     - {id: q:incidentStatus, range: q:IncidentStatus, cardinality: "1"}
   - id: q:IncidentStatus
-    enum: [open, investigating, closed]
+    enum: [open, under_investigation, closed]
   - id: q:Claim
     label: {en: Claim, ko: 클레임}
     properties:

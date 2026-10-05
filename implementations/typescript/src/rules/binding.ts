@@ -7,7 +7,7 @@ import { Context, error, warn } from "../context.js";
 import { FIELD_BINDING, Problem, SEMANTIC_BINDING, structureProblems } from "../structure.js";
 import { get, isObj, Obj } from "../util.js";
 import { localViewIncludes } from "./experimental.js";
-import { expandCurie } from "./ontology.js";
+import { emptySchemaModel, expandCurie, SchemaModel } from "./ontology.js";
 import { compilerFields } from "./world.js";
 
 const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
@@ -177,6 +177,84 @@ export function bindingGroundingProblems(
         out.push({ rule: "grounding.prefix-unknown", msg: `${file}: ${where} "${value}" uses a prefix that no dependency OntologyPackage declares` });
       } else if (!known.has(iri)) {
         out.push({ rule: "grounding.ontology-term", msg: `${file}: ${where} "${value}" (${iri}) is not a term of any dependency OntologyPackage` });
+      }
+    }
+  }
+  return out;
+}
+
+/** Merge the schema models of several ontologies (the first range of a property wins, as for prefixes). */
+export function mergeSchemaModels(models: SchemaModel[]): SchemaModel {
+  const out = emptySchemaModel();
+  for (const m of models) {
+    for (const c of m.classes) out.classes.add(c);
+    for (const key of ["parents", "declaredOn"] as const) {
+      for (const [k, v] of m[key]) {
+        if (!out[key].has(k)) out[key].set(k, new Set());
+        for (const x of v) out[key].get(k)!.add(x);
+      }
+    }
+    for (const [k, v] of m.range) if (!out.range.has(k)) out.range.set(k, v);
+    for (const [k, v] of m.enums) if (!out.enums.has(k)) out.enums.set(k, v);
+  }
+  return out;
+}
+
+function ancestors(cls: string, parents: Map<string, Set<string>>): Set<string> {
+  const seen = new Set<string>();
+  const todo = [cls];
+  while (todo.length) {
+    const c = todo.pop()!;
+    if (seen.has(c)) continue;
+    seen.add(c);
+    todo.push(...[...(parents.get(c) ?? [])].sort());
+  }
+  return seen;
+}
+
+/**
+ * Spec 14 warnings from the owp-yaml schemas of the dependency ontologies: binding.path-domain (a path step that the
+ * schemas declare on other classes than its class, or the previous step's range class) and binding.value-range
+ * (a values.map code outside the enum range of the field's last property). Terms the schemas do not declare are not judged.
+ */
+export function bindingSemanticProblems(bindingDocs: Array<[string, unknown]>, prefixes: Record<string, string>, model: SchemaModel): Problem[] {
+  const out: Problem[] = [];
+  for (const [file, doc] of [...bindingDocs].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    const fields = get(doc, "spec", "fields");
+    if (!isObj(fields)) continue;
+    for (const field of Object.keys(fields).sort()) {
+      const entry = fields[field];
+      if (!isObj(entry) || !Array.isArray(entry.path)) continue;
+      const cls = typeof entry.class === "string" ? expandCurie(entry.class, prefixes) : null;
+      let current: string | null = cls !== null && model.classes.has(cls) ? cls : null;
+      let last: string | null = null;
+      for (let i = 0; i < entry.path.length; i++) {
+        const step = entry.path[i];
+        const prop = typeof step === "string" ? expandCurie(step, prefixes) : null;
+        if (current === null || prop === null || !model.declaredOn.has(prop)) {
+          last = null;
+          break;
+        }
+        const owners = model.declaredOn.get(prop)!;
+        const up = ancestors(current, model.parents);
+        if (owners.size > 0 && ![...owners].some((o) => up.has(o))) {
+          const where = i === 0 ? String(entry.class) : `the range of path[${i - 1}]`;
+          out.push({ rule: "binding.path-domain", msg: `${file}: spec.fields.${field}.path[${i}] "${String(step)}" is not a property of ${where} (${current}); its schema declares it on ${[...owners].sort().join(", ")}` });
+          last = null;
+          break;
+        }
+        last = prop;
+        const rng = model.range.get(prop);
+        current = rng !== undefined && model.classes.has(rng) ? rng : null;
+      }
+      const values = isObj(entry.values) ? entry.values : undefined;
+      const rng = last !== null ? model.range.get(last) : undefined;
+      const enumValues = rng !== undefined ? model.enums.get(rng) : undefined;
+      if (enumValues && values && isObj(values.map)) {
+        const outside = Object.keys(values.map).filter((k) => !enumValues.has(k)).sort();
+        if (outside.length) {
+          out.push({ rule: "binding.value-range", msg: `${file}: spec.fields.${field}.values.map codes ${outside.map((c) => JSON.stringify(c)).join(", ")} are not values of ${rng} (${[...enumValues].sort().join(", ")})` });
+        }
       }
     }
   }

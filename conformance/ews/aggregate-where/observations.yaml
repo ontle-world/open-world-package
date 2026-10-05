@@ -1,0 +1,14 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  - {id: a0, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T00:00:00Z", values: {code: jam}}
+  - {id: a1, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T12:00:00Z", values: {code: jam}}
+  - {id: a2, type: ot.alarm, subject: press-7, observedAt: "2026-01-01T13:00:00Z", values: {code: overtemp}}
+  - {id: a3, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T14:00:00Z", values: {code: estop}}
+  - {id: a4, type: ot.alarm, subject: robot-2, observedAt: "2026-01-01T15:00:00Z", values: {code: jam}, estimatedBy: acme/predictor}
+  - {id: t0, type: ot.temp, observedAt: "2026-01-01T10:00:00Z", values: {celsius: 85, sensor: T1, line: L1}}
+  - {id: t1, type: ot.temp, observedAt: "2026-01-01T11:00:00Z", values: {celsius: 79.5, sensor: T1, line: L1}}
+  - {id: t2, type: ot.temp, observedAt: "2026-01-01T12:00:00Z", values: {celsius: 91, sensor: T2, line: L1}}
+  - {id: t3, type: ot.temp, observedAt: "2026-01-01T13:00:00Z", values: {celsius: 88, sensor: T1}}
+  - {id: t4, type: ot.temp, observedAt: "2026-01-01T14:00:00Z", values: {celsius: "hot", sensor: T1, line: L1}}

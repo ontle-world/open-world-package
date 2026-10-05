@@ -68,7 +68,7 @@ python records_to_observations.py > observations.json
 ontle ews compile . --observations observations.json --as-of 2026-09-05T00:00:00Z
 ```
 
-Ids must be unique across the set, and `observedAt` is UTC (`YYYY-MM-DDTHH:MM:SSZ`). A binding's `from` matches `type`, and its `value` names a key of `values`. To count only some records (say, failed inspections), give them their own type when you map them (`QMS.inspection_failure`); an aggregate counts every observation of its type. [demos/business-ai/map_records.py](../demos/business-ai/map_records.py) is a fuller version that reads the record types from the World's source system profile. For records in a knowledge graph, `ontle kg extract` does the mapping declaratively.
+Ids must be unique across the set, and `observedAt` is UTC (`YYYY-MM-DDTHH:MM:SSZ`). A binding's `from` matches `type`, and its `value` names a key of `values`. To count only some records (say, failed inspections), keep one type and filter in the aggregate with `where` (section 5). [demos/business-ai/map_records.py](../demos/business-ai/map_records.py) is a fuller version that reads the record types from the World's source system profile. For records in a knowledge graph, `ontle kg extract` does the mapping declaratively.
 
 ## 2. Name fields inside the View
 
@@ -95,8 +95,19 @@ State that is not observed directly is latent; list such fields in `latent` and 
 | Form | Binding | Example |
 |---|---|---|
 | Estimate | `{estimate: {from, value, select}}`, reading only observations that carry `estimatedBy` (a model's or person's estimate) | a health index from a degradation model |
-| Aggregate | `{aggregate: {from, value, function, window}}`; `function` is `count`, `distinct_count`, `sum`, `mean`, `min`, or `max`; `window` an ISO 8601 duration such as `PT24H` or `P7D` | alarms in the last 24 hours |
+| Aggregate | `{aggregate: {from, value, function, window, where}}`; `function` is `count`, `distinct_count`, `sum`, `mean`, `min`, or `max`; `window` an ISO 8601 duration such as `PT24H` or `P7D`; `where` keeps only matching observations | alarms in the last 24 hours |
 | Classification | `{classify: {input: <another field>, criterion: {id, version, basis, rules, otherwise}}}`; rules `{when: {eq, in, gt, gte, lt, lte}, label}` are tried in order | `high` risk by an escalation SOP |
+
+`where` filters the candidates of an aggregate with the same conditions a classification rule uses, on any key of the observation's `values`. Every condition must hold, and an observation without the key does not count:
+
+```yaml
+inspection.failures_7d:
+  aggregate: {from: QMS.inspection, value: result, function: count, window: P7D,
+              where: {result: {in: [seal_leak_detected, dimension_out_of_spec]}}}
+line.hot_readings_24h:
+  aggregate: {from: OT.temperature, value: celsius, function: count, window: PT24H,
+              where: {celsius: {gte: 80}, sensor: {eq: T1}}}
+```
 
 A classification always names its criterion, so a consumer can tell which rule judged a value; `basis` may point at the SOP or standard it comes from. The EWS records how each latent value was produced in `derivation`.
 

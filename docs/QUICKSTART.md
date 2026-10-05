@@ -180,6 +180,13 @@ ontle ews compile . --observations examples/observations.yaml --as-of 2026-01-02
 
 `examples/business/manufacturing-quality-world/semantics/quality-terms.yaml` binds a whole World, including coded values and actions.
 
+`validate --resolve` also checks the meaning of a binding against an `owp-yaml` ontology schema. A field path that uses a property on a class the schema does not declare it on is a `binding.path-domain` warning (for example `{class: q:Lot, path: [q:claimStatus]}`). A `values.map` code outside an enum range is a `binding.value-range` warning. These checks are rules over what the ontology declares, so every implementation gives the same answer. Two tools go further:
+
+```bash
+ontle kg check . --source .. --bindings                  # the same checks against ontologies published as RDF
+ontle ews check ews.yaml --world . --source ..           # EWS values outside an enum the ontology declares
+```
+
 ## 9. Describe who does the work
 
 Add these as asset files like any other: `ActorProfile`, `RoleProfile`, `DelegationProfile`, `CapabilityContract`, `TaskSetProfile`, `WorkPatternProfile`, `ArtifactContract`, and `ConsumerRepresentationProfile`. Then see how they connect:

@@ -189,12 +189,38 @@ def cmd_ews_check(args):
         else:
             compiled = compile_ews(args.world, compiler, merged_observations(args.observations), as_of)
             errors = [f"compiled value differs: {d}" for d in ews_differences(ews, compiled)]
+    if not errors and args.source:
+        for w in ews_range_warnings(args.world, ews, args.source):
+            print(f"WARN: {w}")
     if not errors:
         print("VALID")
         return 0
     for e in errors:
         print(f"ERROR: {e}", file=sys.stderr)
     return 1
+
+
+def ews_range_warnings(world: str, ews: dict, sources: list[str]) -> list[str]:
+    """Values of fields bound to an enum-typed property (owp-yaml schemas of the World's ontologies) that are not values
+    of the enum. A runtime data finding, not a validation rule."""
+    from .binding import enum_ranges
+    from .resolve import binding_context, resolve_package
+    resolution = resolve_package(world, sources)
+    binding_docs, prefixes, model = binding_context(resolution.root, resolution)
+    if not binding_docs or model is None:
+        return []
+    spec = ews.get("spec") or {}
+    out: list[str] = []
+    for field, (enum_iri, allowed) in enum_ranges(binding_docs, prefixes, model).items():
+        for section in ("state", "unresolved"):
+            value = (spec.get(section) or {}).get(field)
+            groups = value.items() if isinstance(value, dict) else [(None, value)]
+            for subject, v in groups:
+                for x in v if isinstance(v, list) else [v]:
+                    if x is not None and str(x) not in allowed:
+                        at = f"{field}" + (f" subject {subject!r}" if subject is not None else "")
+                        out.append(f"value outside range: {section}.{at} is {x!r}, not one of {enum_iri} ({', '.join(sorted(allowed))})")
+    return out
 
 
 def cmd_ontology_index(args):
@@ -225,7 +251,13 @@ def cmd_kg_extract(args):
 
 
 def cmd_kg_check(args):
-    from .kgcheck import check_knowledge_graphs
+    from .kgcheck import check_bindings, check_knowledge_graphs
+    if args.bindings:
+        found = check_bindings(args.package, args.source)
+        for w in found:
+            print(f"WARN: {w}")
+        print(f"{len(found)} binding warning{'' if len(found) == 1 else 's'}")
+        return 0
     report = check_knowledge_graphs(args.package, args.source)
     for f in report.findings:
         print(("WARN: " if f.code == "kg.untyped" else "ERROR: ") + f.line(), file=sys.stderr if f.code != "kg.untyped" else sys.stdout)
@@ -417,6 +449,8 @@ def build_parser():
     y.add_argument("--observations", action="append", default=[], help="also compile these ObservationSet files with the EWS's State "
                    "Compiler and compare the values (repeatable)")
     y.add_argument("--as-of", help="with --observations: compilation time (default: the EWS's spec.context.asOf)")
+    y.add_argument("--source", action="append", default=[], help="package source for the World's ontologies: warn about values of fields bound "
+                   "to an enum-typed property that are not values of the enum (repeatable; ONTLE_PATH is also read)")
     y.set_defaults(func=cmd_ews_check)
 
     x = sp.add_parser("observations", help="make ObservationSet documents from records")
@@ -458,6 +492,8 @@ def build_parser():
     y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges (needs the rdf extra)")
     y.add_argument("package", nargs="?", default=".", help="package directory")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
+    y.add_argument("--bindings", action="store_true", help="instead: check the SemanticBinding's field paths and value maps against the "
+                   "RDF T-box of the dependency ontologies, RDF schema entrypoints included (binding.path-domain, binding.value-range)")
     y.set_defaults(func=cmd_kg_check)
 
     x = sp.add_parser("interop", help="mappings to neighbouring standards (docs/interop/)")

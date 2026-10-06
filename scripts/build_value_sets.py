@@ -45,7 +45,7 @@ def render() -> str:
         lines.append(f"  skos:prefLabel {_lit(name)} ;")
         comment = "Used by " + str(entry.get("usedBy")) + ". " + openness  # Python 3.11: no nested quotes in f-strings
         lines.append(f"  rdfs:comment {_lit(comment)} ;")
-        lines.append(f"  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .")
+        lines.append("  dct:source <https://github.com/ontle-world/open-world-package/blob/main/vocab/value-sets.yaml> .")
         for value in sorted(entry["values"]):
             info = entry["values"][value] or {}
             parts = [f"<{BASE}{name}#{value}> a skos:Concept", f"skos:inScheme {scheme}", f"skos:topConceptOf {scheme}",

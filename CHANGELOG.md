@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.2.0-alpha.6 — Catalog, Pilot Fixes, Aggregate Filters, Binding Checks
+
+Highlights:
+- **Package catalog** on the project site: a page per example package from its report, and a PackageIndex to resolve from.
+- **From records to state**: `ontle observations csv`, aggregate filters (`where`), and `ews check --observations`, which compares an expected EWS by value.
+- **Binding meaning checks**: rule-based warnings when a binding uses a property on the wrong class or maps a code outside an enum, from the ontology's own declarations.
+- **Fixes from a new-user pilot**, including `evidence check` version binding and `pack --output <directory>`.
+- **Conformance.** 252 validation, 37 resolution, 34 EWS compile, 24 EWS check, 13 extraction, and 5 detached evidence cases.
+
+Changes:
+
 - Aggregate filters (spec 12.4): an `aggregate` binding may declare `where`, a mapping from a key of the observation's `values` to the conditions a classification rule uses (`eq`, `in`, `gt`, `gte`, `lt`, `lte`). Only observations that have every key and meet every condition are candidates, and the EWS derivation records `where`. For example `where: {result: {in: [fail, rework]}}` counts failed inspections without a separate observation type. Both implementations; 1 EWS case and 4 validation cases.
 - Binding meaning checks (spec 14), rule-based on what the dependency ontologies' `owp-yaml` schemas declare:
   - `binding.path-domain` (warning): a field path step on a class the schema does not declare the property on (parents through `subClassOf` count).

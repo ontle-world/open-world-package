@@ -625,6 +625,8 @@ Warnings also have ids. Implementations SHOULD prefix warning messages with them
 | `value.unknown` | 16-19 | value outside an open value set |
 | `knowledge.graph-ontology` | 19.1 | graph KnowledgeAsset without `spec.conformsTo.ontology` |
 | `binding.term-unscoped` | 14 | binding term outside the World boundary and every View projection |
+| `binding.path-domain` | 14 | binding field path step that the owp-yaml schema declares on other classes than the step's class |
+| `binding.value-range` | 14 | binding `values.map` code that is not a value of the enum range of the field's property |
 | `ref.unpinned` | 5.1 | bound ExternalRef that is not pinned |
 | `experimental.field` | C | experimental kind or field: undefined key, missing required field, or malformed value |
 | `experimental.value` | C | value outside a value set in an experimental kind |

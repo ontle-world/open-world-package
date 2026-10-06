@@ -1,0 +1,23 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.jams_24h, m.faults_24h, plant.t1_hot, plant.t1_hot_max, plant.l1_readings, plant.none_match]
+    perSubject: [m.jams_24h, m.faults_24h]
+    latent: [m.jams_24h, m.faults_24h, plant.t1_hot, plant.t1_hot_max, plant.l1_readings, plant.none_match]
+  bindings:
+    # eq on the value itself, per subject; the estimate (a4) is never a candidate
+    m.jams_24h: {aggregate: {from: ot.alarm, value: code, function: count, window: PT24H, where: {code: {eq: jam}}}}
+    # in
+    m.faults_24h: {aggregate: {from: ot.alarm, value: code, function: count, window: PT24H, where: {code: {in: [overtemp, estop]}}}}
+    # two keys, one of them not the counted value; a number comparison on a string ("hot") is false
+    plant.t1_hot: {aggregate: {from: ot.temp, value: celsius, function: count, where: {celsius: {gte: 80}, sensor: {eq: T1}}}}
+    plant.t1_hot_max: {aggregate: {from: ot.temp, value: celsius, function: max, where: {celsius: {gte: 80, lt: 90}, sensor: {eq: T1}}}}
+    # an observation without the key fails the condition (t3 has no line)
+    plant.l1_readings: {aggregate: {from: ot.temp, value: sensor, function: distinct_count, where: {line: {eq: L1}}}}
+    # no candidate passes: count 0 with empty provenance
+    plant.none_match: {aggregate: {from: ot.temp, value: celsius, function: count, where: {sensor: {eq: T9}}}}

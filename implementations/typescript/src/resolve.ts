@@ -15,8 +15,8 @@ import { readZip } from "./zip.js";
 import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependencies.js";
 import { parseContractRef } from "./rules/worldmodel.js";
 import { viewExternalNames } from "./rules/world.js";
-import { bindingGroundingProblems } from "./rules/binding.js";
-import { ontologyTerms, ontologyUses } from "./rules/ontology.js";
+import { bindingGroundingProblems, bindingSemanticProblems, mergeSchemaModels } from "./rules/binding.js";
+import { ontologyTerms, ontologyUses, schemaModel } from "./rules/ontology.js";
 import { validatePackage, ValidationResult } from "./validate.js";
 
 export interface Candidate {
@@ -522,6 +522,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
 
   // Spec 14: SemanticBinding CURIEs resolve against the package's dependency OntologyPackages.
   for (const n of nodes.values()) for (const p of bindingGrounding(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
+  for (const n of nodes.values()) for (const p of bindingSemantics(n, nodes)) warnings.push({ code: p.rule, message: `${n.identity}: ${p.msg}` });
   for (const n of nodes.values()) for (const p of ontologyDependencyProblems(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
 
   // Cross-package rules for every WorldModelPackage in the closure.
@@ -546,6 +547,22 @@ function ontologyDependencyProblems(pkg: Node, nodes: Map<string, Node>): Array<
       .filter((d) => iri.startsWith(d.iri) && !d.terms.has(iri))
       .map((d) => ({ rule: "ontology.dependency-term", msg: `${file}: ${where} "${value}" (${iri}) is not a term of ${d.ref}` })),
   );
+}
+
+/** Spec 14 warnings: binding paths and value maps against the owp-yaml schemas of the dependency ontologies. */
+function bindingSemantics(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {
+  const docs: Array<[string, unknown]> = [];
+  for (const [rel, kind] of localAssetKinds(pkg.dir, pkg.manifest)) {
+    if (kind !== "SemanticBinding") continue;
+    const l = loadYamlFile(path.join(pkg.dir, rel));
+    docs.push([rel, l.ok ? l.value : undefined]);
+  }
+  if (docs.length === 0) return [];
+  const ontologies = pkg.deps.map((d) => nodes.get(d.ref)).filter((d): d is Node => d !== undefined && d.kind === "OntologyPackage");
+  if (ontologies.length === 0) return [];
+  const prefixes: Record<string, string> = Object.create(null);
+  for (const o of ontologies) for (const [k, v] of Object.entries(ontologyTerms(o.dir, o.manifest).prefixes)) if (!(k in prefixes)) prefixes[k] = v;
+  return bindingSemanticProblems(docs, prefixes, mergeSchemaModels(ontologies.map((o) => schemaModel(o.dir, o.manifest))));
 }
 
 function bindingGrounding(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {

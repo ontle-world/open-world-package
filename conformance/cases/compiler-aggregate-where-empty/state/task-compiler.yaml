@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.a]
+    latent: [m.a]
+  bindings:
+    m.a: {aggregate: {from: ot.alarm, value: code, function: count, where: {}}}

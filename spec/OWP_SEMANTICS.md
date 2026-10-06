@@ -104,5 +104,10 @@ Cross-package rules (section 11), for every package in the closure that has Sema
 
 - The prefixes of all dependency OntologyPackages are merged. Two ontologies that declare the same prefix with different IRIs are an error.
 - Every CURIE expands with a merged prefix, and the expanded IRI is a term of one of those ontologies (section 3.1).
+- Warnings from the `owp-yaml` schema entrypoints of those ontologies (types, their `properties` and `subClassOf`, `relations` with `domain`, ranges, and enum types). A property is declared on a class when it is listed under that type, or a relation's `domain` names it.
+  - `binding.path-domain`: a field's `path[0]` is a property the schemas declare, but not on its `class` or a class it is a `subClassOf` (transitively). Each later step is judged the same way against the range of the previous step, when that range is a class of the schemas.
+  - `binding.value-range`: the last step's range is an enum type and the field's `values.map` has a code that is not a value of that enum.
+  - A term the schemas do not declare (one from an RDF entrypoint or only in a term index) is not judged, and the steps after it are not either.
+  - These are warnings, not errors. In RDFS a domain is not a constraint: using a property on another class only infers more types. A mismatch is usually a mistake, but it is not a contradiction.
 
 The reference CLI reports `semanticCoverage` (bound fields out of compiler fields) in `ontle inspect`, and `ontle ews compile --jsonld` prints an EWS document with a JSON-LD `@context` built from the binding. Neither changes the EWS document.

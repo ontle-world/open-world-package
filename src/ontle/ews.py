@@ -226,6 +226,8 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
                     errors.append(f"{where} aggregate.function must be one of {sorted(AGGREGATE_FUNCTIONS)}")
                 if "window" in a and duration_seconds(a["window"]) is None:
                     errors.append(f"{where} aggregate.window must be an ISO 8601 duration such as PT24H or P7D")
+                if "where" in a:
+                    errors += _where_errors(a["where"], where)
                 if a.get("function") in ("count", "distinct_count") and field in units and not dimensionless(units[field]):
                     errors.append(f"compiler.unit: StateCompilerProfile {rel} field {field!r} is a {a['function']}, so its unit must be dimensionless (1 or an annotation such as {{alarm}}), not {units[field]!r}")
         else:
@@ -295,6 +297,27 @@ def _classify_errors(c: Any, field: str, where: str, fields: list[str] | None, p
         elif "in" in when and not isinstance(when["in"], list):
             errors.append(f"{where} classify.criterion.rules[{i}].when.in must be a list")
     return errors
+
+
+def _where_errors(w: Any, where: str) -> list[str]:
+    """Section 12.4: aggregate.where maps a values key to conditions, the same conditions a classify rule uses."""
+    if not isinstance(w, dict) or not w:
+        return [f"{where} aggregate.where must be a non-empty mapping from a values key to conditions"]
+    errors: list[str] = []
+    for key, cond in w.items():
+        if not isinstance(key, str) or not key:
+            errors.append(f"{where} aggregate.where keys must be non-empty strings")
+        elif not isinstance(cond, dict) or not cond or not set(cond) <= CONDITIONS:
+            errors.append(f"{where} aggregate.where.{key} needs one or more of {sorted(CONDITIONS)}")
+        elif "in" in cond and not isinstance(cond["in"], list):
+            errors.append(f"{where} aggregate.where.{key}.in must be a list")
+    return errors
+
+
+def _passes(o: dict[str, Any], w: dict[str, Any] | None) -> bool:
+    """An observation meets aggregate.where: every condition on every key holds; a missing key fails."""
+    return w is None or all(key in o["values"] and all(_holds(op, o["values"][key], x) for op, x in cond.items())
+                            for key, cond in w.items())
 
 
 def _inexact_number(value: Any) -> bool:
@@ -454,9 +477,9 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
     units = output_units(compiler) or {}
 
     def candidates(field: str, src: dict[str, Any], estimates: bool, since: str | None = None, same_unit: bool = False,
-                   counted: bool = False) -> list[dict[str, Any]]:
+                   counted: bool = False, where: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         cands = sorted((o for o in obs if o["type"] == src["from"] and o["observedAt"] <= as_of and src["value"] in o["values"]
-                        and ("estimatedBy" in o) == estimates and (since is None or o["observedAt"] > since)),
+                        and ("estimatedBy" in o) == estimates and (since is None or o["observedAt"] > since) and _passes(o, where)),
                        key=lambda o: (o["observedAt"], o["id"]))
         # Section 12.5: a reported unit must be the field's declared unit; values are never converted.
         reported = {}
@@ -493,7 +516,7 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
             a = b["aggregate"]
             since = _shift(as_of, duration_seconds(a["window"])) if "window" in a else None
             groups = grouped(field, candidates(field, a, False, since, same_unit=a["function"] in ("sum", "mean", "min", "max"),
-                                                counted=a["function"] in ("count", "distinct_count")))
+                                                counted=a["function"] in ("count", "distinct_count"), where=a.get("where")))
             out = {}
             for k, g in groups.items():
                 r = _aggregate(g, a["value"], a["function"])
@@ -563,7 +586,7 @@ def _derivation(b: dict[str, Any], result: dict[str | None, tuple[str, Any, list
         return {"kind": "estimate", "by": {k: by(r[2]) for k, r in result.items()}}
     if form == "aggregate":
         a = b["aggregate"]
-        return {"kind": "aggregate", **{k: a[k] for k in ("from", "value", "function", "window") if k in a}}
+        return {"kind": "aggregate", **{k: a[k] for k in ("from", "value", "function", "window", "where") if k in a}}
     c = b["classify"]
     return {"kind": "classify", "input": c["input"], "criterion": {k: c["criterion"][k] for k in ("id", "version", "basis") if k in c["criterion"]}}
 

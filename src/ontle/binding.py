@@ -228,6 +228,91 @@ def grounding_issues(package_identity: str, binding_docs: dict[str, dict[str, An
     return errors
 
 
+def merge_models(models: list[dict[str, Any]]) -> dict[str, Any]:
+    merged: dict[str, Any] = {"classes": set(), "parents": {}, "declaredOn": {}, "range": {}, "enums": {}}
+    for m in models:
+        merged["classes"] |= m["classes"]
+        for key in ("parents", "declaredOn"):
+            for k, v in m[key].items():
+                merged[key].setdefault(k, set()).update(v)
+        for key in ("range", "enums"):
+            for k, v in m[key].items():
+                merged[key].setdefault(k, v)
+    return merged
+
+
+def _ancestors(cls: str, parents: dict[str, set[str]]) -> set[str]:
+    seen, todo = set(), [cls]
+    while todo:
+        c = todo.pop()
+        if c not in seen:
+            seen.add(c)
+            todo += sorted(parents.get(c, ()))
+    return seen
+
+
+def _walk(entry: dict[str, Any], prefixes: dict[str, str], model: dict[str, Any]) -> tuple[str | None, tuple[int, str, set[str]] | None]:
+    """Follow a field binding's path through the schema model: (the last property, when every step was judged and
+    fits), and the first step that does not fit (its index, the class it was judged against, the classes the
+    schemas declare it on)."""
+    cls = expand(entry["class"], prefixes) if isinstance(entry.get("class"), str) else None
+    current = cls if cls in model["classes"] else None
+    last = None
+    for i, step in enumerate(entry["path"]):
+        prop = expand(step, prefixes) if isinstance(step, str) else None
+        if current is None or prop is None or prop not in model["declaredOn"]:
+            return None, None
+        owners = model["declaredOn"][prop]
+        if owners and not owners & _ancestors(current, model["parents"]):
+            return None, (i, current, owners)
+        last = prop
+        rng = model["range"].get(prop)
+        current = rng if rng in model["classes"] else None
+    return last, None
+
+
+def enum_ranges(binding_docs: dict[str, dict[str, Any]], prefixes: dict[str, str], model: dict[str, Any]) -> dict[str, tuple[str, set[str]]]:
+    """EWS field -> (enum type IRI, its values), for bound fields whose path ends at an enum-typed property."""
+    out: dict[str, tuple[str, set[str]]] = {}
+    for _, doc in sorted(binding_docs.items()):
+        fields = doc.get("spec", {}).get("fields") if isinstance(doc.get("spec"), dict) else None
+        for field, entry in sorted(fields.items()) if isinstance(fields, dict) else []:
+            if isinstance(entry, dict) and isinstance(entry.get("path"), list):
+                last, _ = _walk(entry, prefixes, model)
+                rng = model["range"].get(last) if last else None
+                if rng in model["enums"]:
+                    out[field] = (rng, model["enums"][rng])
+    return out
+
+
+def semantic_warnings(package_identity: str, binding_docs: dict[str, dict[str, Any]], prefixes: dict[str, str],
+                      model: dict[str, Any]) -> list[str]:
+    """Spec 14 warnings from the owp-yaml schemas of the dependency ontologies. A field's path starts at a property
+    of its class (or a parent class) and each next step at a property of the previous step's range class
+    (binding.path-domain); coded values mapped for an enum-typed property are values of the enum (binding.value-range).
+    Terms the schemas do not declare (an RDF ontology's terms, for example) are not judged."""
+    warnings: list[str] = []
+    for rel, doc in sorted(binding_docs.items()):
+        fields = doc.get("spec", {}).get("fields") if isinstance(doc.get("spec"), dict) else None
+        for field, entry in sorted(fields.items()) if isinstance(fields, dict) else []:
+            if not isinstance(entry, dict) or not isinstance(entry.get("path"), list):
+                continue
+            last, problem = _walk(entry, prefixes, model)
+            if problem:
+                i, current, owners = problem
+                where = entry["class"] if i == 0 else f"the range of path[{i - 1}]"
+                warnings.append(f"binding.path-domain: {package_identity}: {rel}: spec.fields.{field}.path[{i}] {entry['path'][i]!r} is not a "
+                                f"property of {where} ({current}); its schema declares it on {', '.join(sorted(owners))}")
+            values = entry.get("values") if isinstance(entry.get("values"), dict) else None
+            enum = model["enums"].get(model["range"].get(last)) if last else None
+            if enum is not None and values is not None and isinstance(values.get("map"), dict):
+                outside = sorted(str(k) for k in values["map"] if str(k) not in enum)
+                if outside:
+                    warnings.append(f"binding.value-range: {package_identity}: {rel}: spec.fields.{field}.values.map codes "
+                                    f"{', '.join(repr(c) for c in outside)} are not values of {model['range'][last]} ({', '.join(sorted(enum))})")
+    return warnings
+
+
 def jsonld_context(binding_doc: dict[str, Any], prefixes: dict[str, str]) -> dict[str, Any]:
     """JSON-LD context mapping each bound EWS field to the IRI of its last path step (or its class)."""
     context: dict[str, Any] = dict(prefixes)

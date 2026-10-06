@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Aggregate filters (spec 12.4): an `aggregate` binding may declare `where`, a mapping from a key of the observation's `values` to the conditions a classification rule uses (`eq`, `in`, `gt`, `gte`, `lt`, `lte`). Only observations that have every key and meet every condition are candidates, and the EWS derivation records `where`. For example `where: {result: {in: [fail, rework]}}` counts failed inspections without a separate observation type. Both implementations; 1 EWS case and 4 validation cases.
+- Binding meaning checks (spec 14), rule-based on what the dependency ontologies' `owp-yaml` schemas declare:
+  - `binding.path-domain` (warning): a field path step on a class the schema does not declare the property on (parents through `subClassOf` count).
+  - `binding.value-range` (warning): a `values.map` code outside the enum range of the field's property.
+  - Terms the schemas do not declare are not judged. Both implementations; 4 resolution cases.
+  - Tools: `ontle kg check --bindings` makes the same checks against the RDF T-box (RDF schema entrypoints included), and `ontle ews check --source` warns about EWS values outside an enum the ontology declares.
+- The example quality ontology's `IncidentStatus` is `open, under_investigation, closed`, the values the manufacturing World's data uses; the new check found the mismatch.
+
 - Fixes and improvements from a new-user pilot (PyPI `ontle`, a World from raw MES/QMS records, and a World Model with detached evidence):
   - Fix: `ontle evidence check` compares the EvaluationProfile and VerifierProfile versions the evidence names with the ones the archive packages (`evidence.version-mismatch`), as validation does inside a package. Spec section 9.1 says so; both implementations; a new evidence conformance case.
   - Fix: `ontle pack --output <directory>` writes the default file name into the directory instead of failing.

@@ -220,6 +220,19 @@ const CONDITIONS = ["eq", "in", "gt", "gte", "lt", "lte"];
 const DURATION_RE = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
 const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
+/** Spec 12.4: aggregate.where maps a values key to conditions, the same conditions a classify rule uses. */
+function whereProblems(key: string, w: unknown): string[] {
+  if (!isObj(w) || Object.keys(w).length === 0) return [`binding "${key}" aggregate.where must be a non-empty mapping from a values key to conditions`];
+  const out: string[] = [];
+  for (const [k, cond] of Object.entries(w)) {
+    if (k === "") out.push(`binding "${key}" aggregate.where keys must be non-empty strings`);
+    else if (!isObj(cond) || Object.keys(cond).length === 0 || !Object.keys(cond).every((c) => CONDITIONS.includes(c))) {
+      out.push(`binding "${key}" aggregate.where.${k} needs one or more of ${CONDITIONS.join(", ")}`);
+    } else if ("in" in cond && !Array.isArray(cond.in)) out.push(`binding "${key}" aggregate.where.${k}.in must be a list`);
+  }
+  return out;
+}
+
 /** Seconds in an ISO 8601 duration of days, hours, minutes, and seconds (spec 12.4); null if malformed. */
 export function durationSeconds(v: unknown): number | null {
   if (typeof v !== "string" || v === "P" || v === "PT" || v.endsWith("T")) return null;
@@ -340,6 +353,7 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
       if (isObj(a)) {
         if (!AGGREGATE_FUNCTIONS.includes(a.function as string)) out.push(`binding "${key}" aggregate.function must be one of ${AGGREGATE_FUNCTIONS.join(", ")}`);
         if ("window" in a && durationSeconds(a.window) === null) out.push(`binding "${key}" aggregate.window must be an ISO 8601 duration such as PT24H or P7D`);
+        if ("where" in a) out.push(...whereProblems(key, a.where));
       }
     } else {
       out.push(...classifyProblems(key, vv.classify, ewsFields, perSubject, unknown));

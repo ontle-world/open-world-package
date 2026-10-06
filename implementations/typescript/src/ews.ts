@@ -285,10 +285,13 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   const bindings = comp.spec.bindings as Record<string, Obj>;
   const order = (a: Observation, b: Observation) => (a.observedAt < b.observedAt ? -1 : a.observedAt > b.observedAt ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const units: Record<string, string> = outputUnits(comp.spec) ?? Object.create(null);
-  const candidates = (field: string, src: Obj, estimates: boolean, since?: string, sameUnit = false, counted = false) => {
+  // Spec 12.4: aggregate.where — every condition on every key holds; a missing key fails.
+  const passes = (o: Observation, w: unknown) => !isObj(w) || Object.entries(w).every(([k, cond]) =>
+    Object.prototype.hasOwnProperty.call(o.values, k) && Object.entries(cond as Obj).every(([op, x]) => holds(op, (o.values as Obj)[k], x)));
+  const candidates = (field: string, src: Obj, estimates: boolean, since?: string, sameUnit = false, counted = false, where?: unknown) => {
     const cands = observations
       .filter((o) => o.type === src.from && o.observedAt <= asOf && Object.prototype.hasOwnProperty.call(o.values, src.value as string)
-        && ("estimatedBy" in o) === estimates && (since === undefined || o.observedAt > since))
+        && ("estimatedBy" in o) === estimates && (since === undefined || o.observedAt > since) && passes(o, where))
       .sort(order);
     // Spec 12.5: a reported unit must be the field's declared unit; values are never converted.
     const reported = new Set<string>();
@@ -326,7 +329,7 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
       } else if (form === "aggregate") {
         const a = b.aggregate as Obj;
         const since = "window" in a ? shift(asOf, durationSeconds(a.window)!) : undefined;
-        for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string), ["count", "distinct_count"].includes(a.function as string)))) {
+        for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string), ["count", "distinct_count"].includes(a.function as string), a.where))) {
           const r = aggregate(g, a.value as string, a.function as string);
           if (r) out.set(k, r);
         }
@@ -469,7 +472,7 @@ function derive(b: Obj, res: Map<string | null, Result>, byId: Map<string, Obser
   }
   if (form === "aggregate") {
     const a = b.aggregate as Obj;
-    return { kind: "aggregate", ...Object.fromEntries(["from", "value", "function", "window"].filter((k) => k in a).map((k) => [k, a[k]])) };
+    return { kind: "aggregate", ...Object.fromEntries(["from", "value", "function", "window", "where"].filter((k) => k in a).map((k) => [k, a[k]])) };
   }
   const c = b.classify as Obj;
   const crit = c.criterion as Obj;

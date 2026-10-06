@@ -162,6 +162,8 @@ rules:
   value.unknown: {severity: warning, section: "16-19", summary: "value outside an open value set"}
   knowledge.graph-ontology: {severity: warning, section: "19.1", summary: "graph KnowledgeAsset without spec.conformsTo.ontology"}
   binding.term-unscoped: {severity: warning, section: "14", summary: "binding term outside the World boundary and every View projection"}
+  binding.path-domain: {severity: warning, section: "14", summary: "binding field path step that the owp-yaml schema declares on other classes than the step's class"}
+  binding.value-range: {severity: warning, section: "14", summary: "binding values.map code that is not a value of the enum range of the field's property"}
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
   experimental.value: {severity: warning, section: "C", summary: "value outside a value set in an experimental kind"}

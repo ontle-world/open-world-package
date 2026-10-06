@@ -289,6 +289,28 @@
    ],
    "warnings": []
   },
+  "compiler-aggregate-where": {
+   "errors": [],
+   "warnings": []
+  },
+  "compiler-aggregate-where-empty": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "compiler-aggregate-where-in-not-list": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
+  "compiler-aggregate-where-operator": {
+   "errors": [
+    "compiler.binding"
+   ],
+   "warnings": []
+  },
   "compiler-classify-cycle": {
    "errors": [
     "compiler.binding"
@@ -1479,6 +1501,10 @@
    "errors": [],
    "warnings": []
   },
+  "aggregate-where": {
+   "errors": [],
+   "warnings": []
+  },
   "aggregate-window": {
    "errors": [],
    "warnings": []
@@ -1782,6 +1808,26 @@
     "view.outside-world"
    ]
   },
+  "binding-path-chain": {
+   "errors": [],
+   "warnings": [
+    "binding.path-domain",
+    "view.outside-world"
+   ]
+  },
+  "binding-path-domain": {
+   "errors": [],
+   "warnings": [
+    "binding.path-domain",
+    "view.outside-world"
+   ]
+  },
+  "binding-path-parent": {
+   "errors": [],
+   "warnings": [
+    "view.outside-world"
+   ]
+  },
   "binding-prefix-conflict": {
    "errors": [
     "grounding.prefix-conflict"
@@ -1803,6 +1849,13 @@
     "grounding.ontology-term"
    ],
    "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-value-range": {
+   "errors": [],
+   "warnings": [
+    "binding.value-range",
     "view.outside-world"
    ]
   },

@@ -1,0 +1,11 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticBinding
+metadata: {name: terms}
+spec:
+  terms: {claim: q:Claim, lot: q:Lot}
+  fields:
+    claim.status: {class: q:Claim, path: [q:recordedBy]}
+    lot.genealogy: {class: q:Lot, path: [q:derivedFrom, q:derivedFrom]}
+    lot.code: {class: q:Lot, path: [q:batchCode]}
+  observationTypes: {QMS.claim: q:Claim}
+  actions: {propose_capa: q:ProposeCapa}

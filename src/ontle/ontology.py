@@ -209,6 +209,53 @@ def terms(root: Path, manifest: dict[str, Any]) -> tuple[dict[str, str], set[str
     return prefixes, out
 
 
+def schema_model(root: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    """What an OntologyPackage's owp-yaml schema entrypoints declare, by expanded IRI, for binding checks (spec 14):
+    classes, their parents (subClassOf), the classes each property is declared on (types[].properties and relations'
+    domain), each property's range, and the values of each enum type. RDF entrypoints are not read (spec 14)."""
+    ontology = _ontology(manifest)
+    prefixes = {k: v for k, v in ontology["prefixes"].items() if isinstance(v, str)} if isinstance(ontology.get("prefixes"), dict) else {}
+    model: dict[str, Any] = {"classes": set(), "parents": {}, "declaredOn": {}, "range": {}, "enums": {}}
+
+    def iri(value: Any) -> str | None:
+        return expand(value, prefixes) if isinstance(value, str) else None
+
+    def declare(prop: str, cls: str | None, rng: Any) -> None:
+        model["declaredOn"].setdefault(prop, set())
+        if cls:
+            model["declaredOn"][prop].add(cls)
+        r = iri(rng)
+        if r and prop not in model["range"]:
+            model["range"][prop] = r
+
+    for entry in _list(ontology.get("entrypoints")):
+        if not (isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema"
+                and inside_package(root, entry.get("path"))):
+            continue
+        doc = _load(root / entry["path"])
+        spec = doc.get("spec") if isinstance(doc, dict) and isinstance(doc.get("spec"), dict) else {}
+        for t in _list(spec.get("types")):
+            cls = iri(t.get("id")) if isinstance(t, dict) else None
+            if not cls:
+                continue
+            if isinstance(t.get("enum"), list):
+                model["enums"][cls] = {v for v in t["enum"] if isinstance(v, str)}
+                continue
+            model["classes"].add(cls)
+            parents = t.get("subClassOf")
+            parents = parents if isinstance(parents, list) else [parents]
+            model["parents"].setdefault(cls, set()).update(p for p in (iri(x) for x in parents) if p)
+            for p in _list(t.get("properties")):
+                prop = iri(p.get("id")) if isinstance(p, dict) else None
+                if prop:
+                    declare(prop, cls, p.get("range"))
+        for r in _list(spec.get("relations")):
+            prop = iri(r.get("id")) if isinstance(r, dict) else None
+            if prop:
+                declare(prop, iri(r.get("domain")), r.get("range"))
+    return model
+
+
 def term_catalog(root: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
     """Terms an OntologyPackage defines, for search: iri, curie, type, and label (owp-yaml labels: every language,
     joined). From owp-yaml schema entrypoints and the term index. Tooling, not a conformance rule."""

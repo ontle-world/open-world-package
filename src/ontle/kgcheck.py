@@ -225,3 +225,65 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
         report.checked.append(rel)
         report.findings += [KgFinding(code, rel, message, n) for (code, message), n in sorted(found.items())]
     return report
+
+
+def rdf_schema_model(graph) -> dict[str, Any]:
+    """The binding-check model of spec 14 (binding.schema_model's shape) from an RDF T-box: classes, rdfs:subClassOf,
+    rdfs:domain (an owl:unionOf domain counts each member), rdfs:range, and datatypes enumerated with owl:oneOf."""
+    import rdflib
+    import rdflib.collection
+    from rdflib.namespace import OWL, RDF, RDFS
+    model: dict[str, Any] = {"classes": set(), "parents": {}, "declaredOn": {}, "range": {}, "enums": {}}
+
+    def members(node) -> list:
+        lst = graph.value(node, OWL.unionOf)
+        return list(rdflib.collection.Collection(graph, lst)) if lst is not None else [node]
+
+    for cls in set(graph.subjects(RDF.type, OWL.Class)) | set(graph.subjects(RDF.type, RDFS.Class)):
+        if isinstance(cls, rdflib.URIRef):
+            model["classes"].add(str(cls))
+            model["parents"].setdefault(str(cls), set()).update(str(p) for p in graph.objects(cls, RDFS.subClassOf) if isinstance(p, rdflib.URIRef))
+    for prop in set(graph.subjects(RDFS.domain, None)) | set(graph.subjects(RDFS.range, None)):
+        if not isinstance(prop, rdflib.URIRef):
+            continue
+        owners = model["declaredOn"].setdefault(str(prop), set())
+        for d in graph.objects(prop, RDFS.domain):
+            owners.update(str(m) for m in members(d) if isinstance(m, rdflib.URIRef))
+        rng = graph.value(prop, RDFS.range)
+        if isinstance(rng, rdflib.URIRef):
+            model["range"][str(prop)] = str(rng)
+    for dt in set(graph.subjects(OWL.equivalentClass, None)) | set(graph.subjects(OWL.oneOf, None)):
+        nodes = [dt] + list(graph.objects(dt, OWL.equivalentClass))
+        for n in nodes:
+            lst = graph.value(n, OWL.oneOf)
+            if lst is not None and isinstance(dt, rdflib.URIRef):
+                model["enums"][str(dt)] = {str(v) for v in rdflib.collection.Collection(graph, lst) if isinstance(v, rdflib.Literal)}
+    return model
+
+
+def check_bindings(package: str | Path, sources: list[str] | None = None) -> list[str]:
+    """binding.path-domain and binding.value-range (spec 14) for a World's SemanticBinding, judged against the RDF T-box of
+    its dependency ontologies: their owp-yaml schemas and their RDF schema entrypoints. Validation judges the owp-yaml
+    part only; this tool also covers ontologies published as RDF."""
+    from .binding import merge_models, semantic_warnings
+    from .ontology import terms as ontology_terms
+    from .resolve import _dependency_refs, resolve_package
+    root, manifest = load_manifest(package)
+    kinds, docs = local_assets(root, manifest.get("spec") or {})
+    binding_docs = {rel: docs.get(rel) or {} for rel, kind in kinds.items() if kind == "SemanticBinding"}
+    if not binding_docs:
+        return []
+    resolution = resolve_package(root, sources)
+    prefixes: dict[str, str] = {}
+    models = []
+    for ref, _ in _dependency_refs(manifest):
+        dep = resolution.packages.get(ref)
+        if dep is None or dep.kind != "OntologyPackage":
+            continue
+        for name, iri in ontology_terms(dep.root, dep.manifest)[0].items():
+            prefixes.setdefault(name, iri)
+        models.append(rdf_schema_model(tbox_graph(dep.root, dep.manifest)))
+    if not models:
+        raise OWPError("no dependency OntologyPackage resolves: pass --source or set ONTLE_PATH")
+    md = manifest.get("metadata") or {}
+    return semantic_warnings(f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}", binding_docs, prefixes, merge_models(models))

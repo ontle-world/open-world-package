@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyTermIndex
+metadata: {name: terms}
+spec:
+  terms:
+  - {iri: "https://example.org/q#Record", type: class}
+  - {iri: "https://example.org/q#recordedBy", type: property}
+  - {iri: "https://example.org/q#Claim", type: class}
+  - {iri: "https://example.org/q#claimStatus", type: property}
+  - {iri: "https://example.org/q#Lot", type: class}
+  - {iri: "https://example.org/q#derivedFrom", type: property}
+  - {iri: "https://example.org/q#ProposeCapa", type: class}
+  - {iri: "https://example.org/q#batchCode", type: property}

@@ -481,6 +481,35 @@ def external_world_issues(resolution: Resolution) -> tuple[list[str], list[str]]
     return errors, warnings
 
 
+def binding_context(pkg: ResolvedPackage, resolution: Resolution) -> tuple[dict[str, dict[str, Any]], dict[str, str], dict[str, Any] | None]:
+    """A package's SemanticBinding documents, the merged prefixes of its dependency ontologies, and the merged model of
+    their owp-yaml schemas (None when no dependency ontology resolved)."""
+    from .binding import merge_models
+    from .ontology import schema_model, terms as ontology_terms
+    kinds, docs = pkg.local_assets()
+    binding_docs = {rel: docs.get(rel) or {} for rel, kind in kinds.items() if kind == "SemanticBinding"}
+    prefixes: dict[str, str] = {}
+    models = []
+    for ref, _ in _dependency_refs(pkg.manifest):
+        dep = resolution.packages.get(ref)
+        if dep is not None and dep.kind == "OntologyPackage":
+            for name, iri in ontology_terms(dep.root, dep.manifest)[0].items():
+                prefixes.setdefault(name, iri)  # a conflict is grounding.prefix-conflict
+            models.append(schema_model(dep.root, dep.manifest))
+    return binding_docs, prefixes, (merge_models(models) if models else None)
+
+
+def binding_semantic_warnings(resolution: Resolution) -> list[str]:
+    """Spec 14 warnings: SemanticBinding field paths and value maps against the owp-yaml schemas of the dependency ontologies."""
+    from .binding import semantic_warnings
+    warnings: list[str] = []
+    for _, pkg in sorted(resolution.packages.items()):
+        binding_docs, prefixes, model = binding_context(pkg, resolution)
+        if binding_docs and model is not None:
+            warnings += semantic_warnings(pkg.identity, binding_docs, prefixes, model)
+    return warnings
+
+
 def dependency_direction_warnings(resolution: Resolution) -> list[str]:
     """Dependencies that point up the hierarchy. Extension dependencies (declared with `as`) are exempt."""
     warnings: list[str] = []
@@ -514,6 +543,7 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
             errors += [f"resolve.dependency-invalid: {ident}: {e}" for e in validate_package(pkg.root).errors]
     errors += cross_package_errors(resolution)
     warnings += dependency_direction_warnings(resolution)
+    warnings += binding_semantic_warnings(resolution)
     ext_errors, ext_warnings = external_world_issues(resolution)
     errors += ext_errors
     warnings += ext_warnings

@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Any
 
 from .core import MANIFEST, OWPError, load_manifest, local_assets, sha256_bytes, write_manifest
+from .structure import FILELIST_MEDIA_TYPE
 from .yamlio import dump_yaml, load_yaml
 
-FILELIST_MEDIA_TYPE = "application/vnd.openworld.filelist+json"
 OCI_ARTIFACT_TYPE = "application/vnd.openworld.package.v1alpha1"
 OCI_LAYER_MEDIA_TYPE = "application/vnd.openworld.package.layer.v1alpha1+zip"
 OCI_CONFIG_MEDIA_TYPE = "application/vnd.openworld.manifest.v1alpha1+json"

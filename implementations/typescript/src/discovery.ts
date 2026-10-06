@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { IgnoreRule, isIgnored, loadIgnore } from "./ignore.js";
 import { get, isObj, isYamlPath, loadYamlFile, Obj, staysInside } from "./util.js";
 
-const IGNORED = new Set(["__pycache__", "venv", "node_modules", "dist", "build"]);
+export const IGNORED = new Set(["__pycache__", "venv", "node_modules", "dist", "build", "Thumbs.db"]);
 
 /** OWP documents that are package files, not assets. */
 export const DOCUMENT_KINDS = new Set(["ObservationSet", "EffectiveWorldState"]);

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Keeping the two implementations in step:
+  - `scripts/check-structure.mjs` (in `npm test`) checks the TypeScript field tables against `schemas/`, as `tests/test_structure.py` checks the Python ones. All 31 match.
+  - `tests/test_implementation_constants.py` (in CI's parity job) compares the closed lists and tables both implementations keep: profiles, providers, operators, ontology formats and roles, rule families, dependency directions, report constants. It found one difference, now fixed: the TypeScript discovery did not skip `Thumbs.db`.
+  - Constants and patterns defined twice within one implementation are defined once (`COMMIT_RE`, `CURIE_RE`, `SEMVER_RE` in TypeScript; `FILELIST_MEDIA_TYPE` in Python).
+  - CONTRIBUTING.md maps the Python modules to the TypeScript ones and lists what keeps them in step.
+
 - Example sizes: the README's examples are a table with each one's size (minimal, focused, or full by its assets; an ontology by its terms) and its sample data (observations shipped, real artifacts bound). The catalog shows the same on every card and page, computed from the report, and a test keeps the README in step. The README and the catalog say plainly that the examples' data is small and illustrative.
 
 - Playground (registry step P3) on the project site, `https://ontle-world.github.io/open-world-package/playground/`: drop a package folder or an `.owp.zip`, or open an example from the catalog, and the page shows the verdict, the profile, the PackageReport, and the card. Nothing is uploaded: the TypeScript validator, resolver, and report run in the browser. Dependencies come from the catalog's index; each archive is checked against its index digest and its `owp.lock.json`. Catalog pages link to it.

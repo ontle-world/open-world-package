@@ -89,7 +89,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
   }),
 };
 
-const ACTOR_BLOCKS = ["human", "agent", "model", "system"];
+export const ACTOR_BLOCKS = ["human", "agent", "model", "system"];
 
 /** Kinds promoted to the standard (spec sections 16-19) and their rule-id family. */
 export const FAMILIES: Record<string, string> = {

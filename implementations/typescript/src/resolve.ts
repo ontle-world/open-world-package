@@ -77,7 +77,7 @@ function identityOf(m: Obj | undefined): string | undefined {
  * Spec 7: {"format":"owp-lock/v1alpha2","manifest":"owp.yaml","manifest_sha256":hex,
  * "files":[{"path","sha256","size"}], "externals":[...]}. Hashes are lowercase hex without prefix.
  */
-const LOCK_FORMAT = "owp-lock/v1alpha2";
+export const LOCK_FORMAT = "owp-lock/v1alpha2";
 
 interface LockData {
   format: string;
@@ -366,7 +366,7 @@ class Source {
 // ---------------------------------------------------------------- resolution
 
 /** Spec 11: package kinds each kind may depend on (dependencies declared with `as` are extensions and exempt). */
-const DEPENDENCY_DIRECTIONS: Record<string, string[]> = {
+export const DEPENDENCY_DIRECTIONS: Record<string, string[]> = {
   OntologyPackage: ["OntologyPackage"],
   WorldPackage: ["OntologyPackage", "WorldPackage"],
   WorldModelPackage: ["OntologyPackage", "WorldPackage", "WorldModelPackage"],

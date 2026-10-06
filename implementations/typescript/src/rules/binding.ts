@@ -7,10 +7,9 @@ import { Context, error, warn } from "../context.js";
 import { FIELD_BINDING, Problem, SEMANTIC_BINDING, structureProblems } from "../structure.js";
 import { get, isObj, Obj } from "../util.js";
 import { localViewIncludes } from "./experimental.js";
-import { emptySchemaModel, expandCurie, SchemaModel } from "./ontology.js";
+import { CURIE_RE, emptySchemaModel, expandCurie, SchemaModel } from "./ontology.js";
 import { compilerFields } from "./world.js";
 
-const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
 const isCurie = (v: unknown): v is string => typeof v === "string" && CURIE_RE.test(v);
 const SECTIONS = ["terms", "fields", "observationTypes", "actions"];
 

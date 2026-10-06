@@ -12,12 +12,12 @@ import { externalRefProblems } from "./externalref.js";
 export const ONTOLOGY_PROFILES = ["vocabulary", "schema", "constrained", "mapped"] as const;
 export type OntologyProfile = (typeof ONTOLOGY_PROFILES)[number];
 
-const FORMATS = ["owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"];
-const ROLES = ["schema", "shapes", "mappings", "labels"];
-const TERM_TYPES = ["class", "property", "individual", "datatype", "concept"];
+export const FORMATS = ["owp-yaml", "turtle", "jsonld", "rdf-xml", "owl-xml", "ntriples", "linkml", "sssom-tsv"];
+export const ROLES = ["schema", "shapes", "mappings", "labels"];
+export const TERM_TYPES = ["class", "property", "individual", "datatype", "concept"];
 const PREFIX_RE = /^[A-Za-z][A-Za-z0-9_-]*$/;
 const IRI_RE = /^[A-Za-z][A-Za-z0-9+.-]*:\S+$/;
-const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
+export const CURIE_RE = /^([A-Za-z][A-Za-z0-9_-]*):([^\s/]\S*)$/;
 
 const isIri = (v: unknown): v is string => typeof v === "string" && IRI_RE.test(v);
 

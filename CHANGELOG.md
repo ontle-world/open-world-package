@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Upkeep: `golden_smoke.sh` also runs `inspect --report`, `observations csv`, `ews check --observations --source`, `ontle mcp`, and `kg check --bindings`. CI runs pyflakes on the Python code, and the TypeScript build rejects unused locals and parameters; the few they found are fixed (an undefined `Any` annotation, unused imports, a shadowed loop variable). `00_INDEX.md` lists the site, the interop notes, the demos, and the newer files, and the Quickstart points at the Playground.
+
 - Keeping the two implementations in step:
   - `scripts/check-structure.mjs` (in `npm test`) checks the TypeScript field tables against `schemas/`, as `tests/test_structure.py` checks the Python ones. All 31 match.
   - `tests/test_implementation_constants.py` (in CI's parity job) compares the closed lists and tables both implementations keep: profiles, providers, operators, ontology formats and roles, rule families, dependency directions, report constants. It found one difference, now fixed: the TypeScript discovery did not skip `Thumbs.db`.

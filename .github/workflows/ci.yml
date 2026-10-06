@@ -26,6 +26,9 @@ jobs:
       - if: matrix.python-version == '3.14'
         run: python -m pip install markdown==3.11
       - run: ./scripts/golden_smoke.sh
+      # Unused imports, undefined names, and shadowed loop variables (pyflakes; TypeScript checks the same with noUnused*).
+      - if: matrix.python-version == '3.14'
+        run: python -m pip install pyflakes && python -m pyflakes src/ontle scripts tests
 
   typescript-conformance:
     runs-on: ubuntu-latest

@@ -99,4 +99,18 @@ W=examples/business/sales-prioritization-world
 ontle ews compile "$W" --compiler state/account-priority-compiler.yaml --observations "$W/examples/observations.yaml" --as-of 2026-09-15T00:00:00Z > "$TMP/sales-ews.yaml"
 ontle ews check "$TMP/sales-ews.yaml" --world "$W"
 
+# registry and authoring tools: report, records to observations, EWS by value, MCP, binding checks
+W=examples/business/manufacturing-quality-world
+ontle inspect "$W" --report >/dev/null
+ontle inspect "$ARCHIVE" --report >/dev/null
+ontle observations csv demos/business-ai/records/qms_claims.csv --type QMS.claim --subject claim_id --time recorded_at > "$TMP/claims.yaml"
+ontle ews compile "$W" --observations "$TMP/claims.yaml" --as-of 2026-09-05T00:00:00Z >/dev/null
+ontle ews check "$W/examples/expected-ews.yaml" --world "$W" --observations "$W/examples/observations.yaml" --source examples
+MCP="$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"term_lookup","arguments":{"query":"lot"}}}' | ontle mcp "$W" --source examples 2>/dev/null)"
+echo "$MCP" | grep -q '"protocolVersion"'
+echo "$MCP" | grep -q 'q:Lot'
+if python -c "import rdflib" 2>/dev/null; then
+  ontle kg check "$W" --source examples --bindings
+fi
+
 echo "GOLDEN SMOKE PASS"

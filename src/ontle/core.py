@@ -1008,9 +1008,8 @@ def _ensure_term_index(root: Path, manifest: dict[str, Any]) -> None:
         return
     schema = [e for e in _list(onto.get("entrypoints")) if isinstance(e, dict) and e.get("role") == "schema"]
     if schema and not any(e.get("format") == "owp-yaml" for e in schema):
-        try:
-            import rdflib  # noqa: F401
-        except ImportError:
+        import importlib.util
+        if importlib.util.find_spec("rdflib") is None:
             return  # validation reports the missing index
         ontology_module.write_term_index(root, root / MANIFEST)
 

@@ -1,5 +1,7 @@
 # 10-minute Quickstart
 
+To look before installing anything, open the [Playground](https://ontle-world.github.io/open-world-package/playground/) and check an example package in your browser.
+
 The five-minute path, from nothing to a checked archive:
 
 ```bash

@@ -29,7 +29,7 @@ function assetSpec(a: LocalAsset): Record<string, unknown> | undefined {
   return isObj(s) ? s : undefined;
 }
 
-const descriptive: ProfileCheck = (ctx, w) => {
+const descriptive: ProfileCheck = (_ctx, w) => {
   if (isNonEmptyString(w.world?.definition)) return [];
   return [{ rule: "profile.descriptive", msg: "requires spec.world.definition" }];
 };

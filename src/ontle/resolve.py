@@ -649,14 +649,14 @@ def _subject_nodes(world: ResolvedPackage, binding: dict[str, Any], ews: dict[st
 
     nodes: dict[str, dict[str, Any]] = {}
     state = (ews.get("spec") or {}).get("state") or {}
-    for field in per_subject:
-        otype = source_type(field)
+    for name in per_subject:
+        otype = source_type(name)
         rule = subjects.get(otype) if otype else None
-        if not isinstance(rule, dict) or not isinstance(state.get(field), dict):
+        if not isinstance(rule, dict) or not isinstance(state.get(name), dict):
             continue
-        for subject, value in state[field].items():
+        for subject, value in state[name].items():
             node = nodes.setdefault(subject_iri(rule, subject), {"@id": subject_iri(rule, subject)})
             if isinstance(types.get(otype), str):
                 node["@type"] = types[otype]
-            node[field] = _concepts(field, value, bspec, prefixes or {})
+            node[name] = _concepts(name, value, bspec, prefixes or {})
     return [nodes[k] for k in sorted(nodes)]

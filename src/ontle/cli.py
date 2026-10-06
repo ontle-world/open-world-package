@@ -6,6 +6,7 @@ import re
 import sys
 import zipfile
 from pathlib import Path
+from typing import Any
 
 from . import __version__
 from .core import OWPError, deterministic_pack, inspect_package, load_manifest, package_files, validate_package, verify_archive

@@ -56,6 +56,35 @@ def _dependencies(manifest: dict[str, Any]) -> list[str]:
     return out
 
 
+def scale(report: dict[str, Any], observations: int) -> dict[str, str]:
+    """How big an example is, from its report: the package's breadth, and its sample data.
+
+    breadth: an OntologyPackage by its terms; any other package by its assets (minimal up to 5, focused up to 19,
+    full from 20). data: how many sample observations it ships, and whether it binds real external artifacts.
+    """
+    if report.get("ontology"):
+        breadth = f"{report['ontology']['terms']} terms"
+    else:
+        n = report["assets"]["total"]
+        breadth = "minimal" if n <= 5 else "focused" if n < 20 else "full"
+    refs = report["externalRefs"]["total"]
+    data = f"{observations} sample observation{'' if observations == 1 else 's'}" if observations else "no sample data"
+    if refs:
+        data += f" · binds {refs} real artifact{'' if refs == 1 else 's'}"
+    return {"breadth": breadth, "data": data}
+
+
+def observation_count(root: Path, kinds: dict[str, str], docs: dict[str, Any]) -> int:
+    """Observations in the ObservationSets a package ships as PackageExample files."""
+    total = 0
+    for rel, kind in kinds.items():
+        doc = docs.get(rel)
+        if kind == "PackageExample" and isinstance(doc, dict) and doc.get("kind") == "ObservationSet":
+            listed = (doc.get("spec") or {}).get("observations")
+            total += len(listed) if isinstance(listed, list) else 0
+    return total
+
+
 def _badges(report: dict[str, Any]) -> list[tuple[str, bool]]:
     badges: list[tuple[str, bool]] = [("valid" if report["valid"] else "invalid", report["valid"])]
     profile = (report.get("profile") or {}).get("satisfied")
@@ -92,9 +121,9 @@ def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Pat
         md = manifest.get("metadata") or {}
         archive = deterministic_pack(root, archives / f"{md['namespace']}-{md['name']}-{md['version']}.owp.zip")
         report = package_report(archive)
-        kinds, _ = local_assets(root, manifest.get("spec") or {})
+        kinds, docs = local_assets(root, manifest.get("spec") or {})
         entries.append({"dir": root, "manifest": manifest, "report": report, "archive": archive, "assets": dict(sorted(kinds.items())),
-                        "dependencies": _dependencies(manifest)})
+                        "dependencies": _dependencies(manifest), "scale": scale(report, observation_count(root, kinds, docs))})
     index = build_index([e["archive"] for e in entries], base=catalog, terms=True)
     (catalog / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -104,7 +133,7 @@ def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Pat
     for e in entries:
         _package_page(e, catalog, by_identity, page)
     _index_page(entries, catalog, page)
-    return [{"identity": e["report"]["identity"], "report": e["report"], "page": e["page"]} for e in entries]
+    return [{"identity": e["report"]["identity"], "report": e["report"], "page": e["page"], "scale": e["scale"]} for e in entries]
 
 
 def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any], page: Callable[[str, str], str]) -> None:
@@ -151,7 +180,8 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
            f"# in your owp.yaml:\nspec:\n  dependencies:\n  - {html.escape(identity)}")
     body = f"""<p class="kind"><a href="{up}">Catalog</a> · {html.escape(KIND_LABEL.get(report['packageKind'], str(report['packageKind'])))}</p>
 <h1>{html.escape(meta.get('title') or name)}</h1>
-<p><code>{html.escape(identity)}</code> {_badge_html(_badges(report))}</p>
+<p><code>{html.escape(identity)}</code> {_badge_html([(e["scale"]["breadth"], False)] + _badges(report))}</p>
+<p class="muted">Size: {html.escape(e["scale"]["breadth"])} · {html.escape(e["scale"]["data"])}</p>
 <p>{html.escape(meta.get('description', ''))}</p>
 <div class="cols"><div>{card}
 <h2>Assets</h2><table><tr><th>Path</th><th>Kind</th></tr>{assets}</table></div>
@@ -176,7 +206,7 @@ def _index_page(entries: list[dict[str, Any]], catalog: Path, page: Callable[[st
     for e in sorted(entries, key=lambda x: (list(KIND_LABEL).index(x["report"]["packageKind"]) if x["report"]["packageKind"] in KIND_LABEL else 9, x["report"]["identity"])):
         r = e["report"]
         meta = r["metadata"]
-        stats = [f"{r['assets']['total']} asset{'' if r['assets']['total'] == 1 else 's'}"]
+        stats = [f"{r['assets']['total']} asset{'' if r['assets']['total'] == 1 else 's'}", e["scale"]["data"]]
         if r["domains"]:
             stats.append(", ".join(r["domains"]))
         if r["standardBindings"]["standards"]:
@@ -188,11 +218,13 @@ def _index_page(entries: list[dict[str, Any]], catalog: Path, page: Callable[[st
         cards.append(f"""<a class="card" href="{e['page'].removeprefix('catalog/')}" data-search="{html.escape(search)}">
 <span class="kind">{html.escape(KIND_LABEL.get(r['packageKind'], str(r['packageKind'])))}</span>
 <h3>{html.escape(meta.get('title') or r['identity'])}</h3><p><code>{html.escape(r['identity'])}</code></p>
-<p>{html.escape(meta.get('description', ''))}</p><p>{_badge_html(_badges(r))}</p>
+<p>{html.escape(meta.get('description', ''))}</p><p>{_badge_html([(e["scale"]["breadth"], False)] + _badges(r))}</p>
 <p class="muted">{html.escape(' · '.join(stats))}</p></a>""")
     body = f"""<style>{CATALOG_STYLE}</style><h1>OWP package catalog</h1>
 <p>The example packages of this repository, each packed, verified, and checked by the reference CLI. Every number comes from
-<code>ontle inspect --report</code>. Resolve from this catalog with <code>--source index:{SITE}/catalog/index.json</code> (<a href="index.json">index.json</a>).</p>
+<code>ontle inspect --report</code>. They are samples: their data is small and illustrative, not production scale. <em>Minimal</em>,
+<em>focused</em>, and <em>full</em> say how much of OWP a package uses (up to 5, up to 19, and 20 or more assets); an ontology is
+sized by its terms. Two Worlds also bind real public artifacts (a robot dataset, a 3D scene, an OPC UA model). Resolve from this catalog with <code>--source index:{SITE}/catalog/index.json</code> (<a href="index.json">index.json</a>).</p>
 <input type="search" id="q" placeholder="Filter: kind, domain, standard, name" aria-label="Filter packages">
 <div class="cards" id="cards">{''.join(cards)}</div>
 <script>

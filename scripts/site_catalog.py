@@ -159,7 +159,7 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
 <h3>Use this package</h3><pre>{use}</pre>
 <h3>Archive</h3><p><a href="{up}archives/{archive_name}">{html.escape(archive_name)}</a></p>
 <p class="muted">{integrity['size']:,} bytes · {integrity['files']} files<br><code>{integrity['digest'][:19]}…</code></p>
-<p class="muted">Check it with <code>ontle verify {html.escape(archive_name)}</code>.</p>
+<p class="muted">Check it with <code>ontle verify {html.escape(archive_name)}</code>, or <a href="{up}../playground/?archive=../catalog/archives/{archive_name}">in the Playground</a>.</p>
 <h3>Report</h3>{''.join(stats)}
 <p class="muted">Checked by {html.escape(report['validator']['implementation'])} {html.escape(report['validator']['version'])}. <a href="report.json">report.json</a></p>
 <h3>Depends on</h3><ul>{deps}</ul>

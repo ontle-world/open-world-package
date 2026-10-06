@@ -64,6 +64,10 @@ jobs:
         working-directory: implementations/typescript
       - run: python scripts/parity_fuzz.py --seeds 3 --per-case 3
       - run: python scripts/report_parity.py
+      # The browser bundle resolves dependencies through a served catalog index (the Playground).
+      - run: npm run bundle
+        working-directory: implementations/typescript
+      - run: python -m pip install markdown==3.11 && python -m unittest tests.test_site -v
 
   alignments:
     # Reasons over the OWP vocabulary and the alignment packages with HermiT (scripts/check_alignments.sh).

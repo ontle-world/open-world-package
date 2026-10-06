@@ -51,6 +51,7 @@ Section numbers refer to the specification, which is split across files with unc
 | `src/rules/evaluation.ts` | 9 |
 | `src/resolve.ts`, `src/zip.ts` | 7 (lock format `owp-lock/v1alpha2` with `externals`), 11 (directory, archive, git, and local `index:` sources), 13.1, 14 |
 | `src/evidence.ts` | 9.1 detached CompatibilityEvidence |
+| `src/browser/` | the browser build (`npm run bundle` → `dist-browser/owp-validator.js`, used by the site's Playground): `api.ts` checks dropped files or an archive, fetching dependencies from a PackageIndex; the other modules stand in for Node's `fs` (in memory), `path`, `crypto`, and the rest. `npm run browser` compares its verdicts with the reference ids |
 | `src/report.ts` | informative `PackageReport` (`owp-validate report`); `scripts/report_parity.py` checks it equals the reference CLI's `ontle inspect --report` |
 | `src/ews.ts` | 12 |
 | `src/extraction.ts` | Appendix C.1 knowledge extraction transform (query results to ObservationSet) |

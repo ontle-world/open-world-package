@@ -3,3 +3,4 @@ dist/
 .owp-cache/
 tmp/
 probes/
+dist-browser/

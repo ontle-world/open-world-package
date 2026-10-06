@@ -15,7 +15,9 @@ import { get, isObj, loadYamlFile, Obj, packageFile } from "./util.js";
 import { validatePackage } from "./validate.js";
 import { readZip } from "./zip.js";
 
+declare const __OWP_VERSION__: string | undefined; // set by scripts/bundle.mjs: the browser has no package.json to read
 const VERSION = (() => {
+  if (typeof __OWP_VERSION__ === "string") return __OWP_VERSION__;
   try {
     return String(JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
   } catch {

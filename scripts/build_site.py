@@ -11,6 +11,7 @@ Layout (the w3id rules in internal docs map onto these paths):
     spec/<apiVersion>/                           the specification at this commit, as HTML
     pkg/index.html                               what a package IRI identifies; links to its catalog page when there is one
     catalog/                                     the example packages: pages, archives, and a PackageIndex (site_catalog.py)
+    playground/                                  check a package in the browser (site_playground.py; needs the TypeScript bundle)
 """
 from __future__ import annotations
 
@@ -24,6 +25,7 @@ import rdflib
 from rdflib.namespace import OWL, RDF, RDFS
 
 from site_catalog import build_catalog
+from site_playground import build_playground
 
 ROOT = Path(__file__).resolve().parent.parent
 OWP = rdflib.Namespace("https://w3id.org/owp/ns#")
@@ -153,12 +155,16 @@ if (q.get("ns") && q.get("name") && q.get("version")) {
 
     # package catalog (registry step P0)
     build_catalog(out, page)
+    playground = build_playground(out, page)
+    if not playground:
+        print("playground skipped: run `npm run bundle` in implementations/typescript first", file=sys.stderr)
 
     # landing
     (out / "index.html").write_text(page("Open World Package", f"""<h1>Open World Package</h1>
 <ul><li><a href="vocab/owp/">Vocabulary</a> (<code>https://w3id.org/owp/ns#</code>)</li>
 <li><a href="alignments/">Alignments</a></li><li><a href="spec/{API_VERSION}/">Specification {API_VERSION}</a></li>
 <li><a href="catalog/">Package catalog</a>: the example packages, with reports and archives</li>
+<li><a href="playground/">Playground</a>: check a package in your browser, without uploading it</li>
 <li><a href="pkg/">Package identifiers</a></li></ul>"""), encoding="utf-8")
     print(out)
     return 0

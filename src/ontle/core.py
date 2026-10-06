@@ -35,6 +35,7 @@ def _load_vocabulary() -> dict[str, str]:
 
 ASSET_KIND_STABILITY = _load_vocabulary()
 KNOWN_ASSET_KINDS = set(ASSET_KIND_STABILITY)
+IGNORED_PATH_PARTS = {"__pycache__", "venv", "node_modules", "dist", "build", "Thumbs.db"}  # build and tooling output, OS metadata
 DOCUMENT_KINDS = {"ObservationSet", "EffectiveWorldState"}  # OWP documents that are package files, not assets
 # ASCII digits only: Python's \d also matches other decimal digits (such as U+0663 or full-width digits).
 SEMVER_PATTERN = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
@@ -889,7 +890,7 @@ def package_files(root: Path) -> list[Path]:
     rule discovery follows (spec section 5). owp.yaml always is.
     """
     rules = load_ignore(root)
-    ignored_parts = {"__pycache__", "venv", "node_modules", "dist", "build", "Thumbs.db"}
+    ignored_parts = IGNORED_PATH_PARTS
     files: list[Path] = []
     for p in root.rglob("*"):
         if not p.is_file():

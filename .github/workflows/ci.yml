@@ -67,7 +67,7 @@ jobs:
       # The browser bundle resolves dependencies through a served catalog index (the Playground).
       - run: npm run bundle
         working-directory: implementations/typescript
-      - run: python -m pip install markdown==3.11 && python -m unittest tests.test_site -v
+      - run: python -m pip install markdown==3.11 && python -m unittest tests.test_site tests.test_implementation_constants -v
 
   alignments:
     # Reasons over the OWP vocabulary and the alignment packages with HermiT (scripts/check_alignments.sh).

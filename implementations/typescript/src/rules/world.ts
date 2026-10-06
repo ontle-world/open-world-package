@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import { Context, error, hasAssetOfKind, LocalAsset, localAssetsOfKind, Profile, PROFILES, warn } from "../context.js";
 import { Problem } from "../structure.js";
-import { get, isNonEmptyString, isObj, Obj, packageFile } from "../util.js";
+import { get, isNonEmptyString, isObj, Obj, packageFile, SEMVER_RE } from "../util.js";
 import { localKinds, resolvedInclude } from "./experimental.js";
 
 /**
@@ -216,9 +216,9 @@ export function checkCompilerSchemas(ctx: Context): void {
 
 /** Spec 12.2: binding keys are EWS fields of the compiler; from/value strings; select latest|all. */
 export const AGGREGATE_FUNCTIONS = ["count", "distinct_count", "sum", "mean", "min", "max"];
-const CONDITIONS = ["eq", "in", "gt", "gte", "lt", "lte"];
+export const CONDITIONS = ["eq", "in", "gt", "gte", "lt", "lte"];
+export const SELECTORS = ["latest", "all"];
 const DURATION_RE = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
-const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 /** Spec 12.4: aggregate.where maps a values key to conditions, the same conditions a classify rule uses. */
 function whereProblems(key: string, w: unknown): string[] {
@@ -344,7 +344,7 @@ export function bindingProblems(spec: Record<string, unknown> | undefined, ewsFi
     if (form === "observe" || form === "estimate") {
       const inner = form === "observe" ? vv : vv.estimate;
       source(key, inner);
-      if (isObj(inner) && inner.select !== undefined && inner.select !== "latest" && inner.select !== "all") {
+      if (isObj(inner) && inner.select !== undefined && !SELECTORS.includes(inner.select as string)) {
         out.push(`binding "${key}".select must be "latest" or "all" (got ${JSON.stringify(inner.select)})`);
       }
     } else if (form === "aggregate") {

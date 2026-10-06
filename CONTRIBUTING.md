@@ -25,6 +25,40 @@ Starter templates live only in `src/ontle/templates/` and ship as package data; 
 7. A package or fixture never overrides semantic meaning; it tests or instantiates a contract.
 8. Add deterministic validation where possible. Keep model-specific execution optional.
 
+## Changing both implementations
+
+The Python reference (`src/ontle/`) and the TypeScript implementation (`implementations/typescript/src/`) give the same verdicts. A change to a rule, a field, or a closed list goes into both, in the same pull request, with conformance cases. The modules correspond:
+
+| Concern | Python | TypeScript |
+|---|---|---|
+| Validation entry point, manifest and identity, profiles, evaluation lineage | `core.py` | `validate.ts`, `rules/manifest.ts`, `rules/world.ts`, `rules/worldmodel.ts`, `rules/evaluation.ts` |
+| Asset discovery, `.owpignore` | `core.py` (`package_documents`, `local_assets`), `ignore.py` | `discovery.ts`, `rules/assets.ts`, `ignore.ts` |
+| Defined fields, ExternalRef, standard bindings | `structure.py` | `structure.ts`, `rules/externalref.ts` |
+| Extensions, work, actors, experimental kinds and fields, standard-kind fields (spec 15) | `experimental.py` | `rules/experimental.ts`, `rules/extensions.ts`, `rules/standard-fields.ts` |
+| Ontology contract, term index, schema model | `ontology.py` | `rules/ontology.ts` |
+| Semantic binding and its cross-package rules | `binding.py` | `rules/binding.ts` |
+| EWS compile and check, binding forms | `ews.py` | `ews.ts`, `rules/world.ts` |
+| Resolution, archives, lock | `resolve.py`, `core.py` (`verify_archive`) | `resolve.ts`, `zip.ts` |
+| Detached evidence | `distribution.py` | `evidence.ts` |
+| Knowledge extraction | `extraction.py` | `extraction.ts` |
+| PackageReport | `report.py` | `report.ts` |
+| YAML profile, text rules | `yamlio.py`, `values.py` | `util.ts` |
+
+Python only: the CLI and authoring (`cli.py`, `scaffold.py`, `observations.py`), distribution transport (`distribution.py`: OCI, signing, fetch, indexes, catalogs), RDF output and checks (`rdfexport.py`, `kgcheck.py`), and MCP (`mcp.py`, `interop.py`). TypeScript only: the browser build (`src/browser/`) and the conformance runner.
+
+Shared data lives once, outside both: rule ids in `spec/rule-ids.yaml`, the vocabularies in `vocab/`, the document fields in `schemas/`, and the expected results in `conformance/`. Checks keep the copies in step; each runs in CI:
+
+| What could drift | Check |
+|---|---|
+| Verdicts, error and warning ids | the conformance suite and `conformance/reference-ids.json` (`python scripts/reference_ids.py --check`, `npm test`) |
+| Behavior outside the cases | `scripts/parity_fuzz.py`: mutants of every fixture through both |
+| Rule ids used in code | `tests/test_rule_ids.py` against `spec/rule-ids.yaml` |
+| Field tables | `tests/test_structure.py` (Python) and `scripts/check-structure.mjs` (TypeScript) against `schemas/` |
+| Vocabularies | `scripts/check-vocab.mjs` against `vocab/`; Python reads `vocab/` directly |
+| Closed lists and tables (profiles, providers, operators, formats, report constants) | `tests/test_implementation_constants.py` |
+| PackageReport | `scripts/report_parity.py` |
+| Browser build | `npm run browser`: every validation case through the bundle |
+
 ## Pull requests
 
 Please include:

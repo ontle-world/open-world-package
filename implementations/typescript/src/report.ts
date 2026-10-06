@@ -10,6 +10,7 @@ import * as path from "node:path";
 import { localAssetKinds, packageDocuments } from "./discovery.js";
 import { loadArchive } from "./resolve.js";
 import { ontologyTerms } from "./rules/ontology.js";
+import { COMMIT_RE } from "./rules/externalref.js";
 import { outputSchemaFields } from "./rules/world.js";
 import { get, isObj, loadYamlFile, Obj, packageFile } from "./util.js";
 import { validatePackage } from "./validate.js";
@@ -25,13 +26,12 @@ const VERSION = (() => {
   }
 })();
 export const CARD_SECTIONS = ["Scope", "Sources", "Use it for", "Limitations", "Versions"];
-const DEFAULT_CARDS: Record<string, string> = { WorldPackage: "WORLD.md", WorldModelPackage: "WORLDMODEL.md", OntologyPackage: "ONTOLOGY.md" };
-const CARD_SPEC_KEY: Record<string, string> = { WorldPackage: "world", WorldModelPackage: "worldModel", OntologyPackage: "ontology" };
-const DESCRIPTION_LIMIT = 160;
-const COMMIT_RE = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+export const DEFAULT_CARDS: Record<string, string> = { WorldPackage: "WORLD.md", WorldModelPackage: "WORLDMODEL.md", OntologyPackage: "ONTOLOGY.md" };
+export const CARD_SPEC_KEY: Record<string, string> = { WorldPackage: "world", WorldModelPackage: "worldModel", OntologyPackage: "ontology" };
+export const DESCRIPTION_LIMIT = 160;
 // Text the init templates ship for the author to replace (src/ontle/templates/*).
 const TEMPLATE_DESCRIPTION = /^One line on (the|what) /;
-const TEMPLATE_CARD_TEXT = ["Describe in one paragraph", "Add included entities", "Add intentional exclusions", "Three to five "];
+export const TEMPLATE_CARD_TEXT = ["Describe in one paragraph", "Add included entities", "Add intentional exclusions", "Three to five "];
 const CARD_PATH = /`([A-Za-z0-9_.-]+\/[A-Za-z0-9_./-]*\.(?:ya?ml|json|md|ttl|csv|py))`/g;
 
 const obj = (v: unknown): Obj => (isObj(v) ? v : {});

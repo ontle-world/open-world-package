@@ -4,7 +4,7 @@ import { isObj } from "../util.js";
 /** Spec 5.1: listed ExternalRef providers; others are `<extension>:<provider>`. */
 export const PROVIDERS = new Set(["huggingface", "oci", "git", "https", "s3", "gcs", "doi"]);
 const DIGEST_RE = /^sha256:[0-9a-f]{64}$/;
-const COMMIT_RE = /^([0-9a-f]{40}|[0-9a-f]{64})$/;
+export const COMMIT_RE = /^([0-9a-f]{40}|[0-9a-f]{64})$/;
 
 const has = (o: Record<string, unknown>, k: string) => Object.prototype.hasOwnProperty.call(o, k);
 /** An optional field counts as absent when it is missing or null. */

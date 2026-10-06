@@ -1,10 +1,10 @@
 {
   "manifest": "ontle-public-release-manifest/v1",
   "release": "public-alpha-3",
-  "version": "0.2.0a5",
+  "version": "0.2.0a6",
   "cli": "ontle",
   "distribution": "ontle",
-  "file_count_excluding_manifest": 2060,
+  "file_count_excluding_manifest": 2121,
   "files": [
     {
       "path": ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -23,8 +23,8 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "681330ae933dfdbb1cfcde962d2bf22e2df7382d5d60ac120fafc046fc9e3872",
-      "size": 2398
+      "sha256": "26c5100b76e0e80872b42c93984a76ccd95f2090af2c5028090878fd51e4c2e4",
+      "size": 2596
     },
     {
       "path": ".github/workflows/pages.yml",
@@ -53,8 +53,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "0c4110c58127dbe88161f9e5f23afb76a6af789b7f9be001d52f9d097cdc1b7f",
-      "size": 54028
+      "sha256": "6646def1897735bfbe604abbbf8da045dc408a742bd3aac3e0fab90397c628cf",
+      "size": 58808
     },
     {
       "path": "CODE_OF_CONDUCT.md",
@@ -88,18 +88,18 @@
     },
     {
       "path": "README.md",
-      "sha256": "35f75cf031a79ea4992e481487c97d130964dcb2c22d0cc700dfa720237f6857",
-      "size": 10300
+      "sha256": "d8ddacaa70fdd8fa92a8257562c42b39f42573325bfc7d6ab5ae5024f8d46f4b",
+      "size": 10521
     },
     {
       "path": "RELEASE_NOTES.md",
-      "sha256": "b693448d6e0237bc43b457bfa46bf1b132ee7f780191cf2ffaab7c022801cafd",
-      "size": 4834
+      "sha256": "1e1f1a97b96a2a77e2b8ea5bbd36b9ed1e7b3af7ec8a66ee134d940420f061e5",
+      "size": 5788
     },
     {
       "path": "ROADMAP.md",
-      "sha256": "9f1e56c67ac63c2b79534378a5d41a5579f0e8d3f370f270b497cda47ddc097d",
-      "size": 6075
+      "sha256": "af1e951e7447430675de21ab1f4b711ac15ee233ba511e3d0b1619ebfe6bb436",
+      "size": 6207
     },
     {
       "path": "SECURITY.md",
@@ -1370,6 +1370,86 @@
       "path": "conformance/cases/capability-unknown-field/views/task.yaml",
       "sha256": "478f1ebfc7dc944d025d05b9a4c8ea6a48e6f24f16d16787f2c4e2f36688b8e5",
       "size": 86
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-empty/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-empty/owp.yaml",
+      "sha256": "c62e458036ee312b77d3d4db4e4cb127e85176a5cbbff388d16cefcc93dff939",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-empty/state/task-compiler.yaml",
+      "sha256": "be58cb963e2d6c75d51f97b2481838bb3169b164a19c80b065aa21fa0051d295",
+      "size": 310
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-empty/views/task.yaml",
+      "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
+      "size": 117
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-in-not-list/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-in-not-list/owp.yaml",
+      "sha256": "c62e458036ee312b77d3d4db4e4cb127e85176a5cbbff388d16cefcc93dff939",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-in-not-list/state/task-compiler.yaml",
+      "sha256": "2d94060339346d2214e23f5a89e941bbfe9515306f1ad3b3312d8c60b8063089",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-in-not-list/views/task.yaml",
+      "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
+      "size": 117
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-operator/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-operator/owp.yaml",
+      "sha256": "c62e458036ee312b77d3d4db4e4cb127e85176a5cbbff388d16cefcc93dff939",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-operator/state/task-compiler.yaml",
+      "sha256": "98b87b1fba5cbb654fcfa843f0509068ca2d769c9a532c97c0b525b463031dfb",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where-operator/views/task.yaml",
+      "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
+      "size": 117
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where/owp.yaml",
+      "sha256": "c62e458036ee312b77d3d4db4e4cb127e85176a5cbbff388d16cefcc93dff939",
+      "size": 325
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where/state/task-compiler.yaml",
+      "sha256": "09a1a658da6ad1cb7ebae080bd40a04dac6cf418ed1f7229f78ecf36ebb20093",
+      "size": 354
+    },
+    {
+      "path": "conformance/cases/compiler-aggregate-where/views/task.yaml",
+      "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
+      "size": 117
     },
     {
       "path": "conformance/cases/compiler-classify-cycle/WORLD.md",
@@ -5507,6 +5587,16 @@
       "size": 1762
     },
     {
+      "path": "conformance/evidence/version-mismatch/evidence.yaml",
+      "sha256": "0e3089be800761587b3fedec8e9f4e05c324518463c0df8426fefae14cac49ea",
+      "size": 461
+    },
+    {
+      "path": "conformance/evidence/version-mismatch/package.owp.zip",
+      "sha256": "e8a52ebfd418f6a9e9829d9f87012041ab995e446e3bae57d942c25025ec09ac",
+      "size": 1762
+    },
+    {
       "path": "conformance/ews-check/bad-as-of/ews.yaml",
       "sha256": "dfefd485e1721511f5a33020a3627145a12db571ad7d3a74939358843b8f70a8",
       "size": 416
@@ -6193,6 +6283,36 @@
     },
     {
       "path": "conformance/ews/aggregate-numeric/world/views/task.yaml",
+      "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
+      "size": 117
+    },
+    {
+      "path": "conformance/ews/aggregate-where/expected-ews.yaml",
+      "sha256": "6ed1a576264f05dd1f438236b8529273d05b222e32b514e291fe205b2bbf337c",
+      "size": 1858
+    },
+    {
+      "path": "conformance/ews/aggregate-where/observations.yaml",
+      "sha256": "ccca34a88c1c17a411387c3694d044a071364990d798aef371185c6b4ed6df75",
+      "size": 1170
+    },
+    {
+      "path": "conformance/ews/aggregate-where/world/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/ews/aggregate-where/world/owp.yaml",
+      "sha256": "22420e9ad4d024238433f61ba440d068c64d535a4f0595499c38bfec04311a15",
+      "size": 328
+    },
+    {
+      "path": "conformance/ews/aggregate-where/world/state/task-compiler.yaml",
+      "sha256": "e85da064d9b6775f97434abf203c649a75041ce35107ac6a0f6e9d2f8566182a",
+      "size": 1518
+    },
+    {
+      "path": "conformance/ews/aggregate-where/world/views/task.yaml",
       "sha256": "e161761eb7ac92fd70b98078e99e86e5e4efd3f0d32c177e40e3df032240adad",
       "size": 117
     },
@@ -7058,8 +7178,8 @@
     },
     {
       "path": "conformance/expected.yaml",
-      "sha256": "5169c6c08dc2d94205a7cb2ee47b7b6b97fc85b479307b2fc01b85626065ddf1",
-      "size": 65739
+      "sha256": "dad7873ebd4d25723dcd6fdb19e9597b484b13a00142902ca42baa9f2e134972",
+      "size": 68009
     },
     {
       "path": "conformance/extraction/bad-timestamp/profile.yaml",
@@ -7223,8 +7343,8 @@
     },
     {
       "path": "conformance/reference-ids.json",
-      "sha256": "d1acbbe71a7984b388d8ffadee659ccccbeb54f291edc400b6c3204960bccaf0",
-      "size": 33065
+      "sha256": "18932169031e5d9024460afb7283d4ac19bb36bfb058d2ebc5816cb21f8b7880",
+      "size": 34088
     },
     {
       "path": "conformance/resolution/archive-source/packages/world-0.1.0.owp.zip",
@@ -7353,6 +7473,131 @@
     },
     {
       "path": "conformance/resolution/binding-grounded/root/views/task.yaml",
+      "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
+      "size": 131
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/packages/onto/ONTOLOGY.md",
+      "sha256": "00261f4b3f415a226faee35b13c9d29b6a661819aee5252d97d00f9660bbf842",
+      "size": 7
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/packages/onto/owp.yaml",
+      "sha256": "7d03a6a03e404e2e3d19e133b41bc5bbd120d51c20478581820cfc81e392f77e",
+      "size": 337
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/packages/onto/semantics/core.yaml",
+      "sha256": "025676fb3bb981b0b105a528bca3395219ea2db23afc11d4e10808ec7bbf3ecd",
+      "size": 241
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/root/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/root/owp.yaml",
+      "sha256": "59381e6250000ab8cefdd185f87cf6091da170e123e6410714e04514dd1cd473",
+      "size": 452
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/root/semantics/terms.yaml",
+      "sha256": "bc604de8f4b390941c401495202120b5e2da44617d0e14a1fb6dc5f1b052e3d4",
+      "size": 343
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/root/state/task-compiler.yaml",
+      "sha256": "110dae14901b3077b44010d6f7fb17c5ff9070df98673dd63a0bab8011e55a7e",
+      "size": 224
+    },
+    {
+      "path": "conformance/resolution/binding-path-chain/root/views/task.yaml",
+      "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
+      "size": 131
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/packages/onto/ONTOLOGY.md",
+      "sha256": "00261f4b3f415a226faee35b13c9d29b6a661819aee5252d97d00f9660bbf842",
+      "size": 7
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/packages/onto/owp.yaml",
+      "sha256": "7d03a6a03e404e2e3d19e133b41bc5bbd120d51c20478581820cfc81e392f77e",
+      "size": 337
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/packages/onto/semantics/core.yaml",
+      "sha256": "025676fb3bb981b0b105a528bca3395219ea2db23afc11d4e10808ec7bbf3ecd",
+      "size": 241
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/root/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/root/owp.yaml",
+      "sha256": "59381e6250000ab8cefdd185f87cf6091da170e123e6410714e04514dd1cd473",
+      "size": 452
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/root/semantics/terms.yaml",
+      "sha256": "b9782382f60bf4a55f174a837aa2aee947a4efb4934b522f37137549ee8c0edd",
+      "size": 326
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/root/state/task-compiler.yaml",
+      "sha256": "110dae14901b3077b44010d6f7fb17c5ff9070df98673dd63a0bab8011e55a7e",
+      "size": 224
+    },
+    {
+      "path": "conformance/resolution/binding-path-domain/root/views/task.yaml",
+      "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
+      "size": 131
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/packages/onto/ONTOLOGY.md",
+      "sha256": "00261f4b3f415a226faee35b13c9d29b6a661819aee5252d97d00f9660bbf842",
+      "size": 7
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/packages/onto/owp.yaml",
+      "sha256": "a1f137a9220bc53f9165bac019cec19640ac365720fe2dbeeb7e695b61b24a8c",
+      "size": 373
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/packages/onto/semantics/core.yaml",
+      "sha256": "b8162392a0a95bf4c0669fb5690d72bfa1552a1ab42ec38c58e6436384b0bc55",
+      "size": 324
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/packages/onto/semantics/terms.yaml",
+      "sha256": "84cd4c6bd462f19e66cdffb80ef6e12e44f9313802d824bffd78ddb4ef061912",
+      "size": 564
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/root/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/root/owp.yaml",
+      "sha256": "59381e6250000ab8cefdd185f87cf6091da170e123e6410714e04514dd1cd473",
+      "size": 452
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/root/semantics/terms.yaml",
+      "sha256": "4dca0e92524b61e467a434ce51ae74f06f3c0ace594e58af73a60c19c9d73ced",
+      "size": 392
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/root/state/task-compiler.yaml",
+      "sha256": "1aa08990ebf721726f4590e486e925ef027d64d1d46577c37e0cfa1f907f595c",
+      "size": 234
+    },
+    {
+      "path": "conformance/resolution/binding-path-parent/root/views/task.yaml",
       "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
       "size": 131
     },
@@ -7488,6 +7733,46 @@
     },
     {
       "path": "conformance/resolution/binding-term-unknown/root/views/task.yaml",
+      "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
+      "size": 131
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/packages/onto/ONTOLOGY.md",
+      "sha256": "00261f4b3f415a226faee35b13c9d29b6a661819aee5252d97d00f9660bbf842",
+      "size": 7
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/packages/onto/owp.yaml",
+      "sha256": "7d03a6a03e404e2e3d19e133b41bc5bbd120d51c20478581820cfc81e392f77e",
+      "size": 337
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/packages/onto/semantics/core.yaml",
+      "sha256": "9cafee05b288fc6d100c49c3751df6540f172b6dfae6cfb82e6925116ea080df",
+      "size": 342
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/root/WORLD.md",
+      "sha256": "3787f827e7e22e9e28bb1cfce4b49d65f5dee3cc46138524af443b99860f96f8",
+      "size": 28
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/root/owp.yaml",
+      "sha256": "59381e6250000ab8cefdd185f87cf6091da170e123e6410714e04514dd1cd473",
+      "size": 452
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/root/semantics/terms.yaml",
+      "sha256": "c42cf6ee1ecd7d40047f11ec8d23ac84f8a77ff2ecf9bdce2f176264cfa65403",
+      "size": 378
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/root/state/task-compiler.yaml",
+      "sha256": "110dae14901b3077b44010d6f7fb17c5ff9070df98673dd63a0bab8011e55a7e",
+      "size": 224
+    },
+    {
+      "path": "conformance/resolution/binding-value-range/root/views/task.yaml",
       "sha256": "bb5c283d04603e90a43f2363876c5ef4e601c7403fae36a5b28ec75c57aa7405",
       "size": 131
     },
@@ -8738,8 +9023,8 @@
     },
     {
       "path": "docs/QUICKSTART.md",
-      "sha256": "c3e325c4882295392334c3a5e94d2fac0b8f1606260c51037ad1becdb37a0710",
-      "size": 8799
+      "sha256": "b338e2f3f3092b0d2f138ca87ca3fe8bb9a42787862537ecbde887fe4bcd92b4",
+      "size": 11889
     },
     {
       "path": "docs/REFERENCES.md",
@@ -8763,8 +9048,8 @@
     },
     {
       "path": "docs/STATE_COMPILATION.md",
-      "sha256": "b9bab3c16737a415d06b3bc1a18706b22b42bd5aa526d1b03e998c8ebfabd1f4",
-      "size": 5791
+      "sha256": "ef9ae98c0d51c2957bbfe4749df94c9248dabc324fc587d909aeec3a3c73e531",
+      "size": 9296
     },
     {
       "path": "docs/interop/AAS.md",
@@ -9193,8 +9478,8 @@
     },
     {
       "path": "examples/ontology/quality-ontology/semantics/core.yaml",
-      "sha256": "a9d3b68bef91186339539e47f8773e9171611f77b5443510d3e96c82cffcd6c6",
-      "size": 1631
+      "sha256": "6e634809311ec2b537fb3343db6960e32aa383e21e1dc1d4d8aaeab15d33db92",
+      "size": 1637
     },
     {
       "path": "examples/ontology/quality-ontology/semantics/shapes.ttl",
@@ -9458,12 +9743,12 @@
     },
     {
       "path": "implementations/typescript/package-lock.json",
-      "sha256": "165bb4c554449eb44d7a6767a591080b3a23a2cf1febb95bef9fa204419b6b0c",
+      "sha256": "825cbd0b787b69b8987c745c822b7d3ba35b542a668a9a6259ec6845d38fa969",
       "size": 13915
     },
     {
       "path": "implementations/typescript/package.json",
-      "sha256": "dc0ca8ed1eb301a5380f574f1f9d6ea318ad4baaee5730cc1dd02fd3aa30f0e2",
+      "sha256": "af66581c27ebbbfc6c23d8e74f931a0e412466c976e4d65497c7762cf44235ba",
       "size": 1830
     },
     {
@@ -9523,13 +9808,13 @@
     },
     {
       "path": "implementations/typescript/src/evidence.ts",
-      "sha256": "da0cf47f3c50d2f8221d5248eee5a244fb8edfb2e6a2aaaf54560b67294fee08",
-      "size": 2858
+      "sha256": "ec8bd5859e010c98db365682f0abb6263d40a0d04ff192e3de60d1d865561f58",
+      "size": 3379
     },
     {
       "path": "implementations/typescript/src/ews.ts",
-      "sha256": "0a69ebd63cd09c50c576d631e0f54a3ef07bb4b165eff5d0cd0eef81f6832586",
-      "size": 27615
+      "sha256": "409c56f9f4c611bae6fdca6e40d245988561d3f24956214ded13c76fe4cc6462",
+      "size": 28006
     },
     {
       "path": "implementations/typescript/src/extraction.ts",
@@ -9543,13 +9828,13 @@
     },
     {
       "path": "implementations/typescript/src/report.ts",
-      "sha256": "d6da527b59c445fba0c028c97a9be1e5803df33b88d658b2826d3d5e5efd8793",
-      "size": 9681
+      "sha256": "7136c77219273a35d47b124e31c3dbe4819a60a0d7ac5fcdef3a60bd8cee4aea",
+      "size": 10912
     },
     {
       "path": "implementations/typescript/src/resolve.ts",
-      "sha256": "2dd4ee8438fa27de462daed3a322c8ad23994cf970f186f2e38a9e2c1203dc45",
-      "size": 28371
+      "sha256": "cc06725d5bf740964e1273fd943a8b7c723bc419f8f96dd9e4b0cb023d4eb1f8",
+      "size": 29611
     },
     {
       "path": "implementations/typescript/src/rules/assets.ts",
@@ -9558,8 +9843,8 @@
     },
     {
       "path": "implementations/typescript/src/rules/binding.ts",
-      "sha256": "dbcbcba6338d610fbc6d42022264dececf9afbef09cf8dd29b589c12c9879736",
-      "size": 10629
+      "sha256": "aeafe78d9024407a8d8bca0b63c70740580055756d26b82015ac34aec1fd68a9",
+      "size": 14402
     },
     {
       "path": "implementations/typescript/src/rules/dependencies.ts",
@@ -9593,8 +9878,8 @@
     },
     {
       "path": "implementations/typescript/src/rules/ontology.ts",
-      "sha256": "f10a03c0545ae28b9cf22821d13cc942a0b25b52718fe54bee685ac8e9d60a85",
-      "size": 13382
+      "sha256": "9d6a9320da52319609e6982517c438c6d75f3fe772fa5fc35d7e4fc4429a6d4b",
+      "size": 16067
     },
     {
       "path": "implementations/typescript/src/rules/standard-fields.ts",
@@ -9603,8 +9888,8 @@
     },
     {
       "path": "implementations/typescript/src/rules/world.ts",
-      "sha256": "cd755774ab34a35b96520717373c7a4913f1ea5567e288caea9f857c947271f6",
-      "size": 25219
+      "sha256": "efee1332ac864155a4887f0634aac05f0931e09683538b6ff289f262b1b1bef9",
+      "size": 26150
     },
     {
       "path": "implementations/typescript/src/rules/worldmodel.ts",
@@ -9643,7 +9928,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "518091ae49cf1f1001e678e383f42f799745a9deaee5c47f11762f17fa5cec1a",
+      "sha256": "2fbc1a043318b5e88378bd74f7fe800898d5b767415fae9076aa0e1b06f24d53",
       "size": 2270
     },
     {
@@ -9768,8 +10053,8 @@
     },
     {
       "path": "schemas/package-report.schema.json",
-      "sha256": "8f38f7d027871e4c9697203d1a5ff0be501b1b235326116a0a159918fd6a0f5b",
-      "size": 7330
+      "sha256": "552a4824ff62385bc3baeb77d0561ae98ad0ce2e911f7a68a21a36f1138dd962",
+      "size": 7346
     },
     {
       "path": "schemas/role-profile.schema.json",
@@ -9818,8 +10103,8 @@
     },
     {
       "path": "scripts/build_site.py",
-      "sha256": "d9ca40f76403be16842b9deb1ef3eeaaac12d0651d8c9f579553fe7f1ec6cf3f",
-      "size": 8914
+      "sha256": "a85cb4147dda24d72e6df8dea1eaf1a4f3c45f815f125dd0f4509fc353969d3c",
+      "size": 9727
     },
     {
       "path": "scripts/build_value_sets.py",
@@ -9862,14 +10147,19 @@
       "size": 2562
     },
     {
+      "path": "scripts/site_catalog.py",
+      "sha256": "b7d459dbfea51451a54908a36a762472c99771b4021148d3d388160a621d37bc",
+      "size": 12019
+    },
+    {
       "path": "scripts/sync_rule_ids.py",
       "sha256": "f836510756625459f926215c9c83eb9b35b5f41a03d433080c03faee1a7a368e",
       "size": 1665
     },
     {
       "path": "spec/OWP_EVALUATION_AND_STATE.md",
-      "sha256": "cb0b05c986a8d2312f161b95c519d9f496d4c0f547e92e7913d355b69a4623a2",
-      "size": 22106
+      "sha256": "6c7b68067d1e6904354ce274a68aba859fe66617336b576c7dbf5a8fc44e999a",
+      "size": 22906
     },
     {
       "path": "spec/OWP_EXPERIMENTAL.md",
@@ -9878,13 +10168,13 @@
     },
     {
       "path": "spec/OWP_SEMANTICS.md",
-      "sha256": "628147dd948b398571601e4ccb6c75a668ee8e20390ce28abd78374459ef4fad",
-      "size": 10379
+      "sha256": "8941d243969c260b50a8c3160b7c00bd7417c3d0dad7faa0f87d403a4fe63211",
+      "size": 11405
     },
     {
       "path": "spec/OWP_SPEC.md",
-      "sha256": "864565ee1c74a1f0c50775a4263bc43278ff4d81b0b698d70a5c1d720f4eed9e",
-      "size": 54359
+      "sha256": "6d53e78aed7cb19c1a1feeb60148953c7adedeb45684c118b43450de7305782b",
+      "size": 54610
     },
     {
       "path": "spec/OWP_WORK_AND_ACTORS.md",
@@ -9893,38 +10183,38 @@
     },
     {
       "path": "spec/rule-ids.yaml",
-      "sha256": "a94dca7437dff5da5722e5d5f828a7b93768203ef8e1d4a42e05b5f6dedb1ffa",
-      "size": 25032
+      "sha256": "ce2b9b4aec57ef71a37cf3fcc3ab6cb7af3321a1de6d69e7aad47b004a6a1328",
+      "size": 25355
     },
     {
       "path": "src/ontle/__init__.py",
-      "sha256": "9f18d2b3b4d09f50e5d4eee9d2a3ad871798206fc7313328c98bee5a0ab9548b",
+      "sha256": "615f23a4bb897fcb6d4dc2184839ce0ca6d92717170e4edddbf2df82fc76b7bd",
       "size": 24
     },
     {
       "path": "src/ontle/binding.py",
-      "sha256": "787c7343007dd447fe3032d3d39cfdf2af5e2f3a0fe6a865a815a1eb00a7c1b2",
-      "size": 14098
+      "sha256": "d24df9d54bb7f9960891fda73cbad8bad6ac26263465c26be613de3f6de8b6c5",
+      "size": 18956
     },
     {
       "path": "src/ontle/cli.py",
-      "sha256": "90ef662d0da0703a1be5410350409abb8b6be648f868547fc96508c02b552cb7",
-      "size": 24492
+      "sha256": "e32600156bc5aaf3a0de4c94abb4aec1384ecc96f53dfc46f372db47e73284e3",
+      "size": 30556
     },
     {
       "path": "src/ontle/core.py",
-      "sha256": "f705c6c28e6edbd15301eb96072e705eb1a8e7a2fcc49171813c4aa3ffc3cd3a",
-      "size": 58621
+      "sha256": "cf4636780fa23fe09c898b5e9a5fd0960652cfe2028037c9430c0acedcf8f550",
+      "size": 58777
     },
     {
       "path": "src/ontle/distribution.py",
-      "sha256": "4d64df9587944b0d8025a70e9e9166b30a2383b9e937ed9c674d89281ac48f80",
-      "size": 24503
+      "sha256": "ee2fa625b06b7e857c53a525c44b50adc1bb41f4943705c3ee9fa41c7e55d880",
+      "size": 25123
     },
     {
       "path": "src/ontle/ews.py",
-      "sha256": "c59ad4b79d319f0d0f1d4fbeca9b5c81c16c5b7cc22e858cfd99ce836cdd2002",
-      "size": 38355
+      "sha256": "60cfbf7e8724b4b6f51f620ac6e9b63ae4de67aae016949123cef0b1ab5dcb68",
+      "size": 40607
     },
     {
       "path": "src/ontle/experimental.py",
@@ -9948,18 +10238,23 @@
     },
     {
       "path": "src/ontle/kgcheck.py",
-      "sha256": "11ac18e7fe6c14ac834516e9e40c923c2130c12543cd9e317e4f52559d99eac0",
-      "size": 12063
+      "sha256": "90e2e129f342266e80c3c9c43cbffdb07b59e53361d7df4779a344c5966226b8",
+      "size": 15593
     },
     {
       "path": "src/ontle/mcp.py",
-      "sha256": "aba91b7d2a69f999e3964d940a398a0b2071b37dc14e783bc9c799d01425acc0",
-      "size": 17348
+      "sha256": "2d794bf4c911fb93d864a6202f51ab200547d4b000160c062f79bfd1cc662bd1",
+      "size": 19077
+    },
+    {
+      "path": "src/ontle/observations.py",
+      "sha256": "33b9d7b1b8f3e1f6feceb7ccc23c8adcd0907e67f0edae1022251eada17d830c",
+      "size": 2783
     },
     {
       "path": "src/ontle/ontology.py",
-      "sha256": "d761e30f82d67591611c9a34ba16d4de6f602f9658d6fc94631c3f28f36aedde",
-      "size": 24809
+      "sha256": "dad1d7b3c53bb13faa2a84131745a35af49bd0cf0cb68340ca920ddc07cec827",
+      "size": 29922
     },
     {
       "path": "src/ontle/rdfexport.py",
@@ -9968,18 +10263,18 @@
     },
     {
       "path": "src/ontle/report.py",
-      "sha256": "c75c7bec6709fa71d9f4414a0cfc5f6a9f38c32c55279f9c3766589d0296ef9d",
-      "size": 10131
+      "sha256": "aee0db0215fe63df1d6d5cad7ae8cb18092d82c3ce7931915792c2778af0b86f",
+      "size": 11250
     },
     {
       "path": "src/ontle/resolve.py",
-      "sha256": "2c0ccd3c94cc74e52da41de2314faee9e9e51995efc8bdccdad7a7f55d158e96",
-      "size": 32231
+      "sha256": "a56f6e1d0f4507103f49fc955a64c0c6a495d5605b5ad7a58caffd01c9e83797",
+      "size": 34181
     },
     {
       "path": "src/ontle/scaffold.py",
-      "sha256": "8ff90403b486001c97b419b448854c3869cea403c509746da831c1253467e3bc",
-      "size": 18037
+      "sha256": "d42de96d9538ad39d1267299803919a08f79a7affaec3d2f460e1ea6d96abfab",
+      "size": 19090
     },
     {
       "path": "src/ontle/structure.py",
@@ -10182,6 +10477,11 @@
       "size": 389
     },
     {
+      "path": "tests/test_binding_checks.py",
+      "sha256": "2d9ae760f39b1f980b58314edf74c4b8448f198f3a31739f0e9b70bc705f4fc0",
+      "size": 4504
+    },
+    {
       "path": "tests/test_conformance.py",
       "sha256": "92f25debe62c416bbf8686e4f4b0a60615ff2dd7ba4415c5928e62bf2599055f",
       "size": 1277
@@ -10233,8 +10533,8 @@
     },
     {
       "path": "tests/test_report.py",
-      "sha256": "caf5e342fdfbaba7a4aa4303ec0a243463e86ba774787fe9794a59da4a3e739a",
-      "size": 12190
+      "sha256": "eed813b37d2760468307ba641e56fe7b2d58f1b1e421520ad5928427b87460a5",
+      "size": 16019
     },
     {
       "path": "tests/test_resolve.py",
@@ -10250,6 +10550,11 @@
       "path": "tests/test_rule_ids.py",
       "sha256": "711bf7e83845185c00c605ec14f5d17a0a25b9e6bf0ecb6fad7e4b56f7f505fa",
       "size": 6362
+    },
+    {
+      "path": "tests/test_site.py",
+      "sha256": "99beb0e56a48524278436b078fe9ddd1f5b53be885de3824551b39bd2dd8b8a7",
+      "size": 2360
     },
     {
       "path": "tests/test_structure.py",

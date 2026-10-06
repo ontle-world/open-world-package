@@ -1,6 +1,6 @@
-# Public Alpha Release Notes — 0.2.0-alpha.5
+# Public Alpha Release Notes — 0.2.0-alpha.6
 
-This is the third tagged public alpha, and the first on PyPI, of the Open World Package (OWP) specification (`openworld/v1alpha1`) and of `ontle`, its Python reference CLI. The full list of changes is in `CHANGELOG.md`.
+This is the fourth tagged public alpha of the Open World Package (OWP) specification (`openworld/v1alpha1`) and of `ontle`, its Python reference CLI. The full list of changes is in `CHANGELOG.md`.
 
 OWP is a package format for Worlds and the models that work on them:
 
@@ -12,6 +12,13 @@ WorldPackage               a World: Views, State Compilers, bindings, knowledge,
   -> EffectiveWorldState   the state at a time, with provenance, unresolved values, and missing fields
 WorldModelPackage          a model that consumes that state, with evaluation lineage and evidence
 ```
+
+## New in 0.2.0-alpha.6
+
+- **Package catalog.** The example packages at https://ontle-world.github.io/open-world-package/catalog/, each page built from the package's report, with an `index.json` to resolve from (`--source index:<url>`).
+- **From records to state.** `ontle observations csv` turns a CSV export into observations; an aggregate can filter its candidates with `where`; `ontle ews check --observations` compares an expected EWS by value.
+- **Binding meaning checks.** `binding.path-domain` and `binding.value-range` warn when a SemanticBinding uses a property on a class the ontology does not declare it on, or maps a code outside an enum. `ontle kg check --bindings` and `ontle ews check --source` extend this to RDF ontologies and to EWS values.
+- **Fixes** from a new-user pilot: `evidence check` compares profile versions, `pack --output <directory>` works, an unresolved dependency no longer floods the output, and the report hints at leftover template text.
 
 ## New in 0.2.0-alpha.5
 

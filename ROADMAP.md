@@ -4,7 +4,7 @@ This file lists, in order, how this repository is expected to change. Each step 
 
 OWP stays a portable contract: World, View, State Compiler, EWS, World Model applicability, evaluation lineage, and evidence. Evaluation execution and evolution, runtime execution, and model weight formats stay out of this repository (see "Out of scope").
 
-## Current state (0.2.0-alpha.5)
+## Current state (0.2.0-alpha.6)
 
 - WorldPackage conformance profiles (`descriptive` → `action-ready`); every World Model names its compatible Views and State Compilers.
 - Evaluation lineage and pinned `CompatibilityEvidence`.
@@ -13,12 +13,12 @@ OWP stays a portable contract: World, View, State Compiler, EWS, World Model app
 - Stable rule ids (spec Appendix A).
 - Publisher extensions (spec section 13), closed document schemas, and a rule-id registry (`spec/rule-ids.yaml`).
 - Package reports, a read-only MCP server, and experimental World View composition (`specializes`, `composes`, `exclude`).
-- Conformance suite: 248 validation, 33 resolution, 33 EWS compile, 24 EWS check, 13 extraction, 4 detached evidence cases.
+- Conformance suite: 252 validation, 37 resolution, 34 EWS compile, 24 EWS check, 13 extraction, 5 detached evidence cases.
 - Two implementations pass the suite: the Python reference and a clean-room TypeScript implementation.
 
-## 1. ~~Release 0.2.0a5~~
+## 1. ~~Release 0.2.0a6~~
 
-Done: tagged `v0.2.0-alpha.5`, the first release on PyPI (`ontle`); `v0.2.0-alpha.3` and `v0.2.0-alpha.4` are on GitHub only. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml`, `src/ontle/__init__.py`, and `implementations/typescript/package.json` (and its lock), run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version, publishes the CHANGELOG section as the release notes, and publishes the distribution to PyPI as `ontle`.
+Done: tagged `v0.2.0-alpha.6`; `v0.2.0-alpha.5` was the first release on PyPI (`ontle`); `v0.2.0-alpha.3` and `v0.2.0-alpha.4` are on GitHub only. For the next release, move a new `Unreleased` CHANGELOG section to the version, bump `pyproject.toml`, `src/ontle/__init__.py`, and `implementations/typescript/package.json` (and its lock), run `python scripts/release_manifest.py`, and push a `v*` tag after CI passes; the release workflow checks the manifest and version, publishes the CHANGELOG section as the release notes, and publishes the distribution to PyPI as `ontle`.
 
 ## 2. Close known alpha limitations in the spec and suite
 

@@ -44,6 +44,33 @@ class CatalogTests(unittest.TestCase):
             self.assertTrue(result.valid, result.errors)
 
 
+@unittest.skipUnless(HAS_MARKDOWN, "markdown not installed (the site build needs it)")
+class ExampleScaleTests(unittest.TestCase):
+    def test_readme_sizes_match_the_reports(self):
+        """The README's example table states each example's size; it must be what the catalog computes."""
+        sys.path.insert(0, str(ROOT / "scripts"))
+        try:
+            from site_catalog import observation_count, scale
+        finally:
+            sys.path.pop(0)
+        from ontle.core import load_manifest, local_assets
+        from ontle.report import package_report
+        import re
+        rows = re.findall(r"^\| `(examples/[^`]+)` \| [^|]+ \| ([^|]+) \| ([^|]+) \|$", (ROOT / "README.md").read_text(encoding="utf-8"), re.M)
+        self.assertEqual(sorted(r[0] for r in rows), sorted(str(m.parent.relative_to(ROOT)) for m in ROOT.glob("examples/*/*/owp.yaml")))
+        for rel, size, data in rows:
+            with self.subTest(example=rel):
+                root, manifest = load_manifest(ROOT / rel)
+                kinds, docs = local_assets(root, manifest.get("spec") or {})
+                report = package_report(root)
+                computed = scale(report, observation_count(root, kinds, docs))
+                self.assertEqual(size.strip(), computed["breadth"])
+                n = observation_count(root, kinds, docs)
+                self.assertTrue(data.strip().startswith(f"{n} observation") if n else data.strip() == "none")
+                refs = report["externalRefs"]["total"]
+                self.assertEqual(f"binds {refs} real artifact" in data, bool(refs))
+
+
 BUNDLE = ROOT / "implementations" / "typescript" / "dist-browser" / "owp-validator.js"
 
 

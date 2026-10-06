@@ -117,16 +117,22 @@ ontle export --format turtle
 
 ## Examples
 
-- `examples/business/manufacturing-quality-world` — business/manufacturing World package
-- `examples/business/quality-transition-world-model` — World Model bound to a business World
-- `examples/business/quality-scenario-world-model` — runnable reference World Models for one scenario: persistence, three-point, Monte Carlo, and Markov baselines on a CPU, and an LLM model as the minimum bar (`python models/run.py --baselines`)
-- `examples/ontology/lab-ontology`, `examples/ontology/sales-ontology` — T-boxes of the assay and sales example graphs
-- `vocab/owp` — the OWP vocabulary (RDF terms for OWP's own concepts); `alignments/` — informative alignments to PROV-O, BFO 2020 + IAO, and DOLCE+DnS Ultralite (`docs/STANDARDS_INTEROP.md`)
-- `examples/ontology/quality-ontology` — ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World
-- `examples/research/assay-optimization-world` — laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario
-- `examples/business/sales-prioritization-world` — actor-specialized Views, tasks, artifacts, and consumers
-- `examples/physical-ai/mobile-manipulation-world` — Physical AI World package
-- `examples/physical-ai/multimodal-action-world-model` — multimodal/VLA-style World Model package
+The examples are samples: their data is small and illustrative, not production scale. **Size** says how much of OWP a package uses (minimal: up to 5 assets; focused: up to 19; full: 20 or more; an ontology by its terms), and **Sample data** what it ships to compile. The [package catalog](https://ontle-world.github.io/open-world-package/catalog/) shows the same, computed from each package's report.
+
+| Example | What it shows | Size | Sample data |
+|---|---|---|---|
+| `examples/business/manufacturing-quality-world` | business/manufacturing World: quality incidents, ISA-95 and OPC UA bindings, ontology binding, a knowledge graph, work and actors | full | 13 observations; binds 3 real artifacts (OPC UA NodeSets) |
+| `examples/business/sales-prioritization-world` | actor-specialized Views, tasks, artifacts, and consumers | full | 5 observations |
+| `examples/research/assay-optimization-world` | laboratory World with actors, roles, delegation, a design-test-learn work pattern, evaluation, and a scenario | full | 1 observation |
+| `examples/physical-ai/mobile-manipulation-world` | Physical AI World package | focused | 8 observations; binds 2 real artifacts (a LeRobot dataset, an OpenUSD scene) |
+| `examples/business/quality-scenario-world-model` | runnable reference World Models for one scenario: persistence, three-point, Monte Carlo, and Markov baselines on a CPU, and an LLM model as the minimum bar (`python models/run.py --baselines`) | focused | none |
+| `examples/business/quality-transition-world-model` | World Model contract bound to a business World | minimal | none |
+| `examples/physical-ai/multimodal-action-world-model` | multimodal/VLA-style World Model package | minimal | none |
+| `examples/ontology/quality-ontology` | ontology package (owp-yaml schema, SHACL shapes, SSSOM mappings) used by the manufacturing World | 27 terms | none |
+| `examples/ontology/lab-ontology` | T-box of the assay example graph | 6 terms | none |
+| `examples/ontology/sales-ontology` | T-box of the sales example | 5 terms | none |
+
+Also: `vocab/owp`, the OWP vocabulary (RDF terms for OWP's own concepts), and `alignments/`, informative alignments to PROV-O, BFO 2020 + IAO, and DOLCE+DnS Ultralite (`docs/STANDARDS_INTEROP.md`).
 
 End-to-end demos on sample data, from observations to evidence: `demos/` (see `demos/README.md`).
 

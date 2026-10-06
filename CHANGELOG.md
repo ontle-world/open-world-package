@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Example sizes: the README's examples are a table with each one's size (minimal, focused, or full by its assets; an ontology by its terms) and its sample data (observations shipped, real artifacts bound). The catalog shows the same on every card and page, computed from the report, and a test keeps the README in step. The README and the catalog say plainly that the examples' data is small and illustrative.
+
 - Playground (registry step P3) on the project site, `https://ontle-world.github.io/open-world-package/playground/`: drop a package folder or an `.owp.zip`, or open an example from the catalog, and the page shows the verdict, the profile, the PackageReport, and the card. Nothing is uploaded: the TypeScript validator, resolver, and report run in the browser. Dependencies come from the catalog's index; each archive is checked against its index digest and its `owp.lock.json`. Catalog pages link to it.
   - The browser build (`npm run bundle`, `dist-browser/owp-validator.js`) is the same code as the Node implementation. Only Node's built-in modules are replaced, by an in-memory file system and small stand-ins in `src/browser/`, so the verdicts cannot drift. `npm run browser` runs every validation case and example through the bundle and compares the rule ids with `reference-ids.json`: 262/262. A Python test resolves a World Model through a served catalog index with it.
 

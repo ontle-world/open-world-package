@@ -271,8 +271,26 @@ export function outputListProblems(spec: Record<string, unknown> | undefined, ew
     }
     if (!unknown) for (const n of v) if (!(ewsFields ?? []).includes(n)) out.push({ rule, msg: `spec.outputSchema.${key} names "${n}", which is not one of its EWS fields` });
   }
+  if ("subjects" in schema) {
+    const s = schema.subjects;
+    const listed = isObj(s) ? s.from : undefined;
+    const ok = isObj(s) && Object.keys(s).length === 1 && Array.isArray(listed) && listed.length > 0
+      && listed.every((t) => typeof t === "string" && t !== "");
+    if (!ok) out.push({ rule: "compiler.per-subject-field", msg: "spec.outputSchema.subjects must be {from: [observation types]}, a non-empty list" });
+    else if (outputLists(spec).perSubject.length === 0) out.push({ rule: "compiler.per-subject-field", msg: "spec.outputSchema.subjects needs spec.outputSchema.perSubject" });
+  }
   return out;
 }
+
+/** `outputSchema.subjects.from` (spec 12.3): the observation types whose subjects make up the subject set. */
+export function subjectTypes(spec: Record<string, unknown> | undefined): string[] {
+  const schema = isObj(spec?.outputSchema) ? (spec!.outputSchema as Obj) : {};
+  const listed = isObj(schema.subjects) ? (schema.subjects as Obj).from : undefined;
+  return Array.isArray(listed) ? listed.filter((t): t is string => typeof t === "string" && t !== "") : [];
+}
+
+/** Aggregates that are 0 for a known subject without candidates (spec 12.3). */
+export const ZERO_FUNCTIONS = ["count", "distinct_count", "sum"];
 
 export const UCUM_CODE_RE = /^[!-~]+$/; // a UCUM code: printable ASCII without spaces (compared as text, never converted)
 

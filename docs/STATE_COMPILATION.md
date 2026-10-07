@@ -88,6 +88,8 @@ A binding `{from: <type>, value: <key>, select: latest}` takes the newest value 
 
 Listing a field in `perSubject` gives it one value per `subject` instead of one for the whole View: `item.status: {item-1: active, item-2: blocked}`. Every observation a per-subject field uses must have a `subject`.
 
+A per-subject aggregate has a value only for subjects with observations, so a machine without alarms has no `alarms_24h`. To get 0 for it, declare where the subjects come from: `outputSchema.subjects: {from: [MES.equipment_state]}`. Then every machine with a state observation gets 0 from `count`, `distinct_count`, and `sum`, and a classification of that 0 gives its `otherwise` label (`normal`). `mean`, `min`, and `max` stay empty: there is no value to average.
+
 ## 5. Latent fields: estimate, aggregate, classify
 
 State that is not observed directly is latent; list such fields in `latent` and bind each in one of three forms:

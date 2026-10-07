@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: ObservationSet
+spec:
+  observations:
+  # the subject set: m1, m2, m3 (m4 is known only from an estimate, m5 only after asOf)
+  - {id: s1, type: ot.machine, subject: m1, observedAt: "2026-01-01T00:00:00Z", values: {status: running}}
+  - {id: s2, type: ot.machine, subject: m2, observedAt: "2026-01-01T00:00:00Z", values: {status: running}}
+  - {id: s3, type: ot.machine, subject: m3, observedAt: "2026-01-01T00:00:00Z", values: {status: idle}}
+  - {id: s4, type: ot.machine, subject: m4, observedAt: "2026-01-01T00:00:00Z", values: {status: idle}, estimatedBy: acme/model}
+  - {id: s5, type: ot.machine, subject: m5, observedAt: "2026-01-03T00:00:00Z", values: {status: idle}}
+  # alarms: m6 is outside the set and still gets its values
+  - {id: a1, type: ot.alarm, subject: m1, observedAt: "2026-01-01T10:00:00Z", values: {code: jam, severity: high, minutes: 5}}
+  - {id: a2, type: ot.alarm, subject: m1, observedAt: "2026-01-01T11:00:00Z", values: {code: heat, severity: low, minutes: 3}}
+  - {id: a3, type: ot.alarm, subject: m2, observedAt: "2026-01-01T12:00:00Z", values: {code: jam, severity: low, minutes: 2}}
+  - {id: a4, type: ot.alarm, subject: m6, observedAt: "2026-01-01T13:00:00Z", values: {code: jam, severity: high, minutes: 7}}

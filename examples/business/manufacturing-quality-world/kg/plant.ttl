@@ -3,8 +3,8 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 # Illustrative plant knowledge graph; no real plant data.
-ex:claim-102 a q:Claim ; q:claimId "C-102" ; q:affectsLot ex:lot-L-1 , ex:lot-L-2 .
-ex:claim-207 a q:Claim ; q:claimId "C-207" ; q:affectsLot ex:lot-L-9 .
+ex:claim-102 a q:Claim ; q:claimId "C-102" ; q:claimStatus "open" ; q:affectsLot ex:lot-L-1 , ex:lot-L-2 .
+ex:claim-207 a q:Claim ; q:claimId "C-207" ; q:claimStatus "closed" ; q:affectsLot ex:lot-L-9 .
 ex:lot-L-1 a q:Lot ; q:producedOn ex:press-7 .
 ex:lot-L-2 a q:Lot ; q:producedOn ex:press-7 .
 ex:lot-L-9 a q:Lot ; q:producedOn ex:press-2 .

@@ -2,7 +2,8 @@
 
 A local KnowledgeAsset with RDF content and `spec.conformsTo.ontology` is checked against that OntologyPackage and
 the OntologyPackages it depends on. Only terms in those ontologies' namespaces are checked; other vocabularies
-(rdfs, skos, schema.org, external imports) are left alone. Validation never parses RDF (spec section 3.1), so these
+(rdfs, skos, schema.org, external imports) are left alone. When those ontologies have `shapes` entrypoints, the graph
+is also validated against them with SHACL (the shacl extra). Validation never parses RDF (spec section 3.1), so these
 findings are reported by the tool and do not change a package's verdict.
 """
 from __future__ import annotations
@@ -29,15 +30,19 @@ class KgFinding:
         return f"{self.code}: {self.asset}: {self.message} ({self.count}x)"
 
 
+ADVICE = {"kg.untyped", "kg.shape-warning"}  # reported, but the check still passes
+
+
 @dataclass
 class KgReport:
     findings: list[KgFinding] = field(default_factory=list)
     checked: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)  # what the check could not do: unread entrypoints, shapes not run
 
     @property
-    def ok(self) -> bool:  # kg.untyped is advice; every other finding, including kg.parse, fails the check
-        return not any(f.code != "kg.untyped" for f in self.findings)
+    def ok(self) -> bool:  # advice aside, every finding, including kg.parse, fails the check
+        return not any(f.code not in ADVICE for f in self.findings)
 
 
 def _rdflib():
@@ -48,18 +53,38 @@ def _rdflib():
     return rdflib
 
 
-def tbox_graph(root: Path, manifest: dict[str, Any]):
-    """The T-box of one OntologyPackage as an RDF graph: owp-yaml schema entrypoints, RDF schema entrypoints, and the term index."""
+def _identity(manifest: dict[str, Any]) -> str:
+    md = manifest.get("metadata") or {}
+    return f"{md.get('namespace')}/{md.get('name')}@{md.get('version')}"
+
+
+def _rdf_entrypoints(root: Path, manifest: dict[str, Any], role: str, unread: list[str] | None) -> list[tuple[Path, str]]:
+    """The RDF entrypoints of one role, as (file, rdflib format). Others of that role, which the tools cannot read
+    (owl-xml needs an OWL API tool, linkml its own toolchain), are added to `unread`; owp-yaml schemas are read by export_rdf."""
+    out = []
+    for entry in ((manifest.get("spec") or {}).get("ontology") or {}).get("entrypoints") or []:
+        if not isinstance(entry, dict) or entry.get("role") != role:
+            continue
+        fmt = entry.get("format")
+        if fmt in RDF_FORMATS:
+            if not inside_package(root, entry.get("path")):  # never read outside the package (validate reports it)
+                raise OWPError(f"{root.name}: {role} entrypoint {entry['path']} does not exist; run ontle validate on the package")
+            out.append((root / entry["path"], RDF_FORMATS[fmt]))
+        elif not (role == "schema" and fmt == "owp-yaml") and unread is not None:
+            unread.append(f"{_identity(manifest)}: {role} entrypoint {entry.get('path')} ({fmt}) was not read")
+    return out
+
+
+def tbox_graph(root: Path, manifest: dict[str, Any], unread: list[str] | None = None):
+    """The T-box of one OntologyPackage as an RDF graph: owp-yaml schema entrypoints, RDF schema entrypoints, and the
+    term index. Schema entrypoints in other formats are listed in `unread`; their terms come from the term index alone."""
     rdflib = _rdflib()
     from rdflib.namespace import OWL, RDF
     graph = rdflib.Graph()
     graph.parse(data=export_rdf(root, manifest, "turtle"), format="turtle")
     ontology = (manifest.get("spec") or {}).get("ontology") or {}
-    for entry in ontology.get("entrypoints") or []:
-        if isinstance(entry, dict) and entry.get("role") == "schema" and entry.get("format") in RDF_FORMATS:
-            if not inside_package(root, entry.get("path")):  # never read outside the package (validate reports it)
-                raise OWPError(f"{root.name}: schema entrypoint {entry['path']} does not exist; run ontle validate on the package")
-            graph.parse(root / entry["path"], format=RDF_FORMATS[entry["format"]])
+    for path, fmt in _rdf_entrypoints(root, manifest, "schema", unread):
+        graph.parse(path, format=fmt)
     index = ontology.get("termIndex")
     doc = _load(root / index) if inside_package(root, index) else None
     for term in ((doc or {}).get("spec") or {}).get("terms") or [] if isinstance(doc, dict) else []:
@@ -67,6 +92,49 @@ def tbox_graph(root: Path, manifest: dict[str, Any]):
         if kind is not None and isinstance(term.get("iri"), str):
             graph.add((rdflib.URIRef(term["iri"]), RDF.type, kind))
     return graph
+
+
+def shapes_graph(root: Path, manifest: dict[str, Any], unread: list[str] | None = None):
+    """The SHACL shapes of one OntologyPackage: its `shapes` entrypoints in RDF formats, merged."""
+    graph = _rdflib().Graph()
+    for path, fmt in _rdf_entrypoints(root, manifest, "shapes", unread):
+        try:
+            graph.parse(path, format=fmt)
+        except Exception as exc:  # rdflib raises parser-specific errors
+            raise OWPError(f"{_identity(manifest)}: cannot read shapes {path.name}: {' '.join(str(exc).split())[:200]}") from exc
+    return graph
+
+
+def shape_findings(graph, shapes, tbox) -> Counter[tuple[str, str]]:
+    """SHACL validation of a graph (spec 3.1 `shapes` role): one finding per shape, path, and message, counted over
+    focus nodes. The T-box is mixed in, so a shape that targets a class also targets instances of its subclasses."""
+    import rdflib
+    from pyshacl import validate
+    from rdflib.namespace import RDF
+    sh = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    data = rdflib.Graph()
+    for t in graph.triples((None, None, None)):  # a Dataset (nquads) as one graph: named graphs count too
+        data.add(t)
+    _, results, _ = validate(data, shacl_graph=shapes, ont_graph=tbox, inference="none", allow_warnings=True)
+    nn = lambda t: graph.namespace_manager.normalizeUri(t) if isinstance(t, rdflib.URIRef) else str(t)
+    found: Counter[tuple[str, str]] = Counter()
+    first: dict[tuple[str, str], str] = {}
+    for r in results.subjects(RDF.type, sh.ValidationResult):
+        code = "kg.shape" if results.value(r, sh.resultSeverity) == sh.Violation else "kg.shape-warning"
+        shape = results.value(r, sh.sourceShape)
+        if isinstance(shape, rdflib.BNode):  # a property shape: name the node shape it belongs to
+            shape = shapes.value(None, sh.property, shape) or shape
+        path = results.value(r, sh.resultPath)
+        # The constraint by name (sh:minCount 1), not pyshacl's message, which names the focus node and would not aggregate.
+        component = str(results.value(r, sh.sourceConstraintComponent) or "")
+        param = component.rsplit("#", 1)[-1].removesuffix("ConstraintComponent")
+        param = param[:1].lower() + param[1:]
+        value = shapes.value(results.value(r, sh.sourceShape), sh[param]) if param else None
+        detail = f"sh:{param}" + (f" {nn(value)}" if isinstance(value, (rdflib.URIRef, rdflib.Literal)) else "") + " not met"
+        key = (code, f"shape {nn(shape)}" + (f" on {nn(path)}" if isinstance(path, rdflib.URIRef) else "") + f": {detail}")
+        found[key] += 1
+        first.setdefault(key, nn(results.value(r, sh.focusNode)))
+    return Counter({(code, f"{message}, e.g. {first[(code, message)]}"): n for (code, message), n in found.items()})
 
 
 def _enum_types(root: Path, manifest: dict[str, Any]) -> set[str]:
@@ -124,15 +192,16 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
         if onto is None:
             raise OWPError(f"{rel}: cannot resolve spec.conformsTo.ontology {onto_ref}")
 
-        tbox, namespaces, enums, todo, seen = rdflib.Graph(), set(), set(), [onto], set()
+        tbox, shapes, namespaces, enums, todo, seen = rdflib.Graph(), rdflib.Graph(), set(), set(), [onto], set()
         package_graphs: list[Any] = []  # one T-box per package: domains and ranges are read per package
         while todo:  # the ontology and the OntologyPackages it builds on
             pkg = todo.pop()
             if pkg.identity in seen or pkg.kind != "OntologyPackage":
                 continue
             seen.add(pkg.identity)
-            package_graphs.append(tbox_graph(pkg.root, pkg.manifest))
+            package_graphs.append(tbox_graph(pkg.root, pkg.manifest, report.notes))
             tbox += package_graphs[-1]
+            shapes += shapes_graph(pkg.root, pkg.manifest, report.notes)
             namespaces |= _namespaces(pkg.manifest)
             enums |= {rdflib.URIRef(e) for e in _enum_types(pkg.root, pkg.manifest)}
             for dep in (pkg.manifest.get("spec") or {}).get("dependencies") or []:
@@ -222,8 +291,15 @@ def check_knowledge_graphs(package: str | Path, sources: list[str] | None = None
                 found[("kg.untyped", f"object of {name} has no rdf:type, so range {label_of(ranges)} cannot be checked")] += 1
             elif not holds(ranges, types[o]):
                 found[("kg.range", f"object of {name} is not a {label_of(ranges)}")] += 1
+        if len(shapes):
+            import importlib.util
+            if importlib.util.find_spec("pyshacl") is None:
+                report.notes.append(f"{rel}: the ontology has SHACL shapes, which were not run: pip install 'ontle[shacl]'")
+            else:
+                found += shape_findings(graph, shapes, tbox)
         report.checked.append(rel)
         report.findings += [KgFinding(code, rel, message, n) for (code, message), n in sorted(found.items())]
+    report.notes = list(dict.fromkeys(report.notes))  # an ontology shared by several graphs is noted once
     return report
 
 
@@ -261,10 +337,10 @@ def rdf_schema_model(graph) -> dict[str, Any]:
     return model
 
 
-def check_bindings(package: str | Path, sources: list[str] | None = None) -> list[str]:
+def check_bindings(package: str | Path, sources: list[str] | None = None, notes: list[str] | None = None) -> list[str]:
     """binding.path-domain and binding.value-range (spec 14) for a World's SemanticBinding, judged against the RDF T-box of
     its dependency ontologies: their owp-yaml schemas and their RDF schema entrypoints. Validation judges the owp-yaml
-    part only; this tool also covers ontologies published as RDF."""
+    part only; this tool also covers ontologies published as RDF. Schema entrypoints it cannot read go to `notes`."""
     from .binding import merge_models, semantic_warnings
     from .ontology import terms as ontology_terms
     from .resolve import _dependency_refs, resolve_package
@@ -282,7 +358,7 @@ def check_bindings(package: str | Path, sources: list[str] | None = None) -> lis
             continue
         for name, iri in ontology_terms(dep.root, dep.manifest)[0].items():
             prefixes.setdefault(name, iri)
-        models.append(rdf_schema_model(tbox_graph(dep.root, dep.manifest)))
+        models.append(rdf_schema_model(tbox_graph(dep.root, dep.manifest, notes)))
     if not models:
         raise OWPError("no dependency OntologyPackage resolves: pass --source or set ONTLE_PATH")
     md = manifest.get("metadata") or {}

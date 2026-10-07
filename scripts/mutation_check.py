@@ -51,6 +51,11 @@ MUTANTS = [
     ("binding: parent classes do not count", "binding.py", "todo += sorted(parents.get(c, ()))", "todo += []"),
     ("binding: path-domain never fires", "binding.py", "if owners and not owners & _ancestors(current, model[\"parents\"]):", "if False:"),
     ("binding: value-range never fires", "binding.py", 'outside = sorted(str(k) for k in values["map"] if str(k) not in enum)', "outside = []"),
+    # ontology tooling (ROADMAP 7)
+    ("kg: SHACL violations are advice", "kgcheck.py", 'code = "kg.shape" if results.value(r, sh.resultSeverity) == sh.Violation else "kg.shape-warning"', 'code = "kg.shape-warning"'),
+    ("kg: unread entrypoints are not noted", "kgcheck.py", 'elif not (role == "schema" and fmt == "owp-yaml") and unread is not None:', "elif False:"),
+    ("diff: a narrowed domain counts as widened", "ontodiff.py", "return all(any(o <= n for o in old) for n in new)", "return all(any(n <= o for o in old) for n in new)"),
+    ("diff: 0.x needs the full increment", "ontodiff.py", 'need = {"major": "minor", "minor": "patch"}.get(need, need)', "pass"),
     # report
     ("report: pinned counts every reference", "report.py", '"pinned": sum(is_pinned(r) for r in refs)}', '"pinned": len(refs)}'),
     ("report: withBinding counts every field", "report.py", "bound |= {f for f in listed or [] if f in bindings}", "bound |= set(listed or [])"),

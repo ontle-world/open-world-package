@@ -1152,6 +1152,151 @@ cases:
     errors: [asset.api-version]
     satisfiedProfile: descriptive
     rule: "An asset that declares apiVersion must use the manifest's."
+  work-pattern-kind-not-string:
+    valid: false
+    errors: [work.field]
+    satisfiedProfile: viewable
+    rule: "spec.pattern.kind is a string from the value set workPatterns or a declared extension value (spec section 16)."
+  work-pattern-kind-missing:
+    valid: false
+    errors: [work.field]
+    satisfiedProfile: viewable
+    rule: "A WorkPatternProfile declares spec.pattern.kind (spec section 16)."
+  work-pattern-graph-guard-undeclared:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "A transition's guard names a guard declared in spec.graph.guards."
+  work-pattern-graph-event-undeclared:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "A transition's event names an event declared in spec.graph.events."
+  work-pattern-graph-event-trigger:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "An event triggers declared nodes."
+  work-pattern-graph-loop-node:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "A loop's nodes are declared nodes."
+  work-pattern-graph-loop-until:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "A loop's until names a declared guard."
+  work-pattern-node-pattern-kind-unknown:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [value.unknown]
+    rule: "A node patternKind outside the open value set workPatterns is a warning, not an error."
+  work-pattern-input-contract-missing:
+    valid: false
+    errors: [work.reference]
+    satisfiedProfile: viewable
+    rule: "spec.inputContracts name listed local ArtifactContract assets."
+  evaluation-assessment-kind-not-string:
+    valid: false
+    errors: [evaluation.assessment-kind]
+    satisfiedProfile: viewable
+    rule: "assessmentKind is a string (spec section 15.1)."
+  evaluation-assessment-kind-extension-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: viewable
+    rule: "An extension assessmentKind uses an extension declared with 'as' in spec.dependencies (spec section 13)."
+  artifact-template-contract-ref-missing:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental, experimental.reference]
+    rule: "An experimental ArtifactTemplate without artifactContractRef is a warning, not an error (spec Appendix C)."
+  artifact-template-unknown-field:
+    valid: true
+    satisfiedProfile: viewable
+    warnings: [asset.kind-experimental, experimental.field]
+    rule: "An unknown field of an experimental kind is a warning, not an error (spec Appendix C)."
+  artifact-contract-type-missing:
+    valid: false
+    errors: [artifact.field]
+    satisfiedProfile: viewable
+    rule: "An ArtifactContract declares spec.artifact.type (spec section 18)."
+  artifact-contract-schema-ref-missing:
+    valid: false
+    errors: [artifact.reference]
+    satisfiedProfile: viewable
+    rule: "An ArtifactContract's schemaRef is a file in the package."
+  actor-assignment-bad-timestamp:
+    valid: false
+    errors: [actor.field]
+    satisfiedProfile: viewable
+    rule: "An assignment's validFrom and expiresAt are UTC YYYY-MM-DDTHH:MM:SSZ timestamps."
+  actor-type-missing:
+    valid: false
+    errors: [actor.field]
+    satisfiedProfile: viewable
+    rule: "An ActorProfile declares spec.actorType (spec section 17)."
+  consumer-actor-kind-missing:
+    valid: false
+    errors: [artifact.field]
+    satisfiedProfile: viewable
+    rule: "A ConsumerRepresentationProfile declares spec.actor.kind."
+  consumer-model-adapter-ref:
+    valid: false
+    errors: [artifact.reference]
+    satisfiedProfile: viewable
+    rule: "A model block names its adapter in spec.model.adapterRef, a local RepresentationAdapterProfile."
+  consumer-system-interface-ref:
+    valid: false
+    errors: [artifact.reference]
+    satisfiedProfile: viewable
+    rule: "spec.system.interfaceRefs name listed local assets."
+  consumer-agent-capability-ref:
+    valid: false
+    errors: [artifact.reference]
+    satisfiedProfile: viewable
+    rule: "spec.agent.toolScope.capabilityRefs name listed local assets."
+  knowledge-ontology-not-dependency:
+    valid: false
+    errors: [knowledge.reference]
+    satisfiedProfile: viewable
+    rule: "A KnowledgeAsset's conformsTo.ontology is also listed in spec.dependencies (spec section 19)."
+  knowledge-content-path-and-ref:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: viewable
+    rule: "spec.content declares exactly one of path or ref."
+  knowledge-content-path-missing:
+    valid: false
+    errors: [knowledge.reference]
+    satisfiedProfile: viewable
+    rule: "spec.content.path is a file in the package."
+  knowledge-content-ref-extension-undeclared:
+    valid: false
+    errors: [extension.undeclared]
+    satisfiedProfile: viewable
+    rule: "An extension provider in spec.content.ref uses an extension declared with 'as'."
+  knowledge-content-ref-provider-missing:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: viewable
+    rule: "A bound spec.content.ref declares provider (spec section 5.1)."
+  extraction-query-language-missing:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: viewable
+    rule: "A KnowledgeExtractionProfile declares spec.query.language (spec section 19.2)."
+  extraction-observations-empty:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: viewable
+    rule: "spec.observations is a non-empty list."
+  extraction-observation-malformed:
+    valid: false
+    errors: [knowledge.field]
+    satisfiedProfile: viewable
+    rule: "Each observation template has type, a non-empty id column list, and a values mapping."
 resolutionCases:
   dependency-reference-malformed:
     valid: false

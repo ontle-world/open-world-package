@@ -6,6 +6,12 @@
    ],
    "warnings": []
   },
+  "actor-assignment-bad-timestamp": {
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
+  },
   "actor-assignment-both-refs": {
    "errors": [
     "actor.field"
@@ -26,6 +32,12 @@
    "errors": [],
    "warnings": []
   },
+  "actor-type-missing": {
+   "errors": [
+    "actor.field"
+   ],
+   "warnings": []
+  },
   "actor-type-unknown": {
    "errors": [
     "actor.field"
@@ -34,6 +46,18 @@
   },
   "artifact-contract-full": {
    "errors": [],
+   "warnings": []
+  },
+  "artifact-contract-schema-ref-missing": {
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
+  },
+  "artifact-contract-type-missing": {
+   "errors": [
+    "artifact.field"
+   ],
    "warnings": []
   },
   "artifact-operation-unknown": {
@@ -47,6 +71,20 @@
     "artifact.field"
    ],
    "warnings": []
+  },
+  "artifact-template-contract-ref-missing": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.reference"
+   ]
+  },
+  "artifact-template-unknown-field": {
+   "errors": [],
+   "warnings": [
+    "asset.kind-experimental",
+    "experimental.field"
+   ]
   },
   "asset-api-version-mismatch": {
    "errors": [
@@ -429,7 +467,31 @@
    ],
    "warnings": []
   },
+  "consumer-actor-kind-missing": {
+   "errors": [
+    "artifact.field"
+   ],
+   "warnings": []
+  },
   "consumer-actor-ref": {
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
+  },
+  "consumer-agent-capability-ref": {
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
+  },
+  "consumer-model-adapter-ref": {
+   "errors": [
+    "artifact.reference"
+   ],
+   "warnings": []
+  },
+  "consumer-system-interface-ref": {
    "errors": [
     "artifact.reference"
    ],
@@ -480,6 +542,18 @@
   "eval-supersedes-range": {
    "errors": [
     "eval.supersedes"
+   ],
+   "warnings": []
+  },
+  "evaluation-assessment-kind-extension-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "evaluation-assessment-kind-not-string": {
+   "errors": [
+    "evaluation.assessment-kind"
    ],
    "warnings": []
   },
@@ -713,15 +787,63 @@
     "knowledge.graph-ontology"
    ]
   },
+  "extraction-observation-malformed": {
+   "errors": [
+    "knowledge.field"
+   ],
+   "warnings": []
+  },
+  "extraction-observations-empty": {
+   "errors": [
+    "knowledge.field"
+   ],
+   "warnings": []
+  },
   "extraction-profile": {
    "errors": [],
    "warnings": [
     "knowledge.graph-ontology"
    ]
   },
+  "extraction-query-language-missing": {
+   "errors": [
+    "knowledge.field"
+   ],
+   "warnings": []
+  },
   "identity-with-slash": {
    "errors": [
     "manifest.identity"
+   ],
+   "warnings": []
+  },
+  "knowledge-content-path-and-ref": {
+   "errors": [
+    "knowledge.field"
+   ],
+   "warnings": []
+  },
+  "knowledge-content-path-missing": {
+   "errors": [
+    "knowledge.reference"
+   ],
+   "warnings": []
+  },
+  "knowledge-content-ref-extension-undeclared": {
+   "errors": [
+    "extension.undeclared"
+   ],
+   "warnings": []
+  },
+  "knowledge-content-ref-provider-missing": {
+   "errors": [
+    "knowledge.field"
+   ],
+   "warnings": []
+  },
+  "knowledge-ontology-not-dependency": {
+   "errors": [
+    "knowledge.reference"
    ],
    "warnings": []
   },
@@ -1297,6 +1419,54 @@
    ],
    "warnings": []
   },
+  "work-pattern-graph-event-trigger": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-graph-event-undeclared": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-graph-guard-undeclared": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-graph-loop-node": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-graph-loop-until": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-input-contract-missing": {
+   "errors": [
+    "work.reference"
+   ],
+   "warnings": []
+  },
+  "work-pattern-kind-missing": {
+   "errors": [
+    "work.field"
+   ],
+   "warnings": []
+  },
+  "work-pattern-kind-not-string": {
+   "errors": [
+    "work.field"
+   ],
+   "warnings": []
+  },
   "work-pattern-kind-unknown": {
    "errors": [],
    "warnings": [
@@ -1314,6 +1484,12 @@
     "work.field"
    ],
    "warnings": []
+  },
+  "work-pattern-node-pattern-kind-unknown": {
+   "errors": [],
+   "warnings": [
+    "value.unknown"
+   ]
   },
   "work-pattern-unknown-field": {
    "errors": [

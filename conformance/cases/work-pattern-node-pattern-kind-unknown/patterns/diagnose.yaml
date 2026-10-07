@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  pattern: {kind: diagnose}
+  graph:
+    nodes:
+    - {id: gather, patternKind: forecast_weather}

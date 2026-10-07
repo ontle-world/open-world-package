@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeAsset
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  roles: [procedure]
+  representation: documents
+  conformsTo: {ontology: conformance/quality-ontology@^0.1.0}
+  content: {path: knowledge/playbook.md}

@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  source: knowledge/kg.yaml
+  query: {language: sparql, text: 'SELECT ?equipment ?part WHERE { ?equipment <https://example.org/plant#hasPart> ?part }'}
+  observations:
+  - {type: KG.equipment_part, id: [], values: {part: part}}

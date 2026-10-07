@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: WorkPatternProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  pattern: {kind: diagnose, family: analyze_reason}
+  graph:
+    nodes:
+    - {id: gather, family: observe_knowledge}
+    - {id: test, family: evaluate_recover}
+    transitions:
+    - {from: gather, to: test, guard: rejected}
+    guards: [{id: supported}]
+    events: [{id: new_evidence, triggers: [gather]}]
+    loops: [{nodes: [gather, test], maxIterations: 3, until: supported}]

@@ -1,0 +1,9 @@
+apiVersion: openworld/v1alpha1
+kind: ConsumerRepresentationProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  actor: {kind: system}
+  worldViewRef: views/task.yaml
+  system: {interfaceRefs: [interfaces/missing.yaml]}

@@ -1,0 +1,12 @@
+apiVersion: openworld/v1alpha1
+kind: EvaluationProfile
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  assessmentKind: 'acme:peer_review'
+  subject: {kind: artifact, ref: artifacts/report.yaml}
+  objective: report_supports_capa_decision
+  criteria:
+  - {metric: evidence_coverage, rubric: share of claims with linked evidence, threshold: 0.9}
+  metrics: [evidence_coverage]

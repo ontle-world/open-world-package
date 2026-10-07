@@ -58,6 +58,7 @@ Shared data lives once, outside both: rule ids in `spec/rule-ids.yaml`, the voca
 | Closed lists and tables (profiles, providers, operators, formats, report constants) | `tests/test_implementation_constants.py` |
 | PackageReport | `scripts/report_parity.py` |
 | Browser build | `npm run browser`: every validation case through the bundle |
+| Behavior at scale | `tests/test_scale.py` on `scripts/make_scale_fixture.py`'s synthetic plant: EWS against independently computed values, TypeScript against Python, a time budget |
 
 ## Pull requests
 

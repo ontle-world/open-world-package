@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Tests at scale: `scripts/make_scale_fixture.py` generates a synthetic plant (52 classes and 6 enum types with 64 properties; about 1,060 individuals and 3,600 triples; about 1,900 observations of 120 machines and 200 lots), deterministic for a seed. `tests/test_scale.py` checks that every package validates with resolution and no warnings; that both State Compilers give exactly the values the generator computes from its own observations; that the TypeScript implementation gives the same verdicts and an equal EWS; that `kg check`, the binding checks, and `ews check --source` stay quiet on it and find violations put in on purpose; that it packs, indexes, and resolves through the index; and that all of it stays within a time budget.
+- 29 conformance cases for rule branches no test reached (work-pattern graph references, knowledge content, extraction profiles, consumer references, timestamps, and more), found with a coverage run. Both implementations agree on every one.
+
 - Upkeep: `golden_smoke.sh` also runs `inspect --report`, `observations csv`, `ews check --observations --source`, `ontle mcp`, and `kg check --bindings`. CI runs pyflakes on the Python code, and the TypeScript build rejects unused locals and parameters; the few they found are fixed (an undefined `Any` annotation, unused imports, a shadowed loop variable). `00_INDEX.md` lists the site, the interop notes, the demos, and the newer files, and the Quickstart points at the Playground.
 
 - Keeping the two implementations in step:

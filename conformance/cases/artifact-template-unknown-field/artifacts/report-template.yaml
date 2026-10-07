@@ -1,0 +1,10 @@
+apiVersion: openworld/v1alpha1
+kind: ArtifactTemplate
+metadata:
+  name: x
+  version: 0.1.0
+spec:
+  artifactContractRef: artifacts/report.yaml
+  format: markdown
+  engine: jinja
+  content: {path: artifacts/report-template.md}

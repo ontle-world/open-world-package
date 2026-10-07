@@ -53,7 +53,8 @@ PROPERTIES = {
     "inArea": ("Line", "Area"), "inSite": ("Area", "Site"), "inLine": ("Cell", "Line"), "locatedIn": ("Equipment", "Line"),
     "hasComponent": ("Equipment", "Component"), "operatingState": ("Equipment", "EquipmentState"),
     "alarmCount24h": ("Equipment", "xsd:integer"), "criticalAlarmCount24h": ("Equipment", "xsd:integer"),
-    "maxTemperature": ("Equipment", "xsd:decimal"), "meanVibration": ("Equipment", "xsd:decimal"), "riskLevel": ("Equipment", "xsd:string"),
+    "maxTemperature": ("Equipment", "xsd:decimal"), "meanVibration": ("Equipment", "xsd:decimal"), "riskLevel": ("Equipment", "xsd:string"), "lastMaintenance": ("Equipment", "xsd:dateTime"),
+    "temperatureBand": ("Equipment", "xsd:string"), "hotReadingCount": ("Equipment", "xsd:integer"),
     "ratedPower": ("Motor", "xsd:decimal"), "measures": ("Sensor", "xsd:string"), "tonnage": ("Press", "xsd:integer"),
     "payload": ("Robot", "xsd:decimal"), "maxTemp": ("Oven", "xsd:decimal"), "spindleSpeed": ("Spindle", "xsd:integer"),
     "producedOn": ("Lot", "Equipment"), "forOrder": ("Lot", "WorkOrder"), "consumes": ("Lot", "RawMaterial"),
@@ -177,43 +178,75 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
     obs: list[dict[str, Any]] = []
     expected: dict[str, dict[str, Any]] = {f: {} for f in (
         "equipment.state", "equipment.alarms_24h", "equipment.critical_alarms_24h", "equipment.temp_max_6h",
-        "equipment.vibration_mean_6h", "equipment.risk", "lot.status", "lot.inspections", "lot.failed_inspections", "lot.quality_risk")}
+        "equipment.vibration_mean_6h", "equipment.risk", "equipment.temp_band", "equipment.t1_hot_readings_6h", "lot.status", "lot.inspections", "lot.failed_inspections", "lot.quality_risk")}
 
-    def add(otype: str, subject: str, minutes: int, values: dict[str, Any], units: dict[str, str] | None = None) -> None:
+    unresolved: dict[str, dict[str, Any]] = {"equipment.state": {}}
+    provenance: dict[str, dict[str, Any]] = {"equipment.alarms_24h": {}, "equipment.critical_alarms_24h": {}, "lot.failed_inspections": {}}
+
+    def add(otype: str, subject: str, minutes: int, values: dict[str, Any], units: dict[str, str] | None = None,
+            estimated_by: str | None = None) -> None:
         o = {"id": f"{otype.lower()}-{len(obs) + 1:05d}", "type": otype, "subject": subject, "observedAt": ts(as_of, minutes), "values": values}
         if units:
             o["units"] = units
+        if estimated_by:
+            o["estimatedBy"] = estimated_by
         obs.append(o)
 
-    for eid in eq_ids:
-        times = sorted(rng.sample(range(5, 2800), 2), reverse=True)  # distinct times: the newest state is unambiguous
+    for n, eid in enumerate(eq_ids, 1):
+        times = sorted(rng.sample(range(5, 2800), 2), reverse=True)
         states = [rng.choice(STATES) for _ in times]
         for minutes, state in zip(times, states):
             add("MES.equipment_state", eid, minutes, {"state": state})
-        expected["equipment.state"][eid] = states[-1]
-        alarms = crit = 0
-        for _ in range(rng.randint(0, 6)):
-            minutes = rng.randint(1, 2880)  # two days; the field counts the last 24 hours
-            sev = rng.choice(SEVERITIES)
-            add("OT.alarm", eid, minutes, {"code": f"A{rng.randint(100, 199)}", "severity": sev})
-            if minutes < 1440:
-                alarms += 1
-                crit += sev in ("high", "critical")
-        expected["equipment.alarms_24h"][eid] = alarms
-        expected["equipment.critical_alarms_24h"][eid] = crit
-        expected["equipment.risk"][eid] = "high" if crit >= 3 else "elevated" if crit >= 1 else "normal"
-        temps, vibs = [], []
+        if n % 10 == 0:  # a tie: two sources report different states at the same newest time -> unresolved (spec 12.2 rule 4)
+            other = next(s for s in STATES if s != states[-1])
+            add("MES.equipment_state", eid, times[-1], {"state": other})
+            unresolved["equipment.state"][eid] = [states[-1], other]  # candidate order: observedAt, then id
+        else:
+            expected["equipment.state"][eid] = states[-1]
+        # alarms: (minutes before asOf, severity, an estimate?); the field counts observations in (asOf - 24h, asOf]
+        alarms = [(rng.randint(1, 2880), rng.choice(SEVERITIES), False) for _ in range(rng.randint(0, 6))]
+        if n % 15 == 0:
+            alarms.append((-30, "critical", False))  # after asOf: not a candidate
+        if n % 20 == 0:
+            alarms += [(1440, "critical", False), (0, "high", False)]  # exactly at the window start (out) and at asOf (in)
+        if n % 12 == 0:
+            alarms.append((100, "critical", True))  # an estimate: never a candidate of an aggregate (spec 12.4)
+        ids, crit_ids = [], []
+        for minutes, sev, estimate in alarms:
+            add("OT.alarm", eid, minutes, {"code": f"A{rng.randint(100, 199)}", "severity": sev},
+                estimated_by="acme/alarm-predictor" if estimate else None)
+            if 0 <= minutes < 1440 and not estimate:
+                ids.append(obs[-1]["id"])
+                if sev in ("high", "critical"):
+                    crit_ids.append(obs[-1]["id"])
+        if ids:
+            expected["equipment.alarms_24h"][eid] = len(ids)
+            provenance["equipment.alarms_24h"][eid] = sorted(ids)
+        if crit_ids:
+            crit = len(crit_ids)
+            expected["equipment.critical_alarms_24h"][eid] = crit
+            provenance["equipment.critical_alarms_24h"][eid] = sorted(crit_ids)
+            expected["equipment.risk"][eid] = "high" if crit >= 3 else "elevated"
+        temps, vibs, hot_ids = [], [], []
         for _ in range(rng.randint(1, 4)):
             minutes = rng.randint(1, 600)
             t, v = rng.randint(20, 120), rng.randint(1, 40)
-            add("OT.temperature", eid, minutes, {"celsius": t}, {"celsius": "Cel"})
+            sensor = rng.choice(["T1", "T2", None])  # some readings name no sensor: a `where` on sensor must leave them out
+            add("OT.temperature", eid, minutes, {"celsius": t, **({"sensor": sensor} if sensor else {})}, {"celsius": "Cel"})
+            # hot readings of sensor T1: both keys must match, and celsius in [90, 110)
+            if minutes < 360 and sensor == "T1" and 90 <= t < 110:
+                hot_ids.append(obs[-1]["id"])
             add("OT.vibration", eid, minutes, {"mm_s": v}, {"mm_s": "mm/s"})
             if minutes < 360:
                 temps.append((minutes, t))
                 vibs.append((minutes, v))
         if temps:
-            expected["equipment.temp_max_6h"][eid] = max(t for _, t in temps)
+            hottest = max(t for _, t in temps)
+            expected["equipment.temp_max_6h"][eid] = hottest
             expected["equipment.vibration_mean_6h"][eid] = sum(v for _, v in vibs) / len(vibs)
+            expected["equipment.temp_band"][eid] = "hot" if hottest >= 100 else "warm" if hottest >= 80 else "normal"  # otherwise
+        if hot_ids:
+            expected["equipment.t1_hot_readings_6h"][eid] = len(hot_ids)
     for lid in lot_ids:
         times = sorted(rng.sample(range(5, 4000), 2), reverse=True)
         statuses = [rng.choice(LOT_STATUSES) for _ in times]
@@ -221,28 +254,19 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
             add("MES.lot", lid, minutes, {"status": status})
         expected["lot.status"][lid] = statuses[-1]
         results = [rng.choice(RESULTS) for _ in range(rng.randint(0, 3))]
+        failed_ids = []
         for r in results:
             add("QMS.inspection", lid, rng.randint(1, 4000), {"result": r, "station": f"equipment-{rng.choice(eq_ids)}"})
-        failed = results.count("fail")
-        expected["lot.inspections"][lid] = len(results)
-        expected["lot.failed_inspections"][lid] = failed
-        expected["lot.quality_risk"][lid] = "hold" if failed >= 2 else "watch" if failed == 1 else "release"
-    # A per-subject aggregate has a value only for subjects with at least one candidate (spec 12.3, 12.4), and `where`
-    # limits the candidates: drop the zeros the compiler leaves out. A classification is missing where its input is.
-    def has(otype: str, subject: str, since: str | None = None, **match: Any) -> bool:
-        return any(o["type"] == otype and o["subject"] == subject and (since is None or o["observedAt"] > since)
-                   and all(o["values"].get(k) in v for k, v in match.items()) for o in obs)
-    day = ts(as_of, 1440)
-    keep = {
-        "equipment.alarms_24h": lambda k: has("OT.alarm", k, day),
-        "equipment.critical_alarms_24h": lambda k: has("OT.alarm", k, day, severity=("high", "critical")),
-        "equipment.risk": lambda k: has("OT.alarm", k, day, severity=("high", "critical")),
-        "lot.inspections": lambda k: has("QMS.inspection", k),
-        "lot.failed_inspections": lambda k: has("QMS.inspection", k, result=("fail",)),
-        "lot.quality_risk": lambda k: has("QMS.inspection", k, result=("fail",)),
-    }
-    for f, present in keep.items():
-        expected[f] = {k: v for k, v in expected[f].items() if present(k)}
+            if r == "fail":
+                failed_ids.append(obs[-1]["id"])
+        if results:
+            expected["lot.inspections"][lid] = len(results)
+        if failed_ids:  # a lot with inspections but no failure has no candidate, so no value (spec 12.3)
+            expected["lot.failed_inspections"][lid] = len(failed_ids)
+            provenance["lot.failed_inspections"][lid] = sorted(failed_ids)
+            expected["lot.quality_risk"][lid] = "hold" if len(failed_ids) >= 2 else "watch"
+    # A per-subject field has a value only for subjects with at least one candidate (spec 12.3), and `where` limits the
+    # candidates: the values above are recorded only for such subjects, and a classification is missing where its input is.
 
     # ---- the World -----------------------------------------------------------------------------------------
     names = ["equipment", "lot", "line", "alarm", "inspection", "claim", "capa", "work_order", "raw_material", "operator"]
@@ -272,18 +296,26 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
                                   **({"units": units} if units else {})},
                  "bindings": bindings, "traceRequired": True}})
     eq_fields = ["equipment.state", "equipment.alarms_24h", "equipment.critical_alarms_24h", "equipment.temp_max_6h",
-                 "equipment.vibration_mean_6h", "equipment.risk"]
+                 "equipment.vibration_mean_6h", "equipment.risk", "equipment.last_maintenance", "equipment.temp_band",
+                 "equipment.t1_hot_readings_6h"]
     write(world / "state" / "equipment-health.yaml", compiler("equipment-health", "views/equipment-health.yaml", eq_fields, {
         "equipment.state": {"from": "MES.equipment_state", "value": "state", "select": "latest"},
+        "equipment.last_maintenance": {"from": "CMMS.maintenance", "value": "completed", "select": "latest"},  # no such observations
         "equipment.alarms_24h": {"aggregate": {"from": "OT.alarm", "value": "code", "function": "count", "window": "PT24H"}},
         "equipment.critical_alarms_24h": {"aggregate": {"from": "OT.alarm", "value": "code", "function": "count", "window": "PT24H",
                                                         "where": {"severity": {"in": ["high", "critical"]}}}},
         "equipment.temp_max_6h": {"aggregate": {"from": "OT.temperature", "value": "celsius", "function": "max", "window": "PT6H"}},
         "equipment.vibration_mean_6h": {"aggregate": {"from": "OT.vibration", "value": "mm_s", "function": "mean", "window": "PT6H"}},
+        "equipment.t1_hot_readings_6h": {"aggregate": {"from": "OT.temperature", "value": "celsius", "function": "count", "window": "PT6H",
+                                                       "where": {"celsius": {"gte": 90, "lt": 110}, "sensor": {"eq": "T1"}}}},
+        "equipment.temp_band": {"classify": {"input": "equipment.temp_max_6h", "criterion": {
+            "id": "temperature-band", "version": "1.0.0",
+            "rules": [{"when": {"gte": 100}, "label": "hot"}, {"when": {"gte": 80}, "label": "warm"}], "otherwise": "normal"}}},
         "equipment.risk": {"classify": {"input": "equipment.critical_alarms_24h", "criterion": {
             "id": "alarm-escalation", "version": "1.0.0",
             "rules": [{"when": {"gte": 3}, "label": "high"}, {"when": {"gte": 1}, "label": "elevated"}], "otherwise": "normal"}}},
     }, {"equipment.alarms_24h": "{alarm}", "equipment.critical_alarms_24h": "{alarm}", "equipment.temp_max_6h": "Cel",
+        "equipment.t1_hot_readings_6h": "{reading}",
         "equipment.vibration_mean_6h": "mm/s"}))
     lot_fields = ["lot.status", "lot.inspections", "lot.failed_inspections", "lot.quality_risk"]
     write(world / "state" / "lot-quality.yaml", compiler("lot-quality", "views/lot-quality.yaml", lot_fields, {
@@ -308,6 +340,9 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
                 "equipment.temp_max_6h": {"class": "p:Equipment", "path": ["p:maxTemperature"]},
                 "equipment.vibration_mean_6h": {"class": "p:Equipment", "path": ["p:meanVibration"]},
                 "equipment.risk": {"class": "p:Equipment", "path": ["p:riskLevel"]},
+                "equipment.last_maintenance": {"class": "p:Equipment", "path": ["p:lastMaintenance"]},
+                "equipment.temp_band": {"class": "p:Equipment", "path": ["p:temperatureBand"]},
+                "equipment.t1_hot_readings_6h": {"class": "p:Equipment", "path": ["p:hotReadingCount"]},
                 "lot.status": {"class": "p:Lot", "path": ["p:lotStatus"]},
                 "lot.inspections": {"class": "p:Lot", "path": ["p:inspectionCount"]},
                 "lot.failed_inspections": {"class": "p:Lot", "path": ["p:failedInspectionCount"]},
@@ -349,7 +384,8 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
     return {
         "classes": len(CLASSES), "enums": len(ENUMS), "properties": len(PROPERTIES), "individuals": len(individuals),
         "triples": sum(t.count(" .") for t in triples), "observations": len(obs), "equipment": eq_ids, "lots": lot_ids,
-        "asOf": AS_OF, "expected": expected,
+        "asOf": AS_OF, "expected": expected, "unresolved": unresolved, "provenance": provenance,
+        "missing": {"state/equipment-health.yaml": ["equipment.last_maintenance"], "state/lot-quality.yaml": []},
     }
 
 

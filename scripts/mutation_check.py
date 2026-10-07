@@ -67,6 +67,9 @@ MUTANTS = [
     ("resolve: archive hash not checked", "core.py", 'if sha256_bytes(data) != entry["sha256"]:', "if False:"),
     ("ontology: subclass parents dropped", "ontology.py", 'model["parents"].setdefault(cls, set()).update(p for p in (iri(x) for x in parents) if p)', 'model["parents"].setdefault(cls, set())'),
     ("extraction: no multi-latest warning", "extraction.py", 'warnings.append(f"compiler.multi-latest', 'print(f"compiler.multi-latest'),
+    # the community package list
+    ("registry: a wrong digest passes", "../../scripts/registry.py", "if actual != digest:", "if False:"),
+    ("registry: a reserved namespace passes", "../../scripts/registry.py", 'if identity.split("/", 1)[0] in RESERVED_NAMESPACES:', "if False:"),
     # the TypeScript implementation
     ("ts ews: a candidate after asOf counts", "ts:ews.ts", "o.observedAt <= asOf &&", "true &&"),
     ("ts ews: the window includes its start", "ts:ews.ts", "o.observedAt > since)", "o.observedAt >= since)"),

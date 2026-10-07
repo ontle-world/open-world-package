@@ -109,6 +109,7 @@ console.log(JSON.stringify({{ valid: r.valid, resolved: r.resolved, unresolved: 
                 run = subprocess.run(["node", "--input-type=module", "-e", script], capture_output=True, text=True, timeout=120)
             finally:
                 httpd.shutdown()
+                httpd.server_close()
             self.assertEqual(run.returncode, 0, run.stderr)
             result = json.loads(run.stdout)
             self.assertEqual(result["errors"], [])

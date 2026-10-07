@@ -60,7 +60,7 @@ Shared data lives once, outside both: rule ids in `spec/rule-ids.yaml`, the voca
 | Browser build | `npm run browser`: every validation case through the bundle |
 | Behavior at scale | `tests/test_scale.py` on `scripts/make_scale_fixture.py`'s synthetic plant: EWS against independently computed values, TypeScript against Python, a time budget |
 
-Whether the tests catch bugs at all: `python scripts/mutation_check.py` puts 30 small bugs, one at a time, into the Python reference (a window that includes its start, a `where` that needs one condition instead of all, a tie that is never unresolved, a check that never fires, ...) and runs the whole suite on each. Every one must make a test fail. It takes about 20 minutes, so it is not in CI; run it after changing tests or the rules they cover, and add a mutant for each new rule.
+Whether the tests catch bugs at all: `python scripts/mutation_check.py` puts 49 small bugs (32 in Python, 17 in TypeScript), one at a time, into the two implementations (a window that includes its start, a `where` that needs one condition instead of all, `gt` read as `gte`, a tie that is never unresolved, a check that never fires, ...) and runs the tests on each: the Python suite for a Python mutant; `npm test`, the scale comparison, and report parity for a TypeScript one. Every one must make a test fail. It takes about 45 minutes, so it is not in CI; run it after changing tests or the rules they cover (`python scripts/mutation_check.py ews` runs the mutants whose name matches), and add a mutant for each new rule.
 
 ## Pull requests
 

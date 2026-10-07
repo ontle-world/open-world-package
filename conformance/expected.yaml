@@ -1486,6 +1486,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"
     rule: Observation bindings ignore estimates and estimate bindings read only them; the derivation lists who estimated each subject's value.
+  condition-boundaries:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: A value equal to the bound fails gt and lt and passes gte, lte, and eq, in aggregate.where and in classification rules alike.
   aggregate-where:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"

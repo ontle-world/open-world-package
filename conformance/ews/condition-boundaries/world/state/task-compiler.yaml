@@ -1,0 +1,23 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.gt, m.gte, m.lt, m.lte, m.eq, m.count, m.band_gt, m.band_gte, m.band_lt, m.band_lte]
+    latent: [m.gt, m.gte, m.lt, m.lte, m.eq, m.count, m.band_gt, m.band_gte, m.band_lt, m.band_lte]
+  bindings:
+    # a value equal to the bound: gt and lt exclude it, gte and lte include it (readings 4, 5, 6; bound 5)
+    m.gt: {aggregate: {from: ot.reading, value: v, function: count, where: {v: {gt: 5}}}}
+    m.gte: {aggregate: {from: ot.reading, value: v, function: count, where: {v: {gte: 5}}}}
+    m.lt: {aggregate: {from: ot.reading, value: v, function: count, where: {v: {lt: 5}}}}
+    m.lte: {aggregate: {from: ot.reading, value: v, function: count, where: {v: {lte: 5}}}}
+    m.eq: {aggregate: {from: ot.reading, value: v, function: count, where: {v: {eq: 5}}}}
+    m.count: {aggregate: {from: ot.reading, value: v, function: count}}
+    # the same bounds in classification rules, on the count 3
+    m.band_gt: {classify: {input: m.count, criterion: {id: gt, rules: [{when: {gt: 3}, label: matched}], otherwise: not_matched}}}
+    m.band_gte: {classify: {input: m.count, criterion: {id: gte, rules: [{when: {gte: 3}, label: matched}], otherwise: not_matched}}}
+    m.band_lt: {classify: {input: m.count, criterion: {id: lt, rules: [{when: {lt: 3}, label: matched}], otherwise: not_matched}}}
+    m.band_lte: {classify: {input: m.count, criterion: {id: lte, rules: [{when: {lte: 3}, label: matched}], otherwise: not_matched}}}

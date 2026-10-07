@@ -13,6 +13,9 @@ from __future__ import annotations
 import html
 import json
 import re
+import shutil
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any, Callable
 
@@ -102,15 +105,19 @@ def _badge_html(badges: list[tuple[str, bool]]) -> str:
     return "".join(f'<span class="badge{" ok" if ok else ""}">{html.escape(text)}</span>' for text, ok in badges)
 
 
-def _card_html(text: str, repo_dir: str) -> str:
+def _card_html(text: str, base: str) -> str:
     """The card without its title (the page has it), with links relative to the package pointed at the repository."""
     text = re.sub(r"\A\s*# [^\n]*\n", "", text)
-    text = re.sub(r"\]\((?!https?:|#|mailto:)([^)\s]+)\)", lambda m: f"]({REPO}/blob/main/{repo_dir}/{m.group(1)})", text)
+    text = re.sub(r"\]\((?!https?:|#|mailto:)([^)\s]+)\)", lambda m: f"]({base}/{m.group(1)})", text)
     return markdown.markdown(text, extensions=["tables", "fenced_code"])
 
 
-def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Path] | None = None) -> list[dict[str, Any]]:
-    """Write catalog/ under the site root `out`; returns one entry per package (identity, report, page path)."""
+def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Path] | None = None,
+                  community: list[tuple[dict[str, Any], Path]] | None = None) -> list[dict[str, Any]]:
+    """Write catalog/ under the site root `out`; returns one entry per package (identity, report, page path).
+
+    `community` holds (entry of registry/packages.yaml, its checked archive): the archive is published as it is (its
+    digest is the listed one) and its page links to the entry's source."""
     catalog = out / "catalog"
     archives = catalog / "archives"
     archives.mkdir(parents=True)
@@ -124,6 +131,20 @@ def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Pat
         kinds, docs = local_assets(root, manifest.get("spec") or {})
         entries.append({"dir": root, "manifest": manifest, "report": report, "archive": archive, "assets": dict(sorted(kinds.items())),
                         "dependencies": _dependencies(manifest), "scale": scale(report, observation_count(root, kinds, docs))})
+    unpacked = tempfile.TemporaryDirectory()  # listed archives, unpacked for their cards and assets while the pages are built
+    for entry, source in community or []:
+        root = Path(unpacked.name) / str(len(entries))
+        with zipfile.ZipFile(source) as zf:
+            zf.extractall(root)
+        root, manifest = load_manifest(root)
+        md = manifest.get("metadata") or {}
+        archive = archives / f"{md['namespace']}-{md['name']}-{md['version']}.owp.zip"
+        shutil.copyfile(source, archive)
+        report = package_report(archive)
+        kinds, docs = local_assets(root, manifest.get("spec") or {})
+        entries.append({"dir": root, "manifest": manifest, "report": report, "archive": archive, "assets": dict(sorted(kinds.items())),
+                        "dependencies": _dependencies(manifest), "scale": scale(report, observation_count(root, kinds, docs)),
+                        "community": entry})
     index = build_index([e["archive"] for e in entries], base=catalog, terms=True)
     (catalog / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -133,7 +154,20 @@ def build_catalog(out: Path, page: Callable[[str, str], str], packages: list[Pat
     for e in entries:
         _package_page(e, catalog, by_identity, page)
     _index_page(entries, catalog, page)
+    unpacked.cleanup()
     return [{"identity": e["report"]["identity"], "report": e["report"], "page": e["page"], "scale": e["scale"]} for e in entries]
+
+
+def _origin(e: dict[str, Any]) -> tuple[str, bool]:
+    return ("community", True) if e.get("community") else ("example", False)
+
+
+def _origin_note(e: dict[str, Any]) -> str:
+    c = e.get("community")
+    if not c:
+        return ""
+    return (f'<h3>Listed</h3><p>A community package, listed by <a href="https://github.com/{html.escape(c["submittedBy"])}">'
+            f'{html.escape(c["submittedBy"])}</a> through <code>registry/packages.yaml</code>. Its archive lives at its source.</p>')
 
 
 def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any], page: Callable[[str, str], str]) -> None:
@@ -144,10 +178,15 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
     target.mkdir(parents=True)
     e["page"] = f"catalog/{ns}/{name}/{version}/"
     up = "../../../"  # from the package page to catalog/
-    repo_dir = e["dir"].relative_to(ROOT).as_posix()
+    if e.get("community"):  # a listed package: its own source, not this repository
+        source_url, source_label = e["community"]["source"], e["community"]["source"].removeprefix("https://")
+        card_base = source_url.rstrip("/")
+    else:
+        repo_dir = e["dir"].relative_to(ROOT).as_posix()
+        source_url, source_label, card_base = f"{REPO}/tree/main/{repo_dir}", repo_dir, f"{REPO}/blob/main/{repo_dir}"
     meta = report["metadata"]
     card_path = (report.get("card") or {}).get("path")
-    card = _card_html((e["dir"] / card_path).read_text(encoding="utf-8"), repo_dir) if card_path else "<p class=muted>No card.</p>"
+    card = _card_html((e["dir"] / card_path).read_text(encoding="utf-8"), card_base) if card_path else "<p class=muted>No card.</p>"
 
     def link(ref: str) -> str:
         other = by_identity.get(ref)
@@ -180,7 +219,7 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
            f"# in your owp.yaml:\nspec:\n  dependencies:\n  - {html.escape(identity)}")
     body = f"""<p class="kind"><a href="{up}">Catalog</a> · {html.escape(KIND_LABEL.get(report['packageKind'], str(report['packageKind'])))}</p>
 <h1>{html.escape(meta.get('title') or name)}</h1>
-<p><code>{html.escape(identity)}</code> {_badge_html([(e["scale"]["breadth"], False)] + _badges(report))}</p>
+<p><code>{html.escape(identity)}</code> {_badge_html([_origin(e), (e["scale"]["breadth"], False)] + _badges(report))}</p>
 <p class="muted">Size: {html.escape(e["scale"]["breadth"])} · {html.escape(e["scale"]["data"])}</p>
 <p>{html.escape(meta.get('description', ''))}</p>
 <div class="cols"><div>{card}
@@ -195,7 +234,7 @@ def _package_page(e: dict[str, Any], catalog: Path, by_identity: dict[str, Any],
 <h3>Depends on</h3><ul>{deps}</ul>
 <h3>Used by</h3><ul>{used}</ul>
 <h3>License</h3><p>{html.escape(meta.get('license', 'not declared'))}</p>
-<h3>Source</h3><p><a href="{REPO}/tree/main/{repo_dir}">{html.escape(repo_dir)}</a></p>
+<h3>Source</h3><p><a href="{html.escape(source_url)}">{html.escape(source_label)}</a></p>{_origin_note(e)}
 </aside></div>"""
     (target / "index.html").write_text(page(f"{identity} · OWP catalog", f"<style>{CATALOG_STYLE}</style>{body}"), encoding="utf-8")
     (target / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -213,16 +252,17 @@ def _index_page(entries: list[dict[str, Any]], catalog: Path, page: Callable[[st
             stats.append(", ".join(r["standardBindings"]["standards"]))
         if meta.get("license"):
             stats.append(meta["license"])
-        search = " ".join([r["identity"], meta.get("title", ""), meta.get("description", ""), *r["domains"], *r["standardBindings"]["standards"],
+        search = " ".join([_origin(e)[0], r["identity"], meta.get("title", ""), meta.get("description", ""), *r["domains"], *r["standardBindings"]["standards"],
                            KIND_LABEL.get(r["packageKind"], "")]).lower()
         cards.append(f"""<a class="card" href="{e['page'].removeprefix('catalog/')}" data-search="{html.escape(search)}">
 <span class="kind">{html.escape(KIND_LABEL.get(r['packageKind'], str(r['packageKind'])))}</span>
 <h3>{html.escape(meta.get('title') or r['identity'])}</h3><p><code>{html.escape(r['identity'])}</code></p>
-<p>{html.escape(meta.get('description', ''))}</p><p>{_badge_html([(e["scale"]["breadth"], False)] + _badges(r))}</p>
+<p>{html.escape(meta.get('description', ''))}</p><p>{_badge_html([_origin(e), (e["scale"]["breadth"], False)] + _badges(r))}</p>
 <p class="muted">{html.escape(' · '.join(stats))}</p></a>""")
     body = f"""<style>{CATALOG_STYLE}</style><h1>OWP package catalog</h1>
 <p>The example packages of this repository, each packed, verified, and checked by the reference CLI. Every number comes from
-<code>ontle inspect --report</code>. They are samples: their data is small and illustrative, not production scale. <em>Minimal</em>,
+<code>ontle inspect --report</code>. Packages marked <em>community</em> are listed by their authors through
+<a href="{REPO}/blob/main/registry/README.md">registry/packages.yaml</a> and checked the same way. The examples are samples: their data is small and illustrative, not production scale. <em>Minimal</em>,
 <em>focused</em>, and <em>full</em> say how much of OWP a package uses (up to 5, up to 19, and 20 or more assets); an ontology is
 sized by its terms. Two Worlds also bind real public artifacts (a robot dataset, a 3D scene, an OPC UA model). Resolve from this catalog with <code>--source index:{SITE}/catalog/index.json</code> (<a href="index.json">index.json</a>).</p>
 <input type="search" id="q" placeholder="Filter: kind, domain, standard, name" aria-label="Filter packages">

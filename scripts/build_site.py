@@ -84,6 +84,19 @@ Download: <a href="ns.ttl">Turtle</a>, <a href="ns.jsonld">JSON-LD</a>. Also: <a
     return page("OWP vocabulary", body)
 
 
+def community_packages() -> list:
+    """The listed community packages that pass scripts/registry.py's check; a failing one is left out with a warning, so one
+    broken link does not take the site down (CI runs the same check on every change to the list)."""
+    import tempfile
+    from registry import check, load_entries
+    entries, problems = load_entries()
+    cache = Path(tempfile.mkdtemp(prefix="owp-registry-"))
+    archives, more, _ = check(entries, cache) if not problems else ({}, [], [])
+    for p in problems + more:
+        print(f"registry: left out: {p}", file=sys.stderr)
+    return [(e, archives[e["identity"]]) for e in entries if e.get("identity") in archives]
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "_site").resolve()
     if out.exists():
@@ -154,7 +167,7 @@ if (q.get("ns") && q.get("name") && q.get("version")) {
 </script>"""), encoding="utf-8")
 
     # package catalog (registry step P0)
-    build_catalog(out, page)
+    build_catalog(out, page, community=community_packages())
     playground = build_playground(out, page)
     if not playground:
         print("playground skipped: run `npm run bundle` in implementations/typescript first", file=sys.stderr)

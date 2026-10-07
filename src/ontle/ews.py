@@ -144,6 +144,17 @@ def duration_seconds(value: Any) -> int | None:
     return ((d * 24 + h) * 60 + mi) * 60 + sec
 
 
+def subject_types(compiler: dict[str, Any]) -> list[str]:
+    """`outputSchema.subjects.from` (section 12.3): the observation types whose subjects make up the subject set."""
+    schema = compiler.get("outputSchema") if isinstance(compiler.get("outputSchema"), dict) else {}
+    subjects = schema.get("subjects") if isinstance(schema.get("subjects"), dict) else {}
+    listed = subjects.get("from")
+    return [t for t in listed if isinstance(t, str) and t] if isinstance(listed, list) else []
+
+
+ZERO_FUNCTIONS = ("count", "distinct_count", "sum")  # aggregates that are 0 for a known subject without candidates
+
+
 def output_lists(compiler: dict[str, Any]) -> tuple[list[str], list[str]]:
     """`outputSchema.perSubject` and `outputSchema.latent` (sections 12.3, 12.4); malformed lists count as empty."""
     schema = compiler.get("outputSchema") if isinstance(compiler.get("outputSchema"), dict) else {}
@@ -186,6 +197,14 @@ def binding_errors(compiler: dict[str, Any], rel: str, fields: list[str] | None)
             if name not in (fields or []):
                 errors.append(f"{rule}: StateCompilerProfile {rel} spec.outputSchema.{key} names {name!r}, which is not one of its EWS fields")
     per_subject, latent = output_lists(compiler)
+    if "subjects" in schema:
+        subjects = schema["subjects"]
+        listed = subjects.get("from") if isinstance(subjects, dict) else None
+        if not (isinstance(subjects, dict) and set(subjects) == {"from"} and isinstance(listed, list) and listed
+                and all(isinstance(t, str) and t for t in listed)):
+            errors.append(f"compiler.per-subject-field: StateCompilerProfile {rel} spec.outputSchema.subjects must be {{from: [observation types]}}, a non-empty list")
+        elif not per_subject:
+            errors.append(f"compiler.per-subject-field: StateCompilerProfile {rel} spec.outputSchema.subjects needs spec.outputSchema.perSubject")
     units = output_units(compiler)
     if "units" in schema:
         if units is None:
@@ -503,6 +522,11 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
             groups.setdefault(o["subject"], []).append(o)
         return groups
 
+    # the subject set (12.3): subjects of the declared types' observations up to asOf, estimates excluded
+    known_types = set(subject_types(compiler))
+    known_subjects = {o["subject"] for o in obs if o["type"] in known_types and o["observedAt"] <= as_of
+                      and "estimatedBy" not in o and isinstance(o.get("subject"), str)}
+
     # results[field] = {subject or None: (placement, value, ids)}; absent field = missing
     results: dict[str, dict[str | None, tuple[str, Any, list[str]]]] = {}
     for field in fields or []:
@@ -522,6 +546,9 @@ def compile_ews(world_path: str | Path, compiler_path: str, observations: dict[s
                 r = _aggregate(g, a["value"], a["function"])
                 if r is not None:
                     out[k] = r
+            if field in per_subject and a["function"] in ZERO_FUNCTIONS:  # known subjects without candidates (12.3)
+                for subject in sorted(known_subjects - set(out)):
+                    out[subject] = ("state", 0, [])
         else:
             continue
         if out:
@@ -693,10 +720,17 @@ def check_ews(world_path: str | Path, ews: Any) -> list[str]:
         if field not in present:
             errors.append(f"ews.provenance-orphan: provenance for {field!r} which has no value")
     if compiler.get("traceRequired") is True:
+        def may_be_empty(name: Any, seen: tuple = ()) -> bool:
+            """An aggregate over no observations (a count of 0) has an empty provenance list (section 12.4), and a
+            classification takes its input's provenance, so one of such an aggregate has an empty list too."""
+            record = derivation.get(name) if isinstance(name, str) else None
+            if not isinstance(record, dict) or name in seen:
+                return False
+            return record.get("kind") == "aggregate" or (record.get("kind") == "classify" and may_be_empty(record.get("input"), seen + (name,)))
+
         for field in present:
             ids = provenance.get(field)
-            # an aggregate over no observations (a count of 0) has an empty provenance list (section 12.4)
-            empty_ok = isinstance(derivation.get(field), dict) and derivation[field].get("kind") == "aggregate"
+            empty_ok = may_be_empty(field)
             traced = lambda v: isinstance(v, list) and (bool(v) or empty_ok)
             if field in per_subject and isinstance(ids, dict):
                 subjects = set(state[field] if isinstance(state.get(field), dict) else {}) | set(unresolved[field] if isinstance(unresolved.get(field), dict) else {})

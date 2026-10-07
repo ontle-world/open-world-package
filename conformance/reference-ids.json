@@ -435,6 +435,22 @@
    "errors": [],
    "warnings": []
   },
+  "compiler-subjects": {
+   "errors": [],
+   "warnings": []
+  },
+  "compiler-subjects-empty": {
+   "errors": [
+    "compiler.per-subject-field"
+   ],
+   "warnings": []
+  },
+  "compiler-subjects-without-per-subject": {
+   "errors": [
+    "compiler.per-subject-field"
+   ],
+   "warnings": []
+  },
   "compiler-unit-count-dimension": {
    "errors": [
     "compiler.unit"
@@ -1803,6 +1819,10 @@
    ],
    "warnings": []
   },
+  "per-subject-zero": {
+   "errors": [],
+   "warnings": []
+  },
   "schema-ref-fields": {
    "errors": [],
    "warnings": []
@@ -1831,6 +1851,10 @@
    "errors": [
     "ews.as-of"
    ],
+   "warnings": []
+  },
+  "classified-zero-traced": {
+   "errors": [],
    "warnings": []
   },
   "derivation-missing": {

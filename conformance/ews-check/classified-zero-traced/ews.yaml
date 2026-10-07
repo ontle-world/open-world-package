@@ -1,0 +1,124 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.alarms:
+      m1: 2
+      m2: 1
+      m6: 1
+      m3: 0
+    m.high:
+      m1: 1
+      m6: 1
+      m2: 0
+      m3: 0
+    m.kinds:
+      m1: 2
+      m2: 1
+      m6: 1
+      m3: 0
+    m.minutes:
+      m1: 8
+      m2: 2
+      m6: 7
+      m3: 0
+    m.mean_minutes:
+      m1: 4.0
+      m2: 2.0
+      m6: 7.0
+    m.risk:
+      m1: alert
+      m6: alert
+      m2: ok
+      m3: ok
+  unresolved: {}
+  missing: []
+  provenance:
+    m.alarms:
+      m1:
+      - a1
+      - a2
+      m2:
+      - a3
+      m6:
+      - a4
+      m3: []
+    m.high:
+      m1:
+      - a1
+      m6:
+      - a4
+      m2: []
+      m3: []
+    m.kinds:
+      m1:
+      - a1
+      - a2
+      m2:
+      - a3
+      m6:
+      - a4
+      m3: []
+    m.minutes:
+      m1:
+      - a1
+      - a2
+      m2:
+      - a3
+      m6:
+      - a4
+      m3: []
+    m.mean_minutes:
+      m1:
+      - a1
+      - a2
+      m2:
+      - a3
+      m6:
+      - a4
+    m.risk:
+      m1:
+      - a1
+      m6:
+      - a4
+      m2: []
+      m3: []
+  derivation:
+    m.alarms:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+    m.high:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: count
+      where:
+        severity:
+          eq: high
+    m.kinds:
+      kind: aggregate
+      from: ot.alarm
+      value: code
+      function: distinct_count
+    m.minutes:
+      kind: aggregate
+      from: ot.alarm
+      value: minutes
+      function: sum
+    m.mean_minutes:
+      kind: aggregate
+      from: ot.alarm
+      value: minutes
+      function: mean
+    m.risk:
+      kind: classify
+      input: m.high
+      criterion:
+        id: alarm-risk

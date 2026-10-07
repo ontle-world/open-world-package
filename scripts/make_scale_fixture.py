@@ -219,14 +219,13 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
                 ids.append(obs[-1]["id"])
                 if sev in ("high", "critical"):
                     crit_ids.append(obs[-1]["id"])
-        if ids:
-            expected["equipment.alarms_24h"][eid] = len(ids)
-            provenance["equipment.alarms_24h"][eid] = sorted(ids)
-        if crit_ids:
-            crit = len(crit_ids)
-            expected["equipment.critical_alarms_24h"][eid] = crit
-            provenance["equipment.critical_alarms_24h"][eid] = sorted(crit_ids)
-            expected["equipment.risk"][eid] = "high" if crit >= 3 else "elevated"
+        # every machine is in the subject set (outputSchema.subjects): counts are 0, not absent, without candidates
+        expected["equipment.alarms_24h"][eid] = len(ids)
+        provenance["equipment.alarms_24h"][eid] = sorted(ids)
+        crit = len(crit_ids)
+        expected["equipment.critical_alarms_24h"][eid] = crit
+        provenance["equipment.critical_alarms_24h"][eid] = sorted(crit_ids)
+        expected["equipment.risk"][eid] = "high" if crit >= 3 else "elevated" if crit >= 1 else "normal"
         temps, vibs, hot_ids = [], [], []
         for _ in range(rng.randint(1, 4)):
             minutes = rng.randint(1, 600)
@@ -245,8 +244,7 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
             expected["equipment.temp_max_6h"][eid] = hottest
             expected["equipment.vibration_mean_6h"][eid] = sum(v for _, v in vibs) / len(vibs)
             expected["equipment.temp_band"][eid] = "hot" if hottest >= 100 else "warm" if hottest >= 80 else "normal"  # otherwise
-        if hot_ids:
-            expected["equipment.t1_hot_readings_6h"][eid] = len(hot_ids)
+        expected["equipment.t1_hot_readings_6h"][eid] = len(hot_ids)
     for lid in lot_ids:
         times = sorted(rng.sample(range(5, 4000), 2), reverse=True)
         statuses = [rng.choice(LOT_STATUSES) for _ in times]
@@ -259,14 +257,12 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
             add("QMS.inspection", lid, rng.randint(1, 4000), {"result": r, "station": f"equipment-{rng.choice(eq_ids)}"})
             if r == "fail":
                 failed_ids.append(obs[-1]["id"])
-        if results:
-            expected["lot.inspections"][lid] = len(results)
-        if failed_ids:  # a lot with inspections but no failure has no candidate, so no value (spec 12.3)
-            expected["lot.failed_inspections"][lid] = len(failed_ids)
-            provenance["lot.failed_inspections"][lid] = sorted(failed_ids)
-            expected["lot.quality_risk"][lid] = "hold" if len(failed_ids) >= 2 else "watch"
-    # A per-subject field has a value only for subjects with at least one candidate (spec 12.3), and `where` limits the
-    # candidates: the values above are recorded only for such subjects, and a classification is missing where its input is.
+        expected["lot.inspections"][lid] = len(results)  # every lot is in the subject set: 0 without inspections
+        expected["lot.failed_inspections"][lid] = len(failed_ids)
+        provenance["lot.failed_inspections"][lid] = sorted(failed_ids)
+        expected["lot.quality_risk"][lid] = "hold" if len(failed_ids) >= 2 else "watch" if failed_ids else "release"
+    # Without candidates, a subject of the declared subject set gets 0 from count, distinct_count, and sum (spec 12.3);
+    # max and mean stay without a value (temp_max_6h, vibration_mean_6h, and temp_band above are set only with readings).
 
     # ---- the World -----------------------------------------------------------------------------------------
     names = ["equipment", "lot", "line", "alarm", "inspection", "claim", "capa", "work_order", "raw_material", "operator"]
@@ -288,12 +284,12 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
     write(world / "views" / "lot-quality.yaml", view("lot-quality", "release_lots", ["lot", "inspection", "claim", "capa"]))
     write(world / "views" / "plant-overview.yaml", view("plant-overview", "review_plant", None,
                                                         {"composes": ["views/equipment-health.yaml", "views/lot-quality.yaml"]}))
-    compiler = lambda name, view_path, fields, bindings, units=None: dump({
+    compiler = lambda name, view_path, fields, bindings, units=None, subjects=None: dump({
         "apiVersion": "openworld/v1alpha1", "kind": "StateCompilerProfile", "metadata": {"name": name},
         "spec": {"worldViewRef": view_path, "outputContract": "EffectiveWorldState",
                  "outputSchema": {"fields": fields, "perSubject": fields,
                                   "latent": [f for f in fields if "aggregate" in bindings[f] or "classify" in bindings[f]],
-                                  **({"units": units} if units else {})},
+                                  **({"units": units} if units else {}), **({"subjects": {"from": subjects}} if subjects else {})},
                  "bindings": bindings, "traceRequired": True}})
     eq_fields = ["equipment.state", "equipment.alarms_24h", "equipment.critical_alarms_24h", "equipment.temp_max_6h",
                  "equipment.vibration_mean_6h", "equipment.risk", "equipment.last_maintenance", "equipment.temp_band",
@@ -316,7 +312,7 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
             "rules": [{"when": {"gte": 3}, "label": "high"}, {"when": {"gte": 1}, "label": "elevated"}], "otherwise": "normal"}}},
     }, {"equipment.alarms_24h": "{alarm}", "equipment.critical_alarms_24h": "{alarm}", "equipment.temp_max_6h": "Cel",
         "equipment.t1_hot_readings_6h": "{reading}",
-        "equipment.vibration_mean_6h": "mm/s"}))
+        "equipment.vibration_mean_6h": "mm/s"}, ["MES.equipment_state"]))
     lot_fields = ["lot.status", "lot.inspections", "lot.failed_inspections", "lot.quality_risk"]
     write(world / "state" / "lot-quality.yaml", compiler("lot-quality", "views/lot-quality.yaml", lot_fields, {
         "lot.status": {"from": "MES.lot", "value": "status", "select": "latest"},
@@ -326,7 +322,7 @@ def make(out: Path, seed: int = 7, equipment: int = 120, lots: int = 200) -> dic
         "lot.quality_risk": {"classify": {"input": "lot.failed_inspections", "criterion": {
             "id": "lot-release", "version": "1.0.0",
             "rules": [{"when": {"gte": 2}, "label": "hold"}, {"when": {"gte": 1}, "label": "watch"}], "otherwise": "release"}}},
-    }))
+    }, None, ["MES.lot"]))
     write(world / "semantics" / "plant-terms.yaml", dump({
         "apiVersion": "openworld/v1alpha1", "kind": "SemanticBinding", "metadata": {"name": "plant-terms"},
         "spec": {

@@ -88,8 +88,11 @@ class ScaleTests(unittest.TestCase):
         self.assertTrue(any("estimatedBy" in o for o in obs))
         self.assertIn("normal", self.facts["expected"]["equipment.temp_band"].values())  # a classification's otherwise
         self.assertTrue(any(o["type"] == "OT.temperature" and "sensor" not in o["values"] for o in obs))  # no `where` key
-        alarmed = set(self.facts["expected"]["equipment.alarms_24h"])
-        self.assertTrue(alarmed - set(self.facts["expected"]["equipment.critical_alarms_24h"]))  # alarms, none critical
+        e = self.facts["expected"]
+        self.assertTrue(any(n > 0 and e["equipment.critical_alarms_24h"][k] == 0 for k, n in e["equipment.alarms_24h"].items()))  # alarms, none critical
+        self.assertIn(0, e["equipment.alarms_24h"].values())  # a machine of the subject set without alarms: 0, not absent
+        self.assertIn("normal", e["equipment.risk"].values())
+        self.assertEqual(len(e["equipment.risk"]), len(self.facts["equipment"]))  # every machine is classified
 
     def test_ews_equals_the_values_computed_from_the_observations(self):
         for compiler, prefix in COMPILERS.items():

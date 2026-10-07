@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { Issue } from "./context.js";
 import { get, isNonEmptyString, isObj, loadYamlFile, Obj, jsString } from "./util.js";
 import { API_VERSION } from "./vocab.js";
-import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields, outputUnits, unitProblems } from "./rules/world.js";
+import { bindingForm, bindingProblems, durationSeconds, outputListProblems, outputLists, outputSchemaFields, outputUnits, subjectTypes, unitProblems, ZERO_FUNCTIONS } from "./rules/world.js";
 import { localAssetKinds } from "./discovery.js";
 import { EFFECTIVE_WORLD_STATE, OBSERVATION_SET, structureProblems } from "./structure.js";
 
@@ -184,10 +184,16 @@ export function checkEws(ews: unknown, worldDir: string): EwsCheckResult {
   const present = new Set([...Object.keys(state), ...Object.keys(unresolved)]);
   for (const k of Object.keys(provenance)) if (!present.has(k)) e("ews.provenance-orphan", `provenance.${k} is not a field in state or unresolved`);
   if (comp.spec.traceRequired === true) {
+    // An aggregate over no observations (a count of 0) has an empty provenance list (spec 12.4), and a classification
+    // takes its input's provenance, so one of such an aggregate has an empty list too.
+    const mayBeEmpty = (name: unknown, seen: string[] = []): boolean => {
+      if (typeof name !== "string" || seen.includes(name) || !own(derivation, name) || !isObj(derivation[name])) return false;
+      const record = derivation[name] as Obj;
+      return record.kind === "aggregate" || (record.kind === "classify" && mayBeEmpty(record.input, [...seen, name]));
+    };
     for (const f of present) {
       const p = own(provenance, f) ? provenance[f] : undefined;
-      // An aggregate over no observations (a count of 0) has an empty provenance list (spec 12.4).
-      const emptyOk = own(derivation, f) && isObj(derivation[f]) && (derivation[f] as Obj).kind === "aggregate";
+      const emptyOk = mayBeEmpty(f);
       const traced = (ids: unknown) => Array.isArray(ids) && (ids.length > 0 || emptyOk);
       if (perSubject.includes(f) && isObj(p)) {
         const subjects = new Set([...Object.keys(own(state, f) && isObj(state[f]) ? (state[f] as Obj) : {}), ...Object.keys(own(unresolved, f) && isObj(unresolved[f]) ? (unresolved[f] as Obj) : {})]);
@@ -317,6 +323,10 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
   };
 
   // results.get(field) = subject (or null) -> result; an absent field is missing.
+  // The subject set (spec 12.3): subjects of the declared types' observations up to asOf, estimates excluded.
+  const knownTypes = new Set(subjectTypes(comp.spec));
+  const knownSubjects = new Set(observations.filter((o) => knownTypes.has(o.type) && o.observedAt <= asOf && !("estimatedBy" in o)
+    && typeof o.subject === "string").map((o) => o.subject as string));
   const results = new Map<string, Map<string | null, Result>>();
   try {
     for (const field of comp.fields ?? []) {
@@ -332,6 +342,9 @@ export function compileEws(worldDir: string, compilerPath: string, observationDo
         for (const [k, g] of grouped(field, candidates(field, a, false, since, ["sum", "mean", "min", "max"].includes(a.function as string), ["count", "distinct_count"].includes(a.function as string), a.where))) {
           const r = aggregate(g, a.value as string, a.function as string);
           if (r) out.set(k, r);
+        }
+        if (perSubject.includes(field) && ZERO_FUNCTIONS.includes(a.function as string)) { // known subjects without candidates (12.3)
+          for (const s of [...knownSubjects].sort()) if (!out.has(s)) out.set(s, { placement: "state", value: 0, ids: [] });
         }
       } else continue;
       if (out.size) results.set(field, out);

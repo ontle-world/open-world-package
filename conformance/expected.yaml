@@ -38,6 +38,20 @@ cases:
     errors: [compiler.binding]
     satisfiedProfile: viewable
     rule: Classification inputs do not form a cycle.
+  compiler-subjects:
+    valid: true
+    satisfiedProfile: model-ready
+    rule: "A State Compiler with per-subject fields may declare its subject set with outputSchema.subjects.from."
+  compiler-subjects-without-per-subject:
+    valid: false
+    errors: [compiler.per-subject-field]
+    satisfiedProfile: viewable
+    rule: "outputSchema.subjects needs outputSchema.perSubject."
+  compiler-subjects-empty:
+    valid: false
+    errors: [compiler.per-subject-field]
+    satisfiedProfile: viewable
+    rule: "outputSchema.subjects is {from: [observation types]}, a non-empty list."
   compiler-aggregate-where:
     valid: true
     satisfiedProfile: model-ready
@@ -1490,6 +1504,10 @@ ewsCases:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"
     rule: A value equal to the bound fails gt and lt and passes gte, lte, and eq, in aggregate.where and in classification rules alike.
+  per-subject-zero:
+    compiler: state/task-compiler.yaml
+    asOf: "2026-01-02T00:00:00Z"
+    rule: "With outputSchema.subjects, a subject of the set without candidates gets 0 from count, distinct_count, and sum (empty provenance), and nothing from mean; classifications apply to the 0. The set is the subjects of the declared types' observations up to asOf, estimates excluded; a subject outside it still gets its values."
   aggregate-where:
     compiler: state/task-compiler.yaml
     asOf: "2026-01-02T00:00:00Z"
@@ -1636,6 +1654,9 @@ ewsCases:
     errors: [schema.unknown-field]
     rule: "An observation key that is neither defined nor an extensions block makes the input invalid."
 ewsCheckCases:
+  classified-zero-traced:
+    valid: true
+    rule: "With traceRequired, a per-subject aggregate of 0 and a classification of it may have empty provenance."
   state-not-mapping:
     valid: false
     errors: [ews.shape]

@@ -1,0 +1,20 @@
+apiVersion: openworld/v1alpha1
+kind: StateCompilerProfile
+metadata:
+  name: task-compiler
+spec:
+  worldViewRef: views/task.yaml
+  outputContract: EffectiveWorldState
+  outputSchema:
+    fields: [m.alarms, m.high, m.kinds, m.minutes, m.mean_minutes, m.risk]
+    perSubject: [m.alarms, m.high, m.kinds, m.minutes, m.mean_minutes, m.risk]
+    latent: [m.alarms, m.high, m.kinds, m.minutes, m.mean_minutes, m.risk]
+    subjects: {from: [ot.machine]}
+  traceRequired: true
+  bindings:
+    m.alarms: {aggregate: {from: ot.alarm, value: code, function: count}}
+    m.high: {aggregate: {from: ot.alarm, value: code, function: count, where: {severity: {eq: high}}}}
+    m.kinds: {aggregate: {from: ot.alarm, value: code, function: distinct_count}}
+    m.minutes: {aggregate: {from: ot.alarm, value: minutes, function: sum}}
+    m.mean_minutes: {aggregate: {from: ot.alarm, value: minutes, function: mean}}
+    m.risk: {classify: {input: m.high, criterion: {id: alarm-risk, rules: [{when: {gte: 1}, label: alert}], otherwise: ok}}}

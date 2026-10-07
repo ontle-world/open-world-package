@@ -62,6 +62,53 @@ The generated project contains only the authoring surface. `.ontle/` is generato
 | Browse packages, then depend on one | [Package catalog](https://ontle-world.github.io/open-world-package/catalog/) | `ontle validate --source index:https://ontle-world.github.io/open-world-package/catalog/index.json` |
 | Look up a term | [docs/CONCEPTS.md](https://github.com/ontle-world/open-world-package/blob/main/docs/CONCEPTS.md), [docs/GLOSSARY.md](https://github.com/ontle-world/open-world-package/blob/main/docs/GLOSSARY.md) | |
 
+## Running from a clone
+
+The examples, demos, tests, and the TypeScript implementation run from a checkout of this repository. Run every command below from the repository root unless it says otherwise.
+
+```bash
+git clone https://github.com/ontle-world/open-world-package.git
+cd open-world-package
+python3 -m venv .venv && . .venv/bin/activate
+python -m pip install -e .            # the `ontle` CLI, editable; PyYAML is the only dependency
+# optional extras: '.[rdf]' RDF tooling, '.[demo]' LeRobot parquet, '.[llm]' the LLM World Model, '.[shacl]' SHACL tests
+```
+
+Validate and compile an example:
+
+```bash
+ontle validate --resolve --source examples examples/business/manufacturing-quality-world
+W=examples/business/manufacturing-quality-world
+ontle ews compile $W --compiler state/quality-incident-compiler.yaml \
+  --observations $W/examples/observations.yaml --as-of 2026-09-05T00:00:00Z
+```
+
+Run the end-to-end demos and the reference World Models (no network, CPU only):
+
+```bash
+python demos/business-ai/run.py           # observations -> EWS -> model stub -> evidence
+python demos/physical-ai/run.py           # add --check to compare with the committed files
+python examples/business/quality-scenario-world-model/models/run.py --baselines
+```
+
+Run the tests:
+
+```bash
+make test                                 # Python unit tests
+./scripts/golden_smoke.sh                 # unit tests, then every example and starter through the CLI
+```
+
+Run the TypeScript implementation (Node.js 24 or later):
+
+```bash
+cd implementations/typescript
+npm ci && npm run build
+npm test                                  # build, conformance suite, examples, demos, browser bundle
+node dist/cli.js ../../examples/business/manufacturing-quality-world
+```
+
+See `demos/README.md`, `conformance/README.md`, `implementations/typescript/README.md`, and `CONTRIBUTING.md` for details.
+
 ## Starter templates
 
 ```bash
@@ -96,7 +143,8 @@ ontle inspect . --graph --resolved-views
 ontle add extension acme/quality-extension@1.2.0   # declare a publisher extension in owp.yaml
 
 # knowledge graphs (needs the rdf extra)
-ontle kg check . --source ../ontologies      # does the graph (A-box) use only its ontology's (T-box) classes and properties?
+ontle kg check . --source ../ontologies      # does the graph (A-box) use only its ontology's (T-box) classes and properties,
+                                             # and meet its SHACL shapes (pip install 'ontle[rdf,shacl]')?
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
 ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
 
@@ -112,6 +160,7 @@ ontle catalog . --format dcat
 
 # ontology packages
 ontle ontology index        # write the term index (RDF entrypoints: pip install 'ontle[rdf]')
+ontle diff ../v0.1.0 .      # what changed since a version, and whether the SemVer increment is enough
 ontle export --format turtle
 ```
 

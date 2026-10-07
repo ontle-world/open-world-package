@@ -24,7 +24,7 @@ python -m pip install --pre ontle      # alpha releases need --pre
 ontle --version
 ```
 
-`ontle[rdf]` adds RDF tooling (ontology index for RDF entrypoints, `kg check`, SPARQL extraction). To work on ONTLE itself, install from a clone with `python -m pip install -e .`.
+`ontle[rdf]` adds RDF tooling (ontology index for RDF entrypoints, `kg check`, `diff`, SPARQL extraction); `ontle[rdf,shacl]` also runs an ontology's SHACL shapes in `kg check`. To work on ONTLE itself, install from a clone with `python -m pip install -e .`.
 
 ## 2. Create a World
 
@@ -116,6 +116,12 @@ ontle inspect dist/<artifact>.owp.zip --report   # the report of the archive, wi
 
 ```bash
 ontle init enterprise-core --template ontology --namespace example
+```
+
+Before publishing a new version, compare it with the last one. `ontle diff` lists the terms removed, added, or changed (types, superclasses, domains, ranges, enumeration values, labels) and says whether the version increment is enough: major for what can break data that fit the old version, minor for additions, patch for labels and definitions (while the major version is 0, one level less). It needs the rdf extra and exits 1 when the increment is too small, so it can run in CI:
+
+```bash
+ontle diff ../enterprise-core-0.1.0.owp.zip enterprise-core
 ```
 
 ## 7. Create a World Model package

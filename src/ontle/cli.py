@@ -252,23 +252,53 @@ def cmd_kg_extract(args):
 
 
 def cmd_kg_check(args):
-    from .kgcheck import check_bindings, check_knowledge_graphs
+    from .kgcheck import ADVICE, check_bindings, check_knowledge_graphs
     if args.bindings:
-        found = check_bindings(args.package, args.source)
+        notes: list[str] = []
+        found = check_bindings(args.package, args.source, notes)
         for w in found:
             print(f"WARN: {w}")
+        for n in dict.fromkeys(notes):
+            print(f"NOTE: {n}")
         print(f"{len(found)} binding warning{'' if len(found) == 1 else 's'}")
         return 0
     report = check_knowledge_graphs(args.package, args.source)
     for f in report.findings:
-        print(("WARN: " if f.code == "kg.untyped" else "ERROR: ") + f.line(), file=sys.stderr if f.code != "kg.untyped" else sys.stdout)
+        advice = f.code in ADVICE
+        print(("WARN: " if advice else "ERROR: ") + f.line(), file=sys.stdout if advice else sys.stderr)
     for rel in report.skipped:
         print(f"SKIP: {rel}: not a local RDF graph with spec.conformsTo.ontology")
+    for n in report.notes:
+        print(f"NOTE: {n}")
     if not report.checked and not report.findings:
         print("no knowledge graph to check")
     elif report.ok:
         print("OK: " + ", ".join(report.checked))
     return 0 if report.ok else 1
+
+
+def cmd_diff(args):
+    from .ontodiff import diff_ontologies
+    result = diff_ontologies(args.old, args.new)
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2, ensure_ascii=False))
+        return 0 if result.enough else 1
+    print(f"{result.old} -> {result.new}")
+    for c in result.changes:
+        print(f"{c.level}: {c.change}")
+    for n in result.notes:
+        print(f"NOTE: {n}")
+    need = result.required
+    if need is None:
+        print("no term changed")
+        return 0
+    zero = result.old.rsplit("@", 1)[1].startswith("0.")
+    print(f"changes call for: {need}" + (" (a " + {"major": "minor", "minor": "patch", "patch": "patch"}[need] + " increment while the major version is 0)" if zero else ""))
+    if result.enough:
+        print(f"OK: the {result.increment} increment is enough")
+        return 0
+    print(f"ERROR: the version increment ({result.increment or 'none'}) is not enough", file=sys.stderr)
+    return 1
 
 
 def cmd_interop_mcp(args):
@@ -490,12 +520,18 @@ def build_parser():
     y.add_argument("--results", help="JSON file of query result rows; skips running the query")
     y.set_defaults(func=cmd_kg_extract)
 
-    y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges (needs the rdf extra)")
+    y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges, and that it satisfies the ontology's SHACL shapes (needs the rdf extra; shapes need the shacl extra)")
     y.add_argument("package", nargs="?", default=".", help="package directory")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.add_argument("--bindings", action="store_true", help="instead: check the SemanticBinding's field paths and value maps against the "
                    "RDF T-box of the dependency ontologies, RDF schema entrypoints included (binding.path-domain, binding.value-range)")
     y.set_defaults(func=cmd_kg_check)
+
+    x = sp.add_parser("diff", help="compare two versions of an OntologyPackage and say which SemVer increment the changes call for (needs the rdf extra)")
+    x.add_argument("old", help="the earlier version: package directory or .owp.zip")
+    x.add_argument("new", help="the later version: package directory or .owp.zip")
+    x.add_argument("--json", action="store_true")
+    x.set_defaults(func=cmd_diff)
 
     x = sp.add_parser("interop", help="mappings to neighbouring standards (docs/interop/)")
     isp = x.add_subparsers(dest="interop_command", required=True)

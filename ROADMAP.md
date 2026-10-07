@@ -65,6 +65,15 @@ Done: `demos/physical-ai/` (one real LeKiwi episode, a hold-position stub, detac
 
 Namespace ownership, search, evidence aggregation, and certification scopes need a hosted service. It is a separate deployment that consumes this repository's spec and packages; it is not built here. Step P0, a static catalog of the example packages, with community packages listed through `registry/packages.yaml` (a reviewed list; a hosted upload server comes later), and step P3, a Playground that checks a package in the browser with the TypeScript implementation, are on the project site (`scripts/site_catalog.py`, `scripts/site_playground.py`). This repository supplies what a registry reads: the package report (`ontle inspect --report`, `schemas/package-report.schema.json`), the package index, the OCI profile, and the MCP tools (`ontle mcp`).
 
+## 7. Ontology tooling
+
+Tooling around OntologyPackages and knowledge graphs. None of it changes a package's verdict: validation still never parses RDF (spec section 3.1).
+
+1. ~~**SHACL in `ontle kg check`.**~~ Done: the `shapes` entrypoints of the ontologies in the closure run against the graph (the `shacl` extra); violations are `kg.shape`, warnings `kg.shape-warning` (spec section 19.1).
+2. ~~**`ontle diff`.**~~ Done: compares two versions of an OntologyPackage (directories or archives), grades each change major, minor, or patch, and exits 1 when the version increment is too small.
+3. ~~**Unread entrypoints.**~~ Done: `kg check` (and `kg check --bindings`) read only `owp-yaml` and the RDF entrypoints and used to skip an `owl-xml` or `linkml` schema without notice; they now name it. (`ontology index` already refused such a schema.)
+4. ~~**Public Python API.**~~ Done: `ontle.__all__` names the functions other tools may call.
+
 ## Out of scope for this repository
 
 - Evaluation execution, failure triage, evaluation generation, and promotion workflows (runtime and registry concerns; their outputs re-enter OWP as new versions and evidence).

@@ -1,0 +1,120 @@
+apiVersion: openworld/v1alpha1
+kind: EffectiveWorldState
+spec:
+  worldRef: conformance/ews-world@0.1.0
+  worldView: conformance/ews-world@0.1.0#views/task.yaml
+  stateCompiler: conformance/ews-world@0.1.0#state/task-compiler.yaml
+  context:
+    asOf: '2026-01-02T00:00:00Z'
+  state:
+    m.gt: 1
+    m.gte: 2
+    m.lt: 1
+    m.lte: 2
+    m.eq: 1
+    m.count: 3
+    m.band_gt: not_matched
+    m.band_gte: matched
+    m.band_lt: not_matched
+    m.band_lte: matched
+  unresolved: {}
+  missing: []
+  provenance:
+    m.gt:
+    - r3
+    m.gte:
+    - r2
+    - r3
+    m.lt:
+    - r1
+    m.lte:
+    - r1
+    - r2
+    m.eq:
+    - r2
+    m.count:
+    - r1
+    - r2
+    - r3
+    m.band_gt:
+    - r1
+    - r2
+    - r3
+    m.band_gte:
+    - r1
+    - r2
+    - r3
+    m.band_lt:
+    - r1
+    - r2
+    - r3
+    m.band_lte:
+    - r1
+    - r2
+    - r3
+  derivation:
+    m.gt:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+      where:
+        v:
+          gt: 5
+    m.gte:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+      where:
+        v:
+          gte: 5
+    m.lt:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+      where:
+        v:
+          lt: 5
+    m.lte:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+      where:
+        v:
+          lte: 5
+    m.eq:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+      where:
+        v:
+          eq: 5
+    m.count:
+      kind: aggregate
+      from: ot.reading
+      value: v
+      function: count
+    m.band_gt:
+      kind: classify
+      input: m.count
+      criterion:
+        id: gt
+    m.band_gte:
+      kind: classify
+      input: m.count
+      criterion:
+        id: gte
+    m.band_lt:
+      kind: classify
+      input: m.count
+      criterion:
+        id: lt
+    m.band_lte:
+      kind: classify
+      input: m.count
+      criterion:
+        id: lte

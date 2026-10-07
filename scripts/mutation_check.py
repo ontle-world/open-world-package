@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Do the tests catch bugs? Put one small bug at a time into the Python reference and run the tests; each bug the tests
+"""Do the tests catch bugs? Put one small bug at a time into an implementation and run the tests; each bug the tests
 miss ("survived") points at a gap in them. The source is restored after every run.
+
+A Python mutant (a file under src/ontle/) runs the Python suite. A TypeScript mutant (a path under
+implementations/typescript/src/) rebuilds it and runs `npm test` (conformance with exact ids, examples, browser bundle),
+the scale test's TypeScript comparison, and report parity; it needs node.
 
     python scripts/mutation_check.py            # all mutants
     python scripts/mutation_check.py ews        # mutants whose name contains "ews"
@@ -35,6 +39,8 @@ MUTANTS = [
     ("ews: latest picks the oldest", "ews.py", 'newest = cands[-1]["observedAt"]', 'newest = cands[0]["observedAt"]'),
     ("ews: a tie is never unresolved", "ews.py", 'if len(distinct) == 1 else ("unresolved", distinct, ids)', 'if True else None'),
     ("ews: provenance drops the last id", "ews.py", 'ids = sorted(o["id"] for o in tied)', 'ids = sorted(o["id"] for o in tied)[:-1] or sorted(o["id"] for o in tied)'),
+    ("ews: gt is gte", "ews.py", '"gt": v > x', '"gt": v >= x'),
+    ("ews: lt is lte", "ews.py", '"lt": v < x', '"lt": v <= x'),
     ("ews: classify ignores rule order", "ews.py", 'for rule in criterion.get("rules") or []:', 'for rule in reversed(criterion.get("rules") or []):'),
     ("ews: classify has no otherwise", "ews.py", 'return criterion.get("otherwise")', 'return None'),
     # semantic binding checks (spec 14)
@@ -57,30 +63,63 @@ MUTANTS = [
     ("resolve: archive hash not checked", "core.py", 'if sha256_bytes(data) != entry["sha256"]:', "if False:"),
     ("ontology: subclass parents dropped", "ontology.py", 'model["parents"].setdefault(cls, set()).update(p for p in (iri(x) for x in parents) if p)', 'model["parents"].setdefault(cls, set())'),
     ("extraction: no multi-latest warning", "extraction.py", 'warnings.append(f"compiler.multi-latest', 'print(f"compiler.multi-latest'),
+    # the TypeScript implementation
+    ("ts ews: a candidate after asOf counts", "ts:ews.ts", "o.observedAt <= asOf &&", "true &&"),
+    ("ts ews: the window includes its start", "ts:ews.ts", "o.observedAt > since)", "o.observedAt >= since)"),
+    ("ts ews: estimates are candidates", "ts:ews.ts", '&& ("estimatedBy" in o) === estimates', "&& true"),
+    ("ts ews: where needs one condition", "ts:ews.ts", "!isObj(w) || Object.entries(w).every(([k, cond])", "!isObj(w) || Object.entries(w).some(([k, cond])"),
+    ("ts ews: latest picks the oldest", "ts:ews.ts", "const newest = cands[cands.length - 1].observedAt;", "const newest = cands[0].observedAt;"),
+    ("ts ews: a tie is never unresolved", "ts:ews.ts", "return distinct.length === 1 ?", "return true ?"),
+    ("ts ews: count is off by one", "ts:ews.ts", 'if (fn === "count") return { placement: "state", value: values.length, ids };', 'if (fn === "count") return { placement: "state", value: values.length + 1, ids };'),
+    ("ts ews: mean divides by one more", "ts:ews.ts", "value: total / nums.length, ids", "value: total / (nums.length + 1), ids"),
+    ("ts ews: classify has no otherwise", "ts:ews.ts", "  return criterion.otherwise;", "  return undefined;"),
+    ("ts ews: gt is gte", "ts:ews.ts", 'return op === "gt" ? v > x :', 'return op === "gt" ? v >= x :'),
+    ("ts ews: lt is lte", "ts:ews.ts", 'op === "lt" ? v < x :', 'op === "lt" ? v <= x :'),
+    ("ts binding: parent classes do not count", "ts:rules/binding.ts", "todo.push(...[...(parents.get(c) ?? [])].sort());", "todo.push();"),
+    ("ts binding: path-domain never fires", "ts:rules/binding.ts", "if (owners.size > 0 && ![...owners].some((o) => up.has(o))) {", "if (false) {"),
+    ("ts binding: value-range never fires", "ts:rules/binding.ts", "const outside = Object.keys(values.map).filter((k) => !enumValues.has(k)).sort();", "const outside: string[] = [];"),
+    ("ts report: pinned counts every reference", "ts:report.ts", "const pinned = refs.filter(isPinned).length;", "const pinned = refs.length;"),
+    ("ts report: withBinding counts every field", "ts:report.ts", "if (has(bindings, f)) boundFields.add(f);", "boundFields.add(f);"),
+    ("ts views: specializes target not checked", "ts:rules/experimental.ts", "if (!isView(b)) {", "if (false) {"),
 ]
+
+
+TS = ROOT / "implementations" / "typescript"
 
 
 def run_tests() -> bool:
     return subprocess.run([sys.executable, "-m", "unittest", *TESTS], cwd=ROOT, capture_output=True).returncode == 0
 
 
+def run_ts_tests() -> bool:
+    steps = [(["npm", "test"], TS),
+             ([sys.executable, "-m", "unittest", "tests.test_scale.ScaleTests.test_typescript_gives_the_same_verdicts_and_ews"], ROOT),
+             ([sys.executable, "scripts/report_parity.py"], ROOT)]
+    return all(subprocess.run(cmd, cwd=cwd, capture_output=True).returncode == 0 for cmd, cwd in steps)
+
+
 def main() -> int:
     only = sys.argv[1] if len(sys.argv) > 1 else ""
-    assert run_tests(), "the tests fail without any mutant"
+    selected = [m for m in MUTANTS if only in m[0]]
+    if any(not m[1].startswith("ts:") for m in selected):
+        assert run_tests(), "the Python tests fail without any mutant"
+    if any(m[1].startswith("ts:") for m in selected):
+        assert run_ts_tests(), "the TypeScript checks fail without any mutant"
     killed, survived, stale = [], [], []
-    for name, file, old, new in MUTANTS:
-        if only not in name:
-            continue
-        path = SRC / file
+    for name, file, old, new in selected:
+        ts = file.startswith("ts:")
+        path = TS / "src" / file[3:] if ts else SRC / file
         original = path.read_text(encoding="utf-8")
         if original.count(old) != 1:
             stale.append(name)
             continue
         try:
             path.write_text(original.replace(old, new), encoding="utf-8")
-            (survived if run_tests() else killed).append(name)
+            (survived if (run_ts_tests() if ts else run_tests()) else killed).append(name)
         finally:
             path.write_text(original, encoding="utf-8")
+            if ts:
+                subprocess.run(["npm", "run", "build"], cwd=TS, capture_output=True)  # dist/ back to the real source
         print(("killed   " if name in killed else "SURVIVED ") + name, flush=True)
     for name in stale:
         print(f"STALE    {name}: its text is not in the source once")

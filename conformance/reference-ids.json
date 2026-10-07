@@ -1697,6 +1697,10 @@
    "errors": [],
    "warnings": []
   },
+  "condition-boundaries": {
+   "errors": [],
+   "warnings": []
+  },
   "error-duplicate-id": {
    "errors": [
     "ews.input"

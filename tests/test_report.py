@@ -2,6 +2,7 @@ import contextlib
 import hashlib
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -110,6 +111,18 @@ class PackageReportTests(unittest.TestCase):
             self.assertTrue(any("has no section Sources" in h for h in report["hints"]))
             self.assertTrue(any("metadata.description has" in h for h in report["hints"]))
             self.assertIn("WORLD.md names files that are not in the package: views/gone.yaml", report["hints"])
+
+    def test_unpinned_references_are_counted_and_hinted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "w"
+            shutil.copytree(WORLD, root)
+            manifest = root / "owp.yaml"
+            manifest.write_text(manifest.read_text(encoding="utf-8").replace("  assets:\n", "  assets:\n  - kind: Dataset\n"
+                                "    ref: {provider: https, uri: 'https://example.org/sample.csv'}\n", 1), encoding="utf-8")
+            report = package_report(root)
+            self.assertEqual(report["externalRefs"], {"total": 4, "pinned": 3})
+            self.assertIn("1 external reference is not pinned (ontle lock pins https references)", report["hints"])
+            self.assertIn("ref.unpinned", report["warningIds"])
 
     def test_cli_report_and_archive_inspect(self):
         code, out, _ = run_cli(["inspect", str(WORLD), "--report"])

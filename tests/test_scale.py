@@ -77,16 +77,38 @@ class ScaleTests(unittest.TestCase):
                 self.assertTrue(result.valid, result.errors[:5])
                 self.assertEqual(result.warnings, [])
 
+    def test_fixture_has_the_cases_where_compilers_go_wrong(self):
+        """Not only the happy path: ties, observations after asOf, at the window start and at asOf, estimates, a field
+        without observations, and subjects whose candidates the filter removes."""
+        obs = self.observations["spec"]["observations"]
+        self.assertGreaterEqual(len(self.facts["unresolved"]["equipment.state"]), 10)
+        self.assertTrue(any(o["observedAt"] > self.facts["asOf"] for o in obs))
+        self.assertTrue(any(o["observedAt"] == self.facts["asOf"] for o in obs))
+        self.assertTrue(any(o["observedAt"] == "2026-09-09T00:00:00Z" and o["type"] == "OT.alarm" for o in obs))
+        self.assertTrue(any("estimatedBy" in o for o in obs))
+        self.assertIn("normal", self.facts["expected"]["equipment.temp_band"].values())  # a classification's otherwise
+        self.assertTrue(any(o["type"] == "OT.temperature" and "sensor" not in o["values"] for o in obs))  # no `where` key
+        alarmed = set(self.facts["expected"]["equipment.alarms_24h"])
+        self.assertTrue(alarmed - set(self.facts["expected"]["equipment.critical_alarms_24h"]))  # alarms, none critical
+
     def test_ews_equals_the_values_computed_from_the_observations(self):
         for compiler, prefix in COMPILERS.items():
             ews = self.compile(compiler)
             self.assertEqual(check_ews(self.world, ews), [])
-            state = ews["spec"]["state"]
+            spec = ews["spec"]
             for field, want in self.facts["expected"].items():
                 if field.startswith(prefix):
                     with self.subTest(field=field):
-                        self.assertEqual(state.get(field), want)
-            self.assertEqual(ews["spec"]["unresolved"], {})
+                        self.assertEqual(spec["state"].get(field, {}), want)
+            for field, want in self.facts["unresolved"].items():
+                if field.startswith(prefix):
+                    with self.subTest(unresolved=field):
+                        self.assertEqual(spec["unresolved"].get(field), want)
+            for field, want in self.facts["provenance"].items():
+                if field.startswith(prefix):
+                    with self.subTest(provenance=field):
+                        self.assertEqual({k: sorted(v) for k, v in spec["provenance"].get(field, {}).items()}, want)
+            self.assertEqual(sorted(spec["missing"]), self.facts["missing"][compiler])
 
     def test_cli_round_trip_by_value_and_against_the_ontology(self):
         ews_path = self.dir / "equipment-ews.yaml"
@@ -95,7 +117,7 @@ class ScaleTests(unittest.TestCase):
         code, out, err = run_cli(["ews", "check", str(ews_path), "--world", str(self.world), "--observations", obs, "--source", str(self.dir)])
         self.assertEqual((code, out.strip(), err), (0, "VALID", ""))
         broken = load_yaml(ews_path.read_text(encoding="utf-8"))
-        first = sorted(broken["spec"]["state"]["equipment.state"])[0]
+        first = sorted(broken["spec"]["state"]["equipment.state"])[0]  # a resolved subject
         broken["spec"]["state"]["equipment.state"][first] = "exploded"
         ews_path.write_text(dump_yaml(broken), encoding="utf-8")
         code, out, err = run_cli(["ews", "check", str(ews_path), "--world", str(self.world), "--source", str(self.dir)])
@@ -107,8 +129,8 @@ class ScaleTests(unittest.TestCase):
     def test_report_counts(self):
         report = package_report(self.world)
         self.assertTrue(report["valid"])
-        self.assertEqual(report["state"], {"stateCompilers": 2, "fields": 10, "withBinding": 10})
-        self.assertEqual(report["semanticCoverage"], {"boundToTerms": 10, "fields": 10})
+        self.assertEqual(report["state"], {"stateCompilers": 2, "fields": 13, "withBinding": 13})
+        self.assertEqual(report["semanticCoverage"], {"boundToTerms": 13, "fields": 13})
         self.assertEqual(report["hints"], [])
         self.assertEqual(package_report(self.onto)["ontology"]["terms"], self.facts["classes"] + self.facts["enums"] + self.facts["properties"])
 

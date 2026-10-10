@@ -1,0 +1,15 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - {id: q:Defect}
+  - id: q:Lot
+    properties:
+    - {id: q:batchCode, range: string}
+  relations:
+  - {id: q:affects, domain: q:Defect, range: q:Lot}
+  removed:
+  - {id: q:PaintIssue, replacedBy: q:Defect, removedIn: 1}
+  - {id: q:hits, replacedBy: [q:affects]}
+  - {id: q:lotCode}

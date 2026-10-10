@@ -4,7 +4,7 @@ import { ASSET_STRUCTURES, EXTENSION_NAME_RE, extensionBlockProblems, MANIFEST, 
 import { checkSemanticBindings } from "./binding.js";
 import { standardBindingProblems } from "./externalref.js";
 import { checkStandardFields } from "./standard-fields.js";
-import { checkExperimentalAsset, checkMultiLatest, checkStandardKindFields, checkViewComposition, checkViewSpecialization, STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
+import { checkExperimentalAsset, checkMultiLatest, checkStandardKindFields, checkQueryTerms, checkViewComposition, checkViewSpecialization, STANDARD_KINDS_WITH_EXPERIMENTAL_FIELDS, EXPERIMENTAL_STRUCTURES } from "./experimental.js";
 import { fileExists, isNonEmptyString, isObj, normalizeRelPath, staysInside, own } from "../util.js";
 
 const PASCAL_RE = /^[A-Z][A-Za-z0-9]*$/;
@@ -102,6 +102,7 @@ export function checkAssetStructure(ctx: Context): void {
   }
   checkViewSpecialization(ctx);
   checkViewComposition(ctx);
+  checkQueryTerms(ctx);
   checkMultiLatest(ctx);
   checkSemanticBindings(ctx);
 }

@@ -78,12 +78,13 @@ export const SEMANTIC_PROFILE: Shape = closed(
     spec: closed({
       types: list(
         closed({
-          ...leaves("id", "description", "subClassOf", "enum"),
+          ...leaves("id", "description", "subClassOf", "enum", "status", "replacedBy"), // status, replacedBy: Appendix C.1
           label: OPEN,
-          properties: list(closed({ ...leaves("id", "description", "range", "cardinality"), label: OPEN })),
+          properties: list(closed({ ...leaves("id", "description", "range", "cardinality", "status", "replacedBy"), label: OPEN })),
         }),
       ),
-      relations: list(closed({ ...leaves("id", "description", "domain", "range"), label: OPEN })),
+      relations: list(closed({ ...leaves("id", "description", "domain", "range", "status", "replacedBy"), label: OPEN })),
+      removed: list(closed(leaves("id", "replacedBy", "removedIn"))), // Appendix C.1
     }),
   },
   false,
@@ -91,7 +92,7 @@ export const SEMANTIC_PROFILE: Shape = closed(
 
 /** schemas/ontology-term-index.schema.json */
 export const TERM_INDEX: Shape = closed(
-  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: list(closed(leaves("iri", "type", "label"))) }) },
+  { ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed({ terms: list(closed(leaves("iri", "type", "label", "status", "replacedBy"))), removed: list(closed(leaves("iri", "replacedBy", "removedIn"))) }) },
   false,
 );
 

@@ -42,8 +42,20 @@ spec:
 | property with a class range, and every relation | `owl:ObjectProperty` |
 | a property declared under several types | `rdfs:domain` is their `owl:unionOf` (two plain `rdfs:domain` triples would mean the intersection) |
 | a class used from another ontology | declared `owl:Class` |
+| `status: deprecated`, `replacedBy` (experimental, Appendix C.1) | `owl:deprecated true`, `dcterms:isReplacedBy` |
+| `status: candidate` (experimental, Appendix C.1) | `vs:term_status "testing"` |
 
 The terms an ontology defines are the expanded identifiers of its `owp-yaml` schema entrypoints (types, their properties, and relations) together with the terms in its `termIndex`.
+
+**Versions.** A new version of an OntologyPackage SHOULD increase its version (section 2) by at least the level of its largest change below. Only the terms of the ontology's own namespaces (its `iri` and its prefixes that are not a standard vocabulary) are graded:
+
+| Level | Changes |
+|---|---|
+| major | a term removed or its type changed; a superclass or superproperty removed; a domain or range narrowed or changed; an enumeration value removed. Data that fit the old version may not fit the new one. |
+| minor | a term added, deprecated (`owl:deprecated`), or no longer deprecated; a term made or no longer a candidate (Appendix C.1); a superclass or superproperty added; a domain or range widened (every statement of the new version is implied by one of the old); an enumeration value added |
+| patch | labels, definitions, and comments |
+
+While the major version is 0, a major change needs at least a minor increment and a minor change a patch increment. A term SHOULD be deprecated in at least one release before it is removed, and the version that removes it SHOULD keep a tombstone naming its replacements (Appendix C.1), so that users of the term are still told what to use. Domains and ranges are compared by the classes they name, without reasoning over subclasses, so moving a domain to a superclass counts as a change; an author MAY grade it minor by hand. A new or stricter constraint in a `shapes` entrypoint can reject data the old version accepted; it is graded by hand. These rules give version numbers a shared meaning; like the RDF content they compare, they are not part of validation. The reference CLI applies them with `ontle diff <old> <new>`, which exits 1 when the increment is too small.
 
 **Ontology conformance profiles.** An OntologyPackage MAY declare `spec.conformance`; when present, its `profile` MUST be one of the profiles below. Profiles are cumulative; when `spec.conformance` is absent, no profile is required, and a validator SHOULD still report the highest satisfied profile.
 

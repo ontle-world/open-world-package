@@ -144,7 +144,8 @@ ontle add extension acme/quality-extension@1.2.0   # declare a publisher extensi
 
 # knowledge graphs (needs the rdf extra)
 ontle kg check . --source ../ontologies      # does the graph (A-box) use only its ontology's (T-box) classes and properties,
-                                             # and meet its SHACL shapes (pip install 'ontle[rdf,shacl]')?
+                                             # and meet its SHACL shapes (pip install 'ontle[rdf,shacl]')? Its extraction
+                                             # queries are checked too; --json prints counted findings
 ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102 > kg.yaml
 ontle ews compile . --compiler state/quality-incident-compiler.yaml --observations observations.yaml --observations kg.yaml --as-of 2026-09-05T00:00:00Z
 

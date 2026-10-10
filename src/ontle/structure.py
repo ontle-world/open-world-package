@@ -50,13 +50,18 @@ ONTOLOGY = closed({
 SEMANTIC_PROFILE = closed({"apiVersion": VALUE, "kind": VALUE, "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}), "spec": closed({
     "types": array(closed({
         "id": VALUE, "label": OPEN, "description": VALUE, "subClassOf": VALUE, "enum": VALUE,
-        "properties": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "range": VALUE, "cardinality": VALUE})),
+        "status": VALUE, "replacedBy": VALUE,                    # experimental (Appendix C.1)
+        "properties": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "range": VALUE, "cardinality": VALUE,
+                                    "status": VALUE, "replacedBy": VALUE})),
     })),
-    "relations": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "domain": VALUE, "range": VALUE})),
+    "relations": array(closed({"id": VALUE, "label": OPEN, "description": VALUE, "domain": VALUE, "range": VALUE,
+                               "status": VALUE, "replacedBy": VALUE})),
+    "removed": array(closed({"id": VALUE, "replacedBy": VALUE, "removedIn": VALUE})),  # experimental (Appendix C.1)
 })}, extensions=False)
 
 TERM_INDEX = closed({"apiVersion": VALUE, "kind": VALUE, "metadata": closed({"name": VALUE, "version": VALUE, "title": VALUE, "description": VALUE}), "spec": closed({
-    "terms": array(closed({"iri": VALUE, "type": VALUE, "label": VALUE})),
+    "terms": array(closed({"iri": VALUE, "type": VALUE, "label": VALUE, "status": VALUE, "replacedBy": VALUE})),  # status, replacedBy: Appendix C.1
+    "removed": array(closed({"iri": VALUE, "replacedBy": VALUE, "removedIn": VALUE})),  # experimental (Appendix C.1)
 })}, extensions=False)
 
 

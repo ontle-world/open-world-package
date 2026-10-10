@@ -72,6 +72,23 @@ MUTANTS = [
     ("resolve: archive hash not checked", "core.py", 'if sha256_bytes(data) != entry["sha256"]:', "if False:"),
     ("ontology: subclass parents dropped", "ontology.py", 'model["parents"].setdefault(cls, set()).update(p for p in (iri(x) for x in parents) if p)', 'model["parents"].setdefault(cls, set())'),
     ("extraction: no multi-latest warning", "extraction.py", 'warnings.append(f"compiler.multi-latest', 'print(f"compiler.multi-latest'),
+    # term lifecycle, tombstones, and query terms (Appendix C.1)
+    ("lifecycle: replacements are not CURIEs", "ontology.py", 'return f"{best[0]}:{iri[len(best[1]):]}" if best else iri', "return iri"),
+    ("lifecycle: the shortest prefix wins", "ontology.py", "if best is None or len(ns) > len(best[1]):", "if best is None or len(ns) < len(best[1]):"),
+    ("lifecycle: a removed query term is also unknown", "resolve.py", "full not in defined and full not in removed:", "full not in defined:"),
+    ("lifecycle: no tombstone hint", "resolve.py", "if full in removed:", "if False:"),
+    ("lifecycle: term index tombstones ignored", "ontology.py", 'listed = dig(_load(root / index), "spec", "removed")\n        if listed is not None:', 'listed = dig(_load(root / index), "spec", "removed")\n        if False:'),
+    ("lifecycle: removedIn not checked", "ontology.py", 'if "removedIn" in entry and not isinstance(entry["removedIn"], str):', "if False:"),
+    ("lifecycle: removed need not be a list", "ontology.py", 'warnings.append(f"experimental.field: {file}: spec.removed must be a list")', "pass"),
+    ("lifecycle: empty query terms pass", "experimental.py", "if not isinstance(declared, list) or not declared:", "if not isinstance(declared, list):"),
+    ("lifecycle: unknown query prefix passes", "resolve.py", "if isinstance(value, str) and full is None:", "if False:"),
+    ("kg: property paths not read", "kgcheck.py", 'todo.extend(v for k, v in vars(node).items() if k in ("arg", "args", "path"))', "pass"),
+    ("kg: a bad query passes", "kgcheck.py", 'return [KgFinding("kg.parse", rel, f"spec.query.text is not valid SPARQL', 'return [] and [KgFinding("kg.parse", rel, f"spec.query.text is not valid SPARQL'),
+    ("kg: query terms not compared", "kgcheck.py", 'if isinstance(query.get("terms"), list):', "if False:"),
+    ("kg: json says nothing is advice", "kgcheck.py", '"advice": f.code in ADVICE}', '"advice": False}'),
+    ("kg: json exits 0 on errors", "cli.py", "        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))\n        return 0 if report.ok else 1", "        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))\n        return 0"),
+    ("kg: bindings ignore --json", "cli.py", "        if args.json:\n            print(json.dumps({\"warnings\"", "        if False:\n            print(json.dumps({\"warnings\""),
+    ("diff: removal without tombstone not noted", "ontodiff.py", "    if untold:\n", "    if False:\n"),
     # the community package list
     ("registry: a wrong digest passes", "../../scripts/registry.py", "if actual != digest:", "if False:"),
     ("registry: a reserved namespace passes", "../../scripts/registry.py", 'if identity.split("/", 1)[0] in RESERVED_NAMESPACES:', "if False:"),
@@ -95,6 +112,11 @@ MUTANTS = [
     ("ts report: pinned counts every reference", "ts:report.ts", "const pinned = refs.filter(isPinned).length;", "const pinned = refs.length;"),
     ("ts report: withBinding counts every field", "ts:report.ts", "if (has(bindings, f)) boundFields.add(f);", "boundFields.add(f);"),
     ("ts views: specializes target not checked", "ts:rules/experimental.ts", "if (!isView(b)) {", "if (false) {"),
+    ("ts lifecycle: replacements are not CURIEs", "ts:rules/ontology.ts", "return best ? `${best[0]}:${iri.slice(best[1].length)}` : iri;", "return iri;"),
+    ("ts lifecycle: no tombstone hint", "ts:resolve.ts", "if (removed) {", "if (false) {"),
+    ("ts lifecycle: a removed query term is also unknown", "ts:resolve.ts", "!d.terms.has(iri) && !d.removed.has(iri)", "!d.terms.has(iri)"),
+    ("ts lifecycle: removedIn not checked", "ts:rules/ontology.ts", 'if ("removedIn" in entry && typeof entry.removedIn !== "string")', "if (false)"),
+    ("ts lifecycle: empty query terms pass", "ts:rules/experimental.ts", "if (!Array.isArray(declared) || declared.length === 0) {", "if (!Array.isArray(declared)) {"),
 ]
 
 
@@ -108,7 +130,8 @@ def run_tests() -> bool:
 def run_ts_tests() -> bool:
     steps = [(["npm", "test"], TS),
              ([sys.executable, "-m", "unittest", "tests.test_scale.ScaleTests.test_typescript_gives_the_same_verdicts_and_ews"], ROOT),
-             ([sys.executable, "scripts/report_parity.py"], ROOT)]
+             ([sys.executable, "scripts/report_parity.py"], ROOT),
+             ([sys.executable, "-m", "unittest", "tests.test_ontology_tooling.LifecycleParityTests"], ROOT)]  # warning text, word for word
     return all(subprocess.run(cmd, cwd=cwd, capture_output=True).returncode == 0 for cmd, cwd in steps)
 
 

@@ -112,7 +112,7 @@ class KnowledgeGraphCheckTests(unittest.TestCase):
     def test_example_graph_follows_its_ontology(self):
         from ontle.kgcheck import check_knowledge_graphs
         report = check_knowledge_graphs(ROOT / "examples" / "business" / "manufacturing-quality-world", [str(ROOT / "examples")])
-        self.assertEqual(report.checked, ["knowledge/plant-kg.yaml"])
+        self.assertEqual(report.checked, ["knowledge/plant-kg.yaml", "extraction/claim-context.yaml"])  # the graph, and the query over it
         self.assertEqual(report.findings, [])
 
     @unittest.skipUnless(HAS_RDFLIB, "rdflib not installed (pip install 'ontle[rdf]')")

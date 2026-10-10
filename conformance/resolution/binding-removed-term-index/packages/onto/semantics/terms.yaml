@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyTermIndex
+spec:
+  terms: []
+  removed:
+  - {iri: "https://example.org/q#derivedFrom", replacedBy: "https://example.org/q#madeFrom", removedIn: 1.0.0}

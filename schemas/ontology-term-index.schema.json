@@ -67,6 +67,64 @@
               },
               "extensions": {
                 "$ref": "#/$defs/extensions"
+              },
+              "status": {
+                "enum": [
+                  "candidate",
+                  "stable",
+                  "deprecated"
+                ],
+                "description": "Experimental (Appendix C.1): the term's lifecycle status; absent means stable."
+              },
+              "replacedBy": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "Experimental (Appendix C.1): the absolute IRIs of the terms that replace a deprecated term."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "removed": {
+          "type": "array",
+          "description": "Experimental (Appendix C.1): terms the ontology no longer defines (tombstones), with what replaces them.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "iri": {
+                "type": "string"
+              },
+              "replacedBy": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  }
+                ],
+                "description": "Experimental (Appendix C.1): the absolute IRIs of the terms that replace the removed term."
+              },
+              "removedIn": {
+                "type": "string",
+                "description": "Experimental (Appendix C.1): the version of the ontology that removed the term."
+              },
+              "extensions": {
+                "$ref": "#/$defs/extensions"
               }
             },
             "additionalProperties": false

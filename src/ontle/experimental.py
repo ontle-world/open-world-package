@@ -109,7 +109,7 @@ TABLES: dict[str, dict[str, Any]] = {
     "KnowledgeExtractionProfile": _document({
         "source": VALUE,
         "parameters": OPEN,
-        "query": closed({"language": VALUE, "text": VALUE}),
+        "query": closed({"language": VALUE, "text": VALUE, "terms": VALUE}),  # terms: experimental (Appendix C.1)
         "observations": array(closed({
             "type": VALUE, "id": VALUE, "subject": VALUE, "values": OPEN, "multi": VALUE,
             "observedAt": closed({"column": VALUE, "default": VALUE}),
@@ -593,6 +593,24 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
             seen.append(current)
             nxt = _spec(docs.get(current)).get("specializes")
             current = nxt if local_kinds.get(nxt) == "WorldViewProfile" else None
+    return warnings
+
+
+def query_terms_warnings(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]]) -> list[str]:
+    """Appendix C.1: a KnowledgeExtractionProfile's `query.terms` is a non-empty list of CURIEs or absolute IRIs."""
+    from .ontology import CURIE_RE, IRI_RE  # local import: ontology imports structure
+    warnings: list[str] = []
+    for rel, kind in sorted(local_kinds.items()):
+        query = _spec(docs.get(rel)).get("query") if kind == "KnowledgeExtractionProfile" else None
+        if not isinstance(query, dict) or "terms" not in query:
+            continue
+        declared = query["terms"]
+        if not isinstance(declared, list) or not declared:
+            warnings.append(f"experimental.field: {rel}: spec.query.terms must be a non-empty list of CURIEs or absolute IRIs")
+            continue
+        for i, value in enumerate(declared):
+            if not (isinstance(value, str) and (CURIE_RE.match(value) or IRI_RE.match(value))):
+                warnings.append(f"experimental.field: {rel}: spec.query.terms[{i}] {value!r} must be a CURIE or an absolute IRI")
     return warnings
 
 

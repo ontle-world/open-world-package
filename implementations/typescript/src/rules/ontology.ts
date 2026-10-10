@@ -94,6 +94,215 @@ export function ontologyTerms(dir: string, manifest: Obj): { prefixes: Record<st
   return { prefixes, terms };
 }
 
+/** Experimental (Appendix C.1): a term's lifecycle status; absent means stable. */
+export const TERM_STATUSES = ["candidate", "stable", "deprecated"];
+
+type LifecycleDoc = { file: string; format: "owp-yaml" | "term-index"; entries: Array<[string, Obj]> };
+
+/** [where, entry] for every type, property, and relation a SemanticProfile defines. */
+function definingEntries(doc: Obj | undefined): Array<[string, Obj]> {
+  const spec = doc && isObj(doc.spec) ? doc.spec : {};
+  const out: Array<[string, Obj]> = [];
+  (Array.isArray(spec.types) ? spec.types : []).forEach((t, i) => {
+    if (!isObj(t)) return;
+    out.push([`spec.types[${i}]`, t]);
+    (Array.isArray(t.properties) ? t.properties : []).forEach((p, j) => {
+      if (isObj(p)) out.push([`spec.types[${i}].properties[${j}]`, p]);
+    });
+  });
+  (Array.isArray(spec.relations) ? spec.relations : []).forEach((r, i) => {
+    if (isObj(r)) out.push([`spec.relations[${i}]`, r]);
+  });
+  return out;
+}
+
+/** The owp-yaml entrypoints and the term index: where `status` and `replacedBy` live. */
+function lifecycleDocs(dir: string, ontology: Obj): LifecycleDoc[] {
+  const out: LifecycleDoc[] = [];
+  for (const e of Array.isArray(ontology.entrypoints) ? ontology.entrypoints : []) {
+    if (!isObj(e) || e.format !== "owp-yaml") continue;
+    const abs = packageFileAt(dir, e.path);
+    if (abs !== null) out.push({ file: e.path as string, format: "owp-yaml", entries: definingEntries(loadDoc(abs)) });
+  }
+  const abs = packageFileAt(dir, ontology.termIndex);
+  if (abs !== null) {
+    const terms = get(loadDoc(abs), "spec", "terms");
+    const entries: Array<[string, Obj]> = [];
+    (Array.isArray(terms) ? terms : []).forEach((t, j) => {
+      if (isObj(t)) entries.push([`spec.terms[${j}]`, t]);
+    });
+    out.push({ file: ontology.termIndex as string, format: "term-index", entries });
+  }
+  return out;
+}
+
+/** The `removed` lists (tombstones) of the owp-yaml entrypoints and the term index; a `removed` that is not a list is one entry at `spec.removed`. */
+function removedDocs(dir: string, ontology: Obj): Array<{ file: string; format: LifecycleDoc["format"]; entries: Array<[string, unknown]> }> {
+  const out: Array<{ file: string; format: LifecycleDoc["format"]; entries: Array<[string, unknown]> }> = [];
+  const add = (file: string, format: LifecycleDoc["format"], listed: unknown) => {
+    if (listed === undefined || listed === null) return;
+    out.push({ file, format, entries: Array.isArray(listed) ? listed.map((e, i) => [`spec.removed[${i}]`, e]) : [["spec.removed", listed]] });
+  };
+  for (const e of Array.isArray(ontology.entrypoints) ? ontology.entrypoints : []) {
+    if (!isObj(e) || e.format !== "owp-yaml") continue;
+    const abs = packageFileAt(dir, e.path);
+    if (abs !== null) add(e.path as string, "owp-yaml", get(loadDoc(abs), "spec", "removed"));
+  }
+  const abs = packageFileAt(dir, ontology.termIndex);
+  if (abs !== null) add(ontology.termIndex as string, "term-index", get(loadDoc(abs), "spec", "removed"));
+  return out;
+}
+
+/** The identifiers of a `replacedBy`: a non-empty string or a non-empty list of them; null when malformed. */
+function replacedByValues(value: unknown): string[] | null {
+  const values = Array.isArray(value) ? value : [value];
+  return values.length > 0 && values.every((v) => typeof v === "string" && v.trim() !== "") ? (values as string[]) : null;
+}
+
+/** An identifier as an IRI: a term index lists absolute IRIs; owp-yaml uses CURIEs or absolute IRIs. */
+function identifier(format: LifecycleDoc["format"], value: unknown, prefixes: Record<string, unknown>): string | null {
+  if (typeof value !== "string") return null;
+  if (format === "term-index") return isIri(value) ? value : null;
+  return expandCurie(value, prefixes);
+}
+
+function ontologyOf(manifest: Obj): { ontology: Obj; prefixes: Record<string, unknown> } {
+  const o = get(manifest, "spec", "ontology");
+  const ontology = isObj(o) ? o : {};
+  return { ontology, prefixes: isObj(ontology.prefixes) ? ontology.prefixes : {} };
+}
+
+/** Every well-formed `replacedBy` identifier of an OntologyPackage (Appendix C.1). */
+export function replacedByRefs(dir: string, manifest: Obj): Array<{ file: string; where: string; value: string; iri: string }> {
+  const { ontology, prefixes } = ontologyOf(manifest);
+  const out: Array<{ file: string; where: string; value: string; iri: string }> = [];
+  for (const d of [...lifecycleDocs(dir, ontology), ...removedDocs(dir, ontology)]) {
+    for (const [where, entry] of d.entries) {
+      if (!isObj(entry) || !("replacedBy" in entry)) continue;
+      for (const value of replacedByValues(entry.replacedBy) ?? []) {
+        const iri = identifier(d.format, value, prefixes);
+        if (iri !== null) out.push({ file: d.file, where: `${where}.replacedBy`, value, iri });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Term IRI -> status and replacements, for the terms an OntologyPackage marks candidate or deprecated (Appendix C.1).
+ * A term marked in several places takes the strongest mark: deprecated, then candidate.
+ */
+export function termStatuses(dir: string, manifest: Obj): Map<string, { status: string; replacedBy: string[] }> {
+  const { ontology, prefixes } = ontologyOf(manifest);
+  const out = new Map<string, { status: string; replacedBy: string[] }>();
+  for (const d of lifecycleDocs(dir, ontology)) {
+    for (const [, entry] of d.entries) {
+      const status = entry.status;
+      const iri = identifier(d.format, d.format === "term-index" ? entry.iri : entry.id, prefixes);
+      if (iri === null || (status !== "candidate" && status !== "deprecated")) continue;
+      const replaced: string[] = [];
+      if (status === "deprecated") {
+        for (const value of replacedByValues(entry.replacedBy) ?? []) {
+          const full = identifier(d.format, value, prefixes);
+          if (full !== null) replaced.push(full);
+        }
+      }
+      const old = out.get(iri) ?? { status: "stable", replacedBy: [] };
+      if (status === "deprecated" || old.status !== "deprecated") {
+        out.set(iri, { status, replacedBy: old.status === status ? [...new Set([...old.replacedBy, ...replaced])] : replaced });
+      }
+    }
+  }
+  return out;
+}
+
+/** Term IRI -> replacements and removedIn, for the terms an OntologyPackage lists as removed (Appendix C.1 tombstones). */
+export function removedTerms(dir: string, manifest: Obj): Map<string, { replacedBy: string[]; removedIn: string | null }> {
+  const { ontology, prefixes } = ontologyOf(manifest);
+  const out = new Map<string, { replacedBy: string[]; removedIn: string | null }>();
+  for (const d of removedDocs(dir, ontology)) {
+    for (const [, entry] of d.entries) {
+      const iri = isObj(entry) ? identifier(d.format, d.format === "term-index" ? entry.iri : entry.id, prefixes) : null;
+      if (iri === null || !isObj(entry)) continue;
+      const replaced = (replacedByValues(entry.replacedBy) ?? []).map((v) => identifier(d.format, v, prefixes)).filter((v): v is string => v !== null);
+      const old = out.get(iri) ?? { replacedBy: [], removedIn: null };
+      out.set(iri, { replacedBy: [...new Set([...old.replacedBy, ...replaced])], removedIn: old.removedIn ?? (typeof entry.removedIn === "string" ? entry.removedIn : null) });
+    }
+  }
+  return out;
+}
+
+/** An IRI as a CURIE with the longest matching prefix, or the IRI itself when none matches. */
+export function compactIri(iri: string, prefixes: Record<string, unknown>): string {
+  let best: [string, string] | null = null;
+  for (const [name, ns] of Object.entries(prefixes)) {
+    if (typeof ns === "string" && ns && iri.startsWith(ns) && CURIE_RE.test(`${name}:${iri.slice(ns.length)}`)) {
+      if (best === null || ns.length > best[1].length) best = [name, ns];
+    }
+  }
+  return best ? `${best[0]}:${iri.slice(best[1].length)}` : iri;
+}
+
+/** Appendix C.1 (experimental, warnings only): `status` and `replacedBy` of the terms an ontology defines. */
+export function lifecycleProblems(dir: string, manifest: Obj): Array<{ rule: string; msg: string; file: string }> {
+  const { ontology, prefixes } = ontologyOf(manifest);
+  const out: Array<{ rule: string; msg: string; file: string }> = [];
+  for (const d of lifecycleDocs(dir, ontology)) {
+    const add = (rule: string, msg: string) => out.push({ rule, msg: `${d.file}: ${msg}`, file: d.file });
+    for (const [where, entry] of d.entries) {
+      if ("status" in entry && !TERM_STATUSES.includes(entry.status as string)) {
+        add("experimental.value", `${where}.status ${JSON.stringify(entry.status)} must be one of ${TERM_STATUSES.join(", ")}`);
+      }
+      if (!("replacedBy" in entry)) continue;
+      const values = replacedByValues(entry.replacedBy);
+      if (values === null) {
+        add("experimental.field", `${where}.replacedBy must be an identifier or a non-empty list of identifiers`);
+        continue;
+      }
+      if (entry.status !== "deprecated") add("experimental.field", `${where}.replacedBy is only for a term with status deprecated`);
+      for (const value of values) {
+        if (identifier(d.format, value, prefixes) !== null) continue;
+        const need = d.format === "term-index" ? "an absolute IRI" : "a CURIE with a declared prefix or an absolute IRI";
+        add("experimental.field", `${where}.replacedBy ${JSON.stringify(value)} must be ${need}`);
+      }
+    }
+  }
+  const defined = ontologyTerms(dir, manifest).terms;
+  for (const d of removedDocs(dir, ontology)) {
+    const add = (rule: string, msg: string) => out.push({ rule, msg: `${d.file}: ${msg}`, file: d.file });
+    if (d.entries.length > 0 && d.entries[0][0] === "spec.removed") {
+      add("experimental.field", "spec.removed must be a list");
+      continue;
+    }
+    const key = d.format === "term-index" ? "iri" : "id";
+    const need = d.format === "term-index" ? "an absolute IRI" : "a CURIE with a declared prefix or an absolute IRI";
+    for (const [where, entry] of d.entries) {
+      const iri = isObj(entry) ? identifier(d.format, entry[key], prefixes) : null;
+      if (iri === null || !isObj(entry)) {
+        add("experimental.field", `${where} needs ${key}, ${need}`);
+        continue;
+      }
+      if (defined.has(iri)) add("experimental.field", `${where} ${JSON.stringify(entry[key])} is listed as removed, but the ontology still defines it`);
+      if ("removedIn" in entry && typeof entry.removedIn !== "string") add("experimental.field", `${where}.removedIn must be a version string`);
+      if (!("replacedBy" in entry)) continue;
+      const values = replacedByValues(entry.replacedBy);
+      if (values === null) add("experimental.field", `${where}.replacedBy must be an identifier or a non-empty list of identifiers`);
+      for (const value of values ?? []) {
+        if (identifier(d.format, value, prefixes) === null) add("experimental.field", `${where}.replacedBy ${JSON.stringify(value)} must be ${need}`);
+      }
+    }
+  }
+  const namespace = ontology.iri;
+  if (typeof namespace === "string" && namespace.length > 0) {
+    for (const r of replacedByRefs(dir, manifest)) {
+      if (r.iri.startsWith(namespace) && !defined.has(r.iri)) {
+        out.push({ rule: "experimental.reference", msg: `${r.file}: ${r.where} ${JSON.stringify(r.value)} (${r.iri}) is not a term this ontology defines`, file: r.file });
+      }
+    }
+  }
+  return out;
+}
+
 /** What an OntologyPackage's owp-yaml schema entrypoints declare, by expanded IRI (spec 14 binding warnings). */
 export interface SchemaModel {
   classes: Set<string>;
@@ -243,6 +452,8 @@ function checkOntologyContract(ctx: Context, ontology: Obj): void {
     for (const p of r.errors) err(p.rule, p.msg);
     for (const p of r.warnings) warn(ctx, p.rule, p.msg, "owp.yaml");
   });
+
+  for (const p of lifecycleProblems(ctx.root, { spec: { ontology } })) warn(ctx, p.rule, p.msg, p.file);
 }
 
 /** Unmet requirements of one ontology profile alone (spec 3.1 table); profiles are cumulative. */

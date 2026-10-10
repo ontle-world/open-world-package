@@ -256,6 +256,9 @@ def cmd_kg_check(args):
     if args.bindings:
         notes: list[str] = []
         found = check_bindings(args.package, args.source, notes)
+        if args.json:
+            print(json.dumps({"warnings": found, "notes": list(dict.fromkeys(notes))}, indent=2, ensure_ascii=False))
+            return 0
         for w in found:
             print(f"WARN: {w}")
         for n in dict.fromkeys(notes):
@@ -263,6 +266,9 @@ def cmd_kg_check(args):
         print(f"{len(found)} binding warning{'' if len(found) == 1 else 's'}")
         return 0
     report = check_knowledge_graphs(args.package, args.source)
+    if args.json:
+        print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+        return 0 if report.ok else 1
     for f in report.findings:
         advice = f.code in ADVICE
         print(("WARN: " if advice else "ERROR: ") + f.line(), file=sys.stdout if advice else sys.stderr)
@@ -520,11 +526,14 @@ def build_parser():
     y.add_argument("--results", help="JSON file of query result rows; skips running the query")
     y.set_defaults(func=cmd_kg_extract)
 
-    y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges, and that it satisfies the ontology's SHACL shapes (needs the rdf extra; shapes need the shacl extra)")
+    y = ksp.add_parser("check", help="check that a KnowledgeAsset graph uses only the classes and properties of its ontology, within their domains and ranges, "
+                       "and that it satisfies the ontology's SHACL shapes; also check the terms the SPARQL queries of its KnowledgeExtractionProfiles name "
+                       "(needs the rdf extra; shapes need the shacl extra)")
     y.add_argument("package", nargs="?", default=".", help="package directory")
     y.add_argument("--source", action="append", default=[], help="package source for the ontology dependencies (repeatable; ONTLE_PATH is also read)")
     y.add_argument("--bindings", action="store_true", help="instead: check the SemanticBinding's field paths and value maps against the "
                    "RDF T-box of the dependency ontologies, RDF schema entrypoints included (binding.path-domain, binding.value-range)")
+    y.add_argument("--json", action="store_true", help="print the report as JSON: findings with counts, and each graph's ontology and snapshot")
     y.set_defaults(func=cmd_kg_check)
 
     x = sp.add_parser("diff", help="compare two versions of an OntologyPackage and say which SemVer increment the changes call for (needs the rdf extra)")

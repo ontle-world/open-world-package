@@ -1,0 +1,6 @@
+apiVersion: openworld/v1alpha1
+kind: OntologyTermIndex
+spec:
+  terms:
+  - {iri: "https://example.org/q#Scratch", type: class, status: candidate}
+  - {iri: "https://example.org/q#Dent", type: class, status: deprecated, replacedBy: "https://example.org/q#Scratch"}

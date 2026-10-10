@@ -49,7 +49,7 @@ Declared profile: `action-ready` — a World View, a State Compiler with a concr
 
 ## Knowledge graph (experimental)
 
-`knowledge/plant-kg.yaml` is a small illustrative plant graph (`kg/plant.ttl`). It is the A-box for the T-box in `openworld-examples/quality-ontology`; `ontle kg check . --source ../..` confirms it uses only that ontology's classes and properties, within their domains and ranges. `extraction/claim-context.yaml` selects the lots, equipment, and parts behind one claim: `ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102` produces `examples/kg-observations.yaml`, and compiling it together with `examples/observations.yaml` gives `examples/expected-ews-with-kg.yaml`.
+`knowledge/plant-kg.yaml` is a small illustrative plant graph (`kg/plant.ttl`). It is the A-box for the T-box in `openworld-examples/quality-ontology`; `ontle kg check . --source ../..` confirms it uses only that ontology's classes and properties, within their domains and ranges. `extraction/claim-context.yaml` selects the lots, equipment, and parts behind one claim, and lists the ontology terms its query uses (`query.terms`, experimental), so that a deprecated or removed term is reported instead of silently matching nothing: `ontle kg extract . --profile extraction/claim-context.yaml --param claimId=C-102` produces `examples/kg-observations.yaml`, and compiling it together with `examples/observations.yaml` gives `examples/expected-ews-with-kg.yaml`.
 
 ## Work (experimental)
 

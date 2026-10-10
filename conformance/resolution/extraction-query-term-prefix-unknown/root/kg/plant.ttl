@@ -1,0 +1,5 @@
+@prefix q: <https://example.org/q#> .
+@prefix ex: <https://example.org/plant/> .
+
+ex:lot-1 a q:Lot ; q:partOf ex:lot-0 .
+ex:lot-0 a q:Lot .

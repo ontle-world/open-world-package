@@ -24,7 +24,8 @@ const isIri = (v: unknown): v is string => typeof v === "string" && IRI_RE.test(
 /** Expand a CURIE with declared prefixes; a full IRI (`://` or `urn:`) is returned unchanged; null if the prefix is undeclared. */
 export function expandCurie(curie: string, prefixes: Record<string, unknown>): string | null {
   const m = CURIE_RE.exec(curie);
-  if (m && Object.prototype.hasOwnProperty.call(prefixes, m[1])) return `${String(prefixes[m[1]])}${m[2]}`;
+  const ns = m && Object.prototype.hasOwnProperty.call(prefixes, m[1]) ? prefixes[m[1]] : undefined;
+  if (m && typeof ns === "string") return `${ns}${m[2]}`;
   return curie.includes("://") || curie.startsWith("urn:") ? curie : null;
 }
 
@@ -166,10 +167,21 @@ function identifier(format: LifecycleDoc["format"], value: unknown, prefixes: Re
   return expandCurie(value, prefixes);
 }
 
-function ontologyOf(manifest: Obj): { ontology: Obj; prefixes: Record<string, unknown> } {
+/** Neither an identifier nor a CURIE with a declared prefix; a prefix declared with an invalid IRI is ontology.prefix. */
+function malformed(format: LifecycleDoc["format"], value: unknown, prefixes: Record<string, unknown>, declared: Record<string, unknown>): boolean {
+  if (identifier(format, value, prefixes) !== null) return false;
+  const m = format !== "term-index" && typeof value === "string" ? CURIE_RE.exec(value) : null;
+  return !(m && Object.prototype.hasOwnProperty.call(declared, m[1]));
+}
+
+/** The ontology block, its prefixes with an IRI (those identifiers expand with), and every declared prefix. */
+function ontologyOf(manifest: Obj): { ontology: Obj; prefixes: Record<string, unknown>; declared: Record<string, unknown> } {
   const o = get(manifest, "spec", "ontology");
   const ontology = isObj(o) ? o : {};
-  return { ontology, prefixes: isObj(ontology.prefixes) ? ontology.prefixes : {} };
+  const declared = isObj(ontology.prefixes) ? ontology.prefixes : {};
+  const prefixes: Record<string, unknown> = Object.create(null);
+  for (const [k, v] of Object.entries(declared)) if (typeof v === "string") prefixes[k] = v;
+  return { ontology, prefixes, declared };
 }
 
 /** Every well-formed `replacedBy` identifier of an OntologyPackage (Appendix C.1). */
@@ -245,7 +257,7 @@ export function compactIri(iri: string, prefixes: Record<string, unknown>): stri
 
 /** Appendix C.1 (experimental, warnings only): `status` and `replacedBy` of the terms an ontology defines. */
 export function lifecycleProblems(dir: string, manifest: Obj): Array<{ rule: string; msg: string; file: string }> {
-  const { ontology, prefixes } = ontologyOf(manifest);
+  const { ontology, prefixes, declared } = ontologyOf(manifest);
   const out: Array<{ rule: string; msg: string; file: string }> = [];
   for (const d of lifecycleDocs(dir, ontology)) {
     const add = (rule: string, msg: string) => out.push({ rule, msg: `${d.file}: ${msg}`, file: d.file });
@@ -261,7 +273,7 @@ export function lifecycleProblems(dir: string, manifest: Obj): Array<{ rule: str
       }
       if (entry.status !== "deprecated") add("experimental.field", `${where}.replacedBy is only for a term with status deprecated`);
       for (const value of values) {
-        if (identifier(d.format, value, prefixes) !== null) continue;
+        if (!malformed(d.format, value, prefixes, declared)) continue;
         const need = d.format === "term-index" ? "an absolute IRI" : "a CURIE with a declared prefix or an absolute IRI";
         add("experimental.field", `${where}.replacedBy ${JSON.stringify(value)} must be ${need}`);
       }
@@ -279,7 +291,7 @@ export function lifecycleProblems(dir: string, manifest: Obj): Array<{ rule: str
     for (const [where, entry] of d.entries) {
       const iri = isObj(entry) ? identifier(d.format, entry[key], prefixes) : null;
       if (iri === null || !isObj(entry)) {
-        add("experimental.field", `${where} needs ${key}, ${need}`);
+        if (!isObj(entry) || malformed(d.format, entry[key], prefixes, declared)) add("experimental.field", `${where} needs ${key}, ${need}`);
         continue;
       }
       if (defined.has(iri)) add("experimental.field", `${where} ${JSON.stringify(entry[key])} is listed as removed, but the ontology still defines it`);
@@ -288,7 +300,7 @@ export function lifecycleProblems(dir: string, manifest: Obj): Array<{ rule: str
       const values = replacedByValues(entry.replacedBy);
       if (values === null) add("experimental.field", `${where}.replacedBy must be an identifier or a non-empty list of identifiers`);
       for (const value of values ?? []) {
-        if (identifier(d.format, value, prefixes) === null) add("experimental.field", `${where}.replacedBy ${JSON.stringify(value)} must be ${need}`);
+        if (malformed(d.format, value, prefixes, declared)) add("experimental.field", `${where}.replacedBy ${JSON.stringify(value)} must be ${need}`);
       }
     }
   }
@@ -419,7 +431,9 @@ function checkOntologyContract(ctx: Context, ontology: Obj): void {
     if (!doc || doc.kind !== "SemanticProfile") return err("ontology.parse", `${file} (format owp-yaml) must be a SemanticProfile document`, file);
     for (const p of structureProblems(doc, SEMANTIC_PROFILE, ctx.extensionNames)) err(p.rule, `${file}: ${p.msg}`, file);
     for (const [where, value] of profileIdentifiers(doc)) {
-      if (typeof value !== "string" || expandCurie(value, prefixes) === null) {
+      const m = typeof value === "string" ? CURIE_RE.exec(value) : null;
+      const declaredPrefix = m !== null && Object.prototype.hasOwnProperty.call(prefixes, m[1]); // an invalid one is ontology.prefix
+      if (typeof value !== "string" || (expandCurie(value, prefixes) === null && !declaredPrefix)) {
         err("ontology.prefix-undeclared", `${file}: ${where} ${JSON.stringify(value)} uses a prefix that spec.ontology.prefixes does not declare`, file);
       }
     }

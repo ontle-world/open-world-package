@@ -434,7 +434,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             warnings.append(f"knowledge.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
                             "that is its T-box in spec.conformsTo.ontology")
         if ontology is not None:
-            dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in _list(spec_manifest.get("dependencies"))}
+            dependency_refs = [d.get("ref") if isinstance(d, dict) else d for d in _list(spec_manifest.get("dependencies"))]
             if ontology not in dependency_refs:
                 warnings.append(f"experimental.reference: {rel}: spec.conformsTo.ontology {ontology!r} must also be listed in spec.dependencies")
         _check_content(sub("content"), rel, root, declared, errors, warnings)
@@ -697,7 +697,7 @@ def view_composition_warnings(local_kinds: dict[str, str], docs: dict[str, dict[
     def edges(view: str) -> list[str]:
         s = _spec(docs.get(view))
         out = [c for c in _names(s.get("composes")) if c in views] if isinstance(s.get("composes"), list) else []
-        return out + ([s["specializes"]] if s.get("specializes") in views else [])
+        return out + ([s["specializes"]] if isinstance(s.get("specializes"), str) and s["specializes"] in views else [])
 
     def cycle(start: str) -> list[str] | None:
         stack = [(start, [start])]

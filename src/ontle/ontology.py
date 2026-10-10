@@ -265,6 +265,14 @@ def _identifier(fmt: str, value: Any, prefixes: dict[str, Any]) -> str | None:
     return (value if IRI_RE.match(value) else None) if fmt == "term-index" else expand(value, prefixes)
 
 
+def _malformed(fmt: str, value: Any, prefixes: dict[str, Any]) -> bool:
+    """Neither an identifier nor a CURIE with a declared prefix; a prefix declared with an invalid IRI is ontology.prefix."""
+    if _identifier(fmt, value, prefixes) is not None:
+        return False
+    match = CURIE_RE.match(value) if fmt != "term-index" and isinstance(value, str) else None
+    return not (match and match.group(1) in prefixes)
+
+
 def replaced_by_refs(root: Path, manifest: dict[str, Any]) -> list[tuple[str, str, str, str]]:
     """(file, where, value, IRI) for every well-formed `replacedBy` identifier of an OntologyPackage (Appendix C.1)."""
     ontology = _ontology(manifest)
@@ -352,7 +360,7 @@ def lifecycle_warnings(root: Path, manifest: dict[str, Any]) -> list[str]:
             if entry.get("status") != "deprecated":
                 warnings.append(f"experimental.field: {file}: {where}.replacedBy is only for a term with status deprecated")
             for value in values:
-                if _identifier(fmt, value, prefixes) is None:
+                if _malformed(fmt, value, prefixes):
                     need = "an absolute IRI" if fmt == "term-index" else "a CURIE with a declared prefix or an absolute IRI"
                     warnings.append(f"experimental.field: {file}: {where}.replacedBy {value!r} must be {need}")
     defined = terms(root, manifest)[1]
@@ -364,8 +372,9 @@ def lifecycle_warnings(root: Path, manifest: dict[str, Any]) -> list[str]:
         for where, entry in entries:
             iri = _identifier(fmt, entry.get(key), prefixes) if isinstance(entry, dict) else None
             if iri is None:
-                need = "an absolute IRI" if fmt == "term-index" else "a CURIE with a declared prefix or an absolute IRI"
-                warnings.append(f"experimental.field: {file}: {where} needs {key}, {need}")
+                if not isinstance(entry, dict) or _malformed(fmt, entry.get(key), prefixes):
+                    need = "an absolute IRI" if fmt == "term-index" else "a CURIE with a declared prefix or an absolute IRI"
+                    warnings.append(f"experimental.field: {file}: {where} needs {key}, {need}")
                 continue
             if iri in defined:
                 warnings.append(f"experimental.field: {file}: {where} {entry[key]!r} is listed as removed, but the ontology still defines it")
@@ -376,7 +385,7 @@ def lifecycle_warnings(root: Path, manifest: dict[str, Any]) -> list[str]:
                 if values is None:
                     warnings.append(f"experimental.field: {file}: {where}.replacedBy must be an identifier or a non-empty list of identifiers")
                 for value in values or []:
-                    if _identifier(fmt, value, prefixes) is None:
+                    if _malformed(fmt, value, prefixes):
                         need = "an absolute IRI" if fmt == "term-index" else "a CURIE with a declared prefix or an absolute IRI"
                         warnings.append(f"experimental.field: {file}: {where}.replacedBy {value!r} must be {need}")
     namespace = ontology.get("iri")

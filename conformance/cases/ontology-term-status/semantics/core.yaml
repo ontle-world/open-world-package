@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - {id: q:Defect}
+  - {id: q:CoatingDefect, subClassOf: q:Defect, status: candidate}
+  - {id: q:PaintIssue, subClassOf: q:Defect, status: deprecated, replacedBy: q:CoatingDefect}
+  - id: q:Lot
+    status: stable
+    properties:
+    - {id: q:lotCode, range: string, status: deprecated}
+    - {id: q:batchCode, range: string}
+  relations:
+  - {id: q:affects, domain: q:Defect, range: q:Lot}
+  - {id: q:hits, domain: q:Defect, range: q:Lot, status: deprecated, replacedBy: [q:affects]}

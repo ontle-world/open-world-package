@@ -167,4 +167,4 @@ rules:
   ref.unpinned: {severity: warning, section: "5.1", summary: "bound ExternalRef that is not pinned"}
   experimental.field: {severity: warning, section: "C", summary: "experimental kind or field: undefined key, missing required field, or malformed value"}
   experimental.value: {severity: warning, section: "C", summary: "value outside a value set in an experimental kind"}
-  experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes or composes cycle"}
+  experimental.reference: {severity: warning, section: "C", summary: "experimental reference that does not name a suitable local asset, or a specializes or composes cycle; a replacedBy or query term that names no term, or a use of a deprecated or removed term (C.1)"}

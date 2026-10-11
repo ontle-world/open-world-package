@@ -1311,6 +1311,58 @@ cases:
     errors: [knowledge.field]
     satisfiedProfile: viewable
     rule: "Each observation template has type, a non-empty id column list, and a values mapping."
+  ontology-term-status:
+    valid: true
+    rule: "Experimental (Appendix C.1): terms may be candidate, stable, or deprecated, and a deprecated term may name its replacements, in owp-yaml and in the term index."
+  ontology-term-status-unknown:
+    valid: true
+    warnings: [experimental.value]
+    rule: "A term status outside candidate, stable, and deprecated is a warning while lifecycle status is experimental (Appendix C.1)."
+  ontology-replaced-by-not-deprecated:
+    valid: true
+    warnings: [experimental.field]
+    rule: "replacedBy is only for a deprecated term (Appendix C.1)."
+  ontology-replaced-by-undefined:
+    valid: true
+    warnings: [experimental.reference]
+    rule: "A replacedBy in the ontology's own namespace names a term the ontology defines (Appendix C.1)."
+  ontology-removed-term:
+    valid: true
+    rule: "Experimental (Appendix C.1): an ontology may keep tombstones for the terms it removed, with their replacements, in owp-yaml and in the term index."
+  ontology-removed-still-defined:
+    valid: true
+    warnings: [experimental.field]
+    rule: "A term listed as removed is not also defined (Appendix C.1)."
+  extraction-query-terms-malformed:
+    valid: true
+    satisfiedProfile: model-ready
+    warnings: [experimental.field, knowledge.graph-ontology]
+    rule: "spec.query.terms is a non-empty list of CURIEs or absolute IRIs; a malformed one is a warning while it is experimental (Appendix C.1)."
+  extraction-query-terms-empty:
+    valid: true
+    satisfiedProfile: model-ready
+    warnings: [experimental.field, knowledge.graph-ontology]
+    rule: "An empty spec.query.terms is a warning (Appendix C.1)."
+  ontology-removed-not-a-list:
+    valid: true
+    warnings: [experimental.field]
+    rule: "spec.removed is a list (Appendix C.1)."
+  ontology-removed-without-id:
+    valid: true
+    warnings: [experimental.field]
+    rule: "A tombstone names the removed term with id (owp-yaml) or iri (term index) (Appendix C.1)."
+  ontology-removed-in-not-string:
+    valid: true
+    warnings: [experimental.field]
+    rule: "A tombstone's removedIn is a version string (Appendix C.1)."
+  ontology-removed-replaced-by-malformed:
+    valid: true
+    warnings: [experimental.field]
+    rule: "A tombstone's replacedBy is an identifier or a non-empty list of them (Appendix C.1)."
+  ontology-removed-replaced-by-undefined:
+    valid: true
+    warnings: [experimental.reference]
+    rule: "A tombstone's replacedBy in the ontology's own namespace names a term the ontology defines (Appendix C.1)."
 resolutionCases:
   dependency-reference-malformed:
     valid: false
@@ -1486,6 +1538,62 @@ resolutionCases:
     valid: false
     errors: [grounding.prefix-conflict]
     rule: "Two dependency ontologies may not declare one prefix with different IRIs."
+  ontology-deprecated-term-used:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/upper@1.0.0: null
+    rule: "A schema that uses a term its dependency ontology deprecates is told so, with the replacement (Appendix C.1)."
+  ontology-replaced-by-dependency-unknown:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/upper@1.0.0: null
+    rule: "A replacedBy in a dependency ontology's namespace names a term that ontology defines (Appendix C.1)."
+  binding-deprecated-term:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A SemanticBinding that uses a deprecated term of a dependency ontology is told so (Appendix C.1)."
+  binding-removed-term:
+    valid: false
+    errors: [grounding.ontology-term]
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@1.0.0: null
+    rule: "A binding term the dependency ontology removed is an error, and its tombstone names the replacement (Appendix C.1)."
+  extraction-query-term-deprecated:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A term in spec.query.terms that a dependency ontology deprecates is told so, with the replacement (Appendix C.1)."
+  extraction-query-term-unknown:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A term in spec.query.terms in a dependency ontology's namespace is a term that ontology defines (Appendix C.1)."
+  extraction-query-term-prefix-unknown:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A CURIE in spec.query.terms uses a prefix a dependency OntologyPackage declares (Appendix C.1)."
+  extraction-query-term-removed:
+    valid: true
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@0.1.0: null
+    rule: "A term in spec.query.terms that a dependency ontology removed is told so once, with the tombstone's replacement (Appendix C.1)."
+  binding-removed-term-index:
+    valid: false
+    errors: [grounding.ontology-term]
+    warnings: [experimental.reference]
+    resolved:
+      conformance/onto@1.0.0: null
+    rule: "A tombstone in the dependency's term index names the replacement as one in its owp-yaml schema does (Appendix C.1)."
 ewsCases:
   per-subject-latest:
     compiler: state/task-compiler.yaml

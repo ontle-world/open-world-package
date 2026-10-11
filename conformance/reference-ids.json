@@ -827,6 +827,20 @@
    ],
    "warnings": []
   },
+  "extraction-query-terms-empty": {
+   "errors": [],
+   "warnings": [
+    "experimental.field",
+    "knowledge.graph-ontology"
+   ]
+  },
+  "extraction-query-terms-malformed": {
+   "errors": [],
+   "warnings": [
+    "experimental.field",
+    "knowledge.graph-ontology"
+   ]
+  },
   "identity-with-slash": {
    "errors": [
     "manifest.identity"
@@ -1109,6 +1123,58 @@
    ],
    "warnings": []
   },
+  "ontology-removed-in-not-string": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-removed-not-a-list": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-removed-replaced-by-malformed": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-removed-replaced-by-undefined": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "ontology-removed-still-defined": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-removed-term": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-removed-without-id": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-replaced-by-not-deprecated": {
+   "errors": [],
+   "warnings": [
+    "experimental.field"
+   ]
+  },
+  "ontology-replaced-by-undefined": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
   "ontology-schema-owp-yaml": {
    "errors": [],
    "warnings": []
@@ -1134,6 +1200,16 @@
     "ontology.term-index"
    ],
    "warnings": []
+  },
+  "ontology-term-status": {
+   "errors": [],
+   "warnings": []
+  },
+  "ontology-term-status-unknown": {
+   "errors": [],
+   "warnings": [
+    "experimental.value"
+   ]
   },
   "ontology-unknown-field": {
    "errors": [
@@ -2006,6 +2082,13 @@
    ],
    "warnings": []
   },
+  "binding-deprecated-term": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
   "binding-grounded": {
    "errors": [],
    "warnings": [
@@ -2045,6 +2128,24 @@
     "grounding.prefix-unknown"
    ],
    "warnings": [
+    "view.outside-world"
+   ]
+  },
+  "binding-removed-term": {
+   "errors": [
+    "grounding.ontology-term"
+   ],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
+  "binding-removed-term-index": {
+   "errors": [
+    "grounding.ontology-term"
+   ],
+   "warnings": [
+    "experimental.reference",
     "view.outside-world"
    ]
   },
@@ -2124,6 +2225,34 @@
    ],
    "warnings": []
   },
+  "extraction-query-term-deprecated": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
+  "extraction-query-term-prefix-unknown": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
+  "extraction-query-term-removed": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
+  "extraction-query-term-unknown": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference",
+    "view.outside-world"
+   ]
+  },
   "git-bundle-source": {
    "errors": [],
    "warnings": []
@@ -2168,6 +2297,18 @@
     "ontology.dependency-term"
    ],
    "warnings": []
+  },
+  "ontology-deprecated-term-used": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
+  },
+  "ontology-replaced-by-dependency-unknown": {
+   "errors": [],
+   "warnings": [
+    "experimental.reference"
+   ]
   },
   "unresolvable-world": {
    "errors": [

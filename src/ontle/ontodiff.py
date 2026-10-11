@@ -1,11 +1,12 @@
 """`ontle diff`: what changed between two versions of an OntologyPackage, and the SemVer increment the changes call for.
 
-Tooling, like `kg check`: it reads the T-box as RDF (the rdf extra) and changes no verdict. Only the terms of the
-ontology's own namespaces (its `iri` and its non-standard prefixes) are compared:
+Tooling, like `kg check`: it reads the T-box as RDF (the rdf extra) and changes no verdict. The grading rules are spec
+section 3.1 ("Versions"); keep the two in step. Only the terms of the ontology's own namespaces (its `iri` and its
+non-standard prefixes) are compared:
 
 - major: a term removed or its type changed; a superclass or superproperty removed; a domain or range narrowed or
   changed; an enumeration value removed. Data that used the old version may no longer fit.
-- minor: a term added, deprecated, or undeprecated; a superclass or superproperty added; a domain or range widened;
+- minor: a term added, deprecated, or undeprecated, or made or no longer a candidate; a superclass or superproperty added; a domain or range widened;
   an enumeration value added.
 - patch: labels, definitions, and comments.
 
@@ -22,6 +23,7 @@ from typing import Any
 
 from .core import OWPError, SEMVER_RE, load_manifest
 from .kgcheck import _identity, _namespaces, _rdflib, rdf_schema_model, shapes_graph, tbox_graph
+from .ontology import VS_NS, removed_terms
 
 LEVELS = ("patch", "minor", "major")
 TYPES = {  # the term's type, as `ontology index` names it
@@ -127,6 +129,7 @@ def _model(root: Path, manifest: dict[str, Any], notes: list[str]) -> dict[str, 
         info["parents"] = {str(p) for axis in (RDFS.subClassOf, RDFS.subPropertyOf) for p in graph.objects(s, axis) if isinstance(p, rdflib.URIRef)}
         info["domain"], info["range"] = groups(s, RDFS.domain), groups(s, RDFS.range)
         info["deprecated"] = any(str(v).lower() == "true" for v in graph.objects(s, OWL.deprecated))
+        info["candidate"] = any(str(v) in ("testing", "unstable") for v in graph.objects(s, rdflib.URIRef(VS_NS + "term_status")))
         info["text"] = {(str(p), str(o), getattr(o, "language", None)) for p in TEXT for o in graph.objects(s, rdflib.URIRef(p))}
         info["values"] = enums.get(iri)
     return {"terms": terms, "name": graph.namespace_manager.normalizeUri, "shapes": shapes_graph(root, manifest, notes)}
@@ -153,10 +156,18 @@ def diff_ontologies(old_path: str | Path, new_path: str | Path) -> OntologyDiff:
     names = lambda iris: ", ".join(sorted(nn(i) if "://" in i or i.startswith("urn:") else i for i in iris))
     add = lambda level, text: result.changes.append(Change(level, text))
     old_terms, new_terms = a["terms"], b["terms"]
+    tombstones = removed_terms(new_root, new_manifest)
+    untold = []
     for iri in sorted(old_terms.keys() - new_terms.keys()):
-        add("major", f"removed {'/'.join(sorted(old_terms[iri]['types']))} {a['name'](iri)}")
+        replaced = tombstones.get(iri, ([], None))[0]
+        instead = f" (replaced by {names(replaced)})" if replaced else ""
+        add("major", f"removed {'/'.join(sorted(old_terms[iri]['types']))} {a['name'](iri)}{instead}")
+        if iri not in tombstones:
+            untold.append(a["name"](iri))
+    if untold:
+        result.notes.append(f"removed without a `removed` entry (Appendix C.1), so users of {', '.join(untold)} are not told what replaces them")
     for iri in sorted(new_terms.keys() - old_terms.keys()):
-        add("minor", f"added {'/'.join(sorted(new_terms[iri]['types']))} {nn(iri)}")
+        add("minor", f"added {'/'.join(sorted(new_terms[iri]['types']))} {nn(iri)}" + (" (candidate)" if new_terms[iri]["candidate"] else ""))
     for iri in sorted(old_terms.keys() & new_terms.keys()):
         o, n, name = old_terms[iri], new_terms[iri], nn(iri)
         if o["types"] != n["types"]:
@@ -176,6 +187,8 @@ def diff_ontologies(old_path: str | Path, new_path: str | Path) -> OntologyDiff:
                 add("minor", f"{name}: values added: {', '.join(sorted(n['values'] - o['values']))}")
         if o["deprecated"] != n["deprecated"]:
             add("minor", f"{name}: {'deprecated' if n['deprecated'] else 'no longer deprecated'}")
+        if o["candidate"] != n["candidate"]:
+            add("minor", f"{name}: {'now a candidate term' if n['candidate'] else 'no longer a candidate term'}")
         if o["text"] != n["text"]:
             add("patch", f"{name}: labels or definitions changed")
     if not isomorphic(a["shapes"], b["shapes"]):

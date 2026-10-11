@@ -25,6 +25,8 @@ When a profile is promoted, its warnings become errors where the spec says MUST,
 | Profile | Semantic | Portability | Example domains | Machine contract | Interoperability |
 |---|---|---|---|---|---|
 | ArtifactTemplate (C) | reviewed | yes | none yet | schema, cases | 2 implementations, round trips |
+| Term lifecycle: SemanticProfile and OntologyTermIndex `status`, `replacedBy`, `removed` (C.1) | reviewed | yes | none yet | schema, cases | 2 implementations |
+| KnowledgeExtractionProfile `query.terms` (C.1) | reviewed | yes | manufacturing | schema, cases | 2 implementations |
 | WorldViewProfile `specializes`, `composes`, `projection.exclude` (C.1) | open: operations beyond union, filter, and override are undecided | yes | manufacturing, sales, research | schema, cases | 2 implementations, round trips |
 
 Round trips: every example and valid conformance case keeps its verdict, error ids, and warning ids after `ontle pack` and unpacking (`tests/test_roundtrip.py`) and after every YAML file is re-serialized in a different layout (Python `tests/test_roundtrip.py`, TypeScript `scripts/check-roundtrip.mjs`).

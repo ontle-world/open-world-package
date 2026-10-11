@@ -109,7 +109,7 @@ TABLES: dict[str, dict[str, Any]] = {
     "KnowledgeExtractionProfile": _document({
         "source": VALUE,
         "parameters": OPEN,
-        "query": closed({"language": VALUE, "text": VALUE}),
+        "query": closed({"language": VALUE, "text": VALUE, "terms": VALUE}),  # terms: experimental (Appendix C.1)
         "observations": array(closed({
             "type": VALUE, "id": VALUE, "subject": VALUE, "values": OPEN, "multi": VALUE,
             "observedAt": closed({"column": VALUE, "default": VALUE}),
@@ -434,7 +434,7 @@ def experimental_issues(doc: dict[str, Any], kind: str, rel: str, root: Path, sp
             warnings.append(f"knowledge.graph-ontology: {rel}: a graph KnowledgeAsset is an A-box; declare the OntologyPackage "
                             "that is its T-box in spec.conformsTo.ontology")
         if ontology is not None:
-            dependency_refs = {d.get("ref") if isinstance(d, dict) else d for d in _list(spec_manifest.get("dependencies"))}
+            dependency_refs = [d.get("ref") if isinstance(d, dict) else d for d in _list(spec_manifest.get("dependencies"))]
             if ontology not in dependency_refs:
                 warnings.append(f"experimental.reference: {rel}: spec.conformsTo.ontology {ontology!r} must also be listed in spec.dependencies")
         _check_content(sub("content"), rel, root, declared, errors, warnings)
@@ -596,6 +596,24 @@ def view_specialization_warnings(local_kinds: dict[str, str], docs: dict[str, di
     return warnings
 
 
+def query_terms_warnings(local_kinds: dict[str, str], docs: dict[str, dict[str, Any]]) -> list[str]:
+    """Appendix C.1: a KnowledgeExtractionProfile's `query.terms` is a non-empty list of CURIEs or absolute IRIs."""
+    from .ontology import CURIE_RE, IRI_RE  # local import: ontology imports structure
+    warnings: list[str] = []
+    for rel, kind in sorted(local_kinds.items()):
+        query = _spec(docs.get(rel)).get("query") if kind == "KnowledgeExtractionProfile" else None
+        if not isinstance(query, dict) or "terms" not in query:
+            continue
+        declared = query["terms"]
+        if not isinstance(declared, list) or not declared:
+            warnings.append(f"experimental.field: {rel}: spec.query.terms must be a non-empty list of CURIEs or absolute IRIs")
+            continue
+        for i, value in enumerate(declared):
+            if not (isinstance(value, str) and (CURIE_RE.match(value) or IRI_RE.match(value))):
+                warnings.append(f"experimental.field: {rel}: spec.query.terms[{i}] {value!r} must be a CURIE or an absolute IRI")
+    return warnings
+
+
 def _names(value: Any) -> list[str]:
     """A list of names; anything that is not a list of strings counts as empty (TypeScript reads it the same way)."""
     return [x for x in value if isinstance(x, str)] if isinstance(value, list) else []
@@ -679,7 +697,7 @@ def view_composition_warnings(local_kinds: dict[str, str], docs: dict[str, dict[
     def edges(view: str) -> list[str]:
         s = _spec(docs.get(view))
         out = [c for c in _names(s.get("composes")) if c in views] if isinstance(s.get("composes"), list) else []
-        return out + ([s["specializes"]] if s.get("specializes") in views else [])
+        return out + ([s["specializes"]] if isinstance(s.get("specializes"), str) and s["specializes"] in views else [])
 
     def cycle(start: str) -> list[str] | None:
         stack = [(start, [start])]

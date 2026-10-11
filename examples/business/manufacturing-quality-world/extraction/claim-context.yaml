@@ -9,6 +9,7 @@ spec:
     claimId: {type: string}
   query:
     language: sparql
+    terms: [q:claimId, q:affectsLot, q:producedOn, q:hasPart]  # experimental (Appendix C.1): checked against the ontology
     text: |
       PREFIX q: <https://w3id.org/openworld-examples/quality#>
       SELECT ?lot ?equipment ?part WHERE {

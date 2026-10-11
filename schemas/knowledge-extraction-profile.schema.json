@@ -51,6 +51,14 @@
             "text": {
               "type": "string"
             },
+            "terms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "Experimental (Appendix C.1): the ontology terms the query uses, as CURIEs (prefixes of the dependency ontologies) or absolute IRIs."
+            },
             "extensions": {
               "$ref": "#/$defs/extensions"
             }

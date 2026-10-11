@@ -510,6 +510,74 @@ def binding_semantic_warnings(resolution: Resolution) -> list[str]:
     return warnings
 
 
+def lifecycle_reference_warnings(resolution: Resolution) -> list[str]:
+    """Appendix C.1 (experimental): a `replacedBy` in a dependency ontology's namespace names a term it defines;
+    owp-yaml schemas, SemanticBindings, and the declared `query.terms` of KnowledgeExtractionProfiles are told when a
+    term they use from a dependency ontology is deprecated or removed; and declared query terms name terms of it."""
+    from .binding import binding_curies
+    from .ontology import (_load, _profile_curies, compact, expand, removed_terms, replaced_by_refs, term_statuses,
+                           terms as ontology_terms)
+    warnings: list[str] = []
+    for _, pkg in sorted(resolution.packages.items()):
+        deps = []
+        for ref, _ in _dependency_refs(pkg.manifest):
+            dep = resolution.packages.get(ref)
+            iri = dig(dep.manifest, "spec", "ontology", "iri") if dep is not None and dep.kind == "OntologyPackage" else None
+            if isinstance(iri, str) and iri:
+                deps.append((ref, iri, ontology_terms(dep.root, dep.manifest)[1], term_statuses(dep.root, dep.manifest),  # type: ignore[union-attr]
+                             removed_terms(dep.root, dep.manifest)))  # type: ignore[union-attr]
+        if not deps:
+            continue
+        uses: list[tuple[str, str, str, str, dict[str, Any]]] = []  # file, where, value, IRI, the prefixes the file uses
+        if pkg.kind == "OntologyPackage":
+            for file, where, value, full in replaced_by_refs(pkg.root, pkg.manifest):
+                for ref, iri, defined, _, _ in deps:
+                    if full.startswith(iri) and full not in defined:
+                        warnings.append(f"experimental.reference: {pkg.identity}: {file}: {where} {value!r} ({full}) is not a term of {ref}")
+            ontology = dig(pkg.manifest, "spec", "ontology")
+            ontology = ontology if isinstance(ontology, dict) else {}
+            prefixes = ontology.get("prefixes") if isinstance(ontology.get("prefixes"), dict) else {}
+            for entry in ontology.get("entrypoints") if isinstance(ontology.get("entrypoints"), list) else []:
+                if isinstance(entry, dict) and entry.get("format") == "owp-yaml" and entry.get("role") == "schema" and isinstance(entry.get("path"), str):
+                    doc = _load(pkg.root / entry["path"])
+                    for where, value, term_type in _profile_curies(doc) if isinstance(doc, dict) else []:
+                        full = expand(value, prefixes) if isinstance(value, str) and not term_type else None
+                        if full:
+                            uses.append((entry["path"], where, value, full, prefixes))
+        binding_docs, prefixes, _ = binding_context(pkg, resolution)
+        for rel, doc in sorted(binding_docs.items()):
+            for where, value in binding_curies(doc):
+                full = expand(value, prefixes) if isinstance(value, str) else None
+                if full:
+                    uses.append((rel, where, value, full, prefixes))
+        kinds, docs = pkg.local_assets()
+        for rel in sorted(r for r, k in kinds.items() if k == "KnowledgeExtractionProfile"):
+            declared = dig(docs.get(rel), "spec", "query", "terms")
+            for i, value in enumerate(declared if isinstance(declared, list) else []):
+                full = expand(value, prefixes) if isinstance(value, str) else None
+                where = f"spec.query.terms[{i}]"
+                if isinstance(value, str) and full is None:
+                    warnings.append(f"experimental.reference: {pkg.identity}: {rel}: {where} {value!r} uses a prefix that no dependency OntologyPackage declares")
+                elif full:
+                    uses.append((rel, where, value, full, prefixes))
+                    for ref, iri, defined, _, removed in deps:
+                        if full.startswith(iri) and full not in defined and full not in removed:
+                            warnings.append(f"experimental.reference: {pkg.identity}: {rel}: {where} {value!r} ({full}) is not a term of {ref}")
+        for file, where, value, full, names in uses:
+            for ref, _, _, statuses, removed in deps:
+                status, replaced = statuses.get(full, ("stable", []))
+                if full in removed:
+                    replaced, version = removed[full]
+                    gone = f"was removed from {ref.rsplit('@', 1)[0]} in {version}" if version else f"is removed in {ref}"
+                elif status == "deprecated":
+                    gone = f"is deprecated in {ref}"
+                else:
+                    continue
+                instead = f"; replaced by {', '.join(compact(r, names) for r in replaced)}" if replaced else ""
+                warnings.append(f"experimental.reference: {pkg.identity}: {file}: {where} {value!r} ({full}) {gone}{instead}")
+    return warnings
+
+
 def dependency_direction_warnings(resolution: Resolution) -> list[str]:
     """Dependencies that point up the hierarchy. Extension dependencies (declared with `as`) are exempt."""
     warnings: list[str] = []
@@ -544,6 +612,7 @@ def validate_resolved(path: str | Path, sources: list[str] | None = None) -> tup
     errors += cross_package_errors(resolution)
     warnings += dependency_direction_warnings(resolution)
     warnings += binding_semantic_warnings(resolution)
+    warnings += lifecycle_reference_warnings(resolution)
     ext_errors, ext_warnings = external_world_issues(resolution)
     errors += ext_errors
     warnings += ext_warnings

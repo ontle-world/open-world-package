@@ -15,8 +15,8 @@ import { readZip } from "./zip.js";
 import { Dependency, parseDependencies, parsePackageRef } from "./rules/dependencies.js";
 import { parseContractRef } from "./rules/worldmodel.js";
 import { viewExternalNames } from "./rules/world.js";
-import { bindingGroundingProblems, bindingSemanticProblems, mergeSchemaModels } from "./rules/binding.js";
-import { ontologyTerms, ontologyUses, schemaModel } from "./rules/ontology.js";
+import { bindingCuries, bindingGroundingProblems, bindingSemanticProblems, mergeSchemaModels } from "./rules/binding.js";
+import { compactIri, expandCurie, ontologyTerms, ontologyUses, removedTerms, replacedByRefs, schemaModel, termStatuses } from "./rules/ontology.js";
 import { validatePackage, ValidationResult } from "./validate.js";
 
 export interface Candidate {
@@ -524,6 +524,7 @@ export function validateWithResolution(dir: string, opts: ResolveOptions): Resol
   for (const n of nodes.values()) for (const p of bindingGrounding(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
   for (const n of nodes.values()) for (const p of bindingSemantics(n, nodes)) warnings.push({ code: p.rule, message: `${n.identity}: ${p.msg}` });
   for (const n of nodes.values()) for (const p of ontologyDependencyProblems(n, nodes)) err(p.rule, `${n.identity}: ${p.msg}`);
+  for (const n of nodes.values()) for (const p of lifecycleReferences(n, nodes)) warnings.push({ code: p.rule, message: `${n.identity}: ${p.msg}` });
 
   // Cross-package rules for every WorldModelPackage in the closure.
   for (const n of nodes.values()) {
@@ -547,6 +548,88 @@ function ontologyDependencyProblems(pkg: Node, nodes: Map<string, Node>): Array<
       .filter((d) => iri.startsWith(d.iri) && !d.terms.has(iri))
       .map((d) => ({ rule: "ontology.dependency-term", msg: `${file}: ${where} "${value}" (${iri}) is not a term of ${d.ref}` })),
   );
+}
+
+/**
+ * Appendix C.1 (experimental): a `replacedBy` in a dependency ontology's namespace names a term it defines; owp-yaml
+ * schemas, SemanticBindings, and the declared `query.terms` of KnowledgeExtractionProfiles are told when a term they
+ * use from a dependency ontology is deprecated or removed; and declared query terms name terms of it.
+ */
+function lifecycleReferences(pkg: Node, nodes: Map<string, Node>): Array<{ rule: string; msg: string }> {
+  const ontologies = pkg.deps
+    .map((d) => nodes.get(d.ref))
+    .filter((d): d is Node => d !== undefined && d.kind === "OntologyPackage")
+    .map((d) => ({
+      ref: d.identity,
+      iri: get(d.manifest, "spec", "ontology", "iri"),
+      ...ontologyTerms(d.dir, d.manifest),
+      statuses: termStatuses(d.dir, d.manifest),
+      removed: removedTerms(d.dir, d.manifest),
+    }));
+  const deps = ontologies.filter((d) => typeof d.iri === "string" && d.iri.length > 0);
+  if (deps.length === 0) return [];
+  const out: Array<{ rule: string; msg: string }> = [];
+  const uses: Array<{ file: string; where: string; value: string; iri: string; prefixes: Record<string, unknown> }> = [];
+  if (pkg.kind === "OntologyPackage") {
+    for (const r of replacedByRefs(pkg.dir, pkg.manifest)) {
+      for (const d of deps) {
+        if (r.iri.startsWith(d.iri as string) && !d.terms.has(r.iri)) {
+          out.push({ rule: "experimental.reference", msg: `${r.file}: ${r.where} ${JSON.stringify(r.value)} (${r.iri}) is not a term of ${d.ref}` });
+        }
+      }
+    }
+    const own = get(pkg.manifest, "spec", "ontology", "prefixes");
+    for (const u of ontologyUses(pkg.dir, pkg.manifest)) uses.push({ ...u, prefixes: isObj(own) ? own : {} });
+  }
+  const prefixes: Record<string, string> = Object.create(null);
+  for (const d of ontologies) for (const [name, iri] of Object.entries(d.prefixes)) if (!(name in prefixes)) prefixes[name] = iri; // a conflict is grounding.prefix-conflict
+  const kinds = [...localAssetKinds(pkg.dir, pkg.manifest)].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  for (const [rel, kind] of kinds) {
+    if (kind !== "SemanticBinding") continue;
+    const l = loadYamlFile(path.join(pkg.dir, rel));
+    for (const [where, value] of bindingCuries(l.ok ? l.value : undefined)) {
+      const iri = typeof value === "string" ? expandCurie(value, prefixes) : null;
+      if (iri !== null) uses.push({ file: rel, where, value: value as string, iri, prefixes });
+    }
+  }
+  for (const [rel, kind] of kinds) {
+    if (kind !== "KnowledgeExtractionProfile") continue;
+    const l = loadYamlFile(path.join(pkg.dir, rel));
+    const declared = get(l.ok ? l.value : undefined, "spec", "query", "terms");
+    (Array.isArray(declared) ? declared : []).forEach((value, i) => {
+      if (typeof value !== "string") return;
+      const where = `spec.query.terms[${i}]`;
+      const iri = expandCurie(value, prefixes);
+      if (iri === null) {
+        out.push({ rule: "experimental.reference", msg: `${rel}: ${where} ${JSON.stringify(value)} uses a prefix that no dependency OntologyPackage declares` });
+        return;
+      }
+      uses.push({ file: rel, where, value, iri, prefixes });
+      for (const d of deps) {
+        if (iri.startsWith(d.iri as string) && !d.terms.has(iri) && !d.removed.has(iri)) {
+          out.push({ rule: "experimental.reference", msg: `${rel}: ${where} ${JSON.stringify(value)} (${iri}) is not a term of ${d.ref}` });
+        }
+      }
+    });
+  }
+  for (const u of uses) {
+    for (const d of deps) {
+      const removed = d.removed.get(u.iri);
+      const s = d.statuses.get(u.iri);
+      let gone: string;
+      let replaced: string[];
+      if (removed) {
+        gone = removed.removedIn ? `was removed from ${d.ref.slice(0, d.ref.lastIndexOf("@"))} in ${removed.removedIn}` : `is removed in ${d.ref}`;
+        replaced = removed.replacedBy;
+      } else if (s?.status === "deprecated") {
+        gone = `is deprecated in ${d.ref}`;
+        replaced = s.replacedBy;
+      } else continue;
+      const instead = replaced.length ? `; replaced by ${replaced.map((r) => compactIri(r, u.prefixes)).join(", ")}` : "";
+      out.push({ rule: "experimental.reference", msg: `${u.file}: ${u.where} ${JSON.stringify(u.value)} (${u.iri}) ${gone}${instead}` });
+    }
+  }
+  return out;
 }
 
 /** Spec 14 warnings: binding paths and value maps against the owp-yaml schemas of the dependency ontologies. */

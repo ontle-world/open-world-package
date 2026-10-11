@@ -9,9 +9,10 @@ import * as path from "node:path";
 import { Context, error, LocalAsset, warn } from "../context.js";
 import { ANY, ASSET_METADATA, closed, EXTERNAL_REF, leaves, list, OPEN, Shape, structureProblems } from "../structure.js";
 import { isUtcTimestamp } from "../ews.js";
-import { fileExists, isObj, normalizeRelPath, Obj, packageFile as packageFileAt, PINNED_RE, staysInside, jsString, own } from "../util.js";
+import { fileExists, get, isObj, normalizeRelPath, Obj, packageFile as packageFileAt, PINNED_RE, staysInside, jsString, own } from "../util.js";
 import { VALUE_SETS } from "../vocab.js";
 import { externalRefProblems } from "./externalref.js";
+import { CURIE_RE } from "./ontology.js";
 
 const doc = (spec: Record<string, Shape>): Shape => closed({ ...leaves("apiVersion", "kind"), metadata: ASSET_METADATA, spec: closed(spec) }, false);
 const CONTENT = closed({ path: ANY, ref: EXTERNAL_REF });
@@ -69,7 +70,7 @@ export const EXPERIMENTAL_STRUCTURES: Record<string, Shape> = {
   KnowledgeExtractionProfile: doc({
     source: ANY,
     parameters: OPEN,
-    query: closed(leaves("language", "text")),
+    query: closed(leaves("language", "text", "terms")), // terms: experimental (Appendix C.1)
     observations: list(closed({ ...leaves("type", "id", "subject", "multi"), values: OPEN, observedAt: closed(leaves("column", "default")) })),
   }),
   ActorProfile: doc({
@@ -497,6 +498,27 @@ export function checkViewSpecialization(ctx: Context): void {
       }
       chain.push(cur);
     }
+  }
+}
+
+/** Appendix C.1: a KnowledgeExtractionProfile's `query.terms` is a non-empty list of CURIEs or absolute IRIs. */
+export function checkQueryTerms(ctx: Context): void {
+  const kinds = localKinds(ctx);
+  const docs = localDocs(ctx);
+  for (const p of [...kinds.keys()].sort()) {
+    if (kinds.get(p) !== "KnowledgeExtractionProfile") continue;
+    const query = get(docs.get(p), "spec", "query");
+    if (!isObj(query) || !("terms" in query)) continue;
+    const declared = query.terms;
+    if (!Array.isArray(declared) || declared.length === 0) {
+      warn(ctx, "experimental.field", `${p}: spec.query.terms must be a non-empty list of CURIEs or absolute IRIs`, p);
+      continue;
+    }
+    declared.forEach((v, i) => {
+      if (!(typeof v === "string" && (CURIE_RE.test(v) || /^[A-Za-z][A-Za-z0-9+.-]*:\S+$/.test(v)))) {
+        warn(ctx, "experimental.field", `${p}: spec.query.terms[${i}] ${JSON.stringify(v)} must be a CURIE or an absolute IRI`, p);
+      }
+    });
   }
 }
 

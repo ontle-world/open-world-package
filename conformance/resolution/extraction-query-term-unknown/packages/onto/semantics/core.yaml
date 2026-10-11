@@ -1,0 +1,13 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - id: q:Claim
+    properties:
+    - {id: q:claimStatus}
+  - id: q:Lot
+    properties:
+    - {id: q:derivedFrom, range: q:Lot}
+    - {id: q:partOf, range: q:Lot}
+  - id: q:ProposeCapa

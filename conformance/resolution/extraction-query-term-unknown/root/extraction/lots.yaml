@@ -1,0 +1,16 @@
+apiVersion: openworld/v1alpha1
+kind: KnowledgeExtractionProfile
+metadata: {name: lots, version: 0.1.0}
+spec:
+  source: knowledge/kg.yaml
+  query:
+    language: sparql
+    terms: [q:Lot, q:partOf, q:nosuchTerm]
+    text: |
+      PREFIX q: <https://example.org/q#>
+      SELECT ?lot ?parent WHERE { ?lot a q:Lot ; q:partOf ?parent }
+  observations:
+  - type: KG.lot_parent
+    id: [lot, parent]
+    values: {parent: parent}
+    multi: true

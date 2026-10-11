@@ -1,0 +1,2 @@
+@prefix ex: <https://example.org/plant#> .
+ex:press-7 ex:hasPart ex:die-1 .

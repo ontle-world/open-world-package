@@ -1,0 +1,7 @@
+apiVersion: openworld/v1alpha1
+kind: SemanticProfile
+metadata: {name: core}
+spec:
+  types:
+  - {id: q:Defect}
+  - {id: q:Flaw, status: candidate, replacedBy: q:Defect}
